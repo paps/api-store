@@ -59,6 +59,15 @@ const getDb = async () => {
 }
 
 /**
+ * @description Function used to check if the alert message appears after clicking the follow button
+ * @return {Boolean} true if the limit is reached, otherwise false
+ */
+const isFollowLimitReached = (argv, cb) => {
+	const isInPage = $(".alert-messages").length
+	cb(null, (isInPage) ? true : false);
+}
+
+/**
  * @description Connects to twitter with a session ID
  * @param {Object} tab Nick tab in use
  * @param {String} sessionCookie Your session cookie for twitter
@@ -126,6 +135,7 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
  * @description Subscribe to one twitter profile
  * @param {Object} tab
  * @param {String} url
+ * @throws if url is not a valid URL, or the daily follow limit is reached
  */
 const subscribe = async (tab, url) => {
 	utils.log(`Adding ${url}...`, "loading")
@@ -137,12 +147,14 @@ const subscribe = async (tab, url) => {
 	}
 	if (selector === ".ProfileNav-item .follow-text") {
 		await tab.click(".ProfileNav-item .follow-text")
-		try {
-			await tab.waitUntilVisible(".ProfileNav-item .following-text")
-			utils.log(`${url} followed.`, "done")
-		} catch (error) {
-			utils.log(`Clicked the following button but could not verify if ${url} was followed.`, "warning")
+		await tab.waitUntilVisible(".ProfileNav-item .following-text")
+		await tab.wait(1000)
+		const limit = await tab.evaluate(isFollowLimitReached, null)
+		if (limit) {
+			utils.log("Twitter daily follow limit reached !", "error")
+			throw "TLIMIT"
 		}
+		utils.log(`${url} followed.`, "done")
 	} else if (selector === ".ProfileNav-item .following-text") {
 		utils.log(`You are already following ${url}.`, "warning")
 	}
@@ -187,8 +199,11 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 			added.push(newAdd)
 			i++
 		} catch (error) {
-			utils.log(error, "warning")
-			added.push({ url: profile, handle: "invalid URL" })
+			if (error !== "TLIMIT") {
+				utils.log(error, "warning")
+			} else {
+				return []
+			}
 		}
 	}
 	return added
