@@ -1,0 +1,10 @@
+*.swp
+*~
+*.swo
+.DS_Store
+node_modules/
+*.bson
+.vscode
+*.map
+tsconfig.json
+phantombuster.cson
