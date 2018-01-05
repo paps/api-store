@@ -26,8 +26,8 @@ const needle = require("needle")
 
 /**
  * @description Get username of a twitter account
- * @param {Object} arg 
- * @param {Function} callback 
+ * @param {Object} arg
+ * @param {Function} callback
  */
 const scrapeUserName = (arg, callback) => {
 	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
@@ -49,6 +49,7 @@ const getDb = async () => {
 			const data = Papa.parse(file, {header: true}).data
 			return data
 		} catch (error) {
+			// TODO: usefull ??
 			await buster.saveText("url,handle", "database-twitter-auto-follow.csv")
 			return []
 		}
@@ -90,6 +91,7 @@ const twitterConnect = async (tab, sessionCookie) => {
  */
 const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 	let result = []
+	// TODO/ change if
 	if (spreadsheetUrl.indexOf("twitter.com") > -1) {
 		result = [spreadsheetUrl]
 	} else if (spreadsheetUrl.indexOf("docs.google.com") > -1 || spreadsheetUrl.indexOf("https://") > -1 || spreadsheetUrl.indexOf("http://") > -1) {
@@ -97,6 +99,9 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 	} else {
 		result = [spreadsheetUrl]
 	}
+
+	// BUG: Column name is passed into filter function
+	// HACK: to fix, we need have an formated spreadsheet otherwise it's difficult
 	result = result.filter(el => {
 		for (const line of db) {
 			el = el.toLowerCase()
@@ -183,6 +188,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 			i++
 		} catch (error) {
 			utils.log(error, "warning")
+			added.push({ url: profile, handle: "invalid URL" })
 		}
 	}
 	return added

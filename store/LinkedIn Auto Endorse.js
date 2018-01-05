@@ -18,7 +18,56 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const fs = require("fs")
+const Papa = require("papaparse")
+const needle = require("needle")
+
 // }
+
+const agentObjectToDb = async () => {
+	let agentObject
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (error) {
+		throw "Could not load bot database."
+	}
+	const csv = []
+	if (agentObject.userConnected) {
+		for (const name of agentObject.userConnected) {
+			csv.push({profileId: name, baseUrl: ""})
+		}
+	}
+	return csv
+}
+
+const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	let i = 0
+	const maxLength = data.length
+	const urls = []
+	if (maxLength === 0) {
+		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		nick.exit()
+	}
+	while (i < numberOfAddsPerLaunch && i < maxLength) {
+		const row = Math.floor(Math.random() * data.length)
+		urls.push(data[row].trim())
+		data.splice(row, 1)
+		i++
+	}
+	return urls
+}
+
+const checkDb = (str, db) => {
+	for (const line of db) {
+		const regex = new RegExp(`/in/${line.profileId}($|/)`)
+		if (str === line.baseUrl || str.match(regex)) {
+			return false
+		}
+	}
+	return true
+}
+
 
 const linkedinConnect = async (tab, cookie) => {
 	await tab.setCookie({
@@ -59,15 +108,91 @@ const scrollDown = async (tab) => {
 	await tab.wait(1000)
 }
 
-nick.newTab().then(async (tab) => {
-	const [ sessionCookie, spreadsheetUrl ] = utils.checkArguments([
-		{name: "sessionCookie", type: "string", length: 10},
-		{name: "spreadsheetUrl", type: "string", length: 10}
-	])
+/**
+ * @description Create or get a file containing the profile already endorsed
+ * @return {Array} Contains all profile already endorsed
+ * @throws if an error occured during the database loading
+ */
+const getDb = async () => {
+	const response = await needle(
+		"get",
+		`https://phantombuster.com/api/v1/agent/${buster.agentId}`,
+		{},
+		{ headers: { "X-Phantombuster-Key-1":buster.apiKey } }
+	)
 
-	const profileUrls = await utils.getDataFromCsv(spreadsheetUrl)
+	if (
+		response.body && response.body.status === "success" &&
+		response.body.data.awsFolder &&
+		response.body.data.userAwsFolder
+	) {
+		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.awsFolder}/db.cvs`
+		try {
+			await buster.download(url, "db.csv")
+			const file = fs.readFileSync("db.csv", "UTF-8")
+			const data = Papa.parse(file, { header: true }).data
+			return data
+		} catch (error) {
+			return await agentObjectToDb()
+		}
+	} else {
+		throw "The bot cannot load his database"
+	}
+}
+
+/**
+ * @description Function used to remove all already endorsed profiles
+ * @param {String} spreadsheetUrl containing all profiles urls
+ * @param {Array} db containing all profiles already endorsed
+ * @return {Array}
+ */
+const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
+	let result = []
+
+	if (spreadsheetUrl.indexOf("linkedin.com") > -1) {
+		result = [spreadsheetUrl]
+	} else if (
+		spreadsheetUrl.indexOf("docs.google.com") > -1 ||
+		spreadsheetUrl.indexOf("https://") > -1 ||
+		spreadsheetUrl.indexOf("http://") > -1
+	) {
+		result = await utils.getDataFromCsv(spreadsheetUrl)
+	} else {
+		result = [spreadsheetUrl]
+	}
+	if (!result.length) {
+		utils.log("Every LinkedIn profiles from the list are already endorsed", "waring")
+		await buster.setResultObject([])
+	} else {
+		utils.log("Resuming endorsing ...", "info")
+	}
+	return result
+}
+
+/**
+ * @description Main function that launch everything
+ */
+nick.newTab().then(async (tab) => {
+	let tmp = await buster.getAgentObject()
+	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch ] = utils.checkArguments([
+		{name: "sessionCookie", type: "string", length: 10},
+		{name: "spreadsheetUrl", type: "string", length: 10},
+		{name: "numberOfEndorsePerLaunch", type: "string", default: "10"}
+	])
+	let db = await getDb()
+	const data = await utils.getDataFromCsv(spreadsheetUrl, "profileLink")
+	if (tmp.db) {
+		for (const one of tmp.db) {
+			if (data.indexOf(one.url) > -1) {
+				data.splice(data.indexOf(one.url), 1)
+			}
+		}
+	}
+	//let profileUrls = await sortEndorsedProfiles(spreadsheetUrl, db)
+	let profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
+
 	const list = []
-	
+
 	await linkedinConnect(tab, sessionCookie)
 
 	for (let url of profileUrls) {
@@ -93,9 +218,13 @@ nick.newTab().then(async (tab) => {
 			url
 		}
 		list.push(newItem)
+		db.push(newItem)
 	}
+
+	await buster.saveText(Papa.unparse(db), "db.csv")
 	utils.log(`Endorsed ${list.length} profiles.`, "done")
-	await utils.saveResult(list)
+	await buster.setAgentObject(buster.agentId, {db})
+	await utils.saveResult(db)
 })
 .catch((err) => {
 	console.log(err)
