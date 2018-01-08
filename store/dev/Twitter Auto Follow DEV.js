@@ -59,15 +59,6 @@ const getDb = async () => {
 }
 
 /**
- * @description Function used to check if the alert message appears after clicking the follow button
- * @return {Boolean} true if the limit is reached, otherwise false
- */
-const isFollowLimitReached = (argv, cb) => {
-	const isInPage = $(".alert-messages").length
-	cb(null, (isInPage) ? true : false);
-}
-
-/**
  * @description Connects to twitter with a session ID
  * @param {Object} tab Nick tab in use
  * @param {String} sessionCookie Your session cookie for twitter
@@ -149,7 +140,8 @@ const subscribe = async (tab, url) => {
 		await tab.click(".ProfileNav-item .follow-text")
 		await tab.waitUntilVisible(".ProfileNav-item .following-text")
 		await tab.wait(1000)
-		const limit = await tab.evaluate(isFollowLimitReached, null)
+		// NOTE: This selector represents the alert box, if the daily twitter limit is reached
+		const limit = await tab.isVisible(".alert-messages")
 		if (limit) {
 			utils.log("Twitter daily follow limit reached !", "error")
 			throw "TLIMIT"
