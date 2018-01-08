@@ -26,8 +26,8 @@ const needle = require("needle")
 
 /**
  * @description Get username of a twitter account
- * @param {Object} arg 
- * @param {Function} callback 
+ * @param {Object} arg
+ * @param {Function} callback
  */
 const scrapeUserName = (arg, callback) => {
 	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
@@ -97,6 +97,7 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 	} else {
 		result = [spreadsheetUrl]
 	}
+
 	result = result.filter(el => {
 		for (const line of db) {
 			el = el.toLowerCase()
@@ -121,6 +122,7 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
  * @description Subscribe to one twitter profile
  * @param {Object} tab
  * @param {String} url
+ * @throws if url is not a valid URL, or the daily follow limit is reached
  */
 const subscribe = async (tab, url) => {
 	utils.log(`Adding ${url}...`, "loading")
@@ -132,12 +134,15 @@ const subscribe = async (tab, url) => {
 	}
 	if (selector === ".ProfileNav-item .follow-text") {
 		await tab.click(".ProfileNav-item .follow-text")
-		try {
-			await tab.waitUntilVisible(".ProfileNav-item .following-text")
-			utils.log(`${url} followed.`, "done")
-		} catch (error) {
-			utils.log(`Clicked the following button but could not verify if ${url} was followed.`, "warning")
+		await tab.waitUntilVisible(".ProfileNav-item .following-text")
+		await tab.wait(1000)
+		// NOTE: This selector represents the alert box, if the daily twitter limit is reached
+		const limit = await tab.isVisible(".alert-messages")
+		if (limit) {
+			utils.log("Twitter daily follow limit reached !", "error")
+			throw "TLIMIT"
 		}
+		utils.log(`${url} followed.`, "done")
 	} else if (selector === ".ProfileNav-item .following-text") {
 		utils.log(`You are already following ${url}.`, "warning")
 	}
@@ -182,7 +187,11 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 			added.push(newAdd)
 			i++
 		} catch (error) {
-			utils.log(error, "warning")
+			if (error !== "TLIMIT") {
+				utils.log(error, "warning")
+			} else {
+				return []
+			}
 		}
 	}
 	return added
