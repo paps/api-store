@@ -126,7 +126,7 @@ const getDb = async () => {
 		response.body.data.awsFolder &&
 		response.body.data.userAwsFolder
 	) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.awsFolder}/db.cvs`
+		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.awsFolder}/db.csv`
 		try {
 			await buster.download(url, "db.csv")
 			const file = fs.readFileSync("db.csv", "UTF-8")
@@ -161,7 +161,7 @@ const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
 		result = [spreadsheetUrl]
 	}
 	if (!result.length) {
-		utils.log("Every LinkedIn profiles from the list are already endorsed", "waring")
+		utils.log("Every LinkedIn profiles from the list are already endorsed", "warning")
 		await buster.setResultObject([])
 	} else {
 		utils.log("Resuming endorsing ...", "info")
