@@ -135,7 +135,7 @@ const onHttpRequest = (e) => {
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	await linkedinConnect(tab, sessionCookie)
 	await tab.open(postUrl)
-	await tab.waitUntilVisible(".feed-base-comments-list")
+	await tab.waitUntilVisible("#show_prev")
 	await tab.click("#show_prev")
 	await tab.wait(3000)
 	if (!gl.search) {

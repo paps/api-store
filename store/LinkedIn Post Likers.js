@@ -95,9 +95,20 @@ const getLikes = async (tab, postUrl) => {
 		nick.exit(1)
 	}
 	try {
-		selectors.likes = await tab.waitUntilVisible(["button.feed-s-social-counts__num-likes.feed-s-social-counts__count-value", "button.feed-base-social-counts__num-likes", "button.reader-social-bar__like-count"], 5000, "or")
+		/**
+		 * NOTE: to check if the opened page is a real article, we need to check:
+		 * If we got selectors for like, comment, and likes count
+		 * We store, selectors in selectors.likes variable
+		 */
+		selectors.likes = await tab.waitUntilVisible(["button.feed-shared-social-counts__num-likes.feed-shared-social-counts__count-value",
+		"button.feed-shared-social-counts", "button.feed-shared-social-counts__nums-likes"], 5000, "or")
 		await tab.click(selectors.likes)
-		selectors.list = await tab.waitUntilVisible(["ul.feed-s-likers-modal__actor-list", "ul.feed-base-likers-modal__actor-list"], 5000, "or")
+		/**
+		 * NOTE: this waitUntilVisible call checks if we got:
+		 * - some selectors loaded in order to open the popup in order to scrape the likers
+		 */
+		 selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 5000, "or")
+		// selectors.list = await tab.waitUntilVisible(["ul.feed-s-likers-modal__actor-list", "ul.feed-base-likers-modal__actor-list"], 5000, "or")
 	} catch (error) {
 		utils.log("Publication URL seems not to be a publication", "error")
 		nick.exit(1)
