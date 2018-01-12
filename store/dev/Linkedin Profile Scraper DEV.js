@@ -149,7 +149,7 @@ const scrapeInfos = (arg, callback) => {
 			const contactInfos = document.querySelectorAll(".pv-profile-section.pv-contact-info div.pv-profile-section__section-info")
 			if (contactInfos) {
 				infos.details = getInfos([
-					{ key: "linkedinProfile", attribute: "textContent", selector: ".pv-contact-info__contact-item.pv-contact-info__contact-link" },
+					{ key: "linkedinProfile", attribute: "href", selector: ".pv-contact-info__contact-type.ci-vanity-url .pv-contact-info__contact-link" },
 					{ key: "websites", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-websites.pv-contact-info__list" },
 					{ key: "twitter", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-twitter .pv-contact-info__contact-link" },
 					{ key: "phone", attribute: "href", selector: "section.pv-contact-info__contact-type.ci-phone .pv-contact-info__contact-link" },
