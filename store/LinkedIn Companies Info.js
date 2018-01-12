@@ -57,6 +57,24 @@ const scrapeCompanyInfo = (arg, callback) => {
 	if (document.querySelector("p.org-about-company-module__company-staff-count-range")) { result.size = document.querySelector("p.org-about-company-module__company-staff-count-range").textContent.trim() }
 	if (document.querySelector("img.org-top-card-module__logo")) { result.logo = document.querySelector("img.org-top-card-module__logo").src }
 	if (document.querySelector("p.org-about-company-module__founded")) { result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim() }
+	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link"))
+	{
+		/**
+		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
+		 * In order to get all LinkedIn profiles we need to split and remove
+		 * brackets and generated backslashed when decoding the URI component
+		 */
+		let tmp = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link").href
+		tmp = tmp.split("=").pop()
+		tmp = decodeURIComponent(tmp)
+		result.linkedinID =
+						    tmp.replace('[', '')
+							   .replace(']', '')
+							   .replace('\,','')
+							   .split('\"')
+							   .filter(el => (el !== '' && el !== ',') )
+							   .join(',')
+	}
 	callback(null, result)
 }
 

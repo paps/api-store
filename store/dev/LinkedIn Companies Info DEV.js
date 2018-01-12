@@ -59,6 +59,11 @@ const scrapeCompanyInfo = (arg, callback) => {
 	if (document.querySelector("p.org-about-company-module__founded")) { result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim() }
 	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link"))
 	{
+		/**
+		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
+		 * In order to get all LinkedIn profiles we need to split and remove
+		 * brackets and generated backslashed when decoding the URI component
+		 */
 		let tmp = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link").href
 		tmp = tmp.split("=").pop()
 		tmp = decodeURIComponent(tmp)
@@ -123,7 +128,6 @@ const getCompanyInfo = async (tab, link) => {
 			}
 		}
 	}
-	console.log(result)
 	await utils.saveResult(result)
 })()
 .catch(err => {
