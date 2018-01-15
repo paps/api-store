@@ -268,8 +268,8 @@ nick.newTab().then(async (tab) => {
 	])
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	let urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
-	urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
+	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
 	await linkedinConnect(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (const url of urls) {
