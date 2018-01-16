@@ -85,6 +85,17 @@ const scrapeInfos = (arg, callback) => {
 				result[info.key] = selector.querySelector(info.selector)[info.attribute].trim()
 			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).getAttribute(info.attribute)) {
 				result[info.key] = selector.querySelector(info.selector).getAttribute(info.attribute).trim()
+			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).style[info.style]) {
+				/**
+				 * NOTE: this workflow is used to get CSS styles values
+				 * For now it's used when we need to scrape background-image
+				 * we remove those parts of the result string: url(" & ")
+				 */
+				result[info.key] = selector.querySelector(info.selector)
+										   .style[info.style]
+										   .trim()
+										   .replace('url(\"', '')
+										   .replace('\")', '')
 			}
 		}
 		return result
@@ -102,8 +113,18 @@ const scrapeInfos = (arg, callback) => {
 		const topCard = document.querySelector(".pv-profile-section.pv-top-card-section")
 		// Get primary infos
 		infos.general = getInfos([
-			{ key: "imgUrl", attribute: "src", selector: ".pv-top-card-section__profile-photo-container img" },
-			{ key: "fullName", attribute: "alt", selector: ".pv-top-card-section__profile-photo-container img" },
+			/**
+			 * NOTE: we need to pass an array for the imgUrl, because
+			 * CSS selectors changes depending of 2 followed situations:
+			 * 1 - if you look YOUR linkedIn profile with YOUR li_at cookie: it will be .pv-top-card-section__profile-photo-container img
+			 * 2 - if you look SOMEONE ELSE linkedIn profile with YOUR li_at cookie: it will be .presence-entity__image
+			 */
+			 /**
+			  * NOTE: various field is an object depending what you need to get
+			  */
+			{ key: "imgUrl", style: "backgroundImage", selector: ".presence-entity__image" },
+			{ key: "imgUrl", attribute: "src", selector: ".profile-photo-edit__preview" },
+			{ key: "fullName", attribute: "textContent", selector: ".pv-top-card-section__name" },
 			{ key: "fullName", attribute: "aria-label", selector: "div.presence-entity__image" },
 			{ key: "hasAccount", attribute: "textContent", selector: ".pv-member-badge .visually-hidden" },
 			{ key: "headline", attribute: "textContent", selector: ".pv-top-card-section__headline" },
@@ -249,6 +270,7 @@ const fullToCsv = infos => {
 	}
 	return {
 		linkedinProfile: infos.details.linkedinProfile || null,
+		imgUrl: infos.general.imgUrl || null,
 		firstName: infos.general.firstName || null,
 		lastName: infos.general.lastName || null,
 		fullName: infos.general.fullName || null,
