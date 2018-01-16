@@ -28,13 +28,12 @@ const engines = [
 	{name: "Ecosia", baseUrl: "https://www.ecosia.org/search?q=", selectors: {result: "div.result > a:nth-child(1)"}, errorCode: 403},
 ]
 
-const scrapeLinkedinProfile = (arg, callback) => {
+const scrapeTwitterProfile = (arg, callback) => {
 	const links = document.querySelectorAll(arg.selector)
 	const result = []
 	for (const link of links) {
-		if (link.href.indexOf("linkedin.com/in/") > -1) {
-			callback(null, link.href)
-		}
+		if (link.href.match(/(?:http:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/))
+		callback(null, link.href)
 	}
 	callback(null, "no url")
 }
@@ -59,7 +58,7 @@ const scrapeLinkedinProfile = (arg, callback) => {
 // }
 
 const getSearch = async (tab, query, engine) => {
-	const [httpCode] = await tab.open(engine.baseUrl + encodeURIComponent(query + " site:linkedin.com").replace(/[!'()*]/g, escape))
+	const [httpCode] = await tab.open(engine.baseUrl + encodeURIComponent(query + " site:twitter.com").replace(/[!'()*]/g, escape))
 	if (httpCode !== 200) {
 		if (httpCode === engine.errorCode) {
 			throw "Limit reached for google"
@@ -69,7 +68,7 @@ const getSearch = async (tab, query, engine) => {
 	}
 	try {
 		await tab.waitUntilVisible(engine.selectors.result)
-		return (await tab.evaluate(scrapeLinkedinProfile, {selector: engine.selectors.result}))
+		return (await tab.evaluate(scrapeTwitterProfile, {selector: engine.selectors.result}))
 	} catch (error) {
 		utils.log(`Could not get results for ${query} because: ${error}`, "warning")
 		return "none"
@@ -101,9 +100,9 @@ const getSearches = async (tab, queries) => {
 			while (loop) {
 				try {
 					utils.log(`Searching for ${query}...`, "loading")
-					const linkedinUrl = await getSearch(tab, query, engines[mode])
-					result.push({linkedinUrl, query})
-					utils.log(`Got ${linkedinUrl} for ${query}.`, "done")
+					const twitterUrl = await getSearch(tab, query, engines[mode])
+					result.push({twitterUrl, query})
+					utils.log(`Got ${twitterUrl} for ${query}.`, "done")
 					loop = false
 				} catch (error) {
 					enginesDown.push(mode)
