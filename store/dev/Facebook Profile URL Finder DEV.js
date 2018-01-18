@@ -28,7 +28,7 @@
         {name: "Ecosia", baseUrl: "https://www.ecosia.org/search?q=", selectors: {result: "div.result > a:nth-child(1)"}, errorCode: 403},
     ]
     
-    const scrapeLinkedinProfile = (arg, callback) => {
+    const scrapeFacebookProfile = (arg, callback) => {
         const links = document.querySelectorAll(arg.selector)
         const result = []
         for (const link of links) {
@@ -72,7 +72,7 @@
         }
         try {
             await tab.waitUntilVisible(engine.selectors.result)
-            return (await tab.evaluate(scrapeLinkedinProfile, {selector: engine.selectors.result}))
+            return (await tab.evaluate(scrapeFacebookProfile, {selector: engine.selectors.result}))
         } catch (error) {
             utils.log(`Could not get results for ${query} because: ${error}`, "warning")
             return "none"
@@ -104,9 +104,9 @@
                 while (loop) {
                     try {
                         utils.log(`Searching for ${query}...`, "loading")
-                        const linkedinUrl = await getSearch(tab, query, engines[mode])
-                        result.push({linkedinUrl, query})
-                        utils.log(`Got ${linkedinUrl} for ${query}.`, "done")
+                        const facebookUrl = await getSearch(tab, query, engines[mode])
+                        result.push({facebookUrl, query})
+                        utils.log(`Got ${facebookUrl} for ${query}.`, "done")
                         loop = false
                     } catch (error) {
                         enginesDown.push(mode)
