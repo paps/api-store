@@ -32,7 +32,7 @@ const scrapeInstagramProfile = (arg, callback) => {
 	const links = document.querySelectorAll(arg.selector)
 	const result = []
 	for (const link of links) {
-		if (link.href.match(/(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)\/([A-Za-z0-9-_]+)/)) {
+		if (link.href.match(/^(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)\/([A-Za-z0-9-_]+)\/$/g)) {
 			callback(null, link.href)
 		}
 	}
