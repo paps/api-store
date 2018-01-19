@@ -102,7 +102,7 @@ const getAllStartups = async (tab) => {
 		}
 		startupList = allEmails
 	}
-	utils.saveResult(startupList)
+	utils.saveResults(startupList, startupList)
 })()
 .catch((err) => {
 	utils.log(err, "error")
