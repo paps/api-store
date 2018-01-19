@@ -1,0 +1,93 @@
+[
+	name: 'library'
+	apiKey: 'xxx'
+	scripts:
+		# --------------
+		# Global modules
+		# --------------
+		#'lib-Nick-beta.coffee': 'samples/lib-Nick-beta.coffee'
+		#'lib-PhongoLab-beta.coffee': 'samples/lib-PhongoLab-beta.coffee'
+		#'lib-request-beta.coffee': 'samples/lib-request-beta.coffee'
+		#'lib-Hunter.js': 'samples/lib-Hunter.js'
+		#'lib-chrome-launcher.js': 'samples/lib-chrome-launcher.js'
+		#'lib-storeUtils.js': 'samples/lib-storeUtils.js'
+		#'lib-StoreUtilities.js': 'samples/lib-StoreUtilities.js'
+		# --------------
+		# Script samples
+		# --------------
+		#'sample-Nick.js': 'samples/sample-Nick.js'
+		#'sample-CasperJS.js': 'samples/sample-CasperJS.js'
+		#'sample-PhantomJS.js': 'samples/sample-PhantomJS.js'
+		#'sample-Node.js': 'samples/sample-Node.js'
+		#'sample-WhatsMyIp.js': 'samples/sample-WhatsMyIp.js'
+		#'sample-Chromeless.js': 'samples/sample-Chromeless.js'
+		#'Hacker News Front Page Tutorial.js': 'samples/Hacker News Front Page Tutorial.js'
+		#'LinkedIn-Network-Booster.js': 'samples/LinkedIn-Network-Booster.js'
+		# --------------
+		# API store
+		# --------------
+		# 'AngelList Market Companies Extractor.js': 'store/AngelList Market Companies Extractor.js'
+		# 'Domain Name Finder.js': 'store/Domain Name Finder.js'
+		# 'Facebook Group Members.js': 'store/Facebook Group Members.js'
+		# 'Facebook ID Finder.js': 'store/Facebook ID Finder.js'
+		# 'LinkedIn Accept Invitations.js': 'store/LinkedIn Accept Invitations.js'
+		# 'LinkedIn Auto Endorse.js': 'store/LinkedIn Auto Endorse.js'
+		# 'LinkedIn Auto Withdraw.js': 'store/LinkedIn Auto Withdraw.js'
+		# 'LinkedIn Companies Employees.js': 'store/LinkedIn Companies Employees.js'
+		# 'LinkedIn Companies Info.js': 'store/LinkedIn Companies Info.js'
+		# 'LinkedIn Conversations-Hubspot Connector.js': 'store/LinkedIn Conversations-Hubspot Connector.js'
+		# 'LinkedIn Followers Insights.js': 'store/LinkedIn Followers Insights.js'
+		# 'Linkedin Group Members.js': 'store/Linkedin Group Members.js'
+		# 'LinkedIn Network Booster.js': 'store/LinkedIn Network Booster.js'
+		# 'LinkedIn Post Commenters.js': 'store/LinkedIn Post Commenters.js'
+		# 'LinkedIn Post Likers.js': 'store/LinkedIn Post Likers.js'
+		# 'Linkedin Profile Scraper.js': 'store/Linkedin Profile Scraper.js'
+		# 'LinkedIn Profile URL Finder.js': 'store/LinkedIn Profile URL Finder.js'
+		# 'Linkedin Search Export.js': 'store/Linkedin Search Export.js'
+		# 'LinkedIn-Hubspot Connector.js': 'store/LinkedIn-Hubspot Connector.js'
+		# 'Medium Post Clappers.js': 'store/Medium Post Clappers.js'
+		# 'Sales Navigator to LinkedIn Url Converter.js': 'store/Sales Navigator to LinkedIn Url Converter.js'
+		# 'Twitter Auto Follow.js': 'store/Twitter Auto Follow.js'
+		# 'Twitter Follower Collector.js': 'store/Twitter Follower Collector.js'
+		# 'Twitter Network Cleaner.js': 'store/Twitter Network Cleaner.js'
+		# 'Web Summit Startup Emails.js': 'store/Web Summit Startup Emails.js'
+		# 'Quora Topics Influencers.js': 'store/Quora Topics Influencers.js'
+		# 'Twitter Profile URL Finder.js': 'store/Twitter Profile URL Finder.js'
+		#'Pinterest Profile URL Finder.js': 'store/Pinterest Profile URL Finder.js'
+		#'Instagram Profile URL Finder.js': 'store/Instagram Profile URL Finder.js'
+		# 'Twitter Following Collector.js': 'store/Twitter Following Collector.js'
+		#'LinkedIn Company URL Finder.js': 'store/LinkedIn Company URL Finder.js'
+		#'Facebook Profile URL Finder.js': 'store/Facebook Profile URL Finder.js'
+		# --------------
+		# API store DEV
+		# --------------
+		'Domain Name Finder DEV.js': 'store/dev/Domain Name Finder DEV.js'
+		'Facebook ID Finder DEV.js': 'store/dev/Facebook ID Finder DEV.js'
+		'LinkedIn Accept And Message DEV.js': 'store/dev/LinkedIn Accept And Message DEV.js'
+		'LinkedIn Accept Invitations DEV.js': 'store/dev/LinkedIn Accept Invitations DEV.js'
+		'LinkedIn Auto Withdraw DEV.js': 'store/dev/LinkedIn Auto Withdraw DEV.js'
+		'Linkedin Profile Scraper DEV.js': 'store/dev/Linkedin Profile Scraper DEV.js'
+		'LinkedIn Profile URL Finder DEV.js': 'store/dev/LinkedIn Profile URL Finder DEV.js'
+		'Twitter Auto Follow DEV.js': 'store/dev/Twitter Auto Follow DEV.js'
+		'Twitter Follower Collector DEV.js': 'store/dev/Twitter Follower Collector DEV.js'
+		'Twitter Network Cleaner DEV.js': 'store/dev/Twitter Network Cleaner DEV.js'
+		'LinkedIn Accept And Message DEV.js': 'store/dev/LinkedIn Accept And Message DEV.js'
+		'LinkedIn Post Commenters DEV.js': 'store/dev/LinkedIn Post Commenters DEV.js'
+		'LinkedIn Post Likers DEV.js': 'store/dev/LinkedIn Post Likers DEV.js'
+		'Twitter Profile URL Finder DEV.js': 'store/dev/Twitter Profile URL Finder DEV.js'
+		'Pinterest Profile URL Finder DEV.js': 'store/dev/Pinterest Profile URL Finder DEV.js'
+		'Instagram Profile URL Finder DEV.js': 'store/dev/Instagram Profile URL Finder DEV.js'
+		'LinkedIn Companies Info DEV.js': 'store/dev/LinkedIn Companies Info DEV.js'
+		'LinkedIn Network Booster DEV.js': 'store/dev/LinkedIn Network Booster DEV.js'
+		'Facebook Profile URL Finder DEV.js': 'store/dev/Facebook Profile URL Finder DEV.js'
+		'Web Summit Startup Emails DEV.js': 'store/dev/Web Summit Startup Emails DEV.js'
+		# --------------
+		# scraping-challenges solutions
+		# --------------
+		#'scraping-challenge-0.js': 'scraping-challenges/scraping-challenge-0.js'
+		#'scraping-challenge-1.js': 'scraping-challenges/scraping-challenge-1.js'
+		#'scraping-challenge-2.js': 'scraping-challenges/scraping-challenge-2.js'
+		#'scraping-challenge-3.js': 'scraping-challenges/scraping-challenge-3.js'
+		#'scraping-challenge-4.js': 'scraping-challenges/scraping-challenge-4.js'
+		#'scraping-challenge-5.js': 'scraping-challenges/scraping-challenge-5.js'
+]
