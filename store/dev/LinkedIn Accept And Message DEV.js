@@ -51,7 +51,7 @@ const linkedinConnect = async (tab, cookie) => {
 	await linkedinConnect(tab, sessionCookie)
 	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/")
 	await tab.waitUntilVisible("#mynetwork")
-	
+
 	nick.exit()
 })()
 .catch(err => {
