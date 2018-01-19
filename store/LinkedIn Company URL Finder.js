@@ -125,10 +125,12 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const queries = await getQueries()
+	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
+	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	/*const queries = await getQueries()
 	const [csvName] = utils.checkArguments([
 		{name: "csvName", type: "string", default: "result"}
-	])
+	])*/
 	const result = await getSearches(tab, queries)
 	await utils.saveResult(result, csvName)
 	nick.exit()
