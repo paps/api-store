@@ -32,8 +32,9 @@ const scrapeTwitterProfile = (arg, callback) => {
 	const links = document.querySelectorAll(arg.selector)
 	const result = []
 	for (const link of links) {
-		if (link.href.match(/(?:http:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/))
-		callback(null, link.href)
+		if (link.href.match(/(?:http:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/)) {
+			callback(null, link.href)
+		}
 	}
 	callback(null, "no url")
 }
