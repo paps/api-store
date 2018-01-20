@@ -102,7 +102,7 @@ const getAllStartups = async (tab) => {
 		}
 		startupList = allEmails
 	}
-	utils.saveResults(startupList, startupList)
+	await utils.saveResults(startupList, startupList)
 	nick.exit()
 })()
 .catch((err) => {
