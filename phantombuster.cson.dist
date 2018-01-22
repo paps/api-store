@@ -10,8 +10,11 @@
 		#'lib-request-beta.coffee': 'samples/lib-request-beta.coffee'
 		#'lib-Hunter.js': 'samples/lib-Hunter.js'
 		#'lib-chrome-launcher.js': 'samples/lib-chrome-launcher.js'
-		#'lib-storeUtils.js': 'samples/lib-storeUtils.js'
 		#'lib-StoreUtilities.js': 'samples/lib-StoreUtilities.js'
+		# --------------
+		# Global modules DEV
+		# --------------
+		'lib-StoreUtilities-DEV.js': 'samples/lib-StoreUtilities-DEV.js'
 		# --------------
 		# Script samples
 		# --------------
