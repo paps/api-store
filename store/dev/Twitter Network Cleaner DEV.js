@@ -101,11 +101,6 @@ const unfollow = async (tab, twitterHandle) => {
 		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
 	}
 
-	/**
-	 * NOTE: Regex used to remove non printable characters,
-	 * In some cases the profile url will have those characters appended %E2%80%8F
-	 * Thoses characters represents an url encoding, those characters will result to 404 page
-	 */
 	const [httpCode, httpStatus] = await tab.open(`https://twitter.com/${twitterHandle}`)
 	/**
 	 * NOTE: If we can't load the twitter profile, we just notify the user the error
