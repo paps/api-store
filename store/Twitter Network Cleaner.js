@@ -111,7 +111,7 @@ const unfollow = async (tab, twitterHandle) => {
 			utils.log(`Clicked the unfollow button but could not verify if it was done for ${twitterHandle}`, "warning")
 		}
 	} catch (error) {
-		utils.log(`You are already not following ${twitterHandle}`, "info")
+		utils.log(`You weren't following ${twitterHandle}`, "info")
 	}
 }
 
