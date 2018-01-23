@@ -100,7 +100,18 @@ const unfollow = async (tab, twitterHandle) => {
 	if (twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
 	}
-	await tab.open(`https://twitter.com/${twitterHandle}`)
+
+	/**
+	 * NOTE: Regex used to remove non printable characters,
+	 * In some cases the profile url will have those characters appended %E2%80%8F
+	 * Thoses characters represents an url encoding, those characters will result to 404 page
+	 */
+	const [httpCode, httpStatus] = await tab.open(`https://twitter.com/${twitterHandle}`)
+	/**
+	 * NOTE: If we can't load the twitter profile, we just notify the user the error
+	 */
+	if (httpCode >= 400 && httpCode <= 500)
+		return utils.log(`${twitterHandle} doesn't represent a valid twitter profile`, "warning")
 	try {
 		await tab.waitUntilVisible(".ProfileNav-item .following-text")
 		await tab.click(".ProfileNav-item .following-text")
@@ -111,7 +122,7 @@ const unfollow = async (tab, twitterHandle) => {
 			utils.log(`Clicked the unfollow button but could not verify if it was done for ${twitterHandle}`, "warning")
 		}
 	} catch (error) {
-		utils.log(`You are already not following ${twitterHandle}`, "info")
+		utils.log(`You weren't following ${twitterHandle}`, "info")
 	}
 }
 
