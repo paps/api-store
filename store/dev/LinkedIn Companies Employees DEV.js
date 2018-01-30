@@ -105,7 +105,11 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 }
 
 /**
- * @description 
+ * @description Function used to retrieve the LinkedIn company ID
+ * @param {String} url this parameter can be an ID or an URL
+ * @param {Object} tab object
+ * @return {Number}
+ * @throws String, the function will throw if there were an error while retrieving the data or if there is no handler
  */
 const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url))) {
@@ -119,17 +123,14 @@ const getIdFromUrl = async (url, tab) => {
 			await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
 			let tmp = await tab.evaluate((argv, cb) => {
 				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
-				ids = ids.split("=")
-				ids = ids.pop()
-				ids = decodeURIComponent(ids)
-				ids = ids.replace('\]\"', "").replace('\"\]', "").split('\"\,\"')
-				cb(null, ids[0].replace('\[\"', ""))
+				let u = new URL(ids)
+				ids = u.searchParams.get("facetCurrentCompany").split('\"\,\"').pop()
+				ids = ids.replace('\[\"', "").replace('\"\]', "")
+				cb(null, ids)
 			})
 			return parseInt(tmp)
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1])
-
-		/* Awfull handler if the url parameter doesn't represent an id but an company name */
 		} else {
 			throw "could not get id from " + url
 		}
