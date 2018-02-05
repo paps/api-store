@@ -60,6 +60,8 @@ class StoreUtilities {
 		return buster.arguments
 	}
 
+	// Old way of checking arguments
+	// TODO remove all calls to this
 	checkArguments(args) {
 		const buster = this.buster
 		const finalArgs = []
@@ -120,6 +122,7 @@ class StoreUtilities {
 		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
+			console.log(JSON.stringify(match, undefined, 4))
 			if (match[3] === "docs.google.com") {
 				if (match[8] === "edit") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`
