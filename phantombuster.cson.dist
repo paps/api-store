@@ -16,19 +16,8 @@
 		# --------------
 		# Global libs DEV
 		# --------------
-		'lib-StoreUtilities-DEV.js': 'libs/lib-StoreUtilities-DEV.js'
-		'lib-LinkedIn-DEV.js': 'libs/lib-LinkedIn-DEV.js'
-
-		# --------------
-		# Script samples
-		# --------------
-		#'sample-Nick.js': 'samples/sample-Nick.js'
-		#'sample-CasperJS.js': 'samples/sample-CasperJS.js'
-		#'sample-PhantomJS.js': 'samples/sample-PhantomJS.js'
-		#'sample-Node.js': 'samples/sample-Node.js'
-		#'sample-WhatsMyIp.js': 'samples/sample-WhatsMyIp.js'
-		#'sample-Chromeless.js': 'samples/sample-Chromeless.js'
-		#'Hacker News Front Page Tutorial.js': 'samples/Hacker News Front Page Tutorial.js'
+		'lib-StoreUtilities-DEV.js': 'libs/dev/lib-StoreUtilities-DEV.js'
+		'lib-LinkedIn-DEV.js': 'libs/dev/lib-LinkedIn-DEV.js'
 
 		# --------------
 		# API store
@@ -99,4 +88,15 @@
 		#'scraping-challenge-3.js': 'scraping-challenges/scraping-challenge-3.js'
 		#'scraping-challenge-4.js': 'scraping-challenges/scraping-challenge-4.js'
 		#'scraping-challenge-5.js': 'scraping-challenges/scraping-challenge-5.js'
+
+		# --------------
+		# Script samples
+		# --------------
+		#'sample-Nick.js': 'samples/sample-Nick.js'
+		#'sample-CasperJS.js': 'samples/sample-CasperJS.js'
+		#'sample-PhantomJS.js': 'samples/sample-PhantomJS.js'
+		#'sample-Node.js': 'samples/sample-Node.js'
+		#'sample-WhatsMyIp.js': 'samples/sample-WhatsMyIp.js'
+		#'sample-Chromeless.js': 'samples/sample-Chromeless.js'
+		#'Hacker News Front Page Tutorial.js': 'samples/Hacker News Front Page Tutorial.js'
 ]
