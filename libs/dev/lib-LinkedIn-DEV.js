@@ -10,13 +10,18 @@ class LinkedIn {
 
 	async login(tab, cookie) {
 		this.utils.log("Connecting to LinkedIn...", "loading")
+		this.originalSessionCookie = cookie
 
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			await tab.open("https://www.linkedin.com")
+			const [httpCode] = await tab.open("https://www.linkedin.com/feed/")
+			if (httpCode !== 200) {
+				return `linkedin feed responded with http ${httpCode}`
+			}
+			let sel
 			try {
-				const sel = await tab.untilVisible(["#extended-nav", "form.login-form"], "or", 15000)
+				sel = await tab.untilVisible(["#extended-nav", "form.login-form"], "or", 15000)
 			} catch (e) {
 				return e.toString()
 			}
@@ -34,7 +39,11 @@ class LinkedIn {
 
 		try {
 			const ao = await this.buster.getAgentObject()
-			if (typeof(ao[".sessionCookie"]) === "string") {
+
+			if ((typeof(ao[".sessionCookie"]) === "string") && (ao[".originalSessionCookie"] === this.originalSessionCookie)) {
+				// the user has not changed his session cookie, he wants to login with the same account
+				// but we have an newer cookie from the agent object so we try that first
+				console.log("Using cookie from agent object")
 				await this.nick.setCookie({
 					name: "li_at",
 					value: ao[".sessionCookie"],
@@ -45,19 +54,28 @@ class LinkedIn {
 					return
 				}
 			}
-			await this.nick.setCookie({
-				name: "li_at",
-				value: cookie,
-				domain: "www.linkedin.com"
-			})
-			// second login try with cookie from argument
-			const loginResult = await _login()
-			if (loginResult !== null) {
-				throw loginResult
+
+			if (ao[".sessionCookie"] !== this.originalSessionCookie) {
+				// the newer cookie from the agent object failed (or wasn't here)
+				// so we try a second time with the cookie from argument
+				console.log("Using cookie from argument")
+				await this.nick.setCookie({
+					name: "li_at",
+					value: this.originalSessionCookie,
+					domain: "www.linkedin.com"
+				})
+				// second login try with cookie from argument
+				const loginResult = await _login()
+				if (loginResult !== null) {
+					throw loginResult
+				}
+			} else {
+				throw "Cookie from argument is the same as the agent object one, which already failed"
 			}
+
 		} catch (error) {
 			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-			if (utils.test) {
+			if (this.utils.test) {
 				console.log("Debug:")
 				console.log(error)
 			}
@@ -69,10 +87,10 @@ class LinkedIn {
 		try {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
 			if (cookie.length === 1) {
-				await this.buster.saveAgentObject({
-					".sessionCookie": cookie[0].value
+				await this.buster.setAgentObject({
+					".sessionCookie": cookie[0].value,
+					".originalSessionCookie": this.originalSessionCookie
 				})
-				console.log("Debug: saved cookie " + cookie[0].value)
 			} else {
 				throw `${cookie.length} cookies match filtering, cannot know which one to save`
 			}

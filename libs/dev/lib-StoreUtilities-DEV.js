@@ -61,7 +61,6 @@ class StoreUtilities {
 	}
 
 	// Old way of checking arguments
-	// TODO remove all calls to this
 	checkArguments(args) {
 		const buster = this.buster
 		const finalArgs = []
