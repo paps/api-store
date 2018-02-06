@@ -43,7 +43,6 @@ class LinkedIn {
 			if ((typeof(ao[".sessionCookie"]) === "string") && (ao[".originalSessionCookie"] === this.originalSessionCookie)) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have an newer cookie from the agent object so we try that first
-				console.log("Using cookie from agent object")
 				await this.nick.setCookie({
 					name: "li_at",
 					value: ao[".sessionCookie"],
@@ -55,22 +54,17 @@ class LinkedIn {
 				}
 			}
 
-			if (ao[".sessionCookie"] !== this.originalSessionCookie) {
-				// the newer cookie from the agent object failed (or wasn't here)
-				// so we try a second time with the cookie from argument
-				console.log("Using cookie from argument")
-				await this.nick.setCookie({
-					name: "li_at",
-					value: this.originalSessionCookie,
-					domain: "www.linkedin.com"
-				})
-				// second login try with cookie from argument
-				const loginResult = await _login()
-				if (loginResult !== null) {
-					throw loginResult
-				}
-			} else {
-				throw "Cookie from argument is the same as the agent object one, which already failed"
+			// the newer cookie from the agent object failed (or wasn't here)
+			// so we try a second time with the cookie from argument
+			await this.nick.setCookie({
+				name: "li_at",
+				value: this.originalSessionCookie,
+				domain: "www.linkedin.com"
+			})
+			// second login try with cookie from argument
+			const loginResult = await _login()
+			if (loginResult !== null) {
+				throw loginResult
 			}
 
 		} catch (error) {

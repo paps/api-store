@@ -234,6 +234,8 @@ class StoreUtilities {
 	}
 
 	// Function to save an object to csv and in result object if it fits
+	// (deprecated, use saveResults() instead)
+	// XXX NOTE: this function calls nick.exit()
 	async saveResult(result, csvName = "result", schema) {
 		const buster = this.buster
 		this.log("Saving data...", "loading")
