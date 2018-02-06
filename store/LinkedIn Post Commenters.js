@@ -10,7 +10,6 @@ const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
-	debug: false,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -91,7 +90,7 @@ const getAllComments = async (tab, headers, search, max) => {
 		} catch (error) {
 			console.log(error)
 			await tab.wait(2000)
-			fail ++
+			++fail
 		}
 	}
 	utils.log(`Got ${result.length} comments.`, "done")
