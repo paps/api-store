@@ -42,7 +42,7 @@ class LinkedIn {
 
 			if ((typeof(ao[".sessionCookie"]) === "string") && (ao[".originalSessionCookie"] === this.originalSessionCookie)) {
 				// the user has not changed his session cookie, he wants to login with the same account
-				// but we have an newer cookie from the agent object so we try that first
+				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
 					name: "li_at",
 					value: ao[".sessionCookie"],

@@ -113,25 +113,27 @@ const getFirstName = (arg, callback) => {
 	}
 	if (!name.length) {
 		callback(null, "")
-	}
-	const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-	let i = true
-	while (i) {
-		if (name.length > 0) {
-			name = name.split(" ")
-			name.pop()
-			name = name.join(" ")
-			if (hasAccount.indexOf(name) >= 0) {
+	} else {
+		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
+		let i = true
+		while (i) {
+			if (name.length > 0) {
+				name = name.split(" ")
+				name.pop()
+				name = name.join(" ")
+				if (hasAccount.indexOf(name) >= 0) {
+					i = false
+				}
+			} else {
 				i = false
 			}
+		}
+		if (name.length > 0) {
+			callback(null, name)
 		} else {
-			i = false
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
 		}
 	}
-	if (name.length > 0)
-		callback(null, name)
-	else
-		callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
 }
 
 // Function to add someone
@@ -173,14 +175,20 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		// In case the url is unavailable we consider this person added because its url isn't valid
 		if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
 			db.push({profileId: "unavailable", baseUrl: url})
-			throw(`${url} is not a valid URL.`)
+			throw(`${url} is not a valid LinkedIn URL.`)
 		} else {
 			throw(`Error while loading ${url}:\n${error}`)
 		}
 	}
 	// Handle different cases: button connect, send inmail, accept, message, follow or invitation pending
-	const selectors = ["button.connect.primary, button.pv-s-profile-actions--connect", "span.send-in-mail.primary, button.pv-s-profile-actions--send-in-mail", "button.accept.primary", "button.message.primary, button.pv-s-profile-actions--message", "button.follow.primary", ".pv-top-card-section__invitation-pending", ".pv-dashboard-section"]
-	let selector;
+	const selectors = ["button.connect.primary, button.pv-s-profile-actions--connect", // connect button available (best case)
+		"span.send-in-mail.primary, button.pv-s-profile-actions--send-in-mail", // two-step connect with click on (...) required (third+ circle)
+		"button.accept.primary", // the person already invited us, we just have to accept the invite
+		"button.message.primary, button.pv-s-profile-actions--message", // we can message the person (invite already accepted)
+		"button.follow.primary", // only follow button visible (can't connect)
+		".pv-top-card-section__invitation-pending", // invite pending (already added this profile)
+		".pv-dashboard-section"] // we cannot connect with ourselves...
+	let selector
 	try {
 		selector = await tab.waitUntilVisible(selectors, 10000, "or")
 	} catch (error) {
