@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -23,6 +23,8 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 let db;
 // }
 
@@ -235,27 +237,6 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	db.push({profileId, baseUrl: url})
 }
 
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to linkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
-
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName] = utils.checkArguments([
@@ -268,9 +249,9 @@ nick.newTab().then(async (tab) => {
 	])
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	let urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
-	urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
-	await linkedinConnect(tab, sessionCookie)
+	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
+	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (const url of urls) {
 		try {
@@ -281,6 +262,7 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	await buster.saveText(Papa.unparse(db), "database-linkedin-network-booster.csv")
+	await linkedIn.saveCookie()
 	nick.exit(0)
 })
 .catch((err) => {
