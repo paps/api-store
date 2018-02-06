@@ -60,6 +60,7 @@ class StoreUtilities {
 		return buster.arguments
 	}
 
+	// Old way of checking arguments
 	checkArguments(args) {
 		const buster = this.buster
 		const finalArgs = []
@@ -120,6 +121,7 @@ class StoreUtilities {
 		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
+			console.log(JSON.stringify(match, undefined, 4))
 			if (match[3] === "docs.google.com") {
 				if (match[8] === "edit") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`
@@ -232,6 +234,8 @@ class StoreUtilities {
 	}
 
 	// Function to save an object to csv and in result object if it fits
+	// (deprecated, use saveResults() instead)
+	// XXX NOTE: this function calls nick.exit()
 	async saveResult(result, csvName = "result", schema) {
 		const buster = this.buster
 		this.log("Saving data...", "loading")

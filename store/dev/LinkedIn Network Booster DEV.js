@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -23,6 +23,8 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 let db;
 // }
 
@@ -111,25 +113,27 @@ const getFirstName = (arg, callback) => {
 	}
 	if (!name.length) {
 		callback(null, "")
-	}
-	const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-	let i = true
-	while (i) {
-		if (name.length > 0) {
-			name = name.split(" ")
-			name.pop()
-			name = name.join(" ")
-			if (hasAccount.indexOf(name) >= 0) {
+	} else {
+		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
+		let i = true
+		while (i) {
+			if (name.length > 0) {
+				name = name.split(" ")
+				name.pop()
+				name = name.join(" ")
+				if (hasAccount.indexOf(name) >= 0) {
+					i = false
+				}
+			} else {
 				i = false
 			}
+		}
+		if (name.length > 0) {
+			callback(null, name)
 		} else {
-			i = false
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
 		}
 	}
-	if (name.length > 0)
-		callback(null, name)
-	else
-		callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
 }
 
 // Function to add someone
@@ -171,14 +175,20 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		// In case the url is unavailable we consider this person added because its url isn't valid
 		if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
 			db.push({profileId: "unavailable", baseUrl: url})
-			throw(`${url} is not a valid URL.`)
+			throw(`${url} is not a valid LinkedIn URL.`)
 		} else {
 			throw(`Error while loading ${url}:\n${error}`)
 		}
 	}
 	// Handle different cases: button connect, send inmail, accept, message, follow or invitation pending
-	const selectors = ["button.connect.primary, button.pv-s-profile-actions--connect", "span.send-in-mail.primary, button.pv-s-profile-actions--send-in-mail", "button.accept.primary", "button.message.primary, button.pv-s-profile-actions--message", "button.follow.primary", ".pv-top-card-section__invitation-pending", ".pv-dashboard-section"]
-	let selector;
+	const selectors = ["button.connect.primary, button.pv-s-profile-actions--connect", // connect button available (best case)
+		"span.send-in-mail.primary, button.pv-s-profile-actions--send-in-mail", // two-step connect with click on (...) required (third+ circle)
+		"button.accept.primary", // the person already invited us, we just have to accept the invite
+		"button.message.primary, button.pv-s-profile-actions--message", // we can message the person (invite already accepted)
+		"button.follow.primary", // only follow button visible (can't connect)
+		".pv-top-card-section__invitation-pending", // invite pending (already added this profile)
+		".pv-dashboard-section"] // we cannot connect with ourselves...
+	let selector
 	try {
 		selector = await tab.waitUntilVisible(selectors, 10000, "or")
 	} catch (error) {
@@ -235,27 +245,6 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	db.push({profileId, baseUrl: url})
 }
 
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to linkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
-
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName] = utils.checkArguments([
@@ -268,9 +257,9 @@ nick.newTab().then(async (tab) => {
 	])
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	let urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
-	urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
-	await linkedinConnect(tab, sessionCookie)
+	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
+	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (const url of urls) {
 		try {
@@ -281,6 +270,7 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	await buster.saveText(Papa.unparse(db), "database-linkedin-network-booster.csv")
+	await linkedIn.saveCookie()
 	nick.exit(0)
 })
 .catch((err) => {

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,30 +19,12 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 const querystring = require("querystring")
 // }
 
 const gl = {}
-
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
 
 const callComments = (arg, callback) => {
 	$.ajax({
@@ -133,7 +115,7 @@ const onHttpRequest = (e) => {
 		{ name: "csvName", type: "string", default: "result" },
 	])
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	await linkedinConnect(tab, sessionCookie)
+	await linkedIn.login(tab, sessionCookie)
 	await tab.open(postUrl)
 	await tab.waitUntilVisible("#show_prev")
 	await tab.click("#show_prev")
@@ -148,6 +130,7 @@ const onHttpRequest = (e) => {
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
 	const result = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total))
+	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)
 })()
 .catch(err => {
