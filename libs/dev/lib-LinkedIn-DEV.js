@@ -9,8 +9,27 @@ class LinkedIn {
 	}
 
 	async login(tab, cookie) {
+		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
+			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
+			this.nick.exit(1)
+		}
+
+		if (cookie.indexOf("from-global-object:") === 0) {
+			try {
+				const path = cookie.replace("from-global-object:", "")
+				this.utils.log(`Fetching session cookie from global object at "${path}"`, "info")
+				cookie = require("lodash").get(await this.buster.getGlobalObject(), path)
+				if ((typeof(cookie) !== "string") || (cookie.length <= 0)) {
+					throw `Could not find a non empty string at path ${path}`
+				}
+			} catch (e) {
+				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
+				this.nick.exit(1)
+			}
+		}
+
 		this.utils.log("Connecting to LinkedIn...", "loading")
-		this.originalSessionCookie = cookie
+		this.originalSessionCookie = cookie.trim()
 
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
