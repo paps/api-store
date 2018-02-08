@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,28 +18,9 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 // }
-
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
 
 const createUrl = (search, circles) => {
 	const circlesOpt = `facetNetwork=["${circles.first ? "F" : ""}","${circles.second ? "S" : ""}","${circles.third ? "O" : ""}"]`
@@ -56,7 +37,8 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
 			}
-			if (url !== window.location.href + "#" && url.indexOf("www.linkedin.com/in") > -1) {
+			currentJob = currentJob.replace(/^.+ ?: ?\n/, "") // removes 'Current:\n' or 'Actuel :\n' or similar at the beginning of current job
+			if ((url !== window.location.href + "#") && (url.indexOf("www.linkedin.com/in") > -1)) {
 				const newInfos = {
 					url: url,
 					currentJob
@@ -115,13 +97,14 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 			searches = await utils.getDataFromCsv(searches)
 		}
 	}
-	await linkedinConnect(tab, sessionCookie)
+	await linkedIn.login(tab, sessionCookie)
 	let result = []
 	for (const search of searches) {
 		const searchUrl = createUrl(search, circles)
 		const query = queryColumn ? search : false
 		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query))
 	}
+	await linkedIn.saveCookie()
 	utils.saveResult(result)
 })()
 .catch(err => {

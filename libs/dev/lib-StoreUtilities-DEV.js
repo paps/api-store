@@ -156,11 +156,11 @@ class StoreUtilities {
 
 	// Function to check if the result is correct for test purpose
 	_testResult(result) {
-		const minLength = this.testRunObject.resMinLength
+		const minLength = this.testRunObject.resMinLength || this.testRunObject.minResLength
 		const desiredOutput = this.testRunObject.desiredOutput
 		if (minLength) {
 			if (result.length < minLength) {
-				console.log(`Test failed: Result is ${result.length} but minLength is ${minLength}.`)
+				console.log(`Test failed: Result has ${result.length} entries but minimum allowed to pass is ${minLength}.`)
 				this.nick.exit(1)
 			}
 		}

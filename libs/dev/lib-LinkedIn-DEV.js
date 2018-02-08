@@ -45,6 +45,7 @@ class LinkedIn {
 				return e.toString()
 			}
 			if (sel === "#extended-nav") {
+				await tab.untilVisible(".nav-item__profile-member-photo.nav-item__icon", 15000)
 				const name = await tab.evaluate((arg, callback) => {
 					callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
 				})
@@ -87,11 +88,11 @@ class LinkedIn {
 			}
 
 		} catch (error) {
-			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
 			if (this.utils.test) {
 				console.log("Debug:")
 				console.log(error)
 			}
+			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
 			this.nick.exit(1)
 		}
 	}
