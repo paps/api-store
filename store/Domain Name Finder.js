@@ -75,6 +75,8 @@ const getDomainName = async (tab, company) => {
 	let {spreadsheetUrl, companies, columnName} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	} else if (typeof(companies) === 'string') {
+		companies = [companies]
 	}
 	const tab = await nick.newTab()
 	const result = []
