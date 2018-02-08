@@ -91,10 +91,10 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		{ name: "queryColumn", type: "boolean", default: false },
 	])
 	if (typeof searches === "string") {
-		if (searches.indexOf("http") === -1) {
-			searches = [ searches ]
-		} else {
+		if (searches.indexOf("http") === 0) {
 			searches = await utils.getDataFromCsv(searches)
+		} else {
+			searches = [ searches ]
 		}
 	}
 	await linkedIn.login(tab, sessionCookie)
