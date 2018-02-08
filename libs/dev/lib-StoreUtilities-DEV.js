@@ -44,20 +44,17 @@ class StoreUtilities {
 	}
 
 	validateArguments() {
-		const buster = this.buster
-		if (buster.argumentSchema) {
-			const validate = validator(buster.argumentSchema)
-			if (validate(buster.arguments)) {
-				return buster.arguments
-			} else {
-				let errorMessage = "Some arguments seem to be invalid:"
+		if (this.buster.argumentSchema) {
+			const validate = validator(this.buster.argumentSchema)
+			if (!validate(this.buster.arguments)) {
+				let errorMessage = "Error: the API configuration/argument seems invalid:"
 				for (const error of validate.errors) {
-					errorMessage += `\n- ${error.field.replace("data.", "")} ${error.message}`
+					errorMessage += `\n   - ${error.field.replace("data.", "")} => ${error.message}`
 				}
 				throw errorMessage
 			}
 		}
-		return buster.arguments
+		return this.buster.arguments
 	}
 
 	// Old way of checking arguments
@@ -121,7 +118,6 @@ class StoreUtilities {
 		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
-			console.log(JSON.stringify(match, undefined, 4))
 			if (match[3] === "docs.google.com") {
 				if (match[8] === "edit") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`

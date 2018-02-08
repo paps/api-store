@@ -44,22 +44,20 @@ class StoreUtilities {
 	}
 
 	validateArguments() {
-		const buster = this.buster
-		if (buster.argumentSchema) {
-			const validate = validator(buster.argumentSchema)
-			if (validate(buster.arguments)) {
-				return buster.arguments
-			} else {
-				let errorMessage = "Some arguments seem to be invalid:"
+		if (this.buster.argumentSchema) {
+			const validate = validator(this.buster.argumentSchema)
+			if (!validate(this.buster.arguments)) {
+				let errorMessage = "Error: the API configuration/argument seems invalid:"
 				for (const error of validate.errors) {
-					errorMessage += `\n- ${error.field.replace("data.", "")} ${error.message}`
+					errorMessage += `\n   - ${error.field.replace("data.", "")} => ${error.message}`
 				}
 				throw errorMessage
 			}
 		}
-		return buster.arguments
+		return this.buster.arguments
 	}
 
+	// Old way of checking arguments
 	checkArguments(args) {
 		const buster = this.buster
 		const finalArgs = []
@@ -232,6 +230,8 @@ class StoreUtilities {
 	}
 
 	// Function to save an object to csv and in result object if it fits
+	// (deprecated, use saveResults() instead)
+	// XXX NOTE: this function calls nick.exit()
 	async saveResult(result, csvName = "result", schema) {
 		const buster = this.buster
 		this.log("Saving data...", "loading")
