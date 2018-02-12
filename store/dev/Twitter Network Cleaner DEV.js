@@ -124,10 +124,26 @@ const unfollow = async (tab, twitterHandle) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let {spreadsheetUrl, sessionCookie} = utils.validateArguments()
+
+	/**
+	 * NOTE: Just in case arguments got unexpected trailing whitespaces, tabs, ...
+	 */
+	spreadsheetUrl = spreadsheetUrl.trim()
+	sessionCookie = sessionCookie.trim()
 	await twitterConnect(tab, sessionCookie)
+
 	let twitterProfiles = [spreadsheetUrl]
-	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
-		twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl)
+	/* Checking if we have an url from buster.arguments */
+	if (/^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*$/g.test(spreadsheetUrl)) {
+		/**
+		 * Do we have a Twitter profile url ?
+		 * If not let's try to open the url,
+		 * It'll throw if this isn't an CSV
+		 */
+		if (!/(?:http[s]?:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/.test(spreadsheetUrl)) {
+			twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl)
+		}
+
 	}
 	const followers = await getTwitterFollowers(tab, "https://twitter.com/followers")
 	const peopleUnfollowed = []
