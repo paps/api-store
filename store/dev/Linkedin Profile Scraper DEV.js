@@ -136,9 +136,15 @@ const scrapeInfos = (arg, callback) => {
 		])
 		// Get subscribers count
 		if (document.querySelector("div.pv-profile-section.pv-recent-activity-section")) {
-			const subscribersText = document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span").textContent.trim().replace(/\,/g, "").replace(/\./g, "").replace(/\s/g, "")
-			if (subscribersText.match(/[0-9]*/g)) {
-				infos.general.subscribers = subscribersText.match(/[0-9]*/g)[0]
+			/**
+			 * BUG: issue #12 Cannot read property 'textContent' of null
+			 * NOTE: This selector is not always available, the script should test before accessing data from the selector
+			 */
+			if (document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span")) {
+				const subscribersText = document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span").textContent.trim().replace(/\,/g, "").replace(/\./g, "").replace(/\s/g, "")
+				if (subscribersText.match(/[0-9]*/g)) {
+					infos.general.subscribers = subscribersText.match(/[0-9]*/g)[0]
+				}
 			}
 		}
 		if (document.querySelector("span.background-details")) {
