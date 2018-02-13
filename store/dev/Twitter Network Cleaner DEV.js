@@ -129,8 +129,8 @@ const unfollow = async (tab, twitterHandle) => {
 	/**
 	 * NOTE: Just in case arguments got unexpected trailing whitespaces, tabs, ...
 	 */
-	spreadsheetUrl = spreadsheetUrl.trim().replace(/\s+/g, "")
-	sessionCookie = sessionCookie.trim().replace(/\s+/g, "")
+	spreadsheetUrl = spreadsheetUrl.trim()
+	sessionCookie = sessionCookie.trim()
 	await twitterConnect(tab, sessionCookie)
 
 	let twitterProfiles = [spreadsheetUrl]
