@@ -8,7 +8,8 @@ class LinkedIn {
 		this.utils = utils
 	}
 
-	async login(tab, cookie) {
+	// url is optional (will open LinkedIn feed by default)
+	async login(tab, cookie, url) {
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
@@ -34,9 +35,9 @@ class LinkedIn {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			const [httpCode] = await tab.open("https://www.linkedin.com/feed/")
+			const [httpCode] = await tab.open(url || "https://www.linkedin.com/feed/")
 			if (httpCode !== 200) {
-				return `linkedin feed responded with http ${httpCode}`
+				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
 			try {
