@@ -1,11 +1,19 @@
-// Phantombuster configuration {
-// }
-
 class LinkedIn {
+
 	constructor(nick, buster, utils) {
 		this.nick = nick
 		this.buster = buster
 		this.utils = utils
+	}
+
+	// Get LinkedIn username from URL: "https://www.linkedin.com/in/toto" -> "toto"
+	getUsername(url) {
+		if (typeof(url) === "string") {
+			const match = url.match(/linkedin\.com\/in\/([a-zA-Z0-9\\%_-]*)\/?.*$/)
+			if (match && match[1].length > 0)
+				return match[1]
+		}
+		return null
 	}
 
 	// url is optional (will open LinkedIn feed by default)
@@ -113,6 +121,7 @@ class LinkedIn {
 			this.utils.log("Caught exception when saving session cookie: " + e.toString(), "warning")
 		}
 	}
+
 }
 
 module.exports = LinkedIn
