@@ -28,22 +28,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 let db;
 // }
 
-// In case the old agentObject is present we transform it into a csv
-const agentObjectToDb = async () => {
-	let agentObject
-	try {
-		agentObject = await buster.getAgentObject()
-	} catch (error) {
-		throw "Could not load bot database."
-	}
-	const csv = []
-	if (agentObject.userConnected) {
-		for (const name of agentObject.userConnected) {
-			csv.push({profileId: name, baseUrl: ""})
-		}
-	}
-	return csv
-}
+const DB_NAME = "database-linkedin-network-booster.csv"
 
 // Get the file containing the data for this bot
 const getDb = async () => {
@@ -51,14 +36,14 @@ const getDb = async () => {
 		"X-Phantombuster-Key-1": buster.apiKey
 	}})
 	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/database-linkedin-network-booster.csv`
+		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
 		try {
-			await buster.download(url, "db.csv")
-			const file = fs.readFileSync("db.csv", "UTF-8")
+			await buster.download(url, DB_NAME)
+			const file = fs.readFileSync(DB_NAME, "UTF-8")
 			const data = Papa.parse(file, {header: true}).data
 			return data
 		} catch (error) {
-			return await agentObjectToDb()
+			return []
 		}
 	} else {
 		throw "Could not load bot database."
@@ -261,7 +246,7 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Could not add ${url} because of an error: ${error}.`, "warning")
 		}
 	}
-	await buster.saveText(Papa.unparse(db), "database-linkedin-network-booster.csv")
+	await buster.saveText(Papa.unparse(db), DB_NAME)
 	await linkedIn.saveCookie()
 	nick.exit(0)
 })
