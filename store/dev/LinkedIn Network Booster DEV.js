@@ -28,14 +28,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 let db;
 // }
 
-// Get the LinkedIn username from the url: "https://www.linkedin.com/in/toto" -> "toto"
-const getUsername = (url) => {
-	const match = url.match(/linkedin\.com\/in\/([a-zA-Z0-9\\%_-]*)\/?.*$/)
-	if (match && match[1].length > 0)
-		return match[1]
-	return null
-}
-
 // In case the old agentObject is present we transform it into a csv
 const agentObjectToDb = async () => {
 	let agentObject
@@ -205,7 +197,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		}
 	}
 	const currentUrl = await tab.getUrl()
-	const profileId = getUsername(currentUrl)
+	const profileId = linkedIn.getUsername(currentUrl)
 	if (!checkDb(currentUrl, db)) {
 		utils.log(`Already added ${profileId}.`, "done")
 	} else {
