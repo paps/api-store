@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,28 +19,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 // }
-
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
 
 const scrapeCompanyLink = (arg, callback) => {
 	callback(null, document.querySelector("li.search-result a.search-result__result-link").href)
@@ -56,6 +37,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 	if (document.querySelector("a.org-about-us-company-module__website")) { result.website = document.querySelector("a.org-about-us-company-module__website").href }
 	if (document.querySelector("p.org-about-company-module__company-staff-count-range")) { result.size = document.querySelector("p.org-about-company-module__company-staff-count-range").textContent.trim() }
 	if (document.querySelector("img.org-top-card-module__logo")) { result.logo = document.querySelector("img.org-top-card-module__logo").src }
+	if (document.querySelector("p.org-about-company-module__specialities")) { result.specialities = document.querySelector("p.org-about-company-module__specialities").textContent.trim() }
 	if (document.querySelector("p.org-about-company-module__founded")) { result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim() }
 	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link"))
 	{
@@ -97,7 +79,7 @@ const getCompanyInfo = async (tab, link) => {
 	if (typeof companies === "string") {
 		companies = await utils.getDataFromCsv(companies)
 	}
-	await linkedinConnect(tab, sessionCookie)
+	await linkedIn.login(tab, sessionCookie)
 	const result = []
 	for (const company of companies) {
 		if (company.length > 0) {
@@ -128,6 +110,7 @@ const getCompanyInfo = async (tab, link) => {
 			}
 		}
 	}
+	await linkedIn.saveCookie()
 	await utils.saveResult(result)
 })()
 .catch(err => {
