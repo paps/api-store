@@ -96,11 +96,18 @@ const getTwitterFollowers = async (tab, twitterUrl) => {
 }
 
 const unfollow = async (tab, twitterHandle) => {
-	utils.log(`Unfollowing ${twitterHandle}...`, "loading")
 	if (twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
 	}
-	await tab.open(`https://twitter.com/${twitterHandle}`)
+
+	utils.log(`Unfollowing ${twitterHandle}...`, "loading")
+
+	const [httpCode, httpStatus] = await tab.open(`https://twitter.com/${twitterHandle}`)
+	/**
+	 * NOTE: If we can't load the twitter profile, we just notify the user with an error
+	 */
+	if (httpCode >= 400 && httpCode <= 500)
+		return utils.log(`${twitterHandle} doesn't represent a valid twitter profile`, "warning")
 	try {
 		await tab.waitUntilVisible(".ProfileNav-item .following-text")
 		await tab.click(".ProfileNav-item .following-text")
@@ -118,10 +125,26 @@ const unfollow = async (tab, twitterHandle) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let {spreadsheetUrl, sessionCookie} = utils.validateArguments()
+
+	/**
+	 * NOTE: Just in case arguments got unexpected trailing whitespaces, tabs, ...
+	 */
+	spreadsheetUrl = spreadsheetUrl.trim()
+	sessionCookie = sessionCookie.trim()
 	await twitterConnect(tab, sessionCookie)
+
 	let twitterProfiles = [spreadsheetUrl]
-	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
-		twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl)
+	/* Checking if we have an url from buster.arguments */
+	if (/^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*$/g.test(spreadsheetUrl)) {
+		/**
+		 * Do we have a Twitter profile url ?
+		 * If not let's try to open the url,
+		 * It'll throw an error if this isn't a CSV
+		 */
+		if (!/(?:http[s]?:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/.test(spreadsheetUrl)) {
+			twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl)
+		}
+
 	}
 	const followers = await getTwitterFollowers(tab, "https://twitter.com/followers")
 	const peopleUnfollowed = []
