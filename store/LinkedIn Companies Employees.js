@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,28 +19,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 // }
-
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
 
 const jsonToCsv = json => {
 	const csv = []
@@ -104,11 +85,32 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 	return result
 }
 
-const getIdFromUrl = url => {
+/**
+ * @description Function used to retrieve the LinkedIn company ID
+ * @param {String} url this parameter can be an ID or an URL
+ * @param {Object} tab object
+ * @return {Number}
+ * @throws String, the function will throw if there were an error while retrieving the data or if there is no handler
+ */
+const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url))) {
 		return parseInt(url)
 	} else {
-		if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
+		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
+			const [httpCode, httpStatus] = await tab.open(url)
+			if (httpCode == 404) {
+				throw "could not get id: 404 error when tracking linkedIn company ID"
+			}
+			await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
+			let tmp = await tab.evaluate((argv, cb) => {
+				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
+				let u = new URL(ids)
+				ids = u.searchParams.get("facetCurrentCompany").split('\"\,\"').pop()
+				ids = ids.replace('\[\"', "").replace('\"\]', "")
+				cb(null, ids)
+			})
+			return parseInt(tmp)
+		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1])
 		} else {
 			throw "could not get id from " + url
@@ -127,10 +129,10 @@ const getIdFromUrl = url => {
 		{ name: "numberOfPagePerCompany", type: "number", default: 10 },
 		{ name: "waitTime", type: "number", default: 0 },
 	])
-	await linkedinConnect(tab, sessionCookie)
 	if (typeof urls === "string") {
 		urls = await utils.getDataFromCsv(urls)
 	}
+	await linkedIn.login(tab, sessionCookie)
 	let result = []
 	for (const companyUrl of urls) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -139,7 +141,7 @@ const getIdFromUrl = url => {
 			break
 		}
 		try {
-			const id = getIdFromUrl(companyUrl)
+			const id = await getIdFromUrl(companyUrl, tab)
 			const res = await getEmployees(tab, id, numberOfPagePerCompany, waitTime)
 			res.url = companyUrl
 			result.push(res)
@@ -148,6 +150,7 @@ const getIdFromUrl = url => {
 		}
 	}
 	const csvResult = jsonToCsv(result)
+	await linkedIn.saveCookie()
 	await utils.saveResults(result, csvResult, "result", ["url", "name", "job", "location", "currentJob", "companyUrl"])
 	nick.exit()
 })()
