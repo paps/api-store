@@ -39,25 +39,6 @@ const scrapeLinkedinCompanyProfile = (arg, callback) => {
 	callback(null, "no url")
 }
 
-const getQueries = async () => {
-	let [queries, columnName] = utils.checkArguments([
-		{many: [
-			{name: "spreadsheetUrl", type: "string", length: 10},
-			{name: "queries", type: "object", length: 1},
-			{name: "query", type: "string", length: 1},
-		]},
-		{name: "columnName", type: "string", default: ""},
-	])
-	if (typeof queries === "string") {
-		if (buster.arguments.search) {
-			queries = [queries]
-		} else {
-			queries = await utils.getDataFromCsv(queries, columnName)
-		}
-	}
-	return queries
-}
-
 const getSearch = async (tab, query, engine) => {
 	const [httpCode] = await tab.open(engine.baseUrl + encodeURIComponent(query + " site:linkedin.com").replace(/[!'()*]/g, escape))
 	if (httpCode !== 200) {
@@ -125,12 +106,12 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	/*const queries = await getQueries()
-	const [csvName] = utils.checkArguments([
-		{name: "csvName", type: "string", default: "result"}
-	])*/
+	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
+	if (spreadsheetUrl) {
+		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	} else if (typeof(queries) === 'string') {
+		queries = [queries]
+	}
 	const result = await getSearches(tab, queries)
 	await utils.saveResult(result, csvName)
 	nick.exit()
