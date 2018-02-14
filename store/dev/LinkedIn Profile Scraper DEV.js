@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,28 +19,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 // }
-
-// The function to connect with your cookie into linkedIn
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
 
 // Full scroll the LinkedIn Profile
 const fullScroll = async tab => {
@@ -303,7 +284,7 @@ const fullToCsv = infos => {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
 	const tab = await nick.newTab()
-	await linkedinConnect(tab, sessionCookie)
+	await linkedIn.login(tab, sessionCookie)
 	// Two variables to save csv and json
 	const result = []
 	const csvResult = []
@@ -323,6 +304,7 @@ const fullToCsv = infos => {
 			break
 		}
 	}
+	await linkedIn.saveCookie()
 	await utils.saveResults(result, csvResult)
 	nick.exit()
 })()
