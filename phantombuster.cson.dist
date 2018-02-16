@@ -16,6 +16,7 @@
 		# --------------
 		# Global libs DEV
 		# --------------
+		'lib-WebSearch-DEV.js': '/libs/dev/lib-WebSearch-DEV.js'
 		'lib-StoreUtilities-DEV.js': 'libs/dev/lib-StoreUtilities-DEV.js'
 		'lib-LinkedIn-DEV.js': 'libs/dev/lib-LinkedIn-DEV.js'
 
