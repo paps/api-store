@@ -57,7 +57,7 @@ const _defaultEgines = [
  * - How a web research will be formatted bu the class WebSearch
  */
 const enginePattern = { name: "", baseUrl: "", baseSelector: "" ,titleSelector: "", linkSelector: "", descriptionSelector: "", failureSelector: "" }
-const emptyResult = { "results": [], "name": "" }
+const emptyResult = { "results": [], "engine": "" }
 
 /**
  * @internal
@@ -95,7 +95,7 @@ const scrapeResults = (argv, cb) => {
  * @return {Promise<Array>}
  */
 const _doSearch = async function (query) {
-	let result = { results: [], engine: "" }
+	let result = Object.assign({}, emptyResult)
 	const engine = this.engines[this.engineUsed]
 	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query))
 
@@ -115,8 +115,6 @@ const _doSearch = async function (query) {
 
 	if (await this.tab.isPresent(engine.failureSelector)) {
 		throw `Research failed for the query ${query} when using the engine ${engine.name}`
-		//console.warn("Research failed for ", query, "when using the engine", engine.name)
-		//return result
 	}
 
 	result.results = await this.tab.evaluate(scrapeResults, { engine })
@@ -167,13 +165,13 @@ class WebSearch {
 
 		if (this.allEnginesDown()) {
 			console.warn('No more engines available')
-			results = emptyResult
+			results = Object.assign({}, emptyResult)
 			results.name = this.engines[this.engineUsed].name
 			return results
 		}
 
 		while (needToContinue) {
-			console.log(`Performing a research with the web engine: ${this.engines[this.engineUsed].name} ...`)
+			console.log(`Performing the research ${query} with the web engine: ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)
 				needToContinue = false
@@ -184,7 +182,7 @@ class WebSearch {
 				if (this.allEnginesDown()) {
 					console.warn('No more engines available')
 					needToContinue = false
-					results = emptyResult
+					results = Object.assign({}, emptyResult)
 					results.name = this.engines[this.engineUsed].name
 				}
 			}
