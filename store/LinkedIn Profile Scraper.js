@@ -257,6 +257,7 @@ const fullToCsv = infos => {
 	}
 	return {
 		linkedinProfile: infos.details.linkedinProfile || null,
+		description: infos.general.description || null,
 		imgUrl: infos.general.imgUrl || null,
 		firstName: infos.general.firstName || null,
 		lastName: infos.general.lastName || null,
@@ -265,6 +266,7 @@ const fullToCsv = infos => {
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
+		jobDescription: job.description || null,
 		location: job.location || null,
 		mail: infos.details.mail || null,
 		phoneNumber: infos.details.phone || null,
