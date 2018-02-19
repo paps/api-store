@@ -203,7 +203,7 @@ class WebSearch {
 	/**
 	 * @description This method toggles the current verbose level
 	 */
-	toogleVerbose() {this.verbose = !this.verbose}
+	toggleVerbose() {this.verbose = !this.verbose}
 
 	/**
 	 * @description Getter to know if there are some engines available
