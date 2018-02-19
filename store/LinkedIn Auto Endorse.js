@@ -148,7 +148,7 @@ nick.newTab().then(async (tab) => {
 		{name: "sessionCookie", type: "string", length: 10},
 		{name: "spreadsheetUrl", type: "string", length: 10},
 		{name: "numberOfEndorsePerLaunch", type: "string", default: "10"},
-		{name: "columnName", type: "string"}
+		{name: "columnName", type: "string", default: ""}
 	])
 	const db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
