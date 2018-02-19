@@ -142,7 +142,7 @@ const getSearches = async (tab, queries) => {
 		let j = 0
 		let tmp = await webSearch.search(one)
 		while (needToContinue && j < tmp.results.length) {
-			if (tmp.results[j].link.match(/(?:http:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/)) {
+			if (tmp.results[j].link.match(/^(?:(http|https):\/\/)?(?:www\.)?twitter\.com\/(#!\/)?\w+$/)) {
 				toReturn.push({ twitterUrl: tmp.results[j].link, query: _queries[i] })
 				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
 				needToContinue = false
