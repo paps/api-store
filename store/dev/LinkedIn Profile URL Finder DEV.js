@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,6 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
+const WebSearch = require("./lib-WebSearch-DEV")
 const utils = new StoreUtilities(nick, buster)
 // }
 
@@ -106,14 +107,39 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
+	const webSearch = new WebSearch(tab)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(queries) === 'string') {
 		queries = [queries]
 	}
-	const result = await getSearches(tab, queries)
-	await utils.saveResult(result, csvName)
+
+	const _queries = queries.slice(0)
+	const toReturn = []
+	let i = 0
+
+	queries.forEach((el, index, arr) => arr[index] += " site:linkedin.com")
+
+	for (const one of queries) {
+		utils.log(`Searching ${_queries[i]} ...`, "loading")
+		let needToContinue = true
+		let j = 0
+		let tmp = await webSearch.search(one)
+		while (needToContinue && j < tmp.results.length) {
+			if (tmp.results[j].link.indexOf("linkedin.com/in") > -1) {
+				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
+				toReturn.push({ linkedinUrl: tmp.results[j].link, query: _queries[i] })
+				needToContinue = false
+			}
+			j++
+		}
+		i++
+	}
+
+	await tab.close()
+	//const result = await getSearches(tab, queries)
+	await utils.saveResult(toReturn, csvName)
 	nick.exit()
 })()
 .catch(err => {

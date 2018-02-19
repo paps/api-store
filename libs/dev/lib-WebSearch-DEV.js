@@ -105,7 +105,7 @@ const _doSearch = async function (query) {
 	 * NOTE: Error while opening the url
 	 */
 	if ((httpCode >= 300) || (httpCode < 200)) {
-		console.warn("No results from the engine", engine.name)
+		this.verbose && console.warn("No results from the engine", engine.name)
 		this.enginesDown.push(engine)
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 		//return result
@@ -145,10 +145,13 @@ class WebSearch {
 	/**
 	 * @constructs WebSearch
 	 * @param {Object} tab - nickjs tab object
+	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quite
+	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
-	constructor(tab) {
+	constructor(tab, verbose = false) {
 		this.engines = _defaultEgines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
+		this.verbose = verbose
 		this.enginesDown = []
 		this.tab = tab
 	}
@@ -163,6 +166,9 @@ class WebSearch {
 		let results = null
 		let needToContinue = true
 
+		/**
+		 * NOTE: No need to continue if all engines are down
+		 */
 		if (this.allEnginesDown()) {
 			console.warn('No more engines available')
 			results = Object.assign({}, emptyResult)
@@ -170,13 +176,17 @@ class WebSearch {
 			return results
 		}
 
+		/**
+		 * NOTE: While we didn't found a result and the class stills have some engines to use
+		 * the function will continue to search
+		 */
 		while (needToContinue) {
-			console.log(`Performing the research ${query} with the web engine: ${this.engines[this.engineUsed].name} ...`)
+			this.verbose && console.log(`Performing the research ${query} with the web engine: ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)
 				needToContinue = false
 			} catch (e) {
-				console.warn(`Switching to a new engine: ${e}`)
+				this.verbose && console.warn(`Switching to a new engine: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				this.engineUsed = _switchEngine.call(this)
 				if (this.allEnginesDown()) {
@@ -189,6 +199,11 @@ class WebSearch {
 		}
 		return results
 	}
+
+	/**
+	 * @description This method toggles the current verbose level
+	 */
+	toogleVerbose() {this.verbose = !this.verbose}
 
 	/**
 	 * @description Getter to know if there are some engines available
@@ -208,6 +223,7 @@ class WebSearch {
 	/**
 	 * @async
 	 * @description Wrapper function used to perform many requests
+	 * NOTE: This method will return an array of JS objects, those objects are like emptyResult
 	 * @param {Array} 
 	 * @return {Promise<Array>}
 	 */

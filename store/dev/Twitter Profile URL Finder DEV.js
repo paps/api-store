@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,6 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
+const WebSearch = require("./lib-WebSearch-DEV")
 const utils = new StoreUtilities(nick, buster)
 // }
 
@@ -126,10 +127,34 @@ const getSearches = async (tab, queries) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	// const queries = await getQueries()
+	const webSearch = new WebSearch(tab)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const result = await getSearches(tab, queries)
-	await utils.saveResult(result, csvName)
+	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const _queries = queries.slice(0)
+	const toReturn = []
+	let i = 0
+
+	queries.forEach((el, index, arr) => arr[index] += " site:twitter.com")
+
+	for (const one of queries) {
+		utils.log(`Searching ${_queries[i]} ...`, "loading")
+		let needToContinue = true
+		let j = 0
+		let tmp = await webSearch.search(one)
+		while (needToContinue && j < tmp.results.length) {
+			if (tmp.results[j].link.match(/(?:http:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/)) {
+				toReturn.push({ twitterUrl: tmp.results[j].link, query: _queries[i] })
+				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
+				needToContinue = false
+			}
+			j++
+		}
+		i++
+	}
+	await tab.close()
+	await utils.saveResult(toReturn, csvName)
+	//const result = await getSearches(tab, queries)
+	//await utils.saveResult(result, csvName)
 	nick.exit()
 })()
 .catch(err => {
