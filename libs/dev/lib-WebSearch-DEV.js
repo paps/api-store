@@ -71,13 +71,13 @@ const scrapeResults = (argv, cb) => {
 		document.querySelectorAll(argv.engine.baseSelector)
 	).map(el => {
 		return {
-			title: (el.querySelector(argv.engine.titleSelector)) 
+			title: (el.querySelector(argv.engine.titleSelector))
 				? el.querySelector(argv.engine.titleSelector).textContent.trim()
 				: "",
-			link: (el.querySelector(argv.engine.linkSelector)) 
+			link: (el.querySelector(argv.engine.linkSelector))
 				? el.querySelector(argv.engine.linkSelector).href
 				: "",
-			description: (el.querySelector(argv.engine.descriptionSelector)) 
+			description: (el.querySelector(argv.engine.descriptionSelector))
 				? el.querySelector(argv.engine.descriptionSelector).textContent.trim()
 				: ""
 		}
@@ -96,14 +96,14 @@ const scrapeResults = (argv, cb) => {
 const _doSearch = async function (query) {
 	let result = Object.assign({}, emptyResult)
 	const engine = this.engines[this.engineUsed]
-	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query))
+	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
 
 	result.engine = engine.name
 
 	/**
 	 * NOTE: Error while opening the url
 	 */
-	if ((httpCode >= 300) || (httpCode < 200)) {
+	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.warn("No results from the engine", engine.name)
 		this.enginesDown.push(engine)
 		throw `Cannot open the page ${engine.baseUrl}${query}`
