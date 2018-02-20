@@ -149,6 +149,9 @@ const getSearches = async (tab, queries) => {
 			}
 			j++
 		}
+		if (needToContinue) {
+			toReturn.push({ pinterestUrl: "no url", query: _queries[i] })
+		}
 		i++
 	}
 	await tab.close()

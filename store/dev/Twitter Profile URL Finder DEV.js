@@ -127,7 +127,7 @@ const getSearches = async (tab, queries) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	// const queries = await getQueries()
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
 	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const _queries = queries.slice(0)
@@ -148,6 +148,9 @@ const getSearches = async (tab, queries) => {
 				needToContinue = false
 			}
 			j++
+		}
+		if (needToContinue) {
+			toReturn.push({ twitterUrl: "no url", query: _queries[i] })
 		}
 		i++
 	}
