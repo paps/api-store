@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,18 +18,9 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
+const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
-
-// Scrape the page to get all domain names
-const getDomainNames = (arg, callback) => {
-	const results = document.querySelectorAll("div#links > div.result.results_links_deep")
-	const domainNames = []
-	for (const result of results) {
-		domainNames.push(psl.get(result.getAttribute("data-domain")))
-	}
-	callback(null, domainNames)
-}
 
 // Find the domain which has the most repetitions
 const domainMode = (array, company) => {
@@ -60,14 +51,31 @@ const domainMode = (array, company) => {
 	return max.domain
 }
 
-// Get the domain name of one company
-const getDomainName = async (tab, company) => {
+/**
+ * @description Scrapping function used to craft useable domain names from a complete URL
+ * NOTE: This function is used in browser context, in order to use psl library
+ * @param {Array} argv.results - webSearch results
+ * @return {Array} array containing all domain names found from the library webSearch
+ */
+const craftDomains = (argv, cb) => {
+	const domains = argv.results.map(one => psl.get((new URL(one.link)).hostname))
+	cb(null, domains)
+}
+
+/**
+ * @async
+ * @description Function used to get all links from a research engines, extract the domain name
+ * @param {Object} webSearch - webSearch instance
+ * @param {Object} tab - nickjs instance
+ * @param {String} company - company name
+ * @return {Promise<Array>}
+ */
+const getDomainName = async (webSearch, tab, company) => {
 	company = company.toLowerCase()
-	await tab.open(`https://duckduckgo.com/?q=${company}&ia=web`)
-	await tab.waitUntilVisible("#links")
+	let names = await webSearch.search(company)
 	await tab.inject("https://cdnjs.cloudflare.com/ajax/libs/psl/1.1.20/psl.min.js")
-	const domainNames = await tab.evaluate(getDomainNames)
-	return domainMode(domainNames, company)
+	names = await tab.evaluate(craftDomains, { results: names.results })
+	return domainMode(names, company)
 }
 
 // Main function to launch everything and handle errors
@@ -80,6 +88,8 @@ const getDomainName = async (tab, company) => {
 	}
 	const tab = await nick.newTab()
 	const result = []
+	const webSearch = new WebSearch(tab, buster)
+
 	for (const company of companies) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -88,7 +98,7 @@ const getDomainName = async (tab, company) => {
 		}
 		utils.log(`Getting domain name for ${company}...`, "loading")
 		try {
-			const domainName = await getDomainName(tab, company)
+			const domainName = await getDomainName(webSearch, tab, company)
 			result.push({ companyName: company, companyDomain: domainName })
 			utils.log(`Got ${domainName} for ${company}`, "done")
 		} catch (error) {

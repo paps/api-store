@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,6 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
+const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
@@ -127,9 +128,39 @@ const getSearches = async (tab, queries) => {
 	const tab = await nick.newTab()
 	// const queries = await getQueries()
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const result = await getSearches(tab, queries)
-	await utils.saveResult(result, csvName)
+	//const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let _queries = queries.slice(0)
+
+	queries.forEach((el, index, arr) => arr[index] = el += " site:instagram.com")
+
+	const webSearch = new WebSearch(tab, buster)
+	const toReturn = []
+	let i = 0
+
+	for (const one of queries) {
+		utils.log(`Searching ${_queries[i]}`, "loading")
+		let tmp = await webSearch.search(one)
+		let needToContinue = true
+		let j = 0
+		while (needToContinue && j < tmp.results.length)
+		{
+			if (tmp.results[j].link.match(/^(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)\/([A-Za-z0-9-_.]+)\/$/g)) {
+				toReturn.push({ instagramUrl: tmp.results[j].link, query: _queries[i] })
+				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
+				needToContinue = false
+			}
+			j++
+		}
+		if (needToContinue) {
+			toReturn.push({ instagramUrl: "no url", query: _queries[i] })
+		}
+		i++
+	}
+	await tab.close()
+
+	//const result = await getSearches(tab, queries)
+	await utils.saveResult(toReturn, csvName)
 	nick.exit()
 })()
 .catch(err => {
