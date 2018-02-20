@@ -134,7 +134,7 @@ const getSearches = async (tab, queries) => {
 
 	queries.forEach((el, index, arr) => arr[index] = el += " site:instagram.com")
 
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	const toReturn = []
 	let i = 0
 
@@ -143,7 +143,7 @@ const getSearches = async (tab, queries) => {
 		let tmp = await webSearch.search(one)
 		let needToContinue = true
 		let j = 0
-		while (needToContinue && j < tmp.result.length)
+		while (needToContinue && j < tmp.results.length)
 		{
 			if (tmp.results[j].link.match(/^(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)\/([A-Za-z0-9-_.]+)\/$/g)) {
 				toReturn.push({ instagramUrl: tmp.results[j].link, query: _queries[i] })
@@ -151,6 +151,9 @@ const getSearches = async (tab, queries) => {
 				needToContinue = false
 			}
 			j++
+		}
+		if (needToContinue) {
+			toReturn.push({ instagramUrl: "no url", query: _queries[i] })
 		}
 		i++
 	}

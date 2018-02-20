@@ -126,7 +126,7 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	/*const queries = await getQueries()
 	const [csvName] = utils.checkArguments([
 		{name: "csvName", type: "string", default: "result"}
@@ -151,11 +151,14 @@ const getSearches = async (tab, queries) => {
 		 */
 		while (needToContinue && j < tmp.results.length) {
 			if (tmp.results[j].link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}\-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {
-				result.push({ facebookUrl: tmp.results[j].link, query: _queries[i] })
+			result.push({ facebookUrl: tmp.results[j].link, query: _queries[i] })
 				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
 				needToContinue = false
 			}
 			j++
+		}
+		if (needToContinue) {
+			result.push({ facebookUrl: "no url", query: _queries[i] })
 		}
 		i++
 	}

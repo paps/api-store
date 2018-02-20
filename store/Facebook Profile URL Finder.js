@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,6 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
+const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
@@ -125,13 +126,43 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
+	const webSearch = new WebSearch(tab, buster)
 	/*const queries = await getQueries()
 	const [csvName] = utils.checkArguments([
 		{name: "csvName", type: "string", default: "result"}
 	])*/
 	const {spreadsheetUrl,csvName,columnName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const result = await getSearches(tab, queries)
+	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const _queries = queries.slice(0)
+	const result = []
+	let i = 0
+
+	queries.forEach((el, index, arr) => arr[index] = el += " site:facebook.com")
+	//const result = await getSearches(tab, queries)
+	
+	for (const one of queries) {
+		utils.log(`Searching ${_queries[i]} ...`, "loading")
+		let tmp = await webSearch.search(one)
+		let needToContinue = true
+		let j = 0
+		/**
+		 * NOTE: Since facebook researches are (often) starting with a link facebook.com/public/xxx
+		 * This type of url is not use ... so we loop until we got the first successfull match with the regex
+		 */
+		while (needToContinue && j < tmp.results.length) {
+			if (tmp.results[j].link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}\-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {
+			result.push({ facebookUrl: tmp.results[j].link, query: _queries[i] })
+				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
+				needToContinue = false
+			}
+			j++
+		}
+		if (needToContinue) {
+			result.push({ facebookUrl: "no url", query: _queries[i] })
+		}
+		i++
+	}
+	await tab.close()
 	await utils.saveResult(result, csvName)
 	nick.exit()
 })()
