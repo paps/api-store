@@ -31,7 +31,7 @@ const _defaultEgines = [
 	},
 	{
 		"name": "bing",
-		"baseUrl": "https://wwww.bing.com/search?q=",
+		"baseUrl": "https://www.bing.com/search?q=",
 		"baseSelector": "ol#b_results > li.b_algo",
 		"titleSelector": "h2 > a",
 		"linkSelector": "h2 > a",
@@ -64,8 +64,11 @@ const emptyResult = { "results": [], "engine": "" }
  * @param {Object} argv.engine the engine used for the research
  * @return {Array} all results found in the first page
  */
-const scrapeResults = (argv, cb) => {
+const _scrapeResults = (argv, cb) => {
 	let res = []
+
+	// TODO throw if there are zero matching selectors
+	// we didn't match the "no results" selector so we landed here, but if we match nothing here, something is fishy => throw to mark the engine as down
 
 	res = Array.from(
 		document.querySelectorAll(argv.engine.baseSelector)
@@ -105,7 +108,6 @@ const _doSearch = async function (query) {
 	 */
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.warn("No results from the engine", engine.name)
-		this.enginesDown.push(engine)
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 		//return result
 	}
@@ -113,10 +115,11 @@ const _doSearch = async function (query) {
 	await this.tab.untilVisible([engine.baseSelector, engine.failureSelector, "body"], 5000, "or")
 
 	if (await this.tab.isPresent(engine.failureSelector)) {
-		throw `Research failed for the query ${query} when using the engine ${engine.name}`
+		//throw `Research failed for the query ${query} when using the engine ${engine.name}`
+		return result
 	}
 
-	result.results = await this.tab.evaluate(scrapeResults, { engine })
+	result.results = await this.tab.evaluate(_scrapeResults, { engine })
 	return result
 }
 
@@ -127,11 +130,13 @@ const _doSearch = async function (query) {
  */
 const _switchEngine = function () {
 	let availableEngines = []
-	for (let i = 0, len = this.engines.length; i < len; i++) {
-		if (!this.enginesDown.find(one => one === i)) {
+	for (let i = 0; i < this.engines.length; i++) {
+		if (this.enginesDown.indexOf(i) < 0) {
 			availableEngines.push(i)
 		}
 	}
+	//console.log('engines down: ' + JSON.stringify(this.enginesDown))
+	//console.log('available engines: ' + JSON.stringify(availableEngines))
 	return availableEngines[Math.floor(Math.random() * availableEngines.length)]
 }
 
@@ -176,6 +181,8 @@ class WebSearch {
 			results.name = this.engines[this.engineUsed].name
 			return results
 		}
+
+		this.resetEngines()
 
 		/**
 		 * NOTE: While we didn't found a result and the class stills have some engines to use
@@ -225,7 +232,7 @@ class WebSearch {
 	 * @async
 	 * @description Wrapper function used to perform many requests
 	 * NOTE: This method will return an array of JS objects, those objects are like emptyResult
-	 * @param {Array} 
+	 * @param {Array}
 	 * @return {Promise<Array>}
 	 */
 	async searchBatch(queries) {
