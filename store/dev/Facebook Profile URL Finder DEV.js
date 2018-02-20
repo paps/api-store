@@ -126,7 +126,7 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	/*const queries = await getQueries()
 	const [csvName] = utils.checkArguments([
 		{name: "csvName", type: "string", default: "result"}

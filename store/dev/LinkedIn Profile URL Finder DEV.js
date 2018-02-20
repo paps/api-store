@@ -107,7 +107,7 @@ const getSearches = async (tab, queries) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)

@@ -134,7 +134,7 @@ const getSearches = async (tab, queries) => {
 
 	queries.forEach((el, index, arr) => arr[index] = el += " site:instagram.com")
 
-	const webSearch = new WebSearch(tab)
+	const webSearch = new WebSearch(tab, buster)
 	const toReturn = []
 	let i = 0
 
