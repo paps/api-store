@@ -41,7 +41,7 @@ const _defaultEgines = [
 	{
 		"name": "ecosia",
 		"baseUrl": "https://www.ecosia.org/search?q=",
-		"baseSelector": "div.result",
+		"baseSelector": "div.result.js-result",
 		"titleSelector": "a.result-title",
 		"linkSelector": "a.result-url",
 		"descriptionSelector": "p.result-snippet",
