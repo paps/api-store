@@ -145,15 +145,17 @@ class WebSearch {
 	/**
 	 * @constructs WebSearch
 	 * @param {Object} tab - nickjs tab object
+	 * @param {Object} buster - Phantombuster api instance
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quite
 	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
-	constructor(tab, verbose = false) {
+	constructor(tab, buster, verbose = false) {
 		this.engines = _defaultEgines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
 		this.verbose = verbose
 		this.enginesDown = []
 		this.tab = tab
+		this.buster = buster
 	}
 
 	/**
