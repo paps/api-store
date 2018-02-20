@@ -233,7 +233,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "columnName", type: "string", default: "" }
 	])
 	db = await getDb()
-	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
 	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
 	await linkedIn.login(tab, sessionCookie)
