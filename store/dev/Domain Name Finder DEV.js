@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,7 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
-const WebSearch = require("./lib-WebSearch-DEV")
+const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
