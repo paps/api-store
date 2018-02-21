@@ -36,18 +36,26 @@ const utils = new StoreUtilities(nick, buster)
 	const toReturn = []
 
 	for (const one of queries) {
-		utils.log(`Searching ${one} ...`, "loading")
-		let needToContinue = true
-		let j = 0
-		let tmp = await webSearch.search(one + " site:linkedin.com")
-		while (needToContinue && j < tmp.results.length) {
-			if (tmp.results[j].link.indexOf("linkedin.com/in") > -1) {
-				utils.log(`Got ${tmp.results[j].link} for ${one}`, "done")
-				toReturn.push({ linkedinUrl: tmp.results[j].link, query: one })
-				needToContinue = false
-			}
-			j++
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
 		}
+		utils.log(`Searching ${one} ...`, "loading")
+		let search = await webSearch.search(one + " site:linkedin.com")
+		let link = null
+		for (const res of search.results) {
+			if (res.link.indexOf("linkedin.com/in/") > 0) {
+				link = res.link
+				break
+			}
+		}
+		if (link) {
+			utils.log(`Got ${link} for ${one}`, "done")
+		} else {
+			utils.log(`No result for ${one}`, "done")
+		}
+		toReturn.push({ linkedinUrl: link, query: one })
 	}
 
 	await tab.close()

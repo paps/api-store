@@ -8,7 +8,7 @@
  * - titleSelector: CSS selector representing the title of a result
  * - linkSelector: CSS selector representing the link of a result
  * - descriptionSelector: CSS selector representing the description of a result
- * - failureSelector: CSS selector used to check if we're facing a failed research
+ * - noResultsSelector: CSS selector used to check if we're facing a failed research
  */
 const _defaultEgines = [
 	{
@@ -18,7 +18,7 @@ const _defaultEgines = [
 		"titleSelector": "h3.r",
 		"linkSelector": "h3.r > a",
 		"descriptionSelector": "span.st",
-		"failureSelector": "div.med ul"
+		"noResultsSelector": "div.med ul"
 	},
 	{
 		"name": "duckduckgo",
@@ -27,7 +27,7 @@ const _defaultEgines = [
 		"titleSelector": "h2 > a:first-child",
 		"linkSelector": "h2 > a:first-child",
 		"descriptionSelector": ".result__snippet",
-		"failureSelector": "div.no-results"
+		"noResultsSelector": "div.no-results"
 	},
 	{
 		"name": "bing",
@@ -36,7 +36,7 @@ const _defaultEgines = [
 		"titleSelector": "h2 > a",
 		"linkSelector": "h2 > a",
 		"descriptionSelector": "p",
-		"failureSelector": "ol#b_results > li.b_no"
+		"noResultsSelector": "ol#b_results > li.b_no"
 	},
 	{
 		"name": "ecosia",
@@ -45,7 +45,7 @@ const _defaultEgines = [
 		"titleSelector": "a.result-title",
 		"linkSelector": "a.result-url",
 		"descriptionSelector": "p.result-snippet",
-		"failureSelector": "div.empty-result"
+		"noResultsSelector": "div.empty-result"
 
 	}
 ]
@@ -55,7 +55,7 @@ const _defaultEgines = [
  * - How a web engine used in the class WebSearch
  * - How a web research will be formatted bu the class WebSearch
  */
-const enginePattern = { name: "", baseUrl: "", baseSelector: "" ,titleSelector: "", linkSelector: "", descriptionSelector: "", failureSelector: "" }
+const enginePattern = { name: "", baseUrl: "", baseSelector: "" ,titleSelector: "", linkSelector: "", descriptionSelector: "", noResultsSelector: "" }
 const emptyResult = { "results": [], "engine": "" }
 
 /**
@@ -65,12 +65,7 @@ const emptyResult = { "results": [], "engine": "" }
  * @return {Array} all results found in the first page
  */
 const _scrapeResults = (argv, cb) => {
-	let res = []
-
-	// TODO throw if there are zero matching selectors
-	// we didn't match the "no results" selector so we landed here, but if we match nothing here, something is fishy => throw to mark the engine as down
-
-	res = Array.from(
+	const res = Array.from(
 		document.querySelectorAll(argv.engine.baseSelector)
 	).map(el => {
 		return {
@@ -85,6 +80,13 @@ const _scrapeResults = (argv, cb) => {
 				: ""
 		}
 	})
+
+	// error if there are zero matching selectors
+	// we didn't match the "no results" selector so we landed here, but if we match nothing here, something is fishy => throw to mark the engine as down
+	if (res.length <= 0) {
+		return cb("No results found")
+	}
+
 	cb(null, res)
 }
 
@@ -112,10 +114,9 @@ const _doSearch = async function (query) {
 		//return result
 	}
 
-	await this.tab.untilVisible([engine.baseSelector, engine.failureSelector, "body"], 5000, "or")
+	await this.tab.untilVisible([engine.baseSelector, engine.noResultsSelector], 10000, "or")
 
-	if (await this.tab.isPresent(engine.failureSelector)) {
-		//throw `Research failed for the query ${query} when using the engine ${engine.name}`
+	if (await this.tab.isPresent(engine.noResultsSelector)) {
 		return result
 	}
 
@@ -150,7 +151,7 @@ class WebSearch {
 	 * @constructs WebSearch
 	 * @param {Object} tab - nickjs tab object
 	 * @param {Object} buster - Phantombuster api instance
-	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quite
+	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
 	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
 	constructor(tab, buster, verbose = false) {
@@ -170,7 +171,6 @@ class WebSearch {
 	 */
 	async search(query) {
 		let results = null
-		let needToContinue = true
 
 		/**
 		 * NOTE: No need to continue if all engines are down
@@ -178,31 +178,33 @@ class WebSearch {
 		if (this.allEnginesDown()) {
 			console.warn('No more engines available')
 			results = Object.assign({}, emptyResult)
-			results.name = this.engines[this.engineUsed].name
+			results.engine = this.engines[this.engineUsed].name
 			return results
 		}
 
 		this.resetEngines()
 
 		/**
-		 * NOTE: While we didn't found a result and the class stills have some engines to use
+		 * NOTE: While we didn't find a result and the class stills have some engines to use
 		 * the function will continue to search
 		 */
-		while (needToContinue) {
+		while (true) {
 			this.verbose && console.log(`Performing the research ${query} with the web engine: ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)
-				needToContinue = false
+				break
 			} catch (e) {
 				this.verbose && console.warn(`Switching to a new engine: ${e}`)
 				this.enginesDown.push(this.engineUsed)
-				this.engineUsed = _switchEngine.call(this)
 				if (this.allEnginesDown()) {
-					console.warn('No more engines available')
-					needToContinue = false
+					console.warn('No more search engines available')
 					results = Object.assign({}, emptyResult)
-					results.name = this.engines[this.engineUsed].name
+					results.engine = this.engines[this.engineUsed].name
+					break
 				}
+				this.engineUsed = _switchEngine.call(this)
+				// slow down a little
+				await this.tab.wait(this.enginesDown.length * (1500 + (Math.random() * 500)))
 			}
 		}
 		return results
