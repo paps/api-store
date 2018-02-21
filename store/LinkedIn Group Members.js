@@ -68,15 +68,28 @@ const checkGroup = async (tab, groupUrl) => {
 
 // Loop over the pages of the group to get all members (maximum is 2500)
 const getGroupMembers = async (tab) => {
-	let loop = true
+	let errors = 0
 	const members = []
-	while (loop) {
+	while (true) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting group members: ${timeLeft.message}`, "warning")
 			break
 		}
-		const response = await tab.evaluate(ajaxCall, {url: gl.url, headers: gl.headers})
+		let response
+		try {
+			response = await tab.evaluate(ajaxCall, {url: gl.url, headers: gl.headers})
+		} catch (e) {
+			++errors
+			if (errors >= 10) {
+				utils.log(`${errors} errors, stopping`, "warning")
+				break
+			}
+			utils.log(`(Hmm, LinkedIn did not respond correctly, retrying...) [${errors}/10]`, "info")
+			await tab.wait(3000 + 4000 * errors)
+			continue
+		}
+		errors = 0
 		if (response.data) {
 			for (const item of response.data) {
 				const newMember = {}
@@ -103,7 +116,7 @@ const getGroupMembers = async (tab) => {
 			gl.url = response.meta.next
 		} else {
 			utils.log(`Got ${members.length} members from the list.`, "done")
-			loop = false
+			break
 		}
 	}
 	return members
@@ -111,17 +124,21 @@ const getGroupMembers = async (tab) => {
 
 // HTTP request via ajax
 const ajaxCall = (arg, callback) => {
-	$.ajax({
-		url: arg.url,
-		type: "GET",
-		headers: arg.headers
-	})
-	.done(data => {
-		callback(null, data)
-	})
-	.fail(err => {
-		callback(err)
-	})
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(data => {
+			callback(null, data)
+		})
+		.fail(err => {
+			callback(err)
+		})
+	} catch (e) {
+		callback(e.toString())
+	}
 }
 
 // Get http request headers
