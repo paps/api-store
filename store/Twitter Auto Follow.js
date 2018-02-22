@@ -38,18 +38,21 @@ const scrapeUserName = (arg, callback) => {
  * @return {Array} Contains all people already added
  */
 const getDb = async () => {
-	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
+	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {
+		headers: {
 		"X-Phantombuster-Key-1": buster.apiKey
-	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/database-twitter-auto-follow.csv`
+		}
+	})
+	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
+		const dbFileName = "database-twitter-auto-follow.csv"
+		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${dbFileName}`
 		try {
-			await buster.download(url, "database-twitter-auto-follow.csv")
-			const file = fs.readFileSync("database-twitter-auto-follow.csv", "UTF-8")
-			const data = Papa.parse(file, {header: true}).data
+			await buster.download(url, dbFileName)
+			const file = fs.readFileSync(dbFileName, "UTF-8")
+			const data = Papa.parse(file, { header: true }).data
 			return data
 		} catch (error) {
-			await buster.saveText("url,handle", "database-twitter-auto-follow.csv")
+			await buster.saveText("url,handle", dbFileName)
 			return []
 		}
 	} else {
@@ -160,7 +163,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 	let i = 1
 	for (let profile of profiles) {
 		if (i > numberOfAddsPerLaunch) {
-			utils.log(`Already added ${numberOfAddsPerLaunch}.`, "warning")
+			utils.log(`Already added ${numberOfAddsPerLaunch}.`, "info")
 			return added
 		}
 		const timeLeft = await utils.checkTimeLeft()
@@ -170,10 +173,12 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 		}
 		profile = profile.toLowerCase()
 		const newAdd = {}
-		if (profile.match(/twitter\.com\/([A-z0-9\_]+)/)) {
+		const getUsernameRegex = /twitter\.com\/([A-z0-9\_]+)/
+		pmatch = profile.match(getUsernameRegex) // Get twitter user name (handle)
+		if (pmatch) {
 			newAdd.url = profile
-			newAdd.handle = profile.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
-		} else if (profile.match(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)) {
+			newAdd.handle = pmatch[1]
+		} else if (profile.match(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)) { // Check if profile is a valid URL
 			newAdd.url = profile
 		} else {
 			newAdd.url = `https://twitter.com/${profile}`
@@ -182,15 +187,16 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 		try {
 			await subscribe(tab, newAdd.url)
 			if (!newAdd.handle) {
-				newAdd.handle = (await tab.getUrl()).match(/twitter\.com\/([A-z0-9\_]+)/)[1]
+				const url = await tab.getUrl()
+				newAdd.handle = url.match(getUsernameRegex)[1]
 			}
 			added.push(newAdd)
 			i++
 		} catch (error) {
-			if (error !== "TLIMIT") {
-				utils.log(error, "warning")
-			} else {
+			if (error === "TLIMIT") {
 				return []
+			} else {
+				utils.log(error, "warning")
 			}
 		}
 	}
