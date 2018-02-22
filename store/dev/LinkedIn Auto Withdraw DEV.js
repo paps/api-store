@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,54 +18,19 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const LinkedIn = require("./lib-LinkedIn")
+const linkedIn = new LinkedIn(nick, buster, utils)
 // }
-
-/**
- * @description Function used to inject the cookie "li_at" to be connected with LinkedIn account
- * @throws String if the cookie isn't valid to navigate through LinkedIn
- */
-const linkedinConnect = async (tab, cookie) => {
-	utils.log("Connecting to LinkedIn...", "loading")
-	await tab.setCookie({
-		name: "li_at",
-		value: cookie,
-		domain: ".www.linkedin.com"
-	})
-	await tab.open("https://www.linkedin.com")
-	try {
-		await tab.waitUntilVisible("#extended-nav", 10000)
-		const name = await tab.evaluate((arg, callback) => {
-			callback(null, document.querySelector(".nav-item__profile-member-photo.nav-item__icon").alt)
-		})
-		utils.log(`Connected successfully as ${name}`, "done")
-	} catch (error) {
-		utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-		nick.exit(1)
-	}
-}
-
-/**
- * @deprecated	this function works, but there is no need to use for now,
- * 		since we know how many invitations will be withdrawed
- * @description
- * @return {Number}
- */
-const getWithdrawalsNb = (arg, callback) => {
-	callback(null, parseInt(document.querySelector("li.mn-list-toolbar__right-button > button").textContent.match(/\d+/)[0]))
-}
 
 /**
  * @description Browser context function used to get how many sent invitations has been sent
  * @return {Number} sent invitations count
  */
 const getTotalSendInvitations = (arg, cb) => {
-	let raw = (document.querySelector(".mn-list-toolbar label")) ? document.querySelector(".mn-list-toolbar label").textContent.trim() : "null"
-	let digits = raw.match(/\d+/g)
-	let max = 0
-
-	digits.forEach((elem, index, arr) => arr[index] = parseInt(elem))
-	max = Math.max.apply(null, digits)
-
+	const raw = document.querySelector(arg.selector) ? document.querySelector(arg.selector).textContent.trim() : "null"
+	const digits = raw.match(/\d+/g)
+	digits.forEach((elem, index, arr) => arr[index] = parseInt(elem, 10))
+	const max = Math.max.apply(null, digits)
 	cb(null, max)
 }
 
@@ -91,19 +56,20 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	let linkedInWithdrawCount = 0
 	let stopLoopPage = false
 
-	if (typeof peopleCountToKeep === "undefined")
+	if (typeof peopleCountToKeep !== "number")
 	{
-		utils.log("Using default value 1000 for the parameter peopleCountToKeep", "info")
+		utils.log("Using default value 1000 for number of connections requests to keep", "info")
 		peopleCountToKeep = 1000
 	}
 
 	const _selectors = {
+		"withdrawCount": ".mn-list-toolbar label",
 		"withdrawElement": ".mn-invitation-list li:last-child input[type=checkbox]",
 		"withdrawBtn": ".mn-list-toolbar button",
 		"withdrawSuccess": "div.artdeco-toast.artdeco-toast--success",
 		"pageWaitAnchor": ".mn-list-toolbar label",
 		"navigation": ".mn-invitation-pagination li:last-child a",
-		"spinLoading": "span.loader"
+		"spinLoading": "span.loader",
 	}
 
 	utils.log(`The script will keep the ${peopleCountToKeep} most recent invitations`, 'info')
@@ -111,37 +77,35 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	/**
 	 * NOTE: This step will get how many invitations we have send
 	 */
-	await linkedinConnect(tab, sessionCookie)
+	await linkedIn.login(tab, sessionCookie)
 	await tab.open('https://www.linkedin.com/mynetwork/invitation-manager/sent')
-	linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, null)
-	utils.log(`You had send ${linkedInWithdrawCount} invitations`, "info")
+	await tab.untilVisible(_selectors.withdrawCount, 10000)
+	linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
+	utils.log(`You have sent ${linkedInWithdrawCount} invitations`, "info")
 
 	peopleToRemove = linkedInWithdrawCount - peopleCountToKeep
 
 	/**
 	 * NOTE: no more actions because the previous substractions result was 0 or a negativ number
-	 * this means the script will remove recents invitations and not the 
+	 * this means the script will remove recents invitations and not the
 	 */
-	if (peopleToRemove < 0) {
-		utils.log(`You got ${linkedInWithdrawCount} invitations but the script was configured to keep ${peopleCountToKeep}, no more operations to do !`, "done")
+	if (peopleToRemove <= 0) {
+		utils.log(`You have sent ${linkedInWithdrawCount} invitations but the script was configured to keep ${peopleCountToKeep}, no more operations to do!`, "done")
 		nick.exit()
 	}
 
 	/**
 	 * NOTE: Now this is the fun part of the script
 	 */
-
-	//await tab.open(`https://www.linkedin.com/mynetwork/invitation-manager/sent/?page=${page + 1}`)
 	const selectors = ["ul.mn-invitation-list", "section.mn-invitation-manager__no-invites"]
 	let selector = await tab.waitUntilVisible(selectors, 5000, "or")
 
-	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null))) 
+	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null)))
 	{
 		await tab.scrollToBottom()
 		await tab.untilVisible(_selectors.navigation)
 		try {
 			await tab.click(_selectors.navigation)
-		 
 		} catch (e) {
 			console.log(e)
 			stopLoopPage = true
@@ -167,11 +131,11 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	stopLoopPage = false
 	while (!stopLoopPage)
 	{
-		linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations)
+		linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
 		/**
 		 * NOTE: Stop when the count is equal to peopleCountToKeep
 		 */
-		if (linkedInWithdrawCount == peopleCountToKeep) {
+		if (linkedInWithdrawCount <= peopleCountToKeep) {
 			stopLoopPage = true
 		} else {
 			await tab.click(_selectors.withdrawElement)
@@ -180,8 +144,9 @@ const hasReachedOldestInvitations = (arg, cb) => {
 			await tab.wait(1000)
 		}
 	}
-	utils.log(`${peopleToRemove} invitations withdrawed`, "done")
+	utils.log(`${peopleToRemove} invitations withdrawn`, "done")
 	utils.log("No more invites to withdraw.", "done")
+	await linkedIn.saveCookie()
 	nick.exit()
 })()
 .catch(err => {
