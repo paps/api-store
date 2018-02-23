@@ -127,7 +127,7 @@ const getIdFromUrl = async (url, tab) => {
 			{ name: "spreadsheetUrl", type: "string", length: 10 },
 		] },
 		{ name: "numberOfPagePerCompany", type: "number", default: 10 },
-		{ name: "waitTime", type: "number", default: 0 },
+		{ name: "waitTime", type: "number", default: 2000 },
 	])
 	if (typeof urls === "string") {
 		urls = await utils.getDataFromCsv(urls)
