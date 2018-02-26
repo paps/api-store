@@ -46,7 +46,24 @@ const _defaultEgines = [
 		"linkSelector": "a.result-url",
 		"descriptionSelector": "p.result-snippet",
 		"noResultsSelector": "div.empty-result"
-
+	},
+	{
+		"name": "yahoo",
+		"baseUrl": "https://search.yahoo.com/search?p=",
+		"baseSelector": "ol.searchCenterMiddle > li",
+		"titleSelector": "h3.title",
+		"linkSelector": "a.ac-algo",
+		"descriptionSelector": "div.compText.aAbs",
+		"noResultsSelector": "div.dd.zrp"
+	},
+	{
+		"name": "yandex",
+		"baseUrl": "https://www.yandex.com/search/?text=",
+		"baseSelector": "ul.serp-list > li.serp-item",
+		"titleSelector" : "a.link",
+		"linkSelector": "a.link",
+		"descriptionSelector": "div.text-container",
+		"noResultsSelector": "div.misspell"
 	}
 ]
 
