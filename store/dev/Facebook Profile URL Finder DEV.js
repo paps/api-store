@@ -25,7 +25,7 @@ const utils = new StoreUtilities(nick, buster)
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
-	const {spreadsheetUrl,csvName,columnName} = utils.validateArguments()
+	const {spreadsheetUrl, csvName, columnName} = utils.validateArguments()
 	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const result = []
 
@@ -36,8 +36,8 @@ const utils = new StoreUtilities(nick, buster)
 			break
 		}
 
-		utils.log(`Searching ${one} ...`, "loading")
-		let search = await webSearch.search(one + " site:instagram.com")
+		utils.log(`Searching for ${one} ...`, "loading")
+		let search = await webSearch.search(one + " site:facebook.com")
 		let link = null
 		for (const res of search.results) {
 			if (res.link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}\-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {
@@ -46,14 +46,14 @@ const utils = new StoreUtilities(nick, buster)
 			}
 		}
 		if (link) {
-			utils.log(`Got ${link} for ${one}`, "done")
+			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
 			link = "no url"
-			utils.log(`No result for ${one}`, "done")
+			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ facebookUrl: link, query: one })
+		result.push({ facebookUrl: link, query: one })
 	}
-	
+
 	await tab.close()
 	await utils.saveResult(result, csvName)
 	nick.exit()

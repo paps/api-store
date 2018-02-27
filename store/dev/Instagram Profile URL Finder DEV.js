@@ -36,7 +36,7 @@ const utils = new StoreUtilities(nick, buster)
 			break
 		}
 
-		utils.log(`Searching ${one} ...`, "loading")
+		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search(one + " site:instagram.com")
 		let link = null
 		for (const res of search.results) {
@@ -46,10 +46,10 @@ const utils = new StoreUtilities(nick, buster)
 			}
 		}
 		if (link) {
-			utils.log(`Got ${link} for ${one}`, "done")
+			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
 			link = "no url"
-			utils.log(`No result for ${one}`, "done")
+			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ instagramUrl: link, query: one })
 	}

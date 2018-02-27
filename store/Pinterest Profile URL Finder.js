@@ -22,142 +22,40 @@ const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
-const engines = [
-	{name: "Google", baseUrl: "https://www.google.com/search?q=", selectors: {result: ".r > a"}, errorCode: 503},
-	{name: "Duckduckgo", baseUrl: "https://duckduckgo.com/html/?q=", selectors: {result: "div.web-result:not(.result--no-result) h2 > a"}, errorCode: 403},
-	{name: "Bing", baseUrl: "https://www.bing.com/search?q=", selectors: {result: "li.b_algo h2 > a"}, errorCode: 403},
-	{name: "Ecosia", baseUrl: "https://www.ecosia.org/search?q=", selectors: {result: "div.result > a:nth-child(1)"}, errorCode: 403},
-]
+;(async () => {
+	const tab = await nick.newTab()
+	const webSearch = new WebSearch(tab, buster)
+	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
+	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const toReturn = []
 
-const scrapePinterestProfile = (arg, callback) => {
-	const links = document.querySelectorAll(arg.selector)
-	const result = []
-	for (const link of links) {
-		if (link.href.match(/^(?:(?:http|https):\/\/)?(?:www\.)?pinterest\.com\/([A-Za-z0-9-_]+)\/$/g)) {
-			callback(null, link.href)
-		}
-	}
-	callback(null, "no url")
-}
-
-// const getQueries = async () => {
-// 	let [queries, columnName] = utils.checkArguments([
-// 		{many: [
-// 			{name: "spreadsheetUrl", type: "string", length: 10},
-// 			{name: "queries", type: "object", length: 1},
-// 			{name: "query", type: "string", length: 1},
-// 		]},
-// 		{name: "columnName", type: "string", default: ""},
-// 	])
-// 	if (typeof queries === "string") {
-// 		if (buster.arguments.search) {
-// 			queries = [queries]
-// 		} else {
-// 			queries = await utils.getDataFromCsv(queries, columnName)
-// 		}
-// 	}
-// 	return queries
-// }
-
-const getSearch = async (tab, query, engine) => {
-	const [httpCode] = await tab.open(engine.baseUrl + encodeURIComponent(query + " site:pinterest.com").replace(/[!'()*]/g, escape))
-	if (httpCode !== 200) {
-		if (httpCode === engine.errorCode) {
-			throw "Limit reached for google"
-		} else {
-			throw `Got http code ${httpCode}`
-		}
-	}
-	try {
-		await tab.waitUntilVisible(engine.selectors.result)
-		return (await tab.evaluate(scrapePinterestProfile, {selector: engine.selectors.result}))
-	} catch (error) {
-		utils.log(`Could not get results for ${query} because: ${error}`, "warning")
-		return "none"
-	}
-}
-
-const setNewMode = (down, engines) => {
-	let choices = []
-	for (var i = 0; i < engines.length; i++) {
-		if (down.find(j => j === i) === undefined) {
-			choices.push(i)
-		}
-	}
-	return choices[Math.floor(Math.random() * choices.length)]
-}
-
-const getSearches = async (tab, queries) => {
-	let mode = 0
-	const result = []
-	for (const query of queries) {
+	for (const one of queries) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
-			return result
+			break
 		}
-		if (query.length > 0) {
-			let loop = true
-			let enginesDown = []
-			while (loop) {
-				try {
-					utils.log(`Searching for ${query}...`, "loading")
-					const pinterestUrl = await getSearch(tab, query, engines[mode])
-					result.push({pinterestUrl, query})
-					utils.log(`Got ${pinterestUrl} for ${query}.`, "done")
-					loop = false
-				} catch (error) {
-					enginesDown.push(mode)
-					if (enginesDown.length === engines.length) {
-						utils.log("All search engines down.", "warning")
-						return result
-					} else {
-						// utils.log(`${engines[mode].name} failed because "${error}", changing search engine...`, "info")
-						await tab.close()
-						tab = await nick.newTab()
-						mode = setNewMode(enginesDown, engines)
-					}
-				}
+
+		utils.log(`Searching for ${one} ...`, "loading")
+		let search = await webSearch.search(one + " site:pinterest.com")
+		let link = null
+		for (const res of search.results) {
+			if (res.link.match(/^(?:(?:http|https):\/\/)?(?:www\.)?pinterest\.com\/([A-Za-z0-9-_]+)\/$/g)) {
+				link = res.link
+				break
 			}
 		}
-	}
-	return result
-}
-
-;(async () => {
-	const tab = await nick.newTab()
-	// const queries = await getQueries()
-	const webSearch = new WebSearch(tab, buster)
-	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const _queries = queries.slice(0)
-	const toReturn = []
-	let i = 0
-
-	queries.forEach((el, index, arr) => arr[index] += " site:pinterest.com")
-	
-	for (const one of queries) {
-		utils.log(`Searching ${_queries[i]} ...`, "loading")
-		let needToContinue = true
-		let j = 0
-		let tmp = await webSearch.search(one)
-		while (needToContinue && j < tmp.results.length) {
-			if (tmp.results[j].link.match(/^(?:(?:http|https):\/\/)?(?:www\.)?pinterest\.com\/([A-Za-z0-9-_]+)\/$/g)) {
-				toReturn.push({ pinterestUrl: tmp.results[j].link, query: _queries[i] })
-				utils.log(`Got ${tmp.results[j].link} for ${_queries[i]}`, "done")
-				needToContinue = false
-			}
-			j++
+		if (link) {
+			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
+		} else {
+			link = "no url"
+			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		if (needToContinue) {
-			toReturn.push({ pinterestUrl: "no url", query: _queries[i] })
-		}
-		i++
+		toReturn.push({ pinterestUrl: link, query: one })
 	}
+
 	await tab.close()
 	await utils.saveResult(toReturn, csvName)
-	//const result = await getSearches(tab, queries)
-	//await utils.saveResult(result, csvName)
 	nick.exit()
 })()
 .catch(err => {

@@ -41,7 +41,7 @@ const utils = new StoreUtilities(nick, buster)
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		utils.log(`Searching ${one} ...`, "loading")
+		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search(one + " site:linkedin.com")
 		let link = null
 		for (const res of search.results) {
@@ -51,9 +51,10 @@ const utils = new StoreUtilities(nick, buster)
 			}
 		}
 		if (link) {
-			utils.log(`Got ${link} for ${one}`, "done")
+			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
-			utils.log(`No result for ${one}`, "done")
+			link = "no url"
+			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ linkedinUrl: link, query: one })
 	}
