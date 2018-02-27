@@ -13,6 +13,7 @@
 const _defaultEgines = [
 	{
 		"name": "google",
+		"codename": "G",
 		"baseUrl": "https://www.google.com/search?q=",
 		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
 		"titleSelector": "h3.r",
@@ -22,6 +23,7 @@ const _defaultEgines = [
 	},
 	{
 		"name": "duckduckgo",
+		"codename": "D",
 		"baseUrl": "https://duckduckgo.com/?q=",
 		"baseSelector": "div.results div.result.results_links_deep",
 		"titleSelector": "h2 > a:first-child",
@@ -31,6 +33,7 @@ const _defaultEgines = [
 	},
 	{
 		"name": "bing",
+		"codename": "B",
 		"baseUrl": "https://www.bing.com/search?q=",
 		"baseSelector": "ol#b_results > li.b_algo",
 		"titleSelector": "h2 > a",
@@ -40,13 +43,33 @@ const _defaultEgines = [
 	},
 	{
 		"name": "ecosia",
+		"codename": "E",
 		"baseUrl": "https://www.ecosia.org/search?q=",
 		"baseSelector": "div.result.js-result",
 		"titleSelector": "a.result-title",
 		"linkSelector": "a.result-url",
 		"descriptionSelector": "p.result-snippet",
 		"noResultsSelector": "div.empty-result"
-
+	},
+	{
+		"name": "yahoo",
+		"codename": "Y",
+		"baseUrl": "https://search.yahoo.com/search?p=",
+		"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
+		"titleSelector": "h3.title",
+		"linkSelector": "a.ac-algo",
+		"descriptionSelector": "div.compText.aAbs",
+		"noResultsSelector": "div.dd.zrp"
+	},
+	{
+		"name": "yandex",
+		"codename": "Я",
+		"baseUrl": "https://www.yandex.com/search/?text=",
+		"baseSelector": "ul.serp-list > li.serp-item",
+		"titleSelector" : "a.link",
+		"linkSelector": "a.link",
+		"descriptionSelector": "div.text-container",
+		"noResultsSelector": "div.misspell"
 	}
 ]
 
@@ -104,6 +127,7 @@ const _doSearch = async function (query) {
 	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
 
 	result.engine = engine.name
+	result.codename = engine.codename
 
 	/**
 	 * NOTE: Error while opening the url
@@ -179,6 +203,7 @@ class WebSearch {
 			console.warn('No more engines available')
 			results = Object.assign({}, emptyResult)
 			results.engine = this.engines[this.engineUsed].name
+			results.codename = this.engines[this.engineUsed].codename
 			return results
 		}
 
@@ -200,6 +225,7 @@ class WebSearch {
 					console.warn('No more search engines available')
 					results = Object.assign({}, emptyResult)
 					results.engine = this.engines[this.engineUsed].name
+					results.codename = this.engines[this.engineUsed].codename
 					break
 				}
 				this.engineUsed = _switchEngine.call(this)
