@@ -50,7 +50,7 @@ const _defaultEgines = [
 	{
 		"name": "yahoo",
 		"baseUrl": "https://search.yahoo.com/search?p=",
-		"baseSelector": "ol.searchCenterMiddle > li",
+		"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
 		"titleSelector": "h3.title",
 		"linkSelector": "a.ac-algo",
 		"descriptionSelector": "div.compText.aAbs",
