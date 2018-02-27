@@ -64,7 +64,7 @@ const _defaultEgines = [
 	{
 		"name": "yandex",
 		"codename": "Я",
-		"baseUrl": "https://www.yandex.com/search/?text=",
+		"baseUrl": "https://www.yandex.com/search/?lang=en&text=",
 		"baseSelector": "ul.serp-list > li.serp-item",
 		"titleSelector" : "a.link",
 		"linkSelector": "a.link",
@@ -213,10 +213,12 @@ class WebSearch {
 		 * NOTE: While we didn't find a result and the class stills have some engines to use
 		 * the function will continue to search
 		 */
+		let codenameList = ""
 		while (true) {
 			this.verbose && console.log(`Performing the research ${query} with the web engine: ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)
+				codenameList += this.engines[this.engineUsed].codename
 				break
 			} catch (e) {
 				this.verbose && console.warn(`Switching to a new engine: ${e}`)
@@ -228,11 +230,13 @@ class WebSearch {
 					results.codename = this.engines[this.engineUsed].codename
 					break
 				}
+				codenameList += this.engines[this.engineUsed].codename
 				this.engineUsed = _switchEngine.call(this)
 				// slow down a little
 				await this.tab.wait(this.enginesDown.length * (1500 + (Math.random() * 500)))
 			}
 		}
+		results.codename = codenameList
 		return results
 	}
 
