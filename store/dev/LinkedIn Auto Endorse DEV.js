@@ -27,6 +27,28 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const DB_NAME = "database-linkedin-auto-endorse.csv"
 
+/**
+ * NOTE: CSS selectors used during the auto endorse process
+ */
+// const SELECTORS = {
+// 	"oldEndorseItem": ".pv-skill-entity--featured",
+// 	"newEndorseItem": ".pv-skill-category-entity",
+// 	"oldEndorseBtn": ".pv-skill-entity__featured-endorse-button-shared",
+// 	"newEndorseBtn": "button.pv-skill-entity__featured-endorse-button-shared"
+// }
+
+const STAGINGS_SELECTORS = {
+	"endorseItem": ".pv-skill-category-entity",
+	"endorseBtn": "button.pv-skill-entity__featured-endorse-button-shared",
+	"skillText": ".pv-skill-category-entity__name span"
+}
+
+const OLD_SELECTORS = {
+	"endorseItem": ".pv-skill-entity--featured",
+	"endorseBtn": ".pv-skill-entity__featured-endorse-button-shared",
+	"skillText": ".pv-skill-entity__skill-name"
+}
+
 const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	let i = 0
@@ -141,6 +163,21 @@ const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
 }
 
 /**
+ * @description Browser context function used to endorse & retrieve all skills endorsed
+ * @param {Object} argv 
+ * @param {Fucntion} cb 
+ */
+const endorseProfile = (argv, cb) => {
+	let data = []
+
+	$(argv.selectors.endorseItem).each((index, element) => {
+		$(argv.selectors.endorseBtn).click()
+		data[index] = $(element).find($(argv.selectors.skillText)).text()
+	})
+	cb(null, data)
+}
+
+/**
  * @description Main function that launch everything
  */
 nick.newTab().then(async (tab) => {
@@ -154,6 +191,8 @@ nick.newTab().then(async (tab) => {
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
 
+	let selectorFound
+	let skills
 	const result = []
 
 	await linkedIn.login(tab, sessionCookie)
@@ -169,20 +208,20 @@ nick.newTab().then(async (tab) => {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			await scrollDown(tab)
 			try {
-				await tab.waitUntilVisible(".pv-skill-entity--featured", 15000)
+				selectorFound = await tab.waitUntilVisible([OLD_SELECTORS.endorseItem, STAGINGS_SELECTORS.endorseItem], 15000, "or")
+				//await tab.waitUntilVisible(".pv-skill-entity--featured", 15000)
 			} catch (e) {
 				utils.log("Could not find skills to endorse on this profile page", "info")
 				db.push({ url }) // add to db anyway, we're not going to reprocess someone that has no skills
 				continue
 			}
-			const skills = await tab.evaluate((arg, callback) => {
-				let data = []
-				$(".pv-skill-entity--featured").each((index, element) => {
-					$(".pv-skill-entity__featured-endorse-button-shared").click()
-					data[index] = $(element).find($(".pv-skill-entity__skill-name")).text()
-				})
-				callback(null, data)
-			})
+
+			if (selectorFound === OLD_SELECTORS.endorseItem) {
+				skills = await tab.evaluate(endorseProfile, { selectors: OLD_SELECTORS})
+			} else {
+				skills = await tab.evaluate(endorseProfile, { selectors: STAGINGS_SELECTORS })
+			}
+
 			utils.log("Endorsed " + skills.join(", "), "info")
 			result.push({ skills, url })
 			db.push({ url })
