@@ -8,7 +8,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: true,
+	loadImages: false,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
@@ -22,20 +22,29 @@ const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
-// Find the domain which has the most repetitions
-const domainMode = (array, company) => {
+/**
+ * @description Find the domain which has the most repetitions
+ * @param {Array<Object>} array - An array which contains Object representing a SERP like:
+ * @param {String} array.title
+ * @param {String} array.link
+ * @param {String} array.description
+ * @param {String} array.domain
+ * @return {Object} The SERP which has the best rank
+ */
+const getBestRankedDomain = (array) => {
 	let max = {
-		domain: "",
+		domain: null,
 		ranking: 0
 	}
-	let ranks = []
 	for (const data of array) {
 		let count = 0
 		for (const otherData of array) {
-			if (otherData === data) {
-				if (otherData.indexOf(company) >= 0) {
-					count += 15
-				}
+			/**
+			 * NOTE: If the current Object is empty, just go to the next loop step
+			 */
+			if (!Object.keys(otherData).length) {
+				continue
+			} else if (otherData.domain === data.domain) {
 				count++
 			}
 		}
@@ -43,23 +52,41 @@ const domainMode = (array, company) => {
 			max.domain = data
 			max.ranking = count
 		}
-		ranks.push({
-			domain: data,
-			ranking: count
-		})
 	}
 	return max.domain
 }
 
 /**
+ * @async
  * @description Scrapping function used to craft useable domain names from a complete URL
  * NOTE: This function is used in browser context, in order to use psl library
  * @param {Array} argv.results - webSearch results
+ * @param {Array} argv.blacklist - Blacklisted domain names
  * @return {Array} array containing all domain names found from the library webSearch
  */
 const craftDomains = (argv, cb) => {
-	const domains = argv.results.map(one => psl.get((new URL(one.link)).hostname))
-	cb(null, domains)
+	const blacklist = []
+
+	/**
+	 * NOTE: So far, if the URL constructor throws an error.
+	 * There is no purpose to have this element in the blacklist
+	 */
+	for (const one of argv.blacklist) {
+		try {
+			blacklist.push(psl.get((new URL(one)).hostname))
+		} catch (err) {}
+	}
+
+	const completeResults = argv.results.map(one => {
+		const _domain = psl.get((new URL(one.link)).hostname)
+		one.domain = _domain
+		/**
+		 * NOTE: Return an empty JS object if the current element is blacklisted,
+		 * otherwise the element
+		 */
+		return (blacklist.indexOf(_domain) > -1) ? {} : one
+	})
+	cb(null, completeResults)
 }
 
 /**
@@ -68,41 +95,56 @@ const craftDomains = (argv, cb) => {
  * @param {Object} webSearch - webSearch instance
  * @param {Object} tab - nickjs instance
  * @param {String} company - company name
- * @return {Promise<Array>}
+ * @return {Promise<Object>}
  */
-const getDomainName = async (webSearch, tab, company) => {
-	company = company.toLowerCase()
-	let names = await webSearch.search(company)
+const getDomainName = async (webSearch, tab, query, blacklist) => {
+	let names = await webSearch.search(query)
+	query = query.toLowerCase()
+	const firstResult = names.results[0]
 	await tab.inject("https://cdnjs.cloudflare.com/ajax/libs/psl/1.1.20/psl.min.js")
-	names = await tab.evaluate(craftDomains, { results: names.results })
-	return domainMode(names, company)
+	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
+	const theDomain = getBestRankedDomain(results)
+	return {
+		query,
+		domain: theDomain.domain,
+		title: theDomain.title,
+		description: theDomain.description,
+		link: theDomain.link,
+		codename: names.codename
+	}
 }
 
 // Main function to launch everything and handle errors
 ;(async () => {
-	let {spreadsheetUrl, companies, columnName} = utils.validateArguments()
+	let {spreadsheetUrl, companies, columnName, blacklist} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(companies) === 'string') {
 		companies = [companies]
 	}
+
+	blacklist = blacklist || []
+	blacklist = blacklist.map(el => el.toLowerCase().trim())
+	blacklist = blacklist.map(el => (el.startsWith("http://") || el.startsWith("https://")) ? el : `http://${el}`)
+
 	const tab = await nick.newTab()
 	const result = []
 	const webSearch = new WebSearch(tab, buster)
 
-	for (const company of companies) {
+	for (const query of companies) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped scraping domain names: ${timeLeft.message}`, "warning")
 			break
 		}
-		utils.log(`Getting domain name for ${company}...`, "loading")
+		utils.log(`Getting domain name for ${query} ...`, "loading")
 		try {
-			const domainName = await getDomainName(webSearch, tab, company)
-			result.push({ companyName: company, companyDomain: domainName })
-			utils.log(`Got ${domainName} for ${company}`, "done")
+			const res = await getDomainName(webSearch, tab, query, blacklist)
+			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
+			delete res.codename
+			result.push(res)
 		} catch (error) {
-			utils.log(`Could not get domain name for ${company} because: ${error}`, "error")
+			utils.log(`Could not get domain name for ${query}`, "error")
 		}
 	}
 	await utils.saveResult(result)

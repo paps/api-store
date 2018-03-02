@@ -29,16 +29,13 @@ const utils = new StoreUtilities(nick, buster)
  * @param {String} array.link
  * @param {String} array.description
  * @param {String} array.domain
- * @param {Object} company - the company name
  * @return {Object} The SERP which has the best rank
  */
-const getBestRankedDomain = (array, company) => {
+const getBestRankedDomain = (array) => {
 	let max = {
-		domain: "",
+		domain: null,
 		ranking: 0
 	}
-
-	let ranks = []
 	for (const data of array) {
 		let count = 0
 		for (const otherData of array) {
@@ -48,9 +45,6 @@ const getBestRankedDomain = (array, company) => {
 			if (!Object.keys(otherData).length) {
 				continue
 			} else if (otherData.domain === data.domain) {
-				if (otherData.domain.indexOf(company) >= 0) {
-					count += 15
-				}
 				count++
 			}
 		}
@@ -58,10 +52,6 @@ const getBestRankedDomain = (array, company) => {
 			max.domain = data
 			max.ranking = count
 		}
-		ranks.push({
-			domain: data,
-			ranking: count
-		})
 	}
 	return max.domain
 }
@@ -100,12 +90,6 @@ const craftDomains = (argv, cb) => {
 }
 
 /**
- * @param {Array} list -
- * @return {Array} URLs crafted to extract the domain name
- */
-const craftBlacklist = list => list.map(el => (el.startsWith("http")) ? el : "http://" + el)
-
-/**
  * @async
  * @description Function used to get all links from a research engines, extract the domain name
  * @param {Object} webSearch - webSearch instance
@@ -119,7 +103,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const firstResult = names.results[0]
 	await tab.inject("https://cdnjs.cloudflare.com/ajax/libs/psl/1.1.20/psl.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
-	const theDomain = getBestRankedDomain(results, query)
+	const theDomain = getBestRankedDomain(results)
 	return {
 		query,
 		domain: theDomain.domain,
@@ -140,27 +124,27 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	}
 
 	blacklist = blacklist || []
-	blacklist =  blacklist.map(el => el.toLowerCase().trim())
-	blacklist = craftBlacklist(blacklist)
+	blacklist = blacklist.map(el => el.toLowerCase().trim())
+	blacklist = blacklist.map(el => (el.startsWith("http://") || el.startsWith("https://")) ? el : `http://${el}`)
 
 	const tab = await nick.newTab()
 	const result = []
 	const webSearch = new WebSearch(tab, buster)
 
-	for (const company of companies) {
+	for (const query of companies) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped scraping domain names: ${timeLeft.message}`, "warning")
 			break
 		}
-		utils.log(`Getting domain name for ${company} ...`, "loading")
+		utils.log(`Getting domain name for ${query} ...`, "loading")
 		try {
-			const res = await getDomainName(webSearch, tab, company, blacklist)
-			utils.log(`Got ${res.domain} for ${company} (${res.codename})`, "done")
+			const res = await getDomainName(webSearch, tab, query, blacklist)
+			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
 			delete res.codename
 			result.push(res)
 		} catch (error) {
-			utils.log(`Could not get domain name for ${company} ${error}`, "error")
+			utils.log(`Could not get domain name for ${query}`, "error")
 		}
 	}
 	await utils.saveResult(result)
