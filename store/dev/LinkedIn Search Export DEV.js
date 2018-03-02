@@ -68,7 +68,9 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 			break
 		} else {
 			await tab.scrollToBottom()
-			await tab.wait(1000)
+			await tab.wait(3000)
+			await tab.scrollToBottom()
+			await tab.wait(3000)
 			result = result.concat(await tab.evaluate(scrapeResults, {query}))
 			utils.log(`Got urls for page ${i}`, "done")
 		}
