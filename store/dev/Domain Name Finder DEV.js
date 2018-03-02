@@ -22,20 +22,33 @@ const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
-// Find the domain which has the most repetitions
+/**
+ * @description Find the domain which has the most repetitions
+ * @param {Array<Object>} array - An array which contains Object representing a SERP like:
+ * @param {String} array.title
+ * @param {String} array.link
+ * @param {String} array.description
+ * @param {String} array.domain
+ * @param {Object} company - the company name
+ * @return {Object} The SERP which has the best rank
+ */
 const getBestRankedDomain = (array, company) => {
 	let max = {
 		domain: "",
 		ranking: 0
 	}
+
 	let ranks = []
 	for (const data of array) {
 		let count = 0
 		for (const otherData of array) {
-			if (!otherData)
+			/**
+			 * NOTE: If the current Object is empty, just go to the next loop step
+			 */
+			if (!Object.keys(otherData).length) {
 				continue
-			if (otherData === data) {
-				if (otherData.indexOf(company) >= 0) {
+			} else if (otherData.domain === data.domain) {
+				if (otherData.domain.indexOf(company) >= 0) {
 					count += 15
 				}
 				count++
@@ -54,6 +67,7 @@ const getBestRankedDomain = (array, company) => {
 }
 
 /**
+ * @async
  * @description Scrapping function used to craft useable domain names from a complete URL
  * NOTE: This function is used in browser context, in order to use psl library
  * @param {Array} argv.results - webSearch results
@@ -61,15 +75,34 @@ const getBestRankedDomain = (array, company) => {
  * @return {Array} array containing all domain names found from the library webSearch
  */
 const craftDomains = (argv, cb) => {
+	const blacklist = []
 
-	argv.blacklist = argv.blacklist.map(el => psl.get((new URL(el)).hostname))
-	const domains = argv.results.map(one => {
-		const domain = psl.get((new URL(one.link)).hostname)
-		return (argv.blacklist.indexOf(domain) > -1) ? null : domain
+	/**
+	 * NOTE: So far, if the URL constructor throws an error.
+	 * There is no purpose to have this element in the blacklist
+	 */
+	for (const one of argv.blacklist) {
+		try {
+			blacklist.push(psl.get((new URL(one)).hostname))
+		} catch (err) {}
+	}
+
+	const completeResults = argv.results.map(one => {
+		const _domain = psl.get((new URL(one.link)).hostname)
+		one.domain = _domain
+		/**
+		 * NOTE: Return an empty JS object if the current element is blacklisted,
+		 * otherwise the element
+		 */
+		return (blacklist.indexOf(_domain) > -1) ? {} : one
 	})
-	cb(null, domains)
+	cb(null, completeResults)
 }
 
+/**
+ * @param {Array} list -
+ * @return {Array} URLs crafted to extract the domain name
+ */
 const craftBlacklist = list => list.map(el => (el.startsWith("http")) ? el : "http://" + el)
 
 /**
@@ -81,18 +114,18 @@ const craftBlacklist = list => list.map(el => (el.startsWith("http")) ? el : "ht
  * @return {Promise<Object>}
  */
 const getDomainName = async (webSearch, tab, query, blacklist) => {
-	query = query.toLowerCase()
 	let names = await webSearch.search(query)
+	query = query.toLowerCase()
 	const firstResult = names.results[0]
 	await tab.inject("https://cdnjs.cloudflare.com/ajax/libs/psl/1.1.20/psl.min.js")
-	let domains = await tab.evaluate(craftDomains, { results: names.results, blacklist })
-	const domain = getBestRankedDomain(domains, query)
+	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
+	const theDomain = getBestRankedDomain(results, query)
 	return {
 		query,
-		domain,
-		title: firstResult.title,
-		description: firstResult.description,
-		link: firstResult.link,
+		domain: theDomain.domain,
+		title: theDomain.title,
+		description: theDomain.description,
+		link: theDomain.link,
 		codename: names.codename
 	}
 }
@@ -127,7 +160,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 			delete res.codename
 			result.push(res)
 		} catch (error) {
-			utils.log(`Could not get domain name for ${company} TODO`, "error")
+			utils.log(`Could not get domain name for ${company} ${error}`, "error")
 		}
 	}
 	await utils.saveResult(result)
