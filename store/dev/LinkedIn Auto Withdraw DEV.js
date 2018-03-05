@@ -37,6 +37,9 @@ const getTotalSendInvitations = (arg, cb) => {
 	if (Array.isArray(digits)) {
 		digits.map(el => parseInt(el.trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10))
 	}
+	else {
+		return cb("Cannot find the invitations count", null)
+	}
 	const max = Math.max.apply(null, digits)
 	cb(null, max)
 }
