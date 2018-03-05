@@ -28,8 +28,15 @@ const linkedIn = new LinkedIn(nick, buster, utils)
  */
 const getTotalSendInvitations = (arg, cb) => {
 	const raw = document.querySelector(arg.selector) ? document.querySelector(arg.selector).textContent.trim() : "null"
-	const digits = raw.match(/\d+/g)
-	digits.forEach((elem, index, arr) => arr[index] = parseInt(elem, 10))
+	/**
+	 * HACK: To retrieve number bigger than 999, we should check if there are in the string:
+	 * whitespaces, dots or commas
+	 * It will depends on the language used in the current page
+	 */
+	let digits = raw.match(/([\d,\. ]+)/g)
+	if (Array.isArray(digits)) {
+		digits.map(el => parseInt(el.trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10))
+	}
 	const max = Math.max.apply(null, digits)
 	cb(null, max)
 }
