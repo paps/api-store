@@ -189,7 +189,7 @@ class StoreUtilities {
 					console.log(`Test failed: Could not find ${word} in the output.`)
 					this.nick.exit(1)
 				}
-				if (pos < last) {
+				if (!this.testRunObject.disableOutputOrderCheck && (pos < last)) {
 					console.log(`Test failed: Could not find ${word} in the right order.`)
 					this.nick.exit(1)
 				} else {
