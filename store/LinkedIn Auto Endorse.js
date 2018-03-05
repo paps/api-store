@@ -27,6 +27,23 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const DB_NAME = "database-linkedin-auto-endorse.csv"
 
+/**
+ * NOTE: CSS selectors used during the auto endorse process
+ */
+const SELECTORS_2 = {
+	"endorseItem": ".pv-skill-category-entity",
+	"endorseBtn": "button.pv-skill-entity__featured-endorse-button-shared",
+	"skillText": ".pv-skill-category-entity__name span"
+}
+
+const SELECTORS_1 = {
+	"endorseItem": ".pv-skill-entity--featured",
+	"endorseBtn": ".pv-skill-entity__featured-endorse-button-shared",
+	"skillText": ".pv-skill-entity__skill-name"
+}
+
+const SPINNER_SELECTOR = "li-icon > .artdeco-spinner"
+
 const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	let i = 0
@@ -54,6 +71,13 @@ const checkDb = (str, db) => {
 	return true
 }
 
+/**
+ * @async
+ * @description Function used to open a LinkedIn profile in the given Nickjs tab
+ * @param {Object} tab - Nickjs tab object
+ * @param {String} url - URL to open
+ * @throws if the tab didn't open the given profile
+ */
 const profileOpen = async (tab, url) => {
 	await tab.open(url)
 	try {
@@ -63,6 +87,13 @@ const profileOpen = async (tab, url) => {
 	}
 }
 
+/**
+ * @async
+ * NOTE: This function doesn't guarranty that the content of all profile sections
+ * are totally loaded, for now use a custom handler to wait that data of a section is loaded
+ * @description Function used to scroll to the bottom of a profile
+ * @param {Object} tab - nickjs tab object
+ */
 const scrollDown = async (tab) => {
 	utils.log("Scrolling down...", "loading")
 	await tab.scroll(0, 1000)
@@ -141,6 +172,33 @@ const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
 }
 
 /**
+ * @description Browser context function used to endorse & retrieve all skills endorsed
+ * @param {Object} argv 
+ * @param {Fucntion} cb 
+ */
+const endorseProfile = (argv, cb) => {
+	let data = []
+
+	$(argv.selectors.endorseItem).each((index, element) => {
+		$(argv.selectors.endorseBtn).click()
+		data[index] = $(element).find($(argv.selectors.skillText)).text()
+	})
+	cb(null, data)
+}
+
+/**
+ * NOTE: This function is used to wait a bit more the loading of a section
+ * @description Browser context function used to jump to each spinner in order to force the loading
+ * @param {String} argv.spinner - LinkedIn loading spinner selector
+ * @param {Function} cb - Function to exit browser context
+ * @return {Boolean} always true
+ */
+const scrollToSpinners = (argv, cb) => {
+	Array.from(document.querySelectorAll(argv.spinner)).map(el => el.scrollIntoView())
+	cb(null, true)
+}
+
+/**
  * @description Main function that launch everything
  */
 nick.newTab().then(async (tab) => {
@@ -154,6 +212,8 @@ nick.newTab().then(async (tab) => {
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
 
+	let selectorFound
+	let skills
 	const result = []
 
 	await linkedIn.login(tab, sessionCookie)
@@ -168,21 +228,28 @@ nick.newTab().then(async (tab) => {
 			await profileOpen(tab, url)
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			await scrollDown(tab)
+			/**
+			 * NOTE: Handler in case that we still have loading spinners in the page
+			 * If we face this situation, the script need to wait a bit more ...
+			 */
+			if (await tab.isPresent(SPINNER_SELECTOR)) {
+				await tab.evaluate(scrollToSpinners, { spinner: SPINNER_SELECTOR })
+				await tab.waitWhilePresent(SPINNER_SELECTOR, 15000)
+			}
 			try {
-				await tab.waitUntilVisible(".pv-skill-entity--featured", 15000)
+				selectorFound = await tab.waitUntilVisible([SELECTORS_1.endorseItem, SELECTORS_2.endorseItem], 15000, "or")
 			} catch (e) {
 				utils.log("Could not find skills to endorse on this profile page", "info")
 				db.push({ url }) // add to db anyway, we're not going to reprocess someone that has no skills
 				continue
 			}
-			const skills = await tab.evaluate((arg, callback) => {
-				let data = []
-				$(".pv-skill-entity--featured").each((index, element) => {
-					$(".pv-skill-entity__featured-endorse-button-shared").click()
-					data[index] = $(element).find($(".pv-skill-entity__skill-name")).text()
-				})
-				callback(null, data)
-			})
+
+			if (selectorFound === SELECTORS_1.endorseItem) {
+				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_1})
+			} else {
+				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_2 })
+			}
+
 			utils.log("Endorsed " + skills.join(", "), "info")
 			result.push({ skills, url })
 			db.push({ url })
@@ -191,7 +258,13 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 
-	await buster.saveText(Papa.unparse(db), DB_NAME)
+	/**
+	 * NOTE: If the script is running in test mode,
+	 * there is no need to save the data
+	 */
+	if (!utils.test) {
+		await buster.saveText(Papa.unparse(db), DB_NAME)
+	}
 	utils.log(`Endorsed ${result.length} profiles.`, "done")
 	await linkedIn.saveCookie()
 	await utils.saveResult(result)
