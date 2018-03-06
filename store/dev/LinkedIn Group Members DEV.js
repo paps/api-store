@@ -98,6 +98,7 @@ const getGroupMembers = async (tab) => {
 					newMember.profileUrl = mini.profileUrl
 					newMember.firstName = mini.firstName
 					newMember.lastName = mini.lastName
+					newMember.fullName = mini.firstName + ' ' + mini.lastName
 					newMember.headline = mini.headline
 				}
 				if (item.currentPosition) {
