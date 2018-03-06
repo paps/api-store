@@ -12,7 +12,7 @@
 		#'lib-chrome-launcher.js': 'libs/lib-chrome-launcher.js'
 		#'lib-StoreUtilities.js': 'libs/lib-StoreUtilities.js'
 		#'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
-		'lib-WebSearch.js': 'libs/lib-WebSearch.js'
+		#'lib-WebSearch.js': 'libs/lib-WebSearch.js'
 
 		# --------------
 		# Global libs DEV
