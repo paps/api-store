@@ -49,6 +49,7 @@ const linkedinObjectToResult = response => {
 				newComment.profileLink =  `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
 				newComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
 				newComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
+				newComment.fullName = newComment.firstName + ' ' + newComment.lastName
 				newComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
 			}
 			if (element.comment && element.comment.values && element.comment.values[0]) {
