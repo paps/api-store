@@ -69,11 +69,26 @@ class StoreUtilities {
 		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
+			/**
+			 * NOTE: the gid parameter is used by Google spreadsheet to access to a specific in a document
+			 * If there weren't any gid given in the URL, no gid will be append to the crafted URL
+			 * No worry Google will give the sheet in document
+			 */
+			let gid = null
+			if (url.indexOf("gid=") > -1) {
+				gid = url.split("gid=").pop()
+			}
 			if (match[3] === "docs.google.com") {
 				if (match[8] === "edit") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`
 				} else {
 					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
+				}
+				/**
+				 * NOTE: If we got an gid just append it to the crafted URL
+				 */
+				if (gid !== null) {
+					url += `&gid=${gid}`
 				}
 			}
 			await buster.download(url, "sheet.csv")
