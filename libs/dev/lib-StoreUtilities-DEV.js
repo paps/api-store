@@ -4,7 +4,45 @@ const Papa = require("papaparse")
 const {promisify} = require("util")
 const jsonexport = promisify(require("jsonexport"))
 const validator = require("is-my-json-valid")
+const needle = require("needle")
+const { URL } = require("url")
 // }
+
+/**
+ * @async
+ * @internal
+ * @description Function used to download a CSV file from a given url
+ * @param {String} url - the URL to check
+ * @return {Promise<String>} The body content if downloaded
+ * @throws if there were an error from needle or the Google spreadsheet is not shared
+ */
+const downloadCSV = async url => {
+	return new Promise((resolve, reject) => {
+		let hasRedirection = false
+		
+		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
+			if (err) {
+				reject(err)
+			}
+
+			const parsedRequestURL = new URL(url)
+
+			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
+				reject("Could not download csv, maybe csv is not public.")
+			}
+
+			if (resp.statusCode > 400) {
+				reject(`${url} is not available`)
+			}
+
+			resolve(resp.body)
+		})
+
+		httpStream.on('redirect', _url => {
+			hasRedirection = true
+		})
+	})
+}
 
 class StoreUtilities {
 	constructor(nick, buster) {
@@ -69,16 +107,16 @@ class StoreUtilities {
 		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
-			/**
-			 * NOTE: the gid parameter is used by Google spreadsheet to access to a specific in a document
-			 * If there weren't any gid given in the URL, no gid will be append to the crafted URL
-			 * No worry Google will give the sheet in document
-			 */
-			let gid = null
-			if (url.indexOf("gid=") > -1) {
-				gid = url.split("gid=").pop()
-			}
 			if (match[3] === "docs.google.com") {
+				/**
+				 * NOTE: the gid parameter is used by Google spreadsheet to access to a specific in a document
+				 * If there weren't any gid given in the URL, no gid will be append to the crafted URL
+				 * No worry Google will give the sheet in document
+				 */
+				let gid = null
+				if (url.indexOf("gid=") > -1) {
+					gid = url.split("gid=").pop()
+				}
 				if (match[8] === "edit") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`
 				} else {
@@ -91,11 +129,7 @@ class StoreUtilities {
 					url += `&gid=${gid}`
 				}
 			}
-			await buster.download(url, "sheet.csv")
-			const file = fs.readFileSync("sheet.csv", "UTF-8")
-			if (file.indexOf("<!DOCTYPE html>") >= 0) {
-				throw "Could not download csv, maybe csv is not public."
-			}
+			const file = await downloadCSV(url)
 			let data = (Papa.parse(file)).data
 			let column = 0
 			if (columnName) {
