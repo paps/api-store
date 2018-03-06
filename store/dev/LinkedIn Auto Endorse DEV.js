@@ -229,8 +229,9 @@ nick.newTab().then(async (tab) => {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			await scrollDown(tab)
 			/**
-			 * NOTE: Handler in case that we still have loading spinners in the page
-			 * If we face this situation, the script need to wait a bit more ...
+			 * NOTE: In order to load the entire content of all sections
+			 * we need to scroll to each section and wait that the loading spinner dismiss
+			 * It should be a better & cleaner way to get rid of those spinners, we're working on it !
 			 */
 			if (await tab.isPresent(SPINNER_SELECTOR)) {
 				await tab.evaluate(scrollToSpinners, { spinner: SPINNER_SELECTOR })

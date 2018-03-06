@@ -67,10 +67,17 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		if (selector === selectors[0]) {
 			break
 		} else {
+			/**
+			 * NOTE: In order to load the entire content of all results section
+			 * we need to scroll to each section and wait few ms
+			 * It should be a better & cleaner way to load all sections, we're working on it !
+			 */
+			for (let j = 0, k = 500; j < 10; j++, k += 500) {
+				await tab.wait(200)
+				await tab.scroll(0, k)
+			}
 			await tab.scrollToBottom()
-			await tab.wait(3000)
-			await tab.scrollToBottom()
-			await tab.wait(3000)
+			await tab.wait(1500)
 			result = result.concat(await tab.evaluate(scrapeResults, {query}))
 			utils.log(`Got urls for page ${i}`, "done")
 		}
