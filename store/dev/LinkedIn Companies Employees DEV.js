@@ -43,7 +43,8 @@ const scrapeResults = (args, callback) => {
 			const url = result.querySelector(".search-result__result-link").href
 			let currentJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
-				currentJob = result.querySelector("p.search-result__snippets").textContent
+				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
+				currentJob = currentJob.replace(/^.+ ?: ?\n/, '').trim()
 			}
 			if (url !== window.location.href + "#") {
 				linkedInUrls.push({
