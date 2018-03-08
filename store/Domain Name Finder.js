@@ -1,24 +1,31 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
+const WebSearch = require("./lib-WebSearch")
+const userAgent = WebSearch.getRandomUa()
+//console.log(`Chosen user agent: ${userAgent}`)
+
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: false,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
+	userAgent,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 15000,
+	// randomize viewport
+	width: (1180 + Math.round(Math.random() * 200)), // 1180 <=> 1380
+	height: (700 + Math.round(Math.random() * 200)), // 700 <=> 900
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
-const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 // }
 
@@ -101,7 +108,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
 	query = query.toLowerCase()
 	const firstResult = names.results[0]
-	await tab.inject("https://cdnjs.cloudflare.com/ajax/libs/psl/1.1.20/psl.min.js")
+	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
 	const theDomain = getBestRankedDomain(results)
 	return {
