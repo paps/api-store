@@ -53,7 +53,7 @@ const loadAllData = async tab => {
 	const buttons = [
 		{ selector: ".pv-profile-section button.pv-top-card-section__summary-toggle-button", data: "Description" },
 		{ selector: ".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline", data: "Jobs" },
-		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills, .pv-skills-section__additional-skills", data: "Skills" },
+		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills", data: "Skills" },
 		{ selector: "button.contact-see-more-less", data: "Details" },
 	]
 	for (const button of buttons) {
