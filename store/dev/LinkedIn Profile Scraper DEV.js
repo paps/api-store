@@ -194,6 +194,8 @@ const scrapeInfos = (arg, callback) => {
 					{ key: "name", attribute: "textContent", selector: ".pv-skill-category-entity__name span" },
 					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-category-entity__endorsement-count" }
 				])
+			} else {
+				infos.skills = []
 			}
 
 			// Get the first name from the page (and the last name)
