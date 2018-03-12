@@ -24,21 +24,36 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
 // Full scroll the LinkedIn Profile
+/**
+ * NOTE: Slowly but surely loading all sections of the profile
+ */
 const fullScroll = async tab => {
 	await tab.scroll(0, 1000)
+	await tab.wait(2000)
 	await tab.scroll(0, 2000)
+	await tab.wait(2000)
 	await tab.scroll(0, 3000)
+	await tab.wait(2000)
 	await tab.scroll(0, 4000)
+	await tab.wait(2000)
 	await tab.scrollToBottom()
 	await tab.wait(2000)
 }
 
 // Load all data hidden behind "load more" buttons
 const loadAllData = async tab => {
+	/**
+	 * Selectors:
+	 * - Description section
+	 * - Jobs section
+	 * - Skills section (CSS selector)
+	 * - Skills section (alternative CSS selector)
+	 * - Details section
+	 */
 	const buttons = [
 		{ selector: ".pv-profile-section button.pv-top-card-section__summary-toggle-button", data: "Description" },
 		{ selector: ".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline", data: "Jobs" },
-		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills", data: "Skills" },
+		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills, .pv-skills-section__additional-skills", data: "Skills" },
 		{ selector: "button.contact-see-more-less", data: "Details" },
 	]
 	for (const button of buttons) {
@@ -46,7 +61,7 @@ const loadAllData = async tab => {
 		if (visible) {
 			try {
 				await tab.click(button.selector)
-				await tab.wait(1000)
+				await tab.wait(2500)
 			} catch (error) {}
 		}
 	}
@@ -166,12 +181,21 @@ const scrapeInfos = (arg, callback) => {
 			}
 			// Get all profile skills listed
 			const skills = document.querySelectorAll("ul.pv-featured-skills-list > li")
-			if (skills) {
+			const _skills = document.querySelectorAll("ol.pv-skill-categories-section__top-skills > li, ol.pv-skill-category-list__skills_list > li")
+			// Alternative selector for skill sections
+			if (skills.length > 0) {
 				infos.skills = getListInfos(skills, [
 					{ key: "name", attribute: "textContent", selector: "span.pv-skill-entity__skill-name" },
 					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-entity__endorsement-count" },
 				])
+			// If the first selector failed, the script will try this selector
+			} else if (_skills.length > 0) {
+				infos.skills = getListInfos(_skills, [
+					{ key: "name", attribute: "textContent", selector: ".pv-skill-category-entity__name span" },
+					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-category-entity__endorsement-count" }
+				])
 			}
+
 			// Get the first name from the page (and the last name)
 			if (infos.general.fullName && infos.general.hasAccount) {
 				const nameTab = infos.general.fullName.split(" ")
@@ -209,7 +233,10 @@ const getProfileInfos = async (tab, url) => {
 		throw("Error loading the page.")
 	}
 	try {
-		await tab.waitUntilVisible("#profile-wrapper")
+		/**
+		 * NOTE: Using 7500ms timeout to make sure that the page is loaded
+		 */
+		await tab.waitUntilVisible("#profile-wrapper", 7500)
 		utils.log("Profile loaded.", "done")
 	} catch (error) {
 		throw("Could not load the profile.")
