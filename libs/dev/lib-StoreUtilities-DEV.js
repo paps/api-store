@@ -130,7 +130,17 @@ class StoreUtilities {
 				}
 			}
 			const file = await downloadCSV(url)
-			let data = (Papa.parse(file)).data
+			let raw = Papa.parse(file)
+			let data = raw.data
+
+			/**
+			 * HACK: if Papaparse returns a MissingQuotes error
+			 * it means that the file doesn't represent a CSV
+			 */
+			if (raw.errors.find((el) => el.code === "MissingQuotes"))
+				throw `${url} doesn't represent a CSV file`
+
+			//let data = (Papa.parse(file)).data
 			let column = 0
 			if (columnName) {
 				for (var i = 0; i < data[0].length; i++) {
