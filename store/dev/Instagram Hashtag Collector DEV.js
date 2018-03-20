@@ -83,7 +83,6 @@ const scrapePublication = (arg, cb) => {
 
 	data["profileUrl"] = baseSelector.querySelector(profileSelector).href || ""
 	data["profileName"] = baseSelector.querySelector(profileSelector).textContent.trim() || ""
-	// data["likes"] = baseSelector.querySelector(likeSelector).textContent.trim() || ""
 	data["date"] = (new Date(baseSelector.querySelector(pubDateSelector).dateTime)).toLocaleString() || ""
 	data["description"] = baseSelector.querySelector(descriptionSelector).textContent.trim() || ""
 	cb(null, data)
@@ -108,7 +107,6 @@ const loadPosts = async (tab, count) => {
 			break
 		}
 		buster.progressHint(i / count, `Post ${i+1} / ${count}`)
-		await tab.screenshot(`${(new Date()).getTime()}.jpg`)
 		datas.push(await tab.evaluate(scrapePublication))
 		await tab.click("div[role=dialog] a.coreSpriteRightPaginationArrow")
 		await tab.waitUntilVisible("div[role=dialog] img")
