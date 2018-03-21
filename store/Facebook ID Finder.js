@@ -26,15 +26,20 @@ const scrapeId = (arg, callback) => {
 
 const getId = async (tab, url) => {
 	const selector = "form.i-amphtml-form"
-	await tab.open("https://findmyfbid.com/")
-	await tab.waitUntilVisible(selector)
-	await tab.fill(selector, {url: url}, {submit: false})
-	await tab.click(`input[type="submit"]`)
-	const resultSelector = await tab.waitUntilVisible(["#success-wrap", ".text-danger"], 5000, "or")
-	if (resultSelector === "#success-wrap") {
-		return (await tab.evaluate(scrapeId))
+	try {
+		await tab.open("https://findmyfbid.com/")
+		await tab.waitUntilVisible(selector)
+		await tab.fill(selector, {url: url}, {submit: false})
+		await tab.click(`input[type="submit"]`)
+		const resultSelector = await tab.waitUntilVisible(["#success-wrap", ".text-danger"], 20000, "or")
+		if (resultSelector === "#success-wrap") {
+			return (await tab.evaluate(scrapeId))
+		}
+		return false
+	} catch (e) {
+		utils.log(`Error: ${e}`, "error")
+		return false
 	}
-	return false
 }
 
 ;(async () => {
