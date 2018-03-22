@@ -44,7 +44,7 @@ const scrapePublication = (arg, cb) => {
 
 	const baseSelector = document.querySelector("div[role=dialog]")
 	const profileSelector = "header a.notranslate"
-	const likeSelector = "section:nth-child(2) a[role=button] span"
+	const likeSelector = "section div span > span"
 	const likeAlternativeSelector = "section:nth-child(2) a:not([href='#'])"
 	const pubDateSelector = "time"
 	const descriptionSelector = "ul > li:first-child"
