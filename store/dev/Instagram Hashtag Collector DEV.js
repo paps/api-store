@@ -28,8 +28,17 @@
  * @return {Number} publications count
  */
 const postCount = (arg, cb) => {
-	let count = document.querySelector("header span:nth-child(1)").textContent.trim()
-	count = count.replace(/ /g, '').replace(/\./g, '').replace(/,/g, '')
+	let count = document.querySelector("header span:nth-child(1)")
+
+	/**
+	 * NOTE: This can happen if, there weren't not many posts from this tag
+	 */
+	if (!count) {
+		count = document.querySelectorAll("article div:not([class]) a").length
+	} else {
+		count = count.textContent.trim()
+	}
+	(typeof count === "string") && (count = count.replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''))
 	cb(null, parseInt(count, 10))
 }
 
@@ -75,14 +84,18 @@ const scrapePublication = (arg, cb) => {
  */
 const loadPosts = async (tab, count) => {
 	const selectors = {
-		MODAL: "article > div:not([class]) > div > div a img",
+		MODAL: ["article > div:not([class]) > div > div a img", "article div:not([class]) > div > div a img"],
 		OVERLAY:  "div[role=dialog]",
 		NEXT_POST: "div[role=dialog] a.coreSpriteRightPaginationArrow",
 		IMG_SELECTOR: "div[role=dialog] img"
 	}
 	const datas = []
 	let i = 0
-	await tab.click(selectors.MODAL)
+	try {
+		await tab.click(selectors.MODAL[0])
+	} catch (e) {
+		await tab.click(selectors.MODAL[1])
+	}
 	await tab.waitUntilVisible(selectors.OVERLAY)
 	while (i < count) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -92,9 +105,12 @@ const loadPosts = async (tab, count) => {
 		}
 		buster.progressHint(i / count, `Post ${i+1} / ${count}`)
 		datas.push(await tab.evaluate(scrapePublication))
-		await tab.click(selectors.NEXT_POST)
-		await tab.waitUntilVisible(selectors.IMG_SELECTOR)
-		await tab.wait(2500)
+		await tab.inject("../injectables/jquery-3.0.0.min.js")
+		if (await tab.isPresent(selectors.NEXT_POST)) {
+			await tab.click(selectors.NEXT_POST)
+			await tab.waitUntilVisible(selectors.IMG_SELECTOR)
+			await tab.wait(2500)
+		}
 		i++
 	}
 	return datas
@@ -106,10 +122,12 @@ const loadPosts = async (tab, count) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let profiles = []
-	const [hashtag, maxProfiles] = utils.checkArguments([
+	let [hashtag, maxPosts] = utils.checkArguments([
 		{name: "hashtag", type: "string", length: 1},
-		{name: "maxProfiles", type: "number", default: 1}
+		{name: "maxPosts", type: "number", default: 0}
 	])
+
+	let count = 0
 
 	const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
 	if (httpCode === 404) {
@@ -119,10 +137,18 @@ const loadPosts = async (tab, count) => {
 
 	await tab.waitUntilVisible("main")
 	count = await tab.evaluate(postCount)
+
+	/**
+	 * NOTE: If the maxPosts arguments is bigger than the count of posts
+	 * the script will just scrape the scrapped count
+	 */
+	if (maxPosts > count) {
+		maxPosts = count
+	}
 	utils.log(`Publications found: ${count}`, 'info')
-	utils.log(`Now loading ${maxProfiles || count} posts ...`, "loading")
-	profiles = (await loadPosts(tab, maxProfiles || count))
-	utils.log(`URLs loaded: ${profiles.length}`, "done")
+	utils.log(`Now loading ${maxPosts || count} posts ...`, "loading")
+	profiles = await loadPosts(tab, maxPosts || count)
+	utils.log(`${profiles.length} posts scraped`, "done")
 	await utils.saveResults(profiles, profiles)
 	nick.exit()
 })()
