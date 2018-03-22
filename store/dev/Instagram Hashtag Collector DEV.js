@@ -22,29 +22,6 @@
 // }
 
 /**
- * @description Function used to log the bot as an instragam user
- * @param {Object} tab - Nickjs tab object
- * @param {String} sessionCookie - sessionid cookie from instagram
- */
-const instagramConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to instagram...", "loading")
-	await nick.setCookie({
-		name: "sessionid",
-		value: sessionCookie,
-		domain: "www.instagram.com",
-		secure: true,
-		httpOnly: true
-	})
-	await tab.open("instagram.com")
-	try {
-		await tab.waitUntilVisible("main")
-		utils.log("Connected to Instagram successfully.", "done")
-	} catch (error) {
-		throw "Could not connect to Instagram with that sessionCookie."
-	}
-}
-
-/**
  * @description Publications count scrapper
  * @param {*} arg 
  * @param {*} cb 
@@ -129,15 +106,12 @@ const loadPosts = async (tab, count) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let profiles = []
-	const [sessionCookie, hashtag, maxProfiles] = utils.checkArguments([
-		{name: "sessionCookie", type: "string", length: 20},
+	const [hashtag, maxProfiles] = utils.checkArguments([
 		{name: "hashtag", type: "string", length: 1},
 		{name: "maxProfiles", type: "number", default: 1}
 	])
 
-	await instagramConnect(tab, sessionCookie)
 	const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
-
 	if (httpCode === 404) {
 		utils.log(`No results found for the tag ${hashtag}`, "error")
 		nick.exit(1)
