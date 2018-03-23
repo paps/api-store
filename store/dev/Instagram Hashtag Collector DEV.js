@@ -3,13 +3,13 @@
 	"phantombuster package: 5"
 	"phantombuster dependencies: lib-StoreUtilities.js"
 
+	const url = require("url")
 	const Buster = require("phantombuster")
 	const buster = new Buster()
 	
 	const Nick = require("nickjs")
 	const nick = new Nick({
 		loadImages: false,
-		userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 		printPageErrors: false,
 		printResourceErrors: false,
 		printNavigation: false,
@@ -21,57 +21,40 @@
 	const utils = new StoreUtilities(nick, buster)
 // }
 
-/**
- * @description Publications count scrapper
- * @param {*} arg 
- * @param {*} cb 
- * @return {Number} publications count
- */
-const postCount = (arg, cb) => {
-	let count = document.querySelector("header span:nth-child(1)")
-
-	/**
-	 * NOTE: This can happen if, there weren't not many posts from this tag
-	 */
-	if (!count) {
-		count = document.querySelectorAll("article div:not([class]) a").length
-	} else {
-		count = count.textContent.trim()
-	}
-	(typeof count === "string") && (count = count.replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''))
-	cb(null, parseInt(count, 10))
+const SCRAPING_SELECTORS = {
+	baseSelector: "div[role=dialog]",
+	profileSelector: "header a.notranslate",
+	likeSelector: "section div span > span",
+	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
+	pubDateSelector: "time",
+	descriptionSelector: "ul > li:first-child"
 }
+
 
 /**
  * @description Publication scrapper
- * @param {Object} arg 
- * @param {Function} cb 
+ * @param {Object} arg
+ * @param {Function} cb
  * @return {Object} A scrapped publication
  */
 const scrapePublication = (arg, cb) => {
 	let data = {}
 
-	const baseSelector = document.querySelector("div[role=dialog]")
-	const profileSelector = "header a.notranslate"
-	const likeSelector = "section div span > span"
-	const likeAlternativeSelector = "section:nth-child(2) a:not([href='#'])"
-	const pubDateSelector = "time"
-	const descriptionSelector = "ul > li:first-child"
-
+	const baseSelector = document.querySelector(arg.selectors.baseSelector)
 	/**
 	 * NOTE: If the publication have less than 10 likes,
 	 * there is no counter but all instagram users names
 	 */
-	if (baseSelector.querySelector(likeSelector))
-		data["likes"] = parseInt(baseSelector.querySelector(likeSelector).textContent.trim(), 10)
+	if (baseSelector.querySelector(arg.selectors.likeSelector))
+		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim(), 10)
 	else
-		data["likes"] = baseSelector.querySelectorAll(likeAlternativeSelector).length
+		data["likes"] = baseSelector.querySelectorAll(arg.selectors.likeAlternativeSelector).length
 
-	data["profileUrl"] = baseSelector.querySelector(profileSelector).href || ""
-	data["profileName"] = baseSelector.querySelector(profileSelector).textContent.trim() || ""
-	data["date"] = (new Date(baseSelector.querySelector(pubDateSelector).dateTime)).toLocaleDateString() || ""
-	data["description"] = baseSelector.querySelector(descriptionSelector).textContent.trim() || ""
-	data["postUrl"] = document.location.href
+	data["profileUrl"] = baseSelector.querySelector(arg.selectors.profileSelector).href || ""
+	data["profileName"] = baseSelector.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
+	data["date"] = baseSelector.querySelector(arg.selectors.pubDateSelector).dateTime || ""
+	data["description"] = baseSelector.querySelector(arg.selectors.descriptionSelector).textContent.trim() || ""
+	data["postUrl"] = baseSelector.querySelector(arg.selectors.pubDateSelector).parentElement.href || ""
 	cb(null, data)
 }
 
@@ -79,77 +62,153 @@ const scrapePublication = (arg, cb) => {
  * @async
  * @description Function which scrape publications from the result page
  * @param {Object} tab - Nickjs tab
+ * @param {Array} arr - Array to fill
  * @param {Number} count - Amount of publications to scrape
- * @return {Promise<Array>} Scraping result
+ * @param {String} hashtag - Hashtag name
+ * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
-const loadPosts = async (tab, count) => {
+const loadPosts = async (tab, arr, count, hashtag) => {
 	const selectors = {
-		MODAL: ["article > div:not([class]) > div > div a img", "article div:not([class]) > div > div a img"],
+		MOST_RECENT: "article > div:not([class]) > div > div a img",
+		MOST_POPULAR: "article div:not([class]) > div > div a img",
 		OVERLAY:  "div[role=dialog]",
 		NEXT_POST: "div[role=dialog] a.coreSpriteRightPaginationArrow",
 		IMG_SELECTOR: "div[role=dialog] img"
 	}
-	const datas = []
 	let i = 0
 	try {
-		await tab.click(selectors.MODAL[0])
+		await tab.click(selectors.MOST_RECENT)
 	} catch (e) {
-		await tab.click(selectors.MODAL[1])
+		await tab.click(selectors.MOST_POPULAR)
 	}
 	await tab.waitUntilVisible(selectors.OVERLAY)
 	while (i < count) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
-			break
+			return false
 		}
-		buster.progressHint(i / count, `Post ${i+1} / ${count}`)
-		datas.push(await tab.evaluate(scrapePublication))
-		await tab.inject("../injectables/jquery-3.0.0.min.js")
-		if (await tab.isPresent(selectors.NEXT_POST)) {
+		let currentPost = null
+		try {
+			currentPost = await tab.evaluate(scrapePublication, { selectors: SCRAPING_SELECTORS })
+			currentPost.hashtag = hashtag
+			utils.log(`${currentPost.postUrl} scraped`, "done")
+			arr.push(currentPost)
+		} catch (err) {
+			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
+		}
+		/**
+		 * NOTE: If the selector used for clicking to a new post
+		 * there is no need to continue the scraping process
+		 */
+		try {
+			if (!await tab.isPresent(selectors.NEXT_POST)) {
+				break
+			}
 			await tab.click(selectors.NEXT_POST)
-			await tab.waitUntilVisible(selectors.IMG_SELECTOR)
-			await tab.wait(2500)
+			/**
+			 * NOTE: Method used to wait that a new post is fully loaded
+			 * For now there is no cleaner way to wait the new article,
+			 * if there is no change after 30 seconds, the script should abort the wait process
+			 */
+			await tab.evaluate((arg, cb) => {
+				const startTime = Date.now()
+				const waitForNewLoadedPost = () => {
+					const time = document.querySelector(`${arg.selectors.baseSelector} ${arg.selectors.pubDateSelector}`)
+					if ((!time) || (time.parentElement.href === arg.previousPost)) {
+						/**
+						 * HACK: No need to wait more than 30 seconds
+						 */
+						if ((Date.now() - startTime) >= 30000) {
+							cb("New post cannot be loaded after 30s")
+						}
+						setTimeout(waitForNewLoadedPost, 100)
+					} else {
+						cb(null)
+					}
+				}
+				waitForNewLoadedPost()
+			}, { selectors: SCRAPING_SELECTORS, previousPost: currentPost.postUrl })
+		} catch(err) {
+			utils.log(`Error occured while scrapping: ${err.message || err}`, "error")
+			return false
 		}
+		await tab.wait(1000 + (Math.random() * 1000))
 		i++
 	}
-	return datas
+	return true
 }
+
+/**
+ * @description Tiny function used to check if a given string represents an URL
+ * @param {String} target
+ * @return { Boolean } true if target represents an URL otherwise false
+ */
+const isUrl = target => url.parse(target).hostname != null
 
 /**
  * @description Main function
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let profiles = []
-	let [hashtag, maxPosts] = utils.checkArguments([
-		{name: "hashtag", type: "string", length: 1},
-		{name: "maxPosts", type: "number", default: 0}
-	])
+	const MAX_POSTS = 1000
+	let { spreadsheetUrl, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
-	let count = 0
-
-	const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
-	if (httpCode === 404) {
-		utils.log(`No results found for the tag ${hashtag}`, "error")
-		nick.exit(1)
+	if (!maxPosts) {
+		maxPosts = MAX_POSTS
 	}
 
-	await tab.waitUntilVisible("main")
-	count = await tab.evaluate(postCount)
+	if (!csvName) {
+		csvName = "result"
+	}
+
+	if (typeof hashtags === "string") {
+		hashtags = [ hashtags ]
+	}
+
+	if (spreadsheetUrl) {
+		if (isUrl(spreadsheetUrl)) {
+			hashtags = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		} else if(typeof spreadsheetUrl === "string") {
+			hashtags = [ spreadsheetUrl ]
+		}
+	}
+
+	if (maxPosts > MAX_POSTS) {
+		maxPosts = MAX_POSTS
+	}
 
 	/**
-	 * NOTE: If the maxPosts arguments is bigger than the count of posts
-	 * the script will just scrape the scrapped count
+	 * If a hashtag starts with the character #, we just remove the character
+	 * NOTE: if the character # is at the end of the string, it's fine,
+	 * Chrome will open an URL like www.instagram.com/explore/tags/xxx/#
 	 */
-	if (maxPosts > count) {
-		maxPosts = count
+	hashtags = hashtags.map(el => el.startsWith("#") ? el.substr(1) : el)
+	const results = []
+	for (const hashtag of hashtags) {
+		const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
+		if (httpCode === 404) {
+			utils.log(`No results found for the tag ${hashtag}`, "error")
+			continue
+		} else if (httpCode !== 200) {
+			utils.log(`${await tab.getUrl()} returned HTTP code ${httpCode}, the script expects HTTP 200, aborting`, "error")
+			nick.exit(1)
+		}
+
+		try { 
+			await tab.waitUntilVisible("main")
+		} catch (err) {
+			utils.log(`Page is not opened: ${err.message || err}`, "error")
+			continue
+		}
+		utils.log(`Scraping posts using the tag ${hashtags} ...`, "loading")
+		const hasTimeLeft = await loadPosts(tab, results, maxPosts, hashtag)
+		if (!hasTimeLeft) {
+			break
+		}
 	}
-	utils.log(`Publications found: ${count}`, 'info')
-	utils.log(`Now loading ${maxPosts || count} posts ...`, "loading")
-	profiles = await loadPosts(tab, maxPosts || count)
-	utils.log(`${profiles.length} posts scraped`, "done")
-	await utils.saveResults(profiles, profiles)
+	utils.log(`${results.length} posts scraped`, "done")
+	await utils.saveResults(results, results, csvName)
 	nick.exit()
 })()
 .catch(err => {
