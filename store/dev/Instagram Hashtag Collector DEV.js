@@ -27,7 +27,7 @@ const SCRAPING_SELECTORS = {
 	likeSelector: "section div span > span",
 	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
 	pubDateSelector: "time",
-	descriptionSelector: "ul > li:first-child"
+	descriptionSelector: "ul > li:first-child span"
 }
 
 
@@ -41,6 +41,16 @@ const scrapePublication = (arg, cb) => {
 	let data = {}
 
 	const baseSelector = document.querySelector(arg.selectors.baseSelector)
+	let postDescription = baseSelector.querySelector(arg.selectors.descriptionSelector)
+
+	if ((!postDescription) || (!postDescription.children)) {
+		postDescription = ""
+	} else {
+		postDescription = 
+			Array.from(postDescription.children)
+					.map(el => (el.textContent) ? el.textContent.trim() : "" )
+					.join(" ")
+	}
 	/**
 	 * NOTE: If the publication have less than 10 likes,
 	 * there is no counter but all instagram users names
@@ -53,7 +63,7 @@ const scrapePublication = (arg, cb) => {
 	data["profileUrl"] = baseSelector.querySelector(arg.selectors.profileSelector).href || ""
 	data["profileName"] = baseSelector.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
 	data["date"] = baseSelector.querySelector(arg.selectors.pubDateSelector).dateTime || ""
-	data["description"] = baseSelector.querySelector(arg.selectors.descriptionSelector).textContent.trim() || ""
+	data["description"] = postDescription
 	data["postUrl"] = baseSelector.querySelector(arg.selectors.pubDateSelector).parentElement.href || ""
 	cb(null, data)
 }
