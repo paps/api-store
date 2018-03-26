@@ -61,6 +61,7 @@
 		# --------------
 		# API store DEV
 		# --------------
+		'AngelList Market Companies Extractor DEV.js': 'store/dev/AngelList Market Companies Extractor DEV.js'
 		'Domain Name Finder DEV.js': 'store/dev/Domain Name Finder DEV.js'
 		'Facebook ID Finder DEV.js': 'store/dev/Facebook ID Finder DEV.js'
 		'LinkedIn Accept And Message DEV.js': 'store/dev/LinkedIn Accept And Message DEV.js'
