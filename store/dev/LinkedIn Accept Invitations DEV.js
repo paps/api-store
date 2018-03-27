@@ -29,7 +29,7 @@ const acceptInvites = async (tab, nbProfiles) => {
 		const invites = jQuery("ul.mn-invitation-list > li").map(function (i) {
 			if (i < arg.nbProfiles) {
 				jQuery(this).find("input[type='checkbox']").click()
-				return this.querySelector("a.mn-person-info__link").href
+				return this.querySelector("a[data-control-name='profile']").href
 			}
 		})
 		done(null, jQuery.makeArray(invites)) // Success
@@ -49,10 +49,12 @@ const loadProfilesUsingScrollDown = async (tab) => {
 nick.newTab().then(async (tab) => {
 	const {sessionCookie, numberOfProfilesToAdd} = utils.validateArguments()
 
+	const selectors = [ "label.invitation-card__checkbox-label", "section.mn-invitation-manager__no-invites" ]
+
 	await linkedIn.login(tab, sessionCookie, "https://www.linkedin.com/mynetwork/invitation-manager/?filterCriteria=null")
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
-	const selector = await tab.waitUntilVisible(["label.mn-person-card__checkbox-label", "section.mn-invitation-manager__no-invites"], 10000, "or")
-	if (selector === "section.mn-invitation-manager__no-invites") {
+	const selector = await tab.waitUntilVisible(selectors, 10000, "or")
+	if (selector === selectors[1]) {
 		utils.log("No invite to accept.", "done")
 		nick.exit()
 	}
