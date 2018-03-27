@@ -49,8 +49,8 @@ const instagramConnect = async (tab, sessionCookie) => {
 	try {
 		await tab.waitUntilVisible("main")
 		const name = await tab.evaluate((arg, cb) => {
-			const name = document.querySelector("main > section > div:last-of-type > div:first-of-type > div:first-of-type > div > div > a").textContent.trim()
-			cb(null, name)
+			const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
+			cb(null, url.pathname.replace(/\//g, ""))
 		})
 		utils.log(`Connected as ${name}`, "done")
 	} catch (error) {
