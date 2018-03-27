@@ -30,6 +30,34 @@ const SCRAPING_SELECTORS = {
 	descriptionSelector: "ul > li:first-child span"
 }
 
+/**
+ * @description Function used to log as an Instagram user
+ * @param {Object} tab - Nickjs tab
+ * @param {String} sessionCookie - sessionid Instagram cookie
+ * @throws If it were an error during the login process
+ */
+const instagramConnect = async (tab, sessionCookie) => {
+	utils.log("Connecting to instagram...", "loading")
+	await nick.setCookie({
+		name: "sessionid",
+		value: sessionCookie,
+		domain: "www.instagram.com",
+		secure: true,
+		httpOnly: true
+	})
+	await tab.open('https://instagram.com')
+	try {
+		await tab.waitUntilVisible("main")
+		const name = await tab.evaluate((arg, cb) => {
+			const name = document.querySelector("main > section > div:last-of-type > div:first-of-type > div:first-of-type > div > div > a").textContent.trim()
+			cb(null, name)
+		})
+		utils.log(`Connected as ${name}`, "done")
+	} catch (error) {
+		throw "Could not connect to Instagram with that sessionCookie."
+	}
+}
+
 
 /**
  * @description Publication scrapper
@@ -162,7 +190,7 @@ const isUrl = target => url.parse(target).hostname != null
 ;(async () => {
 	const tab = await nick.newTab()
 	const MAX_POSTS = 1000
-	let { spreadsheetUrl, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
+	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
 	if (!maxPosts) {
 		maxPosts = MAX_POSTS
@@ -188,6 +216,10 @@ const isUrl = target => url.parse(target).hostname != null
 		maxPosts = MAX_POSTS
 	}
 
+	if (typeof sessionCookie === "string") {
+		await instagramConnect(tab, sessionCookie)
+	}
+
 	/**
 	 * If a hashtag starts with the character #, we just remove the character
 	 * NOTE: if the character # is at the end of the string, it's fine,
@@ -200,9 +232,6 @@ const isUrl = target => url.parse(target).hostname != null
 		if (httpCode === 404) {
 			utils.log(`No results found for the tag ${hashtag}`, "error")
 			continue
-		} else if (httpCode !== 200) {
-			utils.log(`${await tab.getUrl()} returned HTTP code ${httpCode}, the script expects HTTP 200, aborting`, "error")
-			nick.exit(1)
 		}
 
 		try { 
