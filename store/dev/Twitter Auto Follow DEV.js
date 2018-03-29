@@ -135,23 +135,42 @@ const subscribe = async (tab, url) => {
 	utils.log(`Adding ${url}...`, "loading")
 	await tab.open(url)
 	try {
-		var selector = await tab.waitUntilVisible([".ProfileNav-item .follow-text", ".ProfileNav-item .following-text"], 5000, "or")
+		var selector = await tab.waitUntilVisible([".ProfileNav-item .follow-text", ".ProfileNav-item .following-text", ".pending"], 5000, "or")
 	} catch (error) {
+		console.log("Reported error: ", error.message || error)
 		throw `${url} isn't a valid twitter profile.`
 	}
+	/**
+	 * NOTE: Aren't we following the profile ?
+	 */
 	if (selector === ".ProfileNav-item .follow-text") {
 		await tab.click(".ProfileNav-item .follow-text")
-		await tab.waitUntilVisible(".ProfileNav-item .following-text")
+		const result = await tab.waitUntilVisible([ ".ProfileNav-item .following-text", ".pending" ], 5000, "or")
 		await tab.wait(1000)
-		// NOTE: This selector represents the alert box, if the daily twitter limit is reached
-		const limit = await tab.isVisible(".alert-messages")
-		if (limit) {
-			utils.log("Twitter daily follow limit reached !", "error")
+		/**
+		 * NOTE:Is the target profile in protected mode ?
+		 */
+		if (await tab.isPresent(".pending")) {
+			return utils.log(`Follow request for ${url} is in pending state`, "info")
+		}
+		/**
+		 * NOTE: Did we reach the daily follow limit
+		 */
+		if (await tab.isVisible(".alert-messages")) {
+			utils.log("Twitter daily follow limit reached", "error")
 			throw "TLIMIT"
 		}
-		utils.log(`${url} followed.`, "done")
+		/**
+		 * NOTE: Follow process is a success
+		 */
+		if (result === ".ProfileNav-item .following-text") {
+			return utils.log(`${url} followed`, "done")
+		}
+		/**
+		 * NOTE: Are we already following the profile
+		 */
 	} else if (selector === ".ProfileNav-item .following-text") {
-		utils.log(`You are already following ${url}.`, "warning")
+		return utils.log(`You are already following ${url}.`, "warning")
 	}
 }
 
@@ -198,7 +217,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch) => {
 			i++
 		} catch (error) {
 			if (error === "TLIMIT") {
-				return []
+				return added
 			} else {
 				utils.log(error, "warning")
 			}
