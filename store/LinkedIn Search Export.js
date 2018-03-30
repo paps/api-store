@@ -34,14 +34,38 @@ const scrapeResults = (arg, callback) => {
 		if (result.querySelector(".search-result__result-link")) {
 			const url = result.querySelector(".search-result__result-link").href
 			let currentJob = "none"
+			let pastJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
 			}
-			currentJob = currentJob.replace(/^.+ ?: ?\n/, "") // removes 'Current:\n' or 'Actuel :\n' or similar at the beginning of current job
+			/**
+			 * HACK: issue #39
+			 * Method used to check if the value in currentJob is representing:
+			 * - The current job of the person
+			 * - The past job of the person
+			 */
+			let isCurrentJob = currentJob.match(/^[a-zA-Z]+?(\s+)?:/g)
+			if (isCurrentJob) {
+				isCurrentJob = isCurrentJob.shift()
+				if ((isCurrentJob.toLowerCase().indexOf("actuel") > -1) || (isCurrentJob.toLowerCase().indexOf("current") > -1)) {
+					currentJob = currentJob.replace(/^.+ ?: ?\n/, "")
+					pastJob = null
+				} else if ((isCurrentJob.toLowerCase().indexOf("auparavant") > -1) || (isCurrentJob.toLowerCase().indexOf("past") > -1)) {
+					pastJob = currentJob.replace(/^.+ ?: ?\n/, "")
+					currentJob = null
+				} else {
+					currentJob = currentJob.replace(/^.+ ?: ?\n/, "")
+					pastJob = "none"
+				}
+			}
 			if ((url !== window.location.href + "#") && (url.indexOf("www.linkedin.com/in") > -1)) {
-				const newInfos = {
-					url: url,
-					currentJob
+				let newInfos = { url }
+				if (currentJob && !pastJob) {
+					newInfos.currentJob = currentJob
+				} else if (pastJob && !currentJob) {
+					newInfos.pastJob = pastJob
+				} else {
+					newInfos.currentJob = currentJob
 				}
 				if (result.querySelector("figure.search-result__image > img")) { newInfos.name = result.querySelector("figure.search-result__image > img").alt }
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
