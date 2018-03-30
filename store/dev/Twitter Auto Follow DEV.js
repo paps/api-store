@@ -137,7 +137,7 @@ const subscribe = async (tab, url) => {
 	try {
 		var selector = await tab.waitUntilVisible([".ProfileNav-item .follow-text", ".ProfileNav-item .following-text", ".pending"], 5000, "or")
 	} catch (error) {
-		console.log("Reported error: ", error.message || error)
+		utils.log(`Reported error: ${error.message || error}`, "error")
 		throw `${url} isn't a valid twitter profile.`
 	}
 	/**
