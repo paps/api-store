@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -121,7 +120,7 @@ const getCompaniesInfos = (arg, callback) => {
 			await tab.waitUntilVisible(clickSelector)
 			await tab.click(clickSelector)
 		} catch (error) {
-			console.log('Error:', error.message || error)
+			utils.log(`Error: ${error.message || error}`, "error")
 			break
 		}
 
