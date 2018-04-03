@@ -3,6 +3,9 @@
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
+const _ = require("underscore")
+const url = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -20,6 +23,8 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+require("coffee-script/register")
+const Hunter = require("./lib-Hunter")
 // }
 
 const createUrl = (search, circles) => {
@@ -67,7 +72,15 @@ const scrapeResults = (arg, callback) => {
 				} else {
 					newInfos.currentJob = currentJob
 				}
-				if (result.querySelector("figure.search-result__image > img")) { newInfos.name = result.querySelector("figure.search-result__image > img").alt }
+				if (result.querySelector("figure.search-result__image > img")) {
+					newInfos.name = result.querySelector("figure.search-result__image > img").alt
+					/**
+					 * NOTE: If the script a CSS class named .ghost-person it means that the profile doesnt't contain an image
+					 */
+					if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
+						newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
+					}
+				}
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
 				if (arg.query) {
@@ -110,9 +123,22 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	return result
 }
 
+const isLinkedInSearchURL = (targetUrl) => {
+	const urlObject = url.parse(targetUrl)
+
+	if (urlObject && urlObject.hostname) {
+		if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
+			return 0
+		} else {
+			return -1
+		}
+	}
+	return 1
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
-	let [ searches, sessionCookie, circles, numberOfPage, queryColumn ] = utils.checkArguments([
+	let [ searches, sessionCookie, circles, numberOfPage, queryColumn, hunterApiKey ] = utils.checkArguments([
 		{ many: [
 			{ name: "search", type: "string", length: 1 },
 			{ name: "searches", type: "object", length: 1 },
@@ -122,7 +148,9 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		{ name: "circles", type: "object", default: {first: true, second: true, third: true} },
 		{ name: "numberOfPage", type: "number", default: 5 },
 		{ name: "queryColumn", type: "boolean", default: false },
+		{ name: "hunterApiKey", type: "string", default: ""},
 	])
+
 	if (typeof searches === "string") {
 		if (searches.indexOf("http") === 0) {
 			searches = await utils.getDataFromCsv(searches)
@@ -133,7 +161,19 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	await linkedIn.login(tab, sessionCookie)
 	let result = []
 	for (const search of searches) {
-		const searchUrl = createUrl(search, circles)
+		let searchUrl = ""
+		const isSearchURL = isLinkedInSearchURL(search)
+
+		if (isSearchURL === 0) {
+			searchUrl = search
+		} else if (isSearchURL === 1) {
+			searchUrl = createUrl(search, circles)
+		} else {
+			utils.log(`${search} doesn't neither a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
+			continue
+		}
+
+		// const searchUrl = (isLinkedInSearchURL(search)) ? search : createUrl(search, circles)
 		const query = queryColumn ? search : false
 		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query))
 	}

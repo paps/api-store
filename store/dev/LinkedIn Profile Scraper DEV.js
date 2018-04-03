@@ -1,7 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Hunter.js"
+
+const fs = require("fs")
+const Papa = require("papaparse")
+const _ = require("underscore")
+const needle = require("needle")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -21,7 +26,30 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+require("coffee-script/register")
+const Hunter = require("./lib-Hunter")
 // }
+
+const DB_NAME = "database-linkedin-profile-scraper.csv"
+
+const getDB = async () => {
+	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
+		"X-Phantombuser-Key-1": buster.apiKey }
+	})
+	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
+		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
+		try {
+			await buster.download(url, DB_NAME)
+			const file = fs.readFileSync(DB_NAME, "UTF-8")
+			const data = Papa.parse(file, { header: true }).data
+			return data
+		} catch (err) {
+			return []
+		}
+	} else {
+		throw "Could not load bot database."
+	}
+}
 
 // Full scroll the LinkedIn Profile
 /**
@@ -309,7 +337,7 @@ const fullToCsv = infos => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	utils.log("Getting the arguments...", "loading")
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -335,6 +363,28 @@ const fullToCsv = infos => {
 			break
 		}
 	}
+
+	if (hunterApiKey) {
+		let hunterError = ""
+		const hunter = new Hunter(hunterApiKey)
+		for (const scraped of result) {
+			if (hunterError) {
+				result.error = hunterError
+				allEmails.push(scraped)
+			} else {
+				try {
+					const hunterSearch = await hunter.find({ full_name: scraped.fullName, company: scraped.jobs[0].companyName })
+					utils.log(`Hunter found ${hunterSearch.email} for ${scraped.name}`, "info")
+					scraped.email = hunterSearch.email
+				} catch (err) {
+					hunterError = err.toString()
+					utils.log(hunterError, "error")
+					scraped.email = hunterError
+				}
+			}
+		}
+	}
+
 	await linkedIn.saveCookie()
 	await utils.saveResults(result, csvResult)
 	nick.exit()
