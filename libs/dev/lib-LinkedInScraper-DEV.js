@@ -1,8 +1,5 @@
-// phantombuster configuration {
-	const Linkedin = require('./lib-LinkedIn')
-	require('coffee-script/register')
-	const Hunter = require('./lib-Hunter')
-// }
+require('coffee-script/register')
+const Hunter = require('./lib-Hunter')
 
 /**
  * NOTE: Slowly but surely loading all sections of the profile
@@ -21,7 +18,7 @@ const fullScroll = async tab => {
 }
 
 // Load all data hidden behind "load more" buttons
-const loadAllData = async tab => {
+const loadProfileSections = async tab => {
 	/**
 	 * Selectors:
 	 * - Description section
@@ -31,20 +28,21 @@ const loadAllData = async tab => {
 	 * - Details section
 	 */
 	const buttons = [
-		{ selector: ".pv-profile-section button.pv-top-card-section__summary-toggle-button", data: "Description" },
-		{ selector: ".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline", data: "Jobs" },
-		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills", data: "Skills" },
-		{ selector: "button.contact-see-more-less", data: "Details" },
+		".pv-profile-section button.pv-top-card-section__summary-toggle-button",
+		".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline",
+		".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills",
+		"button.contact-see-more-less",
 	]
 	for (const button of buttons) {
-		const visible = await tab.isVisible(button.selector)
+		const visible = await tab.isVisible(button)
 		if (visible) {
 			try {
-				await tab.click(button.selector)
+				await tab.click(button)
 				await tab.wait(2500)
 			} catch (error) {}
 		}
 	}
+	// Restore the initial position on the page after loading all sections
 	await tab.scroll(0, 0)
 }
 
@@ -170,6 +168,7 @@ const scrapeInfos = (arg, callback) => {
 				])
 			// If the first selector failed, the script will try this selector
 			} else if (_skills.length > 0) {
+				// TODO scrape here only when needed
 				infos.skills = getListInfos(_skills, [
 					{ key: "name", attribute: "textContent", selector: ".pv-skill-category-entity__name span" },
 					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-category-entity__endorsement-count" }
@@ -195,9 +194,8 @@ const scrapeInfos = (arg, callback) => {
 				}
 			}
 			// Delete this (only needed to determine the first name)
-			if (infos.general.hasAccount) {
-				delete infos.general.hasAccount
-			}
+			delete infos.general.hasAccount
+
 			// Delete tel: for the phone
 			if (infos.details.phone) {
 				infos.details.phone = infos.details.phone.replace("tel:", "")
@@ -208,9 +206,12 @@ const scrapeInfos = (arg, callback) => {
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const getProfileInfos = async (tab, url, utils) => {
+const scrapingProcess = async (tab, url, utils) => {
 	try {
-		await tab.open(url)
+		const [httpCode] = await tab.open(url)
+		if (httpCode !== 200) {
+			throw "Expects HTTP code 200 when opening a LinkedIn profile"
+		}
 	} catch (error) {
 		throw("Error loading the page.")
 	}
@@ -230,7 +231,7 @@ const getProfileInfos = async (tab, url, utils) => {
 		utils.log("Error during the scroll of the page.", "warning")
 	}
 	try {
-		await loadAllData(tab)
+		await loadProfileSections(tab)
 		utils.log("All data loaded", "done")
 	} catch (error) {
 		utils.log("Error during the loading of data.", "warning")
@@ -245,24 +246,10 @@ const getProfileInfos = async (tab, url, utils) => {
 }
 
 // Function to format the infos for the csv file (less infos)
-const fullToCsv = infos => {
+const craftCsvObject = infos => {
 	let job = {}
 	if (infos.jobs[0]) {
 		job = infos.jobs[0]
-	}
-	let skills = [
-		{},
-		{},
-		{}
-	]
-	if (infos.skills[0]) {
-		skills[0] = infos.skills[0]
-	}
-	if (infos.skills[1]) {
-		skills[1] = infos.skills[1]
-	}
-	if (infos.skills[2]) {
-		skills[2] = infos.skills[2]
 	}
 	return {
 		linkedinProfile: infos.details.linkedinProfile || null,
@@ -280,9 +267,9 @@ const fullToCsv = infos => {
 		mail: infos.details.mail || null,
 		phoneNumber: infos.details.phone || null,
 		twitter: infos.details.twitter || null,
-		skill1: skills[0].name || null,
-		skill2: skills[1].name || null,
-		skill3: skills[2].name || null,
+		skill1: (infos.skills[0]) ? infos.skills[0].name : null,
+		skill2: (infos.skills[1]) ? infos.skills[1].name : null,
+		skill3: (infos.skills[2]) ? infos.skills[2].name : null,
 	}
 }
 
@@ -293,16 +280,12 @@ const fullToCsv = infos => {
 class LinkedInScraper {
 	/**
 	 * @constructor
-	 * @param {Nick} nick --- Nick instance}
-	 * @param {Buster} buster -- Buster instance}
 	 * @param {StoreUtilities} utils -- StoreUtilities instance}
-	 * @param {String|null} [hunterApiKey] -- Hunter API key}
+	 * @param {String} [hunterApiKey] -- Hunter API key}
 	 */
-	constructor(nick, buster, utils, hunterApiKey = null) {
-		this.nick = nick
-		this.buster = buster
+	constructor(utils, hunterApiKey = null) {
 		this.utils = utils
-		this.hunter = (hunterApiKey) ? new Hunter(hunterApiKey) : null
+		this.hunter = (hunterApiKey) ? new (hunterApiKey) : null
 	}
 
 	/**
@@ -313,36 +296,51 @@ class LinkedInScraper {
 	 * @param {String} url -- LinkedIn Profile URL}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfiles(tab, url) {
+	async scrapeProfile(tab, url) {
 		let result
 		let csvResult
 		try {
-			result = await getProfileInfos(tab, url, this.utils)
+			result = await scrapingProcess(tab, url, this.utils)
 			this.utils.log(`${url} successfully scraped.`, "done")
 		} catch (err) {
 			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
 		}
 
-		if (this.hunter) {
+		if (this.hunter && result.jobs.length >= 0) {
 			let hunterError = ''
-			if (hunterError) {
-				result.error = hunterError
-			} else {
-				try {
-					const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , company: result.jobs[0].companyName })
-					this.utils.log(`Hunter found ${hunterSearch.email} for ${result.general.fullName}`, "info")
-					if (hunterSearch.email) {
-						result.details.mail = hunterSearch.email
-					}
-				} catch (err) {
-					hunterError = err.toString()
-					this.utils.log(hunterError, "error")
-					result.details.mail = hunterError
+			try {
+				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , company: result.jobs[0].companyName })
+				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
+				// Don't erase non empty value, if Hunter.io doesn't return an email
+				if (hunterSearch.email) {
+					result.details.mail = hunterSearch.email
 				}
+			} catch (err) {
+				hunterError = err.toString()
+				this.utils.log(hunterError, "error")
+				result.details.mail = hunterError
 			}
 		}
-		csvResult = fullToCsv(result)
+		csvResult = craftCsvObject(result)
 		return { csv: csvResult, json: result }
+	}
+
+	/**
+	 * @description Format date stored in an object array / an object to a CSV format
+	 * @param {Array|Object}
+	 * @return {Array|Object}
+	 */
+	formatToCSV(data) {
+		let res = null
+		if (Array.isArray(data)) {
+			res = []
+			for (const one of data) {
+				res.push(craftCsvObject(res))
+			}
+		} else {
+			res = craftCsvObject(data)
+		}
+		return res
 	}
 }
 

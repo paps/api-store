@@ -98,7 +98,7 @@ const filterRows = (str, db) => {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)))
-	const linkedInScraper = new LinkedInScraper(nick, buster, utils, hunterApiKey)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	// Two variables to save csv and json
@@ -110,7 +110,7 @@ const filterRows = (str, db) => {
 			utils.log(`Stopping the scraping: ${timeLeft.message}`, "warning")
 			break
 		}
-		const infos = await linkedInScraper.scrapeProfiles(tab, url)
+		const infos = await linkedInScraper.scrapeProfile(tab, url)
 		result.push(infos.json)
 		csvResult.push(infos.csv)
 		db.push(infos.csv)
