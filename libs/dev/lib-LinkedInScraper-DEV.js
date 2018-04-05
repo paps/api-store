@@ -168,7 +168,6 @@ const scrapeInfos = (arg, callback) => {
 				])
 			// If the first selector failed, the script will try this selector
 			} else if (_skills.length > 0) {
-				// TODO scrape here only when needed
 				infos.skills = getListInfos(_skills, [
 					{ key: "name", attribute: "textContent", selector: ".pv-skill-category-entity__name span" },
 					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-category-entity__endorsement-count" }
@@ -207,13 +206,15 @@ const scrapeInfos = (arg, callback) => {
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils) => {
-	try {
-		const [httpCode] = await tab.open(url)
-		if (httpCode !== 200) {
-			throw "Expects HTTP code 200 when opening a LinkedIn profile"
+	if (url !== null) {
+		try {
+			const [httpCode] = await tab.open(url)
+			if (httpCode !== 200) {
+				throw "Expects HTTP code 200 when opening a LinkedIn profile"
+			}
+		} catch (error) {
+			throw("Error loading the page.")
 		}
-	} catch (error) {
-		throw("Error loading the page.")
 	}
 	try {
 		/**
@@ -296,7 +297,7 @@ class LinkedInScraper {
 	 * @param {String} url -- LinkedIn Profile URL}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url) {
+	async scrapeProfile(tab, url = null) {
 		let result
 		let csvResult
 		try {
@@ -307,7 +308,6 @@ class LinkedInScraper {
 		}
 
 		if (this.hunter && result.jobs.length >= 0) {
-			let hunterError = ''
 			try {
 				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , company: result.jobs[0].companyName })
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
@@ -316,9 +316,8 @@ class LinkedInScraper {
 					result.details.mail = hunterSearch.email
 				}
 			} catch (err) {
-				hunterError = err.toString()
-				this.utils.log(hunterError, "error")
-				result.details.mail = hunterError
+				this.utils.log(err.toString(), "error")
+				result.details.mail = ''
 			}
 		}
 		csvResult = craftCsvObject(result)
@@ -330,7 +329,7 @@ class LinkedInScraper {
 	 * @param {Array|Object}
 	 * @return {Array|Object}
 	 */
-	formatToCSV(data) {
+	static formatToCSV(data) {
 		let res = null
 		if (Array.isArray(data)) {
 			res = []
