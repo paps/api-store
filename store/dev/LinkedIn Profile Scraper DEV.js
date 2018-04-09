@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Hunter.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")

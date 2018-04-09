@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -25,6 +25,8 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+let linkedInScraper = null
 let db;
 // }
 
@@ -142,16 +144,24 @@ const connectTo = async (selector, tab, message) => {
 
 // Full function to add someone with different cases
 const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
+	let scrapedProfile = {}
 	try {
 		const [httpCode, httpStatus] = await tab.open(url.replace(/.+linkedin\.com/, "linkedin.com"))
 		if (httpCode !== 200) {
 			throw("Not http code 200")
 		}
 		await tab.waitUntilVisible("#profile-wrapper", 10000)
+		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url)
+		scrapedProfile = scrapingResult.csv
+		if (!scrapedProfile.linkedinProfile) {
+			scrapedProfile.linkedinProfile = await tab.getUrl()
+		}
+		scrapedProfile.baseUrl = url
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
 		if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
-			db.push({profileId: "unavailable", baseUrl: url})
+			scrapedProfile.profileId = "unavailable"
+			db.push(scrapedProfile)
 			throw(`${url} is not a valid LinkedIn URL.`)
 		} else {
 			throw(`Error while loading ${url}:\n${error}`)
@@ -194,7 +204,8 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
 					// Add them into the already added username object
-					db.push({profileId, baseUrl: url})
+					scrapedProfile.profileId = profileId
+					db.push(scrapedProfile)
 					throw("Email needed to add this person.")
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
@@ -219,19 +230,22 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		}
 	}
 	// Add them into the already added username object
-	db.push({profileId, baseUrl: url})
+	scrapedProfile.profileId = profileId
+	db.push(scrapedProfile)
 }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName] = utils.checkArguments([
+	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 280 },
 		{ name: "onlySecondCircle", type: "boolean", default: false },
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
-		{ name: "columnName", type: "string", default: "" }
+		{ name: "columnName", type: "string", default: "" },
+		{ name: "hunterApiKey", type: "string", default: "" },
 	])
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey !== "" ? hunterApiKey : null)
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
@@ -248,6 +262,7 @@ nick.newTab().then(async (tab) => {
 	}
 	await buster.saveText(Papa.unparse(db), DB_NAME)
 	await linkedIn.saveCookie()
+	utils.log("Job is done !", "done")
 	nick.exit(0)
 })
 .catch((err) => {

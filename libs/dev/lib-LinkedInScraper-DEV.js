@@ -1,5 +1,13 @@
-require('coffee-script/register')
-const Hunter = require('./lib-Hunter')
+// Phantombuster configuration {
+	"phantombuster dependencies: lib-Hunter.js"
+	require('coffee-script/register')
+	const Hunter = require('./lib-Hunter')
+// }
+
+/**
+ * HACK: Tiny wrapper to quickly call this function
+ */
+const has = Object.prototype.hasOwnProperty
 
 /**
  * NOTE: Slowly but surely loading all sections of the profile
@@ -252,22 +260,30 @@ const craftCsvObject = infos => {
 	if (infos.jobs[0]) {
 		job = infos.jobs[0]
 	}
+
+	/**
+	 * We should know if infos object contains all fields in order to return the CSV formatted Object
+	 * If the scraping process failed to retrieve some data, the function will fill gaps by a null value
+	 */
+	const hasDetails = has.call(infos, 'details')
+	const hasGeneral = has.call(infos, 'general')
+
 	return {
-		linkedinProfile: infos.details.linkedinProfile || null,
-		description: infos.general.description || null,
-		imgUrl: infos.general.imgUrl || null,
-		firstName: infos.general.firstName || null,
-		lastName: infos.general.lastName || null,
-		fullName: infos.general.fullName || null,
-		subscribers: infos.general.subscribers || null,
+		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null ,
+		description: (hasGeneral) ? (infos.general.description || null) : null,
+		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
+		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
+		lastName: (hasGeneral) ? (infos.general.lastName || null) : null,
+		fullName: (hasGeneral) ? (infos.general.fullName || null) : null,
+		subscribers: (hasGeneral) ? (infos.general.subscribers || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
 		jobDescription: job.description || null,
 		location: job.location || null,
-		mail: infos.details.mail || null,
-		phoneNumber: infos.details.phone || null,
-		twitter: infos.details.twitter || null,
+		mail: (hasDetails) ? (infos.details.mail || null) : null,
+		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
+		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		skill1: (infos.skills[0]) ? infos.skills[0].name : null,
 		skill2: (infos.skills[1]) ? infos.skills[1].name : null,
 		skill3: (infos.skills[2]) ? infos.skills[2].name : null,
@@ -286,7 +302,7 @@ class LinkedInScraper {
 	 */
 	constructor(utils, hunterApiKey = null) {
 		this.utils = utils
-		this.hunter = (hunterApiKey) ? new (hunterApiKey) : null
+		this.hunter = (hunterApiKey) ? new Hunter(hunterApiKey) : null
 	}
 
 	/**
@@ -298,8 +314,8 @@ class LinkedInScraper {
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
 	async scrapeProfile(tab, url = null) {
-		let result
-		let csvResult
+		let result = []
+		let csvResult = []
 		try {
 			result = await scrapingProcess(tab, url, this.utils)
 			this.utils.log(`${url} successfully scraped.`, "done")
@@ -322,24 +338,6 @@ class LinkedInScraper {
 		}
 		csvResult = craftCsvObject(result)
 		return { csv: csvResult, json: result }
-	}
-
-	/**
-	 * @description Format date stored in an object array / an object to a CSV format
-	 * @param {Array|Object}
-	 * @return {Array|Object}
-	 */
-	static formatToCSV(data) {
-		let res = null
-		if (Array.isArray(data)) {
-			res = []
-			for (const one of data) {
-				res.push(craftCsvObject(res))
-			}
-		} else {
-			res = craftCsvObject(data)
-		}
-		return res
 	}
 }
 
