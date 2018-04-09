@@ -26,8 +26,8 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
-let linkedInScraper = null
-let db;
+let linkedInScraper
+let db
 // }
 
 const DB_NAME = "database-linkedin-network-booster.csv"
@@ -65,7 +65,7 @@ const checkDb = (str, db) => {
 
 // Get only a certain number of urls to add
 const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	data = data.filter((item, pos) => data.indexOf(item) === pos) // Remove duplicates
 	let i = 0
 	const maxLength = data.length
 	const urls = []
@@ -146,16 +146,8 @@ const connectTo = async (selector, tab, message) => {
 const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	let scrapedProfile = {}
 	try {
-		const [httpCode, httpStatus] = await tab.open(url.replace(/.+linkedin\.com/, "linkedin.com"))
-		if (httpCode !== 200) {
-			throw("Not http code 200")
-		}
-		await tab.waitUntilVisible("#profile-wrapper", 10000)
-		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url)
+		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
 		scrapedProfile = scrapingResult.csv
-		if (!scrapedProfile.linkedinProfile) {
-			scrapedProfile.linkedinProfile = await tab.getUrl()
-		}
 		scrapedProfile.baseUrl = url
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
@@ -179,17 +171,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	try {
 		selector = await tab.waitUntilVisible(selectors, 10000, "or")
 	} catch (error) {
-		const newUrl = await tab.getUrl()
-		if (url !== newUrl) {
-			await tab.open(newUrl)
-			try {
-				selector = await tab.waitUntilVisible(selectors, 10000, "or")
-			} catch (error) {
-				throw(`${url} didn't load correctly.`)
-			}
-		} else {
-			throw(`${url} didn't load correctly.`)
-		}
+		throw(`${url} didn't load correctly.`)
 	}
 	const currentUrl = await tab.getUrl()
 	const profileId = linkedIn.getUsername(currentUrl)
@@ -245,7 +227,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "columnName", type: "string", default: "" },
 		{ name: "hunterApiKey", type: "string", default: "" },
 	])
-	linkedInScraper = new LinkedInScraper(utils, hunterApiKey !== "" ? hunterApiKey : null)
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null)
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
