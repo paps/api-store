@@ -146,6 +146,9 @@ const connectTo = async (selector, tab, message) => {
 const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	let scrapedProfile = {}
 	try {
+		/**
+		 * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
+		 */
 		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
 		scrapedProfile = scrapingResult.csv
 		scrapedProfile.baseUrl = url
