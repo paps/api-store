@@ -1,13 +1,6 @@
 // Phantombuster configuration {
 	"phantombuster dependencies: lib-Hunter.js"
-	require('coffee-script/register')
-	const Hunter = require('./lib-Hunter')
 // }
-
-/**
- * HACK: Tiny wrapper to quickly call this function
- */
-const has = Object.prototype.hasOwnProperty
 
 /**
  * NOTE: Slowly but surely loading all sections of the profile
@@ -214,21 +207,15 @@ const scrapeInfos = (arg, callback) => {
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils) => {
-	if (url !== null) {
-		try {
-			const [httpCode] = await tab.open(url)
-			if (httpCode !== 200) {
-				throw "Expects HTTP code 200 when opening a LinkedIn profile"
-			}
-		} catch (error) {
-			throw("Error loading the page.")
-		}
+	const [httpCode] = await tab.open(url)
+	if (httpCode !== 200) {
+		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {
 		/**
 		 * NOTE: Using 7500ms timeout to make sure that the page is loaded
 		 */
-		await tab.waitUntilVisible("#profile-wrapper", 7500)
+		await tab.waitUntilVisible("#profile-wrapper", 15000)
 		utils.log("Profile loaded.", "done")
 	} catch (error) {
 		throw("Could not load the profile.")
@@ -245,13 +232,8 @@ const scrapingProcess = async (tab, url, utils) => {
 	} catch (error) {
 		utils.log("Error during the loading of data.", "warning")
 	}
-	try {
-		utils.log("Scrapping the data on the page...", "loading")
-		const infos = await tab.evaluate(scrapeInfos)
-		return infos
-	} catch (error) {
-		throw(error)
-	}
+	utils.log("Scraping page...", "loading")
+	return await tab.evaluate(scrapeInfos)
 }
 
 // Function to format the infos for the csv file (less infos)
@@ -265,8 +247,8 @@ const craftCsvObject = infos => {
 	 * We should know if infos object contains all fields in order to return the CSV formatted Object
 	 * If the scraping process failed to retrieve some data, the function will fill gaps by a null value
 	 */
-	const hasDetails = has.call(infos, 'details')
-	const hasGeneral = has.call(infos, 'general')
+	const hasDetails = infos.hasOwnProperty('details')
+	const hasGeneral = infos.hasOwnProperty('general')
 
 	return {
 		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null ,
@@ -292,7 +274,7 @@ const craftCsvObject = infos => {
 
 /**
  * @class {Scraping} LinkedInScraper
- * @classdesc Tiny class used to scrape data on a LinkedInProfile
+ * @classdesc Tiny class used to scrape data on a LinkedIn profile
  */
 class LinkedInScraper {
 	/**
@@ -302,7 +284,11 @@ class LinkedInScraper {
 	 */
 	constructor(utils, hunterApiKey = null) {
 		this.utils = utils
-		this.hunter = (hunterApiKey) ? new Hunter(hunterApiKey) : null
+		this.hunter = null
+		if (hunterApiKey) {
+			require('coffee-script/register')
+			this.hunter = new (require('./lib-Hunter'))(hunterApiKey)
+		}
 	}
 
 	/**
@@ -318,6 +304,13 @@ class LinkedInScraper {
 		let csvResult = []
 		try {
 			result = await scrapingProcess(tab, url, this.utils)
+			/**
+			 * NOTE: If the linkedIn profile is not fill during the scraping
+			 * the lib will automatically set the current URL used in the browser
+			 */
+			if (!result.details.linkedinProfile) {
+				result.details.linkedinProfile = await tab.getUrl()
+			}
 			this.utils.log(`${url} successfully scraped.`, "done")
 		} catch (err) {
 			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
