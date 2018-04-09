@@ -23,8 +23,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-require("coffee-script/register")
-const Hunter = require("./lib-Hunter")
 // }
 
 const createUrl = (search, circles) => {
