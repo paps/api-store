@@ -1,5 +1,5 @@
 // Phantombuster configuration {
-	"phantombuster dependencies: lib-Hunter.js"
+"phantombuster dependencies: lib-Hunter.js"
 // }
 
 /**
@@ -40,7 +40,7 @@ const loadProfileSections = async tab => {
 			try {
 				await tab.click(button)
 				await tab.wait(2500)
-			} catch (error) {}
+			} catch (error) { continue }
 		}
 	}
 	// Restore the initial position on the page after loading all sections
@@ -66,11 +66,12 @@ const scrapeInfos = (arg, callback) => {
 				 * For now it's used when we need to scrape background-image
 				 * we remove those parts of the result string: url(" & ")
 				 */
-				result[info.key] = selector.querySelector(info.selector)
-										   .style[info.style]
-										   .trim()
-										   .replace('url(\"', '')
-										   .replace('\")', '')
+				result[info.key] =
+									selector.querySelector(info.selector)
+										.style[info.style]
+										.trim()
+										.replace("url(\"", "")
+										.replace("\")", "")
 			}
 		}
 		return result
@@ -94,9 +95,9 @@ const scrapeInfos = (arg, callback) => {
 			 * 1 - if you look YOUR linkedIn profile with YOUR li_at cookie: it will be .pv-top-card-section__profile-photo-container img
 			 * 2 - if you look SOMEONE ELSE linkedIn profile with YOUR li_at cookie: it will be .presence-entity__image
 			 */
-			 /**
-			  * NOTE: various field is an object depending what you need to get
-			  */
+			/**
+			 * NOTE: various field is an object depending what you need to get
+			 */
 			{ key: "imgUrl", style: "backgroundImage", selector: ".presence-entity__image" },
 			{ key: "imgUrl", attribute: "src", selector: ".profile-photo-edit__preview" },
 			{ key: "fullName", attribute: "textContent", selector: ".pv-top-card-section__name" },
@@ -107,8 +108,22 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "school", attribute: "textContent", selector: ".pv-top-card-section__school"},
 			{ key: "location", attribute: "textContent", selector: ".pv-top-card-section__location"},
 			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-section__connections > span"},
-			{ key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
+			// { key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
 		])
+		/**
+		 * HACK: issue #49 lib-LinkedInScraper: Better description field extraction
+		 * the description selector can contains br span tags,
+		 * the code below only get text node content and replace all br tags with a newline character
+		 */
+		if (document.querySelector(".pv-top-card-section__summary-text")) {
+			infos.general.description =
+									Array.from(document.querySelector(".pv-top-card-section__summary-text").childNodes)
+										.map(el => (el.nodeType === Node.TEXT_NODE) ? el.textContent.trim() : null)
+										.join("\n")
+										.trim()
+		} else {
+			infos.general.description = ""
+		}
 		// Get subscribers count
 		if (document.querySelector("div.pv-profile-section.pv-recent-activity-section")) {
 			/**
@@ -116,7 +131,7 @@ const scrapeInfos = (arg, callback) => {
 			 * NOTE: This selector is not always available, the script should test before accessing data from the selector
 			 */
 			if (document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span")) {
-				const subscribersText = document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span").textContent.trim().replace(/\,/g, "").replace(/\./g, "").replace(/\s/g, "")
+				const subscribersText = document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span").textContent.trim().replace(/,/g, "").replace(/\./g, "").replace(/\s/g, "")
 				if (subscribersText.match(/[0-9]*/g)) {
 					infos.general.subscribers = subscribersText.match(/[0-9]*/g)[0]
 				}
@@ -128,8 +143,8 @@ const scrapeInfos = (arg, callback) => {
 			if (jobs) {
 				infos.jobs = getListInfos(jobs, [
 					{ key: "companyName", attribute: "textContent", selector: ".pv-entity__secondary-title" },
-					{ key: "companyUrl", attribute: "href", selector: `a[data-control-name="background_details_company"]` },
-					{ key: "jobTitle", attribute: "textContent", selector: `a[data-control-name="background_details_company"] div.pv-entity__summary-info > h3` },
+					{ key: "companyUrl", attribute: "href", selector: "a[data-control-name=\"background_details_company\"]" },
+					{ key: "jobTitle", attribute: "textContent", selector: "a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3" },
 					{ key: "dateRange", attribute: "textContent", selector: ".pv-entity__date-range > span:nth-child(2)" },
 					{ key: "location", attribute: "textContent", selector: ".pv-entity__location > span:nth-child(2)" },
 					{ key: "description", attribute: "textContent", selector: ".pv-entity__description" },
@@ -239,7 +254,7 @@ const scrapingProcess = async (tab, url, utils) => {
 // Function to format the infos for the csv file (less infos)
 const craftCsvObject = infos => {
 	let job = {}
-	if (infos.jobs[0]) {
+	if (infos.jobs && infos.jobs[0]) {
 		job = infos.jobs[0]
 	}
 
@@ -247,11 +262,11 @@ const craftCsvObject = infos => {
 	 * We should know if infos object contains all fields in order to return the CSV formatted Object
 	 * If the scraping process failed to retrieve some data, the function will fill gaps by a null value
 	 */
-	const hasDetails = infos.hasOwnProperty('details')
-	const hasGeneral = infos.hasOwnProperty('general')
+	const hasDetails = infos.hasOwnProperty("details")
+	const hasGeneral = infos.hasOwnProperty("general")
 
 	return {
-		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null ,
+		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
@@ -266,9 +281,9 @@ const craftCsvObject = infos => {
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
-		skill1: (infos.skills[0]) ? infos.skills[0].name : null,
-		skill2: (infos.skills[1]) ? infos.skills[1].name : null,
-		skill3: (infos.skills[2]) ? infos.skills[2].name : null,
+		skill1: (infos.skills && infos.skills[0]) ? infos.skills[0].name : null,
+		skill2: (infos.skills && infos.skills[1]) ? infos.skills[1].name : null,
+		skill3: (infos.skills && infos.skills[2]) ? infos.skills[2].name : null,
 	}
 }
 
@@ -286,8 +301,8 @@ class LinkedInScraper {
 		this.utils = utils
 		this.hunter = null
 		if (hunterApiKey) {
-			require('coffee-script/register')
-			this.hunter = new (require('./lib-Hunter'))(hunterApiKey)
+			require("coffee-script/register")
+			this.hunter = new (require("./lib-Hunter"))(hunterApiKey)
 		}
 	}
 
@@ -300,8 +315,8 @@ class LinkedInScraper {
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
 	async scrapeProfile(tab, url = null) {
-		let result = []
-		let csvResult = []
+		let result = {}
+		let csvResult = {}
 		try {
 			result = await scrapingProcess(tab, url, this.utils)
 			/**
@@ -313,10 +328,12 @@ class LinkedInScraper {
 			}
 			this.utils.log(`${url} successfully scraped.`, "done")
 		} catch (err) {
+			result.details = {}
+			result.details["linkedinProfile"] = url
 			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
 		}
 
-		if (this.hunter && result.jobs.length >= 0) {
+		if (this.hunter && result.jobs.length > 0) {
 			try {
 				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , company: result.jobs[0].companyName })
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
@@ -326,7 +343,7 @@ class LinkedInScraper {
 				}
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
-				result.details.mail = ''
+				result.details.mail = ""
 			}
 		}
 		csvResult = craftCsvObject(result)
