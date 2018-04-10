@@ -1,9 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
-const _ = require("underscore")
 const url = require("url")
 
 const Buster = require("phantombuster")
@@ -12,7 +11,6 @@ const buster = new Buster()
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -136,7 +134,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let [ searches, sessionCookie, circles, numberOfPage, queryColumn, hunterApiKey ] = utils.checkArguments([
+	let [ searches, sessionCookie, circles, numberOfPage, queryColumn ] = utils.checkArguments([
 		{ many: [
 			{ name: "search", type: "string", length: 1 },
 			{ name: "searches", type: "object", length: 1 },
@@ -145,8 +143,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "circles", type: "object", default: {first: true, second: true, third: true} },
 		{ name: "numberOfPage", type: "number", default: 5 },
-		{ name: "queryColumn", type: "boolean", default: false },
-		{ name: "hunterApiKey", type: "string", default: ""},
+		{ name: "queryColumn", type: "boolean", default: false }
 	])
 
 	if (typeof searches === "string") {
@@ -167,7 +164,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		} else if (isSearchURL === 1) {
 			searchUrl = createUrl(search, circles)
 		} else {
-			utils.log(`${search} doesn't represent neither a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
+			utils.log(`${search} doesn't represent a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
 			continue
 		}
 
