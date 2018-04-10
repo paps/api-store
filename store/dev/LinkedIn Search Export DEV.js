@@ -27,7 +27,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const createUrl = (search, circles) => {
 	const circlesOpt = `facetNetwork=["${circles.first ? "F" : ""}","${circles.second ? "S" : ""}","${circles.third ? "O" : ""}"]`
-	return (`https://www.linkedin.com/search/results/people/?keywords=${search}&${circlesOpt}`)
+	return (`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(search)}&${encodeURIComponent(circlesOpt)}`) // TODO: test + encodeURI
 }
 
 const scrapeResults = (arg, callback) => {
@@ -167,7 +167,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		} else if (isSearchURL === 1) {
 			searchUrl = createUrl(search, circles)
 		} else {
-			utils.log(`${search} doesn't neither a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
+			utils.log(`${search} doesn't represent neither a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
 			continue
 		}
 
