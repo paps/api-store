@@ -1,24 +1,24 @@
 // Phantombuster configuration {
-	"phantombuster command: nodejs"
-	"phantombuster package: 5"
-	"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster command: nodejs"
+"phantombuster package: 5"
+"phantombuster dependencies: lib-StoreUtilities.js"
 
-	const url = require("url")
-	const Buster = require("phantombuster")
-	const buster = new Buster()
-	
-	const Nick = require("nickjs")
-	const nick = new Nick({
-		loadImages: false,
-		printPageErrors: false,
-		printResourceErrors: false,
-		printNavigation: false,
-		printAborts: false,
-		debug: false,
-	})
-	
-	const StoreUtilities = require("./lib-StoreUtilities")
-	const utils = new StoreUtilities(nick, buster)
+const url = require("url")
+const Buster = require("phantombuster")
+const buster = new Buster()
+
+const Nick = require("nickjs")
+const nick = new Nick({
+	loadImages: false,
+	printPageErrors: false,
+	printResourceErrors: false,
+	printNavigation: false,
+	printAborts: false,
+	debug: false,
+})
+
+const StoreUtilities = require("./lib-StoreUtilities")
+const utils = new StoreUtilities(nick, buster)
 // }
 
 const SCRAPING_SELECTORS = {
@@ -74,7 +74,7 @@ const scrapePublication = (arg, cb) => {
 	if ((!postDescription) || (!postDescription.children)) {
 		postDescription = ""
 	} else {
-		postDescription = 
+		postDescription =
 			Array.from(postDescription.children)
 					.map(el => (el.textContent) ? el.textContent.trim() : "" )
 					.join(" ")
@@ -193,7 +193,7 @@ const isUrl = target => url.parse(target).hostname != null
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
 	if (!maxPosts) {
-		maxPosts = MAX_POSTS
+		maxPosts = 250 // by default we'll scrape 250 posts
 	}
 
 	if (!csvName) {
@@ -234,7 +234,7 @@ const isUrl = target => url.parse(target).hostname != null
 			continue
 		}
 
-		try { 
+		try {
 			await tab.waitUntilVisible("main")
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
