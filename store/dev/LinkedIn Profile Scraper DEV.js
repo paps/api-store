@@ -1,11 +1,10 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
-const _ = require("underscore")
 const needle = require("needle")
 
 const Buster = require("phantombuster")
@@ -14,7 +13,6 @@ const buster = new Buster()
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
