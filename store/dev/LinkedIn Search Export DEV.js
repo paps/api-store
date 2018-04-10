@@ -147,7 +147,9 @@ const isLinkedInSearchURL = (targetUrl) => {
 	])
 
 	if (typeof searches === "string") {
-		if (searches.indexOf("http") === 0) {
+		if (isLinkedInSearchURL(searches) === 0) {
+			searches = [ searches ]
+		} else if ((searches.toLowerCase().indexOf("http://") === 0) || (searches.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv(searches)
 		} else {
 			searches = [ searches ]
