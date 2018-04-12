@@ -25,19 +25,18 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
-// }
 
 let db = null
-const DB_NAME = 'database-linkedin-profile-scraper.csv'
-const JSON_NAME = 'result.json'
-const CSV_NAME = 'result.csv'
+const DB_NAME = "database-linkedin-profile-scraper.csv"
+const JSON_NAME = "result.json"
+// }
 
 const getDB = async (name = DB_NAME) => {
 	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
 		"X-Phantombuster-Key-1": buster.apiKey }
 	})
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
+		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${name}`
 		try {
 			await buster.download(url, DB_NAME)
 			const file = fs.readFileSync(DB_NAME, "UTF-8")
@@ -108,16 +107,22 @@ const filterRows = (str, db) => {
 			utils.log(`Stopping the scraping: ${timeLeft.message}`, "warning")
 			break
 		}
-		const infos = await linkedInScraper.scrapeProfile(tab, url)
-		result.push(infos.json)
-		csvResult.push(infos.csv)
-		db.push(infos.csv)
+		let infos
+		try {
+			infos = await linkedInScraper.scrapeProfile(tab, url)
+			result.push(infos.json)
+			csvResult.push(infos.csv)
+			db.push(infos.csv)
+		} catch (err) {
+			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
+			continue
+		}
 	}
 	await linkedIn.saveCookie()
 	await utils.saveResults(result, csvResult)
-	await utils.saveResult(csvResult, 'database-linkedin-profile-scraper')
+	await utils.saveResult(csvResult, "database-linkedin-profile-scraper")
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
