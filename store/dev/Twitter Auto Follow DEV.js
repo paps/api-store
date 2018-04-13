@@ -30,7 +30,7 @@ const needle = require("needle")
  * @param {Function} callback
  */
 const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
+	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
 
 /**
