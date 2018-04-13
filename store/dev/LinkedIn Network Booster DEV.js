@@ -35,7 +35,7 @@ const getDb = async () => {
 	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
 		"X-Phantombuster-Key-1": buster.apiKey
 	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
+	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
 		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
 		try {
 			await buster.download(url, DB_NAME)
@@ -84,9 +84,9 @@ const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
 const getFirstName = (arg, callback) => {
 	let name = ""
 	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-	  name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
 	} else if (document.querySelector("div.presence-entity__image")) {
-	  name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
 	}
 	if (!name.length) {
 		callback(null, "")
@@ -177,7 +177,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	const currentUrl = await tab.getUrl()
 	scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
 	if (!checkDb(currentUrl, db)) {
-		utils.log(`Already added ${profileId}.`, "done")
+		utils.log(`Already added ${scrapedProfile.profileId}.`, "done")
 	} else {
 		// 1- Case when you can add directly
 		if (selector === selectors[0]) {
@@ -196,7 +196,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 					utils.log(`Added ${url}.`, "done")
 				}
 			} else {
-				throw `Is in third circle and the onlySecondCircle option is set to true`
+				throw "Is in third circle and the onlySecondCircle option is set to true"
 			}
 		} else if (selector === selectors[2]) { // 3- Case when this people already invited you (auto accept)
 			await tab.click(selector)
@@ -246,7 +246,7 @@ nick.newTab().then(async (tab) => {
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
-.catch((err) => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch((err) => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
