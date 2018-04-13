@@ -68,12 +68,24 @@ const getLastExecJSON = async (filename) => {
 	}
 }
 
-const getUrlsToScrape = data => {
-	if (data.length === 0) {
+const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	let i = 0
+	const maxLength = data.length
+	const urls = []
+	if (maxLength === 0) {
 		utils.log("Input is empty or every profiles specified are scraped.", "warning")
-		nick.exit(0)
+		nick.exit()
 	}
-	return data
+
+	while (i < numberOfAddsPerLaunch && i < maxLength) {
+		const row = Math.floor(Math.random() * data.length)
+		urls.push(data[row].trim())
+		data.splice(row, 1)
+		i++
+	}
+
+	return urls
 }
 
 const filterRows = (str, db) => {
@@ -89,12 +101,20 @@ const filterRows = (str, db) => {
 ;(async () => {
 	utils.log("Getting the arguments...", "loading")
 	db = await getDB()
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
-	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)))
+
+	if (!numberOfAddsPerLaunch) {
+		numberOfAddsPerLaunch = urls.length
+	} else if (numberOfAddsPerLaunch > urls.length) {
+		numberOfAddsPerLaunch = urls.length
+	}
+
+	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
