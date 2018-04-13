@@ -306,17 +306,16 @@ const craftCsvObject = infos => {
  * @return {Promise<String>} Website company
  */
 const getCompanyWebsite = async (tab, url, utils) => {
-	let website
 	try {
 		await tab.open(url)
 		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
-		website = await tab.evaluate((arg, cb) => {
+		return await tab.evaluate((arg, cb) => {
 			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
 		})
 	} catch (err) {
 		utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
+		return null
 	}
-	return website
 }
 
 /**
@@ -377,7 +376,7 @@ class LinkedInScraper {
 					companyUrl = companyUrl ? companyUrl : result.jobs[0].companyName
 					await companyTab.close()
 				} else {
-					companyUrl = result.jobs[0].companyUrl
+					companyUrl = result.jobs[0].companyName
 				}
 				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , domain: companyUrl })
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
