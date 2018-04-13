@@ -115,7 +115,7 @@ const filterRows = (str, db) => {
 
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	// Two variables to save csv and json
