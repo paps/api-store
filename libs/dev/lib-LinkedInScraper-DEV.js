@@ -116,11 +116,22 @@ const scrapeInfos = (arg, callback) => {
 		 * the code below only get text node content and replace all br tags with a newline character
 		 */
 		if (document.querySelector(".pv-top-card-section__summary-text")) {
-			infos.general.description =
+			/**
+			 * NOTE: New LinkedIn UI use differents CSS selectors for description field
+			 */
+			if (document.querySelector(".lt-line-clamp__line")) {
+				infos.general.description =
+									Array.from(document.querySelectorAll(".lt-line-clamp__line"))
+										.map(el => el.textContent.trim())
+										.join("\n")
+										.trim()
+			} else {
+				infos.general.description =
 									Array.from(document.querySelector(".pv-top-card-section__summary-text").childNodes)
 										.map(el => (el.nodeType === Node.TEXT_NODE) ? el.textContent.trim() : null)
 										.join("\n")
 										.trim()
+			}
 		} else {
 			infos.general.description = ""
 		}
@@ -288,6 +299,27 @@ const craftCsvObject = infos => {
 }
 
 /**
+ * @description Function used to scrape the company website from it own LinkedIn comapny page
+ * @throws if there were an error during the scraping process
+ * @param {Object} tab - Nick.js tab
+ * @param {String} url - LinkedIn company URL
+ * @return {Promise<String>} Website company
+ */
+const getCompanyWebsite = async (tab, url, utils) => {
+	let website
+	try {
+		await tab.open(url)
+		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
+		website = await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
+		})
+	} catch (err) {
+		utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
+	}
+	return website
+}
+
+/**
  * @class {Scraping} LinkedInScraper
  * @classdesc Tiny class used to scrape data on a LinkedIn profile
  */
@@ -296,10 +328,12 @@ class LinkedInScraper {
 	 * @constructor
 	 * @param {StoreUtilities} utils -- StoreUtilities instance}
 	 * @param {String} [hunterApiKey] -- Hunter API key}
+	 * @param {Object} [nick] -- Nickjs instance}
 	 */
-	constructor(utils, hunterApiKey = null) {
+	constructor(utils, hunterApiKey = null, nick = null) {
 		this.utils = utils
 		this.hunter = null
+		this.nick = nick
 		if (hunterApiKey) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey)
@@ -329,13 +363,23 @@ class LinkedInScraper {
 			this.utils.log(`${url} successfully scraped.`, "done")
 		} catch (err) {
 			result.details = {}
+			result.jobs = []
 			result.details["linkedinProfile"] = url
 			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
 		}
 
 		if (this.hunter && result.jobs.length > 0) {
 			try {
-				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , company: result.jobs[0].companyName })
+				let companyUrl = ""
+				if (this.nick) {
+					const companyTab = await this.nick.newTab()
+					companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
+					companyUrl = companyUrl ? companyUrl : result.jobs[0].companyName
+					await companyTab.close()
+				} else {
+					companyUrl = result.jobs[0].companyUrl
+				}
+				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , domain: companyUrl })
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
 				// Don't erase non empty value, if Hunter.io doesn't return an email
 				if (hunterSearch.email) {
