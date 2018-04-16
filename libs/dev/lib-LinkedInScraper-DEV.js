@@ -392,6 +392,43 @@ class LinkedInScraper {
 		csvResult = craftCsvObject(result)
 		return { csv: csvResult, json: result }
 	}
+	
+	/**
+	 * @async
+	 * @description Profile visitor Method
+	 * NOTE: this method will open, load all section from a given LinkedIn profile URL
+	 * @param {Tab} tab -- Nick.js tab, with a LinkedIn session }
+	 * @param {String} url -- LinkedIn Profile URL }
+	 * @return {Promise<void>} no data returned
+	 */
+	async visitProfile(tab, url) {
+		const [httpCode] = await tab.open(url)
+		if (httpCode !== 200) {
+			throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
+		}
+		try {
+			/**
+			 * NOTE: Using 7500ms timeout to make sure that the page is loaded
+			 */
+			await tab.waitUntilVisible("#profile-wrapper", 15000)
+			this.utils.log("Profile loaded.", "done")
+		} catch (error) {
+			throw("Could not load the profile.")
+		}
+		try {
+			this.utils.log("Scrolling to load all data of the profile...", "loading")
+			await fullScroll(tab)
+		} catch (error) {
+			this.utils.log("Error during the scroll of the page.", "warning")
+		}
+		try {
+			await loadProfileSections(tab)
+			this.utils.log("All data loaded", "info")
+		} catch (error) {
+			this.utils.log("Error during the loading of data.", "warning")
+		}
+		this.utils.log("Profile visited", "done")
+	}
 }
 
 module.exports = LinkedInScraper
