@@ -105,11 +105,24 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "hasAccount", attribute: "textContent", selector: ".pv-member-badge .visually-hidden" },
 			{ key: "headline", attribute: "textContent", selector: ".pv-top-card-section__headline" },
 			{ key: "company", attribute: "textContent", selector: ".pv-top-card-section__company"},
+			{ key: "company", attribute: "textContent", selector: ".pv-top-card-v2-section__link.pv-top-card-v2-section__link-experience.mb1" }, // Issue #52
 			{ key: "school", attribute: "textContent", selector: ".pv-top-card-section__school"},
+			{ key: "school", attribute: "textContent", selector: ".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__school-name" }, // Issue #52
 			{ key: "location", attribute: "textContent", selector: ".pv-top-card-section__location"},
 			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-section__connections > span"},
+			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections" } // Issue #52
 			// { key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
 		])
+
+		const sel = document.querySelector(".pv-profile-section.pv-top-card-section .pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections")
+		if (sel) {
+			/**
+			 * HACK: Issue #52
+			 * Scrapping only the number not the text (thanks to the new Linkedin UI)
+			 */
+			infos.general.connections = sel.textContent.trim().match(/\d+\+?/)[0]
+		}
+
 		/**
 		 * HACK: issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
@@ -166,6 +179,7 @@ const scrapeInfos = (arg, callback) => {
 			if (schools) {
 				infos.schools = getListInfos(schools, [
 					{ key: "schoolUrl", attribute: "href", selector: "a.background_details_school" },
+					{ key: "schoolUrl", attribute: "href", selector: "a[data-control-name=\"background_details_school\"]" }, // Issue #52
 					{ key: "schoolName", attribute: "textContent", selector: ".pv-entity__school-name" },
 					{ key: "degree", attribute: "textContent", selector: ".pv-entity__secondary-title.pv-entity__degree-name span.pv-entity__comma-item" },
 					{ key: "degreeSpec", attribute: "textContent", selector: ".pv-entity__secondary-title.pv-entity__fos span.pv-entity__comma-item" },
@@ -173,6 +187,46 @@ const scrapeInfos = (arg, callback) => {
 					{ key: "description", attribute: "textContent", selector: ".pv-entity__description" },
 				])
 			}
+
+			/**
+			 * @param {String} clickSelector -- CSS selector}
+			 * @return {Promise<Object>} Scraped informations from the popup
+			 */
+			const waitForModalToLoad = (clickSelector) => {
+				const clickTimeStamping = Date.now()
+				return new Promise((resolve, reject) => {
+					document.querySelector(clickSelector).click()
+					const waitForModal = () => {
+						const isModalIn = document.querySelector("artdeco-modal")
+						if (!isModalIn) {
+							if (Date.now() - clickTimeStamping >= 30000) {
+								document.querySelector("artdeco-modal button.artdeco-dismiss").click()
+								resolve({ linkedinProfile: "", websites: "", twitter: "", phone: "", mail: "" })
+							}
+							waitForModal()
+						} else {
+							const MODAL_SELECTORS = {
+								LINKED_URL: ".ci-vanity-url .pv-contact-info__contact-link",
+								WEBSITE_URL: ".ci-websites .pv-contact-info__contact-link",
+								TWITTER_URL: ".ci-twitter .pv-contact-info__contact-link",
+								MAIL_URL: ".ci-email .pv-contact-info__contact-link",
+								PHONE_URL: ".ci-phone .pv-contact-info__contact-link"
+							}
+							const scraped = {
+								linkedinProfile: (document.querySelector(MODAL_SELECTORS.LINKED_URL)) ? document.querySelector(MODAL_SELECTORS.LINKED_URL).href : "",
+								websites: (document.querySelector(MODAL_SELECTORS.WEBSITE_URL)) ? document.querySelector(MODAL_SELECTORS.WEBSITE_URL).textContent.trim() : "",
+								twitter: (document.querySelector(MODAL_SELECTORS.TWITTER_URL)) ? document.querySelector(MODAL_SELECTORS.TWITTER_URL).href : "",
+								phone: (document.querySelector(MODAL_SELECTORS.PHONE_URL)) ? document.querySelector(MODAL_SELECTORS.PHONE_URL).href : "",
+								mail: (document.querySelector(MODAL_SELECTORS.MAIL_URL)) ? document.querySelector(MODAL_SELECTORS.MAIL_URL).href : ""
+							}
+							document.querySelector("artdeco-modal button.artdeco-dismiss").click()
+							resolve(scraped)
+						}
+					}
+					setTimeout(waitForModal, 100)
+				})
+			}
+
 			// Get all profile infos listed
 			const contactInfos = document.querySelectorAll(".pv-profile-section.pv-contact-info div.pv-profile-section__section-info")
 			if (contactInfos) {
@@ -184,6 +238,7 @@ const scrapeInfos = (arg, callback) => {
 					{ key: "mail", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-email .pv-contact-info__contact-link" },
 				])
 			}
+
 			// Get all profile skills listed
 			const skills = document.querySelectorAll("ul.pv-featured-skills-list > li")
 			const _skills = document.querySelectorAll("ol.pv-skill-categories-section__top-skills > li, ol.pv-skill-category-list__skills_list > li")
@@ -221,6 +276,23 @@ const scrapeInfos = (arg, callback) => {
 			}
 			// Delete this (only needed to determine the first name)
 			delete infos.general.hasAccount
+
+			/**
+			 * HACK: Issue #52
+			 * We scrape details from the account at the end of the process, if the browser use v2 LinkedIn selectors
+			 * if not, the control flow is ignored ... sadly we need to duplicate some process code
+			 */
+			if (document.querySelector("a[data-control-name=\"contact_see_more\"]")) {
+				waitForModalToLoad(".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__contact-info")
+					.then(details => {
+						infos.details = details
+						// Delete tel: for the phone
+						if (infos.details.phone) {
+							infos.details.phone = infos.details.phone.replace("tel:", "")
+						}
+						callback(null, infos)
+					})
+			}
 
 			// Delete tel: for the phone
 			if (infos.details.phone) {
