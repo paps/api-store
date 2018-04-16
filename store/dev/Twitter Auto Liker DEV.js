@@ -24,6 +24,7 @@ const utils = new StoreUtilities(nick, buster)
 const DEFAULT_RES_NAME = "result"
 const DB_NAME = "twitter-auto-liker.csv"
 const DEFAULT_LIKE_COUNT = 1
+const DEFAULT_PROFILE_LAUNCH = 1
 let db
 // }
 
@@ -48,7 +49,7 @@ const getDb = async (filename = DB_NAME) => {
 
 const filterUrls = (str, db) => {
 	for (const line of db) {
-		if (line.twitterUrl === str) {
+		if (line.twitterUrl === str || line.twitterUrl.startsWith(str)) {
 			return false
 		}
 	}
@@ -285,7 +286,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	}
 
 	if (!numberOfProfilesPerLaunch) {
-		numberOfProfilesPerLaunch = queries.length
+		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH
 	}
 
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el, db)), numberOfProfilesPerLaunch)
