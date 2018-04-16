@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -22,7 +21,9 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const DEFAULT_RES_NAME = "result"
 const DB_NAME = "twitter-auto-liker.csv"
+const DEFAULT_LIKE_COUNT = 1
 let db
 // }
 
@@ -157,18 +158,24 @@ const getLoadedTweetsCount = (arg, cb) => {
  * @throws if there were an error during when opening the profile or during the like procedure
  * @param {Object} tab - Nickjs tab object
  * @param {String} profile - url or profile name to open
- * @param {Number} [likesCount] - Total count of tweets to like in the given profile (default 20)
+ * @param {Number} [likesCount] - Total count of tweets to like in the given profile (default 1)
  * @return {Promise<Object>}
  */
-const loadProfileAndLike = async (tab, profile, likesCount = 20) => {
+const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT) => {
 	const url = isUrl(profile) ? profile : `https://twitter.com/${profile}`
 
 	const [httpCode] = await tab.open(url)
 	if (httpCode === 404) {
 		throw `Cannot open the URL: ${url}`
 	}
-	await tab.waitUntilVisible(".ProfileHeading", 7500)
-	const tweetsCount = await tab.evaluate(getTweetsCount)
+	let tweetsCount = 0
+	try {
+		await tab.waitUntilVisible(".ProfileHeading", 7500)
+		tweetsCount = await tab.evaluate(getTweetsCount)
+	} catch (err) {
+		utils.log(`Cannot open profile ${url}, due to ${err.message || err}`, "warning")
+		return { twitterUrl: url, likeCount: 0 }
+	}
 	/**
 	 * NOTE: If the likeCount parameter is bigger than the total tweets count, the script will like every tweets
 	 */
@@ -179,33 +186,52 @@ const loadProfileAndLike = async (tab, profile, likesCount = 20) => {
 	utils.log(`Now loading ${likesCount} tweets ...`, "loading")
 	let loadedCount = await tab.evaluate(getLoadedTweetsCount)
 
-	while (loadedCount < likesCount) {
+	/**
+	 * NOTE: We need to exit of the loop if:
+	 * - We have less tweets than the required like count
+	 * - We loaded all tweets to like
+	 * - We can not load tweets to like
+	 */
+	while (loadedCount < likesCount || likesCount >= loadedCount) {
 		loadedCount = await tab.evaluate(getLoadedTweetsCount)
 		buster.progressHint(loadedCount / likesCount, `Tweets loaded: ${loadedCount}/${likesCount}`)
 		await tab.scrollToBottom()
 		/**
 		 * HACK: Since we don't load images with Nick.js to run the script faster,
-		 * we loose the tweets loading spinner, since we can now how many tweets are loaded at screen
-		 * we just wait that there is more tweets at screen
+		 * we loose the tweets loading spinner, since we can now how many tweets are loaded at screen at anytime
+		 * wa can just wait that there is more tweets at screen
 		 */
 		try {
-			await tab.evaluate((arg, cb) => {
+			const state = await tab.evaluate((arg, cb) => {
 				const startingTimestamp = Date.now()
 				const waitForNewTweets = () => {
 					const loadedTweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
-					if (loadedTweets <= arg.previousTweetsCount) {
+					/**
+					 * HACK: If this dataset is not in the DOM, it means that there are no more tweets to load
+					 */
+					if (!document.querySelector(".stream-container").dataset.minPosition) {
+						cb(null, "DONE")
+					} else if (loadedTweets <= arg.previousTweetsCount) {
 						if (Date.now() - startingTimestamp >= 30000) {
-							cb("Tweets cannot be loaded after waiting 30s")
+							cb("Tweets cannot be loaded after waiting 30s, or end of timeline reached")
 						}
 						setTimeout(waitForNewTweets, 100)
-					} else if (!document.querySelector(".stream-container").dataset.minPosition) {
-						cb(true)
 					} else {
 						cb(null)
 					}
 				}
 				waitForNewTweets()
-			}, { previousTweetsCount: loadedCount })
+			},
+			{ previousTweetsCount: loadedCount }
+			)
+
+			/**
+			 * HACK: Sometimes the visual tweets count on the profile doesn't represent the loaded tweet count,
+			 * so if we reached at the end of the timeline we just break the loop
+			 */
+			if (state === "DONE") {
+				break
+			}
 		} catch (err) {
 			utils.log(`Error during tweets loading: ${err.message || err}`, "info")
 			break
@@ -241,7 +267,13 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch } = utils.validateArguments()
 
 	if (!csvName) {
-		csvName = "result"
+		csvName = DEFAULT_RES_NAME
+	}
+
+	if (typeof queries === "string") {
+		queries = [ (isTwitterUrl(queries)) ? queries : `https://twitter.com/${queries}` ]
+	} else if (Array.isArray(queries)) {
+		queries = queries.map(el => isUrl(el) ? el : `https://twitter.com/${el}`)
 	}
 
 	if (spreadsheetUrl) {
@@ -249,14 +281,13 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ (isTwitterUrl(spreadsheetUrl)) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}` ]
-		} else if (Array.isArray(spreadsheetUrl)) {
-			queries = []
-			for (const one of spreadsheetUrl) {
-				queries.push(isUrl(one) ? one : `https://twitter/com/${one}`)
-			}
 		}
 	}
-	
+
+	if (!numberOfProfilesPerLaunch) {
+		numberOfProfilesPerLaunch = queries.length
+	}
+
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el, db)), numberOfProfilesPerLaunch)
 	await twitterConnect(tab, sessionCookie)
 
