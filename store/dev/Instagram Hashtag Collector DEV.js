@@ -202,6 +202,64 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 const isUrl = target => url.parse(target).hostname !== null
 
 /**
+ * @description
+ * @param {Object|Array} posts -- one or a list of scraped posts}
+ * @return {Object} All hashtags with their occurrence count
+ */
+const hashtagsOccurrences = (posts) => {
+	let allHashtags = []
+	let uniqueHashtags
+	let result = {}
+
+	/**
+	 * NOTE: collecting all hashtags from input
+	 */
+	if (Array.isArray(posts)) {
+		for (const post of posts) {
+			allHashtags = allHashtags.concat(post.description.match(/#[a-zA-Z0-9]+/g))
+		}
+	} else  {
+		allHashtags = posts.description.match(/#[a-zA-Z0-9]+/g)
+	}
+	/**
+	 * NOTE: removing duplicated hashtags & order to forging the result object
+	 */
+	uniqueHashtags = Array.from(new Set(allHashtags))
+	for (const hashtag of uniqueHashtags) {
+		result[hashtag] = 0
+	}
+
+	/**
+	 * NOTE: Incrementing hashtags if there is an occurence
+	 */
+	for (const one of allHashtags) {
+		result[one] += 1 
+	}
+
+	/**
+	 * NOTE: Filtering the most occured hashtag
+	 */
+	result["mostScrapedHashtag"] = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b)
+	return result
+}
+
+/**
+ * @description Function used to create a JS object representing the CSV output
+ * @param {Object} data -- JS object}
+ * @return {Object} CSV JS object
+ */
+const forgeCsvFromJSON = data => {
+	let csv = []
+	for (const one of data) {
+		let tmp = Object.assign({}, one)
+		tmp.mostScrapedHashtag = tmp.hashtagsOccurrences.mostScrapedHashtag
+		delete tmp.hashtagsOccurrences
+		csv.push(tmp)
+	}
+	return csv
+}
+
+/**
  * @async
  * @description
  * @param {Tab} tab -- Nikcjs tab with an Instagram session }
@@ -272,7 +330,7 @@ const searchInput = async (tab, searchTerm, type) => {
 	 * Chrome will open an URL like www.instagram.com/explore/tags/xxx/#
 	 */
 	hashtags = hashtags.map(el => el.startsWith("#") ? el.substr(1) : el)
-	const results = []
+	let results = []
 	for (const hashtag of hashtags) {
 		const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
 		if (httpCode === 404) {
@@ -292,8 +350,14 @@ const searchInput = async (tab, searchTerm, type) => {
 			break
 		}
 	}
+	const res = hashtagsOccurrences(results)
+	for (const one of results) {
+		one.hashtagsOccurrences = res
+	}
+	const csvResult = forgeCsvFromJSON(results)
+	utils.log(`${res.mostScrapedHashtag} has ${res[res.mostScrapedHashtag]} occurences during the scraping process`, "info")
 	utils.log(`${results.length} posts scraped`, "done")
-	await utils.saveResults(results, results, csvName)
+	await utils.saveResults(results, csvResult, csvName)
 	nick.exit()
 })()
 	.catch(err => {
