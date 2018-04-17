@@ -27,7 +27,11 @@ const SCRAPING_SELECTORS = {
 	likeSelector: "section div span > span",
 	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
 	pubDateSelector: "time",
-	descriptionSelector: "ul > li:first-child span"
+	descriptionSelector: "ul > li:first-child span",
+	videoSelector: "article div:not([class]) video",
+	postImage: "article div:not([class]) img", // To scrape the post image, we need to specify article an the content div
+	profileImage: "article img",
+	location: "header div:last-of-type > div:last-of-type a:last-of-type" // Location if present in the post
 }
 
 /**
@@ -45,7 +49,7 @@ const instagramConnect = async (tab, sessionCookie) => {
 		secure: true,
 		httpOnly: true
 	})
-	await tab.open('https://instagram.com')
+	await tab.open("https://instagram.com")
 	try {
 		await tab.waitUntilVisible("main")
 		const name = await tab.evaluate((arg, cb) => {
@@ -75,24 +79,40 @@ const scrapePublication = (arg, cb) => {
 		postDescription = ""
 	} else {
 		postDescription =
-			Array.from(postDescription.children)
-					.map(el => (el.textContent) ? el.textContent.trim() : "" )
-					.join(" ")
+			Array
+				.from(postDescription.children)
+				.map(el => (el.textContent) ? el.textContent.trim() : "" )
+				.join(" ")
 	}
 	/**
 	 * NOTE: If the publication have less than 10 likes,
 	 * there is no counter but all instagram users names
 	 */
-	if (baseSelector.querySelector(arg.selectors.likeSelector))
-		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim(), 10)
-	else
+	if (baseSelector.querySelector(arg.selectors.likeSelector)) {
+		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\s/g, ""), 10)
+	} else {
 		data["likes"] = baseSelector.querySelectorAll(arg.selectors.likeAlternativeSelector).length
+	}
 
 	data["profileUrl"] = baseSelector.querySelector(arg.selectors.profileSelector).href || ""
 	data["profileName"] = baseSelector.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
 	data["date"] = baseSelector.querySelector(arg.selectors.pubDateSelector).dateTime || ""
 	data["description"] = postDescription
 	data["postUrl"] = baseSelector.querySelector(arg.selectors.pubDateSelector).parentElement.href || ""
+
+	if (baseSelector.querySelector(arg.selectors.videoSelector)) {
+		data["postVideo"] = baseSelector.querySelector(arg.selectors.videoSelector).src
+		data["videoThumbnail"] = baseSelector.querySelector(arg.selectors.videoSelector).poster
+	}
+
+	if (baseSelector.querySelector(arg.selectors.postImage)) {
+		data["postImage"] = baseSelector.querySelector(arg.selectors.postImage).src
+	}
+
+	if (baseSelector.querySelector(arg.selectors.location)) {
+		data["location"] = baseSelector.querySelector(arg.selectors.location).textContent.trim()
+	}
+
 	cb(null, data)
 }
 
@@ -154,9 +174,6 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 				const waitForNewLoadedPost = () => {
 					const time = document.querySelector(`${arg.selectors.baseSelector} ${arg.selectors.pubDateSelector}`)
 					if ((!time) || (time.parentElement.href === arg.previousPost)) {
-						/**
-						 * HACK: No need to wait more than 30 seconds
-						 */
 						if ((Date.now() - startTime) >= 30000) {
 							cb("New post cannot be loaded after 30s")
 						}
@@ -182,7 +199,36 @@ const loadPosts = async (tab, arr, count, hashtag) => {
  * @param {String} target
  * @return { Boolean } true if target represents an URL otherwise false
  */
-const isUrl = target => url.parse(target).hostname != null
+const isUrl = target => url.parse(target).hostname !== null
+
+/**
+ * @async
+ * @description
+ * @param {Tab} tab -- Nikcjs tab with an Instagram session }
+ * @param {String} searchTerm -- Input given by the user }
+ * @param {String} type -- Determine if we need to sort locations or hashtags URLs }
+ * @return {Promise<String>}
+ */
+const searchInput = async (tab, searchTerm, type) => {
+	/**
+	 * Fill the search input
+	 */
+	await tab.sendKeys("nav input", searchTerm, {
+		reset: true,
+		keepFocus: true,
+		modifiers: {}
+	})
+
+	const found = await tab.evaluate((arg, cb) => {
+		const urls =
+					Array
+						.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+						.map(el => el.href)
+						.filter(el => el.startsWith(`https://www.instagram.com/explore/${arg.type}`))
+		cb(null, urls.shift())
+	}, { type })
+	return found
+}
 
 /**
  * @description Main function
@@ -193,7 +239,7 @@ const isUrl = target => url.parse(target).hostname != null
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
 	if (!maxPosts) {
-		maxPosts = 250 // by default we'll scrape 250 posts
+		maxPosts = MAX_POSTS // by default we'll scrape 1000 posts
 	}
 
 	if (!csvName) {
@@ -250,7 +296,7 @@ const isUrl = target => url.parse(target).hostname != null
 	await utils.saveResults(results, results, csvName)
 	nick.exit()
 })()
-.catch(err => {
-	utils.log(`Error during execution: ${err}`, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(`Error during execution: ${err}`, "error")
+		nick.exit(1)
+	})
