@@ -106,9 +106,18 @@ const getCompanyInfo = async (tab, link) => {
 				let link = ""
 				utils.log(`Getting infos for ${company}`, "loading")
 				if (!fullUrl) {
-					await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
-					await tab.waitUntilVisible("div.search-results-container")
-					link = await tab.evaluate(scrapeCompanyLink)
+					/**
+					 * HACK: If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
+					 * the script will sraightforwardly forge an URL with the given ID
+					 * It coulds fail if the input is an number but doesn't represents an ID
+					 */
+					if (!isNaN(company)) {
+						link = `https://www.linkedin.com/company/${company}`
+					} else {
+						await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
+						await tab.waitUntilVisible("div.search-results-container")
+						link = await tab.evaluate(scrapeCompanyLink)
+					}
 				} else {
 					link = company
 				}
