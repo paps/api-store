@@ -441,30 +441,37 @@ class LinkedInScraper {
 
 		if (this.hunter && result.jobs.length > 0) {
 			try {
-				let companyUrl = ""
+				let companyUrl = null
 				if (this.nick) {
 					const companyTab = await this.nick.newTab()
 					companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
-					companyUrl = companyUrl ? companyUrl : result.jobs[0].companyName
 					await companyTab.close()
+				}
+				const hunterPayload = {}
+				if (result.general.firstName && result.general.lastName) {
+					hunterPayload.first_name = result.general.firstName
+					hunterPayload.last_name = result.general.lastName
 				} else {
-					companyUrl = result.jobs[0].companyName
+					hunterPayload.full_name = result.general.fullName
 				}
-				const hunterSearch = await this.hunter.find({ first_name: result.general.firstName, last_name: result.general.lastName , domain: companyUrl })
-				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName}`, "info")
-				// Don't erase non empty value, if Hunter.io doesn't return an email
-				if (hunterSearch.email) {
-					result.details.mail = hunterSearch.email
+				if (!companyUrl) {
+					hunterPayload.company = result.jobs[0].companyName
+				} else {
+					hunterPayload.domain = companyUrl
 				}
+				this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
+				const hunterSearch = await this.hunter.find(hunterPayload)
+				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
+				result.details.emailFromHunter = hunterSearch.email
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
-				result.details.mail = ""
+				result.details.emailFromHunter = ""
 			}
 		}
 		csvResult = craftCsvObject(result)
 		return { csv: csvResult, json: result }
 	}
-	
+
 	/**
 	 * @async
 	 * @description Profile visitor Method

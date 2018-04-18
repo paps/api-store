@@ -226,7 +226,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "columnName", type: "string", default: "" },
 		{ name: "hunterApiKey", type: "string", default: "" },
 	])
-	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null)
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
