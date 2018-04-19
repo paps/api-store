@@ -122,6 +122,35 @@ class LinkedIn {
 		}
 	}
 
+	/**
+	 * @param {Object} tab -- Nickjs tab
+	 * @return {Promise<Boolean>} true if reached otherwise false
+	 */
+	async hasReachedCommercialLimit(tab) {
+		const COMMERCIAL_LIMIT_SELECTOR = ".search-paywall__info"
+		const BLURED_RESULT_SELECTOR = ".search-result__profile-blur"
+		const RESULT = ".search-result__info"
+
+		/**
+		 * NOTE: Best case limit selector & blurred result no need to continue the scrapping
+		 */
+		if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR) && await tab.isPresent(BLURED_RESULT_SELECTOR)) {
+			return true
+		/**
+		 * NOTE: A tricky case if there are results, blured results in the page & the limit selector,
+		 * we let the script scrape but the next call will returns false
+		 */
+		} else if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR) && await tab.isPresent(RESULT) && await tab.isPresent(BLURED_RESULT_SELECTOR)) {
+			return false
+		/**
+		 * NOTE: Yet another tricky case if the script was scraping & change page, we need to check if there are results & if the limit selector is present
+		 */
+		} else if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR) && !await tab.isPresent(RESULT)) {
+			return true
+		}
+		return false
+	}
+
 }
 
 module.exports = LinkedIn
