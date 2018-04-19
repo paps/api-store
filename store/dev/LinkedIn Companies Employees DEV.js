@@ -21,6 +21,8 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+const COMMERCIAL_LIMIT_SELECTOR = ".search-paywall__info"
+const BLURRED_RESULT_SELECTOR = ".search-result__profile-blur"
 // }
 
 const jsonToCsv = json => {
@@ -44,7 +46,7 @@ const scrapeResults = (args, callback) => {
 			let currentJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
-				currentJob = currentJob.replace(/^.+ ?: ?\n/, '').trim()
+				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
 			}
 			if (url !== window.location.href + "#") {
 				linkedInUrls.push({
@@ -73,6 +75,25 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 		utils.log(`Getting urls from page ${i}...`, "loading")
 		await tab.open(`https://www.linkedin.com/search/results/people/?facetCurrentCompany=["${id}"]&page=${i}`)
 		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
+
+		/**
+		 * NOTE: If those 2 selectors are present in the page, it means that
+		 * the loged user has reached the LinkedIn commercial use limit
+		 * 
+		 * If there is only the div containing a message from LinkedIn it just means that,
+		 *  the loged user has almost reached the commercial use limit
+		 */
+		if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR) && await tab.isPresent(BLURRED_RESULT_SELECTOR)) {
+			const messageToPrint = await tab.evaluate((arg, cb) => {
+				const headLine = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info h2").textContent.trim() : ""
+				const subText = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info p:first-of-type").textContent.trim() : ""
+				const res = `${headLine}\n${subText}`
+				cb(null, res)
+			})
+			utils.log(messageToPrint, "warning")
+			break
+		}
+
 		if (selector === selectors[0]) {
 			break
 		} else {
@@ -94,25 +115,25 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
  * @throws String, the function will throw if there were an error while retrieving the data or if there is no handler
  */
 const getIdFromUrl = async (url, tab) => {
-	if (!isNaN(parseInt(url))) {
-		return parseInt(url)
+	if (!isNaN(parseInt(url, 10))) {
+		return parseInt(url, 10)
 	} else {
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			const [httpCode, httpStatus] = await tab.open(url)
-			if (httpCode == 404) {
+			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}
 			await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
 			let tmp = await tab.evaluate((argv, cb) => {
 				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
 				let u = new URL(ids)
-				ids = u.searchParams.get("facetCurrentCompany").split('\"\,\"').pop()
-				ids = ids.replace('\[\"', "").replace('\"\]', "")
+				ids = u.searchParams.get("facetCurrentCompany").split("\",\"").pop()
+				ids = ids.replace("[\"", "").replace("\"]", "")
 				cb(null, ids)
 			})
-			return parseInt(tmp)
+			return tmp.includes(",") ? tmp : parseInt(tmp, 10)
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
-			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1])
+			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
 		} else {
 			throw "could not get id from " + url
 		}
@@ -155,7 +176,7 @@ const getIdFromUrl = async (url, tab) => {
 	await utils.saveResults(result, csvResult, "result", ["url", "name", "job", "location", "currentJob", "companyUrl"])
 	nick.exit()
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
