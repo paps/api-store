@@ -362,6 +362,7 @@ const craftCsvObject = infos => {
 		jobDescription: job.description || null,
 		location: job.location || null,
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
+		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		skill1: (infos.skills && infos.skills[0]) ? infos.skills[0].name : null,
@@ -379,13 +380,17 @@ const craftCsvObject = infos => {
  */
 const getCompanyWebsite = async (tab, url, utils) => {
 	try {
-		await tab.open(url)
+		const [httpCode] = await tab.open(url)
+		if (httpCode === 404) {
+			utils.log(`Can't open the LinkedIn company URL: ${url}`, "warning")
+			return null
+		}
 		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
 		return await tab.evaluate((arg, cb) => {
 			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
 		})
 	} catch (err) {
-		utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
+		// utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
 		return null
 	}
 }
