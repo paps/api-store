@@ -32,6 +32,7 @@ const loadProfileSections = async tab => {
 		".pv-profile-section button.pv-top-card-section__summary-toggle-button",
 		".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline",
 		".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills",
+		".pv-profile-section__card-action-bar.pv-skills-section__additional-skills", // Issue #40: endorsements dropdown wasn't open, the CSS selector changed
 		"button.contact-see-more-less",
 	]
 	for (const button of buttons) {
