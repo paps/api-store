@@ -170,9 +170,9 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		".pv-dashboard-section"] // we cannot connect with ourselves...
 	let selector
 	try {
-		selector = await tab.waitUntilVisible(selectors, 10000, "or")
+		selector = await tab.waitUntilVisible(selectors, 15000, "or")
 	} catch (error) {
-		throw(`${url} didn't load correctly.`)
+		throw(`${url} didn't load correctly`)
 	}
 	const currentUrl = await tab.getUrl()
 	scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
@@ -238,7 +238,7 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Adding ${url}...`, "loading")
 			await addLinkedinFriend(url, tab, message, onlySecondCircle)
 		} catch (error) {
-			utils.log(`Could not add ${url} because of an error: ${error}.`, "warning")
+			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}
 	}
 	await buster.saveText(Papa.unparse(db), DB_NAME)

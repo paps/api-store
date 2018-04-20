@@ -124,7 +124,7 @@ const getIdFromUrl = async (url, tab) => {
 				ids = ids.replace("[\"", "").replace("\"]", "")
 				cb(null, ids)
 			})
-			return tmp.includes(",") ? tmp : parseInt(tmp, 10)
+			return parseInt(tmp, 10)
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
 		} else {
