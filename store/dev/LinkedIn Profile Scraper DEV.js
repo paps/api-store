@@ -97,6 +97,35 @@ const filterRows = (str, db) => {
 	return true
 }
 
+/**
+ * @todo Use this function when others validations in this API are done
+ * @description Tiny function used to return as much as possible skills
+ * @param {Object} csvRes -- Result object formatted for the CSV output returned from the scraping process}
+ * @param {Object} jsonRes -- Result object formatted for the JSON output}
+ * @param {Number} skillsToRet -- Count of skills to return in CSV}
+ * @return {Object} CSV object with the count of skills asked
+ */
+const craftCsvSkills = (csvRes, jsonRes, skillsToRet) => {
+	let toRet = Object.assign({}, csvRes)
+
+	// NOTE: No need to go any further if there is no jobs returned by the scraping process
+	if (jsonRes.skills.length < 1) {
+		return toRet
+	}
+
+	delete toRet.skill1
+	delete toRet.skill2
+	delete toRet.skill3
+
+	for (let i = 0; i < skillsToRet; i++) {
+		if (i > jsonRes.skills.length) {
+			break
+		}
+		toRet[`skill${i+1}`] = jsonRes.skills[i]
+	}
+	return toRet
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	utils.log("Getting the arguments...", "loading")
