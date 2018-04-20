@@ -1,0 +1,112 @@
+{
+	"slug": "linkedin-search-export",
+	"description": "Collects LinkedIn search results",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
+	"hidden": false,
+	"gradientBegin": "#057212",
+	"gradientEnd": "#0099F7",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"search": "SpaceX engineer",
+		"circles": {
+			"first": false,
+			"second": true,
+			"third": true
+		},
+		"numberOfPage": 5,
+		"queryColumn": true
+	},
+	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"url": "LinkedIn profile URL",
+		"currentJob": "",
+		"name": "",
+		"job": "",
+		"location": "",
+		"query": "Corresponding search query that lead to this result (if enabled in config)"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "LinkedIn session cookie <a href=\"/api-store/3149/linkedin-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"search": {
+						"helpers": [
+							"Enter either a text search <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						],
+						"label": "LinkedIn search terms <a href=\"/api-store/3149/linkedin-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
+						"placeholder": "iOS developer"
+					},
+					"circles": {
+						"fields": {
+							"first": {
+								"rightLabel": "<b>Search in your 1st degree connections</b>"
+							},
+							"second": {
+								"rightLabel": "<b>Search in your 2nd degree connections</b>"
+							},
+							"third": {
+								"rightLabel": "<b>Search in your 3rd+ degree connections</b>"
+							}
+						}
+					},
+					"numberOfPage": {
+						"label": "Number of pages to go through in the search results <a href=\"/api-store/3149/linkedin-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
+						"placeholder": 5,
+						"inputType": "number",
+						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					},
+					"queryColumn": {
+						"rightLabel": "<b>Write back your search query in the result CSV</b>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"search": {
+				"type": "string",
+				"required": true
+			},
+			"circles": {
+				"properties": {
+					"first": {
+						"type": "boolean",
+						"required": true
+					},
+					"second": {
+						"type": "boolean",
+						"required": true
+					},
+					"third": {
+						"type": "boolean",
+						"required": true
+					}
+				}
+			},
+			"numberOfPage": {
+				"type": "number",
+				"minimum": 1,
+				"required": true
+			},
+			"queryColumn": {
+				"type": "boolean",
+				"required": true
+			}
+		}
+	}
+}

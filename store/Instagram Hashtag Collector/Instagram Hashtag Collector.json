@@ -1,0 +1,118 @@
+{
+	"slug": "instagram-hashtag-collector",
+	"description": "Extract the most recent posts for any hashtag on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgumentAllowed": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "#soloparking"
+	},
+	"outputDescription": {
+		"profileUrl": "Profile URL of post author",
+		"profileName": "Instagram username of post author",
+		"postUrl": "Instagram post URL",
+		"date": "Post publication date",
+		"likes": "Number of likes the post received",
+		"hashtag": "Hashtag that lead to the post"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"helper": "Enter either an Instagram hashtag <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL (make sure your file is publicly available)"
+					},
+					"sessionCookie": {
+						"helper": ""
+					},
+					"columnName": {
+						"placeholder": "Hashtag",
+						"default": "Hashtag",
+						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags (otherwise we'll use the first column)"
+					},
+					"maxPosts": {
+						"type": "number",
+						"helpers": [
+							"By default, the API will scrape a maximum of 250 posts per hashtag",
+							"You are limited to a maximum of 1000 posts per hashtag"
+						],
+						"placeholder": 250
+					},
+					"csvName": {
+						"type": "text",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Instagram hashtag or spreasheet URL"
+			},
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session cookie (<i>sessionid</i>)"
+			},
+			"columnName": {
+				"type": "string",
+				"title": "Spreadsheet column name for Instagram hashtags"
+			},
+			"csvName": {
+				"type": "string",
+				"title": "Output CSV name"
+			},
+			"maxPosts": {
+				"type": "number",
+				"title": "Number of posts to scrape per hashtag",
+				"default": 250,
+				"maximum": 1000,
+				"minimum": 1
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

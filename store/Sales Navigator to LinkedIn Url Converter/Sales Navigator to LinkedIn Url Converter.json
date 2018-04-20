@@ -1,0 +1,15 @@
+{
+	"slug": "sales-navigator-to-linkedin-url-converter",
+	"description": "Convert a Sales Navigator URL into a LinkedIn one.",
+	"image": "",
+	"hidden": true,
+	"gradientBegin": "#E44D26",
+	"gradientEnd": "#F16529",
+	"argumentDescription": "Insert your <i>spreadsheet</i> URL inbetween the double quotes",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"csvName": "",
+		"columnName": ""
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"slug": "linkedin-conversations-hubspot-connector",
+	"description": "",
+	"image": "",
+	"hidden": true,
+	"gradientBegin": "#E44D26",
+	"gradientEnd": "#F16529",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "Insert your <i>session cookie</i>, <i>LinkedIn post URL</i> & <i>CSV name</i> inbetween the double quotes",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"postUrl": "https://www.linkedin.com/feed/update/urn:li:activity:(...)",
+		"csvName": "csv_name"
+	}
+}

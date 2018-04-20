@@ -1,0 +1,44 @@
+{
+	"slug": "linkedin-followers-insights",
+	"description": "Generate a list of all your followers and identify influencers",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Followers_Insights/lkd_fllwrs_nsghts2.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#ff4b1f",
+	"gradientEnd": "#1fddff",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+		"profileLink": "LinkedIn profile URL",
+		"firstName": "",
+		"lastName": "",
+		"occupation": "Current position",
+		"followers": "How many LinkedIn users follow this person?"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/3750/linkedin-followers-insights#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			}
+		}
+	}
+}

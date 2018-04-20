@@ -1,0 +1,51 @@
+{
+	"slug": "twitter-network-cleaner",
+	"description": "Unfollow every one in a list that isn't following you",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_network_cleaner/twitter_network_cleaner_v1.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_4createanicespreadsheet",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+		"url": "URL of the persons unfollowed"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4128/twitter-network-cleaner#section_4createanicespreadsheet\">?</a>)"
+					},
+					"sessionCookie": {
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4128/twitter-network-cleaner#section_5getyourtwittersessioncookie\">?</a>)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL",
+				"minLength": 1,
+				"required": true
+			},
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session Cookie",
+				"minLength": 10,
+				"required": true
+			}
+		}
+	}
+}

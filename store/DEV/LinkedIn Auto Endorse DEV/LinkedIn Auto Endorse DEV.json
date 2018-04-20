@@ -1,0 +1,65 @@
+{
+	"slug": "linkedin-auto-endorse",
+	"description": "Auto Endorse skills of your LinkedIn contacts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_auto_endorse/linkedin+auto+endorse.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#BDFFF3",
+	"gradientEnd": "#4AC29A",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
+		"numberOfEndorsePerLaunch": "10"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/3611/linkedin-auto-endorse#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of people to endorse <a href=\"/api-store/3611/linkedin-auto-endorse#section_spreadsheet\" target=\"_blank\">(?)</a>",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfEndorsePerLaunch": {
+						"label": "Number of endorsed profiles per launch (10 max.)",
+						"placeholder": 10,
+						"inputType": "number"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfEndorsePerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10
+			}
+		}
+	}
+}

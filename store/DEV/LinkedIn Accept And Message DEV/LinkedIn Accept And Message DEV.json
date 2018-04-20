@@ -1,0 +1,55 @@
+{
+	"slug": "linkedin-accept-and-invite",
+	"description": "Accept and message people",
+	"image": "",
+	"hidden": true,
+	"gradientBegin": "#E44D26",
+	"gradientEnd": "#F16529",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "",
+		"message": ""
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"numberOfAddsPerLaunch": {
+						"type": "number",
+						"placeholder": 10
+					},
+					"message": {
+						"type": "textarea",
+						"helpers": [
+							"Use #firstName# to insert the first name of the person you are adding in your message.",
+							"You are limited by LinkedIn to 280 characters.",
+							"Leave this bloc empty if you want to just send an invite without message."
+						]
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session cookie",
+				"required": true,
+				"minLength": 15
+			},
+			"numberOfAddsPerLaunch": {
+				"type": "integer",
+				"title": "Number of adds per launch"
+			},
+			"message": {
+				"type": "string",
+				"title": "Message",
+				"maxLength": 280
+			}
+		}
+	}
+}

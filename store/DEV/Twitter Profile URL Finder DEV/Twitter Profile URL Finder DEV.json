@@ -1,0 +1,55 @@
+{
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url"
+					},
+					"columnName": {
+						"type": "text"
+					},
+					"queries": {
+						"hidden": true,
+						"disabled": true
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL"
+			},
+			"columnName": {
+				"type": "string",
+				"title": "Title of the storing names column in your document"
+			},
+			"queries": {
+				"type": "array",
+				"title": "Queries",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			}
+		},
+		"anyOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"required": [
+					"queries"
+				]
+			}
+		]
+	}
+}

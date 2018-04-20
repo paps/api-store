@@ -1,0 +1,60 @@
+{
+	"slug": "angellist-market-companies-extractor",
+	"description": "Pick a market and get all companies info",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/angellist_companies_info/angel_list_companies_info.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#859398",
+	"gradientEnd": "#283048",
+	"argumentHelpAnchor": "#section_4findyourangellistmarket",
+	"defaultArgument": {
+		"url": "https://angel.co/blockchain-cryptocurrency-2",
+		"limit": 100
+	},
+	"outputDescription": {
+		"name": "",
+		"blurb": "",
+		"angelListUrl": "",
+		"logo": "",
+		"location": "",
+		"type": "",
+		"joined": "",
+		"followers": "",
+		"signal": ""
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"url": {
+						"label": "AngelList URL (<a target=\"_blank\" href=\"/api-store/3678/angellist-market-companies-extractor#section_4findyourangellistmarket\">?</a>)",
+						"type": "url"
+					},
+					"limit": {
+						"helper": "You can only scrape 400 companies per page because AngelList won't allow to load more companies."
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"require": true,
+		"type": "object",
+		"properties": {
+			"url": {
+				"type": "string",
+				"title": "AngelList URL",
+				"required": true
+			},
+			"limit": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 400,
+				"title": "Limit number of companies to scrape",
+				"required": true
+			}
+		}
+	}
+}

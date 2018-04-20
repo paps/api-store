@@ -1,0 +1,66 @@
+{
+	"slug": "linkedin-companies-employees",
+	"description": "Do your homework, know everything about your buyer's personae",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Companies_Employees/lkd_cmpns_mpls.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#f79d00",
+	"gradientEnd": "#64f38c",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1Q-vT35KgY1orONz_qbGB8lSm3cyzpjWKSCCf_-OFiLs",
+		"numberOfPagePerCompany": 10
+	},
+	"outputDescription": {
+		"url": "LinkedIn profile URL",
+		"name": "",
+		"job": "Past job",
+		"location": "Where is she/he based",
+		"currentjob": "Current position"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"TODO\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of companies <a href=\"TODO\" target=\"_blank\">(?)</a>",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"numberOfPagePerCompany": {
+						"label": "Number of employee pages to go through per company per launch",
+						"placeholder": 10,
+						"inputType": "number",
+						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"numberOfPagePerCompany": {
+				"type": "number",
+				"required": true,
+				"minimum": 1
+			}
+		}
+	}
+}

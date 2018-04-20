@@ -1,0 +1,44 @@
+{
+	"slug": "facebook-id-finder",
+	"description": "Find Facebook IDs from Facebook profile URLs",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_ID_Finder/FB_ID_finder2.png",
+	"hidden": false,
+	"gradientBegin": "#ff00cc",
+	"gradientEnd": "#333399",
+	"argumentDescription": "Insert your <i>spreadsheet</i> URL inbetween the double quotes",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/13EW6nmHZwwdlngew7G2BoKsHjRKEH_g6U-C9zvaLYII",
+		"csvName": "your_csv_name"
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"label": "Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/3102/facebook-id-finder#section_4googlespreadsheet\">?</a>)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"require": true,
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL",
+				"required": true
+			},
+			"csvName": {
+				"title": "CSV file name",
+				"type": "string",
+				"required": true
+			}
+		}
+	}
+}

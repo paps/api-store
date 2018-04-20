@@ -1,0 +1,47 @@
+{
+	"slug": "linkedin-accept-invitations",
+	"description": "Add incoming pending invitations automatically",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Accept_Invitations/lkd_logo_invitation.png",
+	"hidden": false,
+	"gradientBegin": "#F4D03F",
+	"gradientEnd": "#16A085",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"numberOfProfilesToAdd": "5"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/2885/linkedin-accept-invitations#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"numberOfProfilesToAdd": {
+						"inputType": "number",
+						"placeholder": 5,
+						"label": "Number of invitations to accept per launch (max. 50) <a href=\"/api-store/2885/linkedin-accept-invitations#section_5howmanyconnectionsperiteration\" target=\"_blank\">(?)</a>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"numberOfProfilesToAdd": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 50
+			}
+		}
+	}
+}

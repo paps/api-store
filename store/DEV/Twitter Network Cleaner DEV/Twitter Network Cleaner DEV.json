@@ -1,0 +1,50 @@
+{
+	"slug": "twitter-network-cleaner",
+	"description": "Unfollow every one in the list that isn't following you",
+	"image": "",
+	"hidden": true,
+	"gradientBegin": "#E44D26",
+	"gradientEnd": "#F16529",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+		"url": "URL of the persons unfollowed"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4128/twitter-network-cleaner#section_4createanicespreadsheet\">?</a>)"
+					},
+					"sessionCookie": {
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4128/twitter-network-cleaner#section_5getyourtwittersessioncookie\">?</a>)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL",
+				"minLength": 1,
+				"required": true
+			},
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session Cookie",
+				"minLength": 10,
+				"required": true
+			}
+		}
+	}
+}

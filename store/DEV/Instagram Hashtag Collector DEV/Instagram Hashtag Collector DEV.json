@@ -1,0 +1,114 @@
+{
+	"slug": "instagram-hashtag-collector",
+	"description": "",
+	"image": "",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgumentAllowed": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1hpdA_GRy-htfYt2QtzXq6KKW_3PNoyFPPci0DOMsW5I/edit#gid=0",
+		"columnName": "Hashtag"
+	},
+	"outputDescription": {
+		"profileUrl": "Instagram poster profile URL",
+		"profileName": "Instagram poster username",
+		"postUrl": "Instagram post URL",
+		"date": "Post publication date",
+		"likes": "Like count for the post",
+		"hashtag": "Hashtag used to get the post"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or an Instagram Hashtag"
+					},
+					"sessionCookie": {
+						"helper": ""
+					},
+					"columnName": {
+						"placeholder": "Hashtag",
+						"default": "Hashtag"
+					},
+					"maxPosts": {
+						"type": "number",
+						"helper": "If you leave this field empty, the script will scrape 1000 posts per hashtags",
+						"placeholder": 1000
+					},
+					"csvName": {
+						"type": "text",
+						"placeholder": "result",
+						"default": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreasheet URL"
+			},
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session cookie sessionid"
+			},
+			"columnName": {
+				"type": "string",
+				"title": "Document column title of Instagram hashtags"
+			},
+			"csvName": {
+				"type": "string",
+				"title": "Output CSV name"
+			},
+			"maxPosts": {
+				"type": "number",
+				"title": "Maximum posts scraped per hashtags",
+				"default": 1000
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

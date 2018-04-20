@@ -1,0 +1,46 @@
+{
+	"slug": "linkedin-auto-withdraw",
+	"description": "Automatically withdraw old pending sent invitations",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_auto_withdraw/linkedin+auto+withdraw_paper.png",
+	"hidden": false,
+	"gradientBegin": "#54B325",
+	"gradientEnd": "#fffc00",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"peopleCountToKeep": "1000"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/3672/linkedin-auto-withdraw#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"peopleCountToKeep": {
+						"inputType": "number",
+						"placeholder": 1000,
+						"label": "Number of connection requests to keep <a href=\"/api-store/3672/linkedin-auto-withdraw#section_invitations\" target=\"_blank\">(?)</a>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"peopleCountToKeep": {
+				"type": "number",
+				"minimum": 0
+			}
+		}
+	}
+}

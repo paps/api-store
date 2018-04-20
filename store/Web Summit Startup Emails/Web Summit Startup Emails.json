@@ -1,0 +1,54 @@
+{
+	"slug": "web-summit-startup-emails",
+	"description": "Get info & emails from Web Summit startups",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/web_summit_startup_emails/web_summit_startup_email.png",
+	"hidden": true,
+	"new": false,
+	"gradientBegin": "#00B6B9",
+	"gradientEnd": "#EE3268",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_4getyourhunterioapikey_optional_",
+	"defaultArgument": {
+		"hunterApiKey": ""
+	},
+	"outputDescription": {
+		"name": "full name",
+		"location": "from which country",
+		"category": "which industry ",
+		"link": "domain link",
+		"value": "only with Hunter.io",
+		"type": "only with Hunter.io",
+		"confidence": "only with Hunter.io",
+		"first_name": "only with Hunter.io",
+		"last_name": "only with Hunter.io",
+		"postion": "only with Hunter.io",
+		"linkedin": "only with Hunter.io",
+		"twitter": "only with Hunter.io",
+		"phone_number": "only with Hunter.io"
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"hunterApiKey": {
+						"label": "Hunter API key (<a target=\"_blank\" href=\"/api-store/3935/web-summit-startup-emails#section_4getyourhunterioapikey_optional_\">?</a>)",
+						"placeholder": "optional"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"require": true,
+		"type": "object",
+		"properties": {
+			"hunterApiKey": {
+				"type": "string",
+				"title": "Hunter API key",
+				"required": false
+			}
+		}
+	}
+}

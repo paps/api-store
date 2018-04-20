@@ -1,0 +1,12 @@
+{
+	"slug": "linkedin-search-and-invite",
+	"description": "",
+	"image": "",
+	"hidden": true,
+	"gradientBegin": "#E44D26",
+	"gradientEnd": "#F16529",
+	"argumentDescription": "Insert your <i>session cookie</i> inbetween the double quotes",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie"
+	}
+}

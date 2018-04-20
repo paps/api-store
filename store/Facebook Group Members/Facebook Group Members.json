@@ -1,0 +1,15 @@
+{
+	"slug": "facebook-group-members",
+	"description": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/facebook_group_members/Facebook+group+members.png",
+	"hidden": true,
+	"gradientBegin": "#3d5a98",
+	"gradientEnd": "#e1eec3",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"groupUrl": "https://www.facebook.com/groups/your_group",
+		"cookieXs": "xscookie",
+		"cookieUser": "usercookie"
+	}
+}

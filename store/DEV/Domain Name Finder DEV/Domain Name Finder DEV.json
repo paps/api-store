@@ -1,0 +1,103 @@
+{
+	"slug": "domain-name-finder",
+	"description": "Turn business/company names into their online domain names",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Domain_Name_Finder/dmn_nm_fdr.png",
+	"hidden": false,
+	"gradientBegin": "#135058",
+	"gradientEnd": "#F1F2B5",
+	"argumentHelpAnchor": "#section_googlespreadsheet",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/17iXe2EwjoV2bwAbTKKH5lCQN_7n1Y0HGtVsA4jf8FxA",
+		"blacklist": [
+			"wikipedia.org",
+			"linkedin.com",
+			"facebook.com",
+			"google.com",
+			"findthecompany.com"
+		]
+	},
+	"outputDescription": {
+		"companyName": "Provided company name",
+		"companyDomain": "Corresponding company domain link"
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/3171/domain-name-finder#section_googlespreadsheet\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name from which to get company names",
+						"placeholder": "Company name",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"blacklist": {
+						"helper": "<b style='color: #000;'>Ignored domains:</b>",
+						"animate": false,
+						"items": {
+							"placeholder": "domain.com"
+						}
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"blacklist": {
+				"type": "array",
+				"items": {
+					"type": "string"
+				}
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"companies": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"companies": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

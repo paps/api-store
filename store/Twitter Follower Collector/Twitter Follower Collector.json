@@ -1,0 +1,54 @@
+{
+	"slug": "twitter-follower-collector",
+	"description": "Extract a list of all followers from any Twitter account",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_follower_collector/twitter_follower_collector.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#2DAAE2",
+	"gradientEnd": "#EF629F",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_4aimaspecifictwitteraccountorseveralatatime",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+		"profileUrl": "Profile url of the person following the targeted account",
+		"name": "Name of the person",
+		"bio": "Bio of the person",
+		"isFollowing": "Url of the profile targeted"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
+					},
+					"sessionCookie": {
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_5getyourtwittersessioncookie\">?</a>)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL",
+				"minLength": 1,
+				"required": true
+			},
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session Cookie",
+				"minLength": 10,
+				"required": true
+			}
+		}
+	}
+}

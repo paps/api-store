@@ -1,0 +1,92 @@
+{
+	"slug": "linkedin-profile-url-finder",
+	"description": "Find LinkedIn profile URLs from first and last names",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_profile_url_finder/linkedin+_profile_url_finder.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#12FFF7",
+	"gradientEnd": "#EDDE5D",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1nAqPZu16jyJWFNEhP1E020ghL2Q-dt_EyghWIpVKqIQ",
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"linkedinUrl": "Matched LinkedIn profile URL (if found)",
+		"query": "The search query that lead to this URL"
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+						"label": "Spreadsheet URL of names to find <a href=\"/api-store/4015/linkedin-profile-url-finder#section_argument\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get first and last names <a href=\"/api-store/4015/linkedin-profile-url-finder#section_5columnname\" target=\"_blank\">(?)</a>",
+						"placeholder": "Full name",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"csvName": {
+						"label": "Output CSV name",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

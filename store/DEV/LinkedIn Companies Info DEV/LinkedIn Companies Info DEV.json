@@ -1,0 +1,88 @@
+{
+	"slug": "linkedin-companies-info",
+	"description": "Starting from a list of companies, find all their information on LinkedIn",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Companies_Info/lkd_cmpns_nfs.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#FD68BA",
+	"gradientEnd": "#64f38c",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/10s_woxByzUMc3kGB2RI6KcQb1Aazs8_LmkY4pDSr4Mo"
+	},
+	"outputDescription": {
+		"link": "Company LinkedIn profile link",
+		"name": "",
+		"industry": "",
+		"location": "",
+		"description": "Description of the company on LinkedIn",
+		"website": "",
+		"specialities": "List of the company's specialities as listed on LinkedIn",
+		"size": "X to Y employees",
+		"logo": "URL of the company logo used on LinkedIn",
+		"yearFounded": ""
+	},
+	"argumentHelpAnchor": "#section_4linkedinauthentication",
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/3296/linkedin-companies-info#section_4linkedinauthentication\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your LinkedIn session cookie here"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+							"We'll use the first column of your file (column A)"
+						],
+						"label": "Spreadsheet URL of companies to scrape <a href=\"/api-store/3296/linkedin-companies-info#section_spreadsheet\" target=\"_blank\">(?)</a>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"companies": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			}
+		]
+	}
+}

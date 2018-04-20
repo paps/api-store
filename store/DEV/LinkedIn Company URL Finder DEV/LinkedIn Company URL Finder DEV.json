@@ -1,0 +1,92 @@
+{
+	"slug": "linkedin-company-url-finder",
+	"description": "From a list of company names, find their corresponding LinkedIn company page URLs",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_company_url_finder/linkedin+_company_url_finder.png",
+	"hidden": false,
+	"new": true,
+	"gradientBegin": "#74d3ad",
+	"gradientEnd": "#f4935a",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgumentAllowed": true,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/19QU2EVoJLQreBOXB-cxzlqExJqQV0WPrzuGIcE1mFYU",
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"linkedinUrl": "Matched LinkedIn company URL (if found)",
+		"query": "The search query that lead to this URL"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+						"label": "Spreadsheet URL of company names to find <a href=\"/api-store/4372/linkedin-company-url-finder#section_argument\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get company names <a href=\"/api-store/4372/linkedin-company-url-finder#section_5columnname\" target=\"_blank\">(?)</a>",
+						"placeholder": "Company",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"csvName": {
+						"label": "Output CSV name",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

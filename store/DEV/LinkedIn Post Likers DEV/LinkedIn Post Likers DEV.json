@@ -1,0 +1,60 @@
+{
+	"slug": "linkedin-post-likers",
+	"description": "Extract LinkedIn profiles, names & jobs of everyone who liked a LinkedIn post.",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_post_likers/lkd_post_lks.png",
+	"hidden": false,
+	"gradientBegin": "#e65c00",
+	"gradientEnd": "#F9D423",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"postUrl": "https://www.linkedin.com/feed/update/urn:li:activity:(...)",
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"profileLink": "LinkedIn profile URL",
+		"name": "",
+		"job": "Current position/job of liker"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/2880/linkedin-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"postUrl": {
+						"label": "Post URL <a href=\"/api-store/2880/linkedin-post-likers#section_posturl\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste a LinkedIn post URL here",
+						"type": "url"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file <a href=\"/api-store/2880/linkedin-post-likers#section_5nameyourfuturecsv\" target=\"_blank\">(?)</a>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"postUrl": {
+				"type": "string",
+				"required": true
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
