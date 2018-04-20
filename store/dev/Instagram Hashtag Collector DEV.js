@@ -25,6 +25,7 @@ const SCRAPING_SELECTORS = {
 	baseSelector: "div[role=dialog]",
 	profileSelector: "header a.notranslate",
 	likeSelector: "section div span > span",
+	yetAnotherLikeSelector: "section div a span", // NOTE: sometime the selector is not the same, so we need to handle another selector for the likes count
 	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
 	pubDateSelector: "time",
 	descriptionSelector: "ul > li:first-child span",
@@ -90,6 +91,8 @@ const scrapePublication = (arg, cb) => {
 	 */
 	if (baseSelector.querySelector(arg.selectors.likeSelector)) {
 		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\s/g, ""), 10)
+	} else if (baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector)) {
+		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector).textContent.trim().replace(/\s/g, ""), 10)
 	} else {
 		data["likes"] = baseSelector.querySelectorAll(arg.selectors.likeAlternativeSelector).length
 	}
@@ -191,6 +194,12 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		await tab.wait(1000 + (Math.random() * 1000))
 		i++
 	}
+	/**
+	 * NOTE: In order to continue the search we need to close the overlay
+	 */
+	if (await tab.isVisible(selectors.OVERLAY)) {
+		await tab.click(selectors.OVERLAY)
+	}
 	return true
 }
 
@@ -202,7 +211,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 const isUrl = target => url.parse(target).hostname !== null
 
 /**
- * @description
+ * @deprecated This function is not used for now
  * @param {Object|Array} posts -- one or a list of scraped posts}
  * @return {Object} All hashtags with their occurrence count
  */
@@ -244,6 +253,7 @@ const hashtagsOccurrences = (posts) => {
 }
 
 /**
+ * @deprecated This function is not used for now
  * @description Function used to create a JS object representing the CSV output
  * @param {Object} data -- JS object}
  * @return {Object} CSV JS object
@@ -358,12 +368,7 @@ const searchInput = async (tab, searchTerm, type) => {
 			break
 		}
 	}
-	const res = hashtagsOccurrences(results)
-	for (const one of results) {
-		one.hashtagsOccurrences = res
-	}
-	const csvResult = forgeCsvFromJSON(results)
-	utils.log(`${res.mostScrapedHashtag} has ${res[res.mostScrapedHashtag]} occurences during the scraping process`, "info")
+	const csvResult = results
 	utils.log(`${results.length} posts scraped`, "done")
 	await utils.saveResults(results, csvResult, csvName)
 	nick.exit()
