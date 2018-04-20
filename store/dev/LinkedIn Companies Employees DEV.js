@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,10 +20,8 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const COMMERCIAL_LIMIT_SELECTOR = ".search-paywall__info"
-const BLURRED_RESULT_SELECTOR = ".search-result__profile-blur"
 // }
 
 const jsonToCsv = json => {
@@ -76,14 +75,8 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 		await tab.open(`https://www.linkedin.com/search/results/people/?facetCurrentCompany=["${id}"]&page=${i}`)
 		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
 
-		/**
-		 * NOTE: If those 2 selectors are present in the page, it means that
-		 * the loged user has reached the LinkedIn commercial use limit
-		 * 
-		 * If there is only the div containing a message from LinkedIn it just means that,
-		 *  the loged user has almost reached the commercial use limit
-		 */
-		if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR) && await tab.isPresent(BLURRED_RESULT_SELECTOR)) {
+		// NOTE: LinkedIn commercial use limit
+		if (await linkedIn.hasReachedCommercialLimit(tab)) {
 			const messageToPrint = await tab.evaluate((arg, cb) => {
 				const headLine = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info h2").textContent.trim() : ""
 				const subText = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info p:first-of-type").textContent.trim() : ""

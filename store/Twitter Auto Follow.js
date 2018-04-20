@@ -8,7 +8,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
@@ -30,7 +30,7 @@ const needle = require("needle")
  * @param {Function} callback
  */
 const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
+	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
 
 /**

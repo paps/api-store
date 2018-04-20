@@ -265,7 +265,7 @@ const forgeCsvFromJSON = data => {
  * @param {Tab} tab -- Nikcjs tab with an Instagram session }
  * @param {String} searchTerm -- Input given by the user }
  * @param {String} type -- Determine if we need to sort locations or hashtags URLs }
- * @return {Promise<String>}
+ * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
  */
 const searchInput = async (tab, searchTerm, type) => {
 	/**
@@ -273,10 +273,12 @@ const searchInput = async (tab, searchTerm, type) => {
 	 */
 	await tab.sendKeys("nav input", searchTerm, {
 		reset: true,
-		keepFocus: true,
-		modifiers: {}
+		keepFocus: true
 	})
-
+	/**
+	 * NOTE: Waiting Instagram results
+	 */
+	await tab.waitUntilVisible(".coreSpriteSearchClear")
 	const found = await tab.evaluate((arg, cb) => {
 		const urls =
 					Array
@@ -324,17 +326,23 @@ const searchInput = async (tab, searchTerm, type) => {
 		await instagramConnect(tab, sessionCookie)
 	}
 
-	/**
-	 * If a hashtag starts with the character #, we just remove the character
-	 * NOTE: if the character # is at the end of the string, it's fine,
-	 * Chrome will open an URL like www.instagram.com/explore/tags/xxx/#
-	 */
-	hashtags = hashtags.map(el => el.startsWith("#") ? el.substr(1) : el)
 	let results = []
 	for (const hashtag of hashtags) {
-		const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
+		/**
+		 * NOTE: Simple process to check if we need to search an URL for hashtags or locations
+		 */
+		let targetUrl = ""
+		let inputType = hashtag.startsWith("#") ? "tags" : "locations"
+		let input = (inputType === "tags") ? hashtag.substr(1) : hashtag
+
+		targetUrl = await searchInput(tab, input, inputType)
+		if (!targetUrl) {
+			utils.log(`No urls found for ${hashtag}`, "error")
+			continue
+		}
+		const [httpCode] = await tab.open(targetUrl)
 		if (httpCode === 404) {
-			utils.log(`No results found for the tag ${hashtag}`, "error")
+			utils.log(`No results found for ${hashtag}`, "error")
 			continue
 		}
 
@@ -344,7 +352,7 @@ const searchInput = async (tab, searchTerm, type) => {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
-		utils.log(`Scraping posts using the tag ${hashtag} ...`, "loading")
+		utils.log(`Scraping posts using the ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
 		const hasTimeLeft = await loadPosts(tab, results, maxPosts, hashtag)
 		if (!hasTimeLeft) {
 			break
