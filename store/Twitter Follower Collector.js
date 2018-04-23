@@ -73,7 +73,7 @@ const getTwitterFollowers = async (tab, twitterHandle) => {
 		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
 	}
 	await tab.open(`https://twitter.com/${twitterHandle}/followers`)
-	await tab.waitUntilVisible("div.GridTimeline")
+	await tab.waitUntilVisible("div.GridTimeline", 10000)
 	let loop = true
 	let n = await tab.evaluate(getDivsNb)
 	while (loop) {
