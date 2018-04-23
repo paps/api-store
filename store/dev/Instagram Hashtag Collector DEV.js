@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -278,6 +279,14 @@ const forgeCsvFromJSON = data => {
  * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
  */
 const searchInput = async (tab, searchTerm, type) => {
+
+	if (await tab.isPresent(".coreSpriteSearchClear")) {
+		await tab.screenshot(`${searchTerm}-${type}.jpg`)
+		await buster.saveText(await tab.getContent(), `${searchTerm}-${type}.html`)
+		await tab.click(".coreSpriteSearchClear")
+		await tab.wait(1000)
+	}
+
 	/**
 	 * Fill the search input
 	 */
@@ -289,6 +298,7 @@ const searchInput = async (tab, searchTerm, type) => {
 	 * NOTE: Waiting Instagram results
 	 */
 	await tab.waitUntilVisible(".coreSpriteSearchClear")
+	// TODO: tab.wait call
 	const found = await tab.evaluate((arg, cb) => {
 		const urls =
 					Array
