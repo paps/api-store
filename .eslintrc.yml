@@ -1,0 +1,61 @@
+env:
+  browser: true
+  es6: true
+  node: true
+extends: 'eslint:recommended'
+parserOptions:
+  ecmaVersion: 8
+  sourceType: module
+rules:
+  indent:
+    - error
+    - tab
+    - outerIIFEBody: 1
+  linebreak-style:
+    - error
+    - unix
+  quotes:
+    - error
+    - double
+  no-extra-semi:
+    - error
+  eqeqeq:
+    - error
+    - always
+  no-implied-eval:
+    - error
+  no-new-func:
+    - error
+  no-void:
+    - error
+  wrap-iife:
+    - error
+    - any
+  radix:
+    - error
+    - always
+  yoda:
+    - error
+    - never
+  comma-dangle:
+    - error
+    - only-multiline
+  no-array-constructor:
+    - error 
+  no-var:
+    - error
+  no-empty:
+    - error
+  no-debugger:
+    - error
+  no-unreachable:
+    - error
+  no-caller:
+    - error
+  no-with:
+    - error
+  eol-last:
+    - error
+    - always
+  no-console: 0
+
