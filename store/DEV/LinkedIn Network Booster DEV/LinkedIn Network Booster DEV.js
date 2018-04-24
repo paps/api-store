@@ -167,7 +167,9 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		"button.message.primary, button.pv-s-profile-actions--message", // we can message the person (invite already accepted)
 		"button.follow.primary", // only follow button visible (can't connect)
 		".pv-top-card-section__invitation-pending", // invite pending (already added this profile)
-		".pv-dashboard-section"] // we cannot connect with ourselves...
+		".pv-dashboard-section", // we cannot connect with ourselves...
+		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // Yet another CSS selector for pending request, this is part of the new LinkedIn UI
+	]
 	let selector
 	try {
 		selector = await tab.waitUntilVisible(selectors, 15000, "or")
@@ -181,8 +183,12 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	} else {
 		// 1- Case when you can add directly
 		if (selector === selectors[0]) {
-			await connectTo(selector, tab, message)
-			utils.log(`Added ${url}.`, "done")
+			if (await tab.isPresent(selectors[7])) {
+				utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
+			} else {
+				await connectTo(selector, tab, message)
+				utils.log(`Added ${url}.`, "done")
+			}
 		} else if (selector === selectors[1]) { // 2- Case when you need to use the (...) button before and add them from there
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
