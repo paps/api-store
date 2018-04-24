@@ -318,6 +318,11 @@ const searchInput = async (tab, searchTerm, type) => {
 	const MAX_POSTS = 1000
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
+	if (!sessionCookie) {
+		utils.log("The API needs a session cookie to navigate throught instagram.com", "error")
+		nick.exit(1)
+	}
+
 	if (!maxPosts) {
 		maxPosts = MAX_POSTS // by default we'll scrape 1000 posts
 	}

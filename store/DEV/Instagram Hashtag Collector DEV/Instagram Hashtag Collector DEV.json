@@ -28,6 +28,9 @@
 				"properties": {
 					"spreadsheetUrl": {
 						"required": true
+					},
+					"sessionCookie": {
+						"required": true
 					}
 				}
 			},
@@ -37,7 +40,7 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or an Instagram Hashtag"
 					},
 					"sessionCookie": {
-						"helper": ""
+						"helper": "Instagram cookie named sessionid"
 					},
 					"columnName": {
 						"placeholder": "Hashtag",
