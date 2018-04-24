@@ -152,7 +152,6 @@ const connectTo = async (selector, tab, message) => {
 		 */
 		const isInvitationSent = /isSendInvite=true$/
 		if (isRedirected.test(url)) {
-			console.log("Redirect to:", url)
 			if (!isInvitationSent.test(url)) {
 				/**
 				 * The bot was redirected to an unexpected URL
