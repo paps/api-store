@@ -173,25 +173,16 @@ const scrapeInfos = (arg, callback) => {
 		/**
 		 * HACK: issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
-		 * the code below only get text node content and replace all br tags with a newline character
+		 * the code below replace all br tags by a newline character, and remove elippsis string used by LinkedIn
 		 */
 		if (document.querySelector(".pv-top-card-section__summary-text")) {
-			/**
-			 * NOTE: New LinkedIn UI use differents CSS selectors for description field
-			 */
-			if (document.querySelector(".lt-line-clamp__line")) {
-				infos.general.description =
-									Array.from(document.querySelectorAll(".lt-line-clamp__line"))
-										.map(el => el.textContent.trim())
-										.join("\n")
-										.trim()
-			} else {
-				infos.general.description =
-									Array.from(document.querySelector(".pv-top-card-section__summary-text").childNodes)
-										.map(el => (el.nodeType === Node.TEXT_NODE) ? el.textContent.trim() : null)
-										.join("\n")
-										.trim()
-			}
+			let tmpRaw =
+				document.querySelector(".pv-top-card-section__summary-text")
+					.innerHTML
+					.replace(/\.{3}/g, "")
+					.replace(/(<\/?br>)/g, "\n")
+			document.querySelector(".pv-top-card-section__summary-text").innerHTML = tmpRaw
+			infos.general.description = document.querySelector(".pv-top-card-section__summary-text").textContent.trim()
 		} else {
 			infos.general.description = ""
 		}
