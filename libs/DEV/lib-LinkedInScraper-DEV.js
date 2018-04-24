@@ -48,6 +48,52 @@ const loadProfileSections = async tab => {
 	await tab.scroll(0, 0)
 }
 
+/**
+ * @description Browser context function used to scrape all contact infos from LinkedIn profile
+ * @param {Object} arg 
+ * @param {Function} callback 
+ * @return Object LinkedIn profile contact infos
+ */
+const getDetails = (arg, callback) => {
+	let details = {}
+	const getInfos = (infos, selector) => {
+		if (!selector) {
+			selector = document
+		}
+		const result = {}
+		for (const info of infos) {
+			if (selector.querySelector(info.selector) && selector.querySelector(info.selector)[info.attribute]) {
+				result[info.key] = selector.querySelector(info.selector)[info.attribute].trim()
+			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).getAttribute(info.attribute)) {
+				result[info.key] = selector.querySelector(info.selector).getAttribute(info.attribute).trim()
+			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).style[info.style]) {
+				/**
+				 * NOTE: this workflow is used to get CSS styles values
+				 * For now it's used when we need to scrape background-image
+				 * we remove those parts of the result string: url(" & ")
+				 */
+				result[info.key] =
+									selector.querySelector(info.selector)
+										.style[info.style]
+										.trim()
+										.replace("url(\"", "")
+										.replace("\")", "")
+			}
+		}
+		return result
+	}
+
+	details = getInfos([
+		{ key: "linkedinProfile", attribute: "href", selector: ".ci-vanity-url .pv-contact-info__contact-link" },
+		{ key: "websites", attribute: "textContent", selector: ".ci-websites .pv-contact-info__contact-link" },
+		{ key: "twitter", attribute: "textContent", selector: ".ci-twitter .pv-contact-info__contact-link" },
+		{ key: "phone", attribute: "href", selector: ".ci-phone .pv-contact-info__contact-link" },
+		{ key: "mail", attribute: "textContent", selector: ".ci-email .pv-contact-info__contact-link" }
+	], document.querySelector("artdeco-modal")
+	)
+	callback(null, details)
+}
+
 // Function executed in the browser to get all data from the profile
 const scrapeInfos = (arg, callback) => {
 	// Generic function to get infos from a selector and check if this selector exists
@@ -188,68 +234,15 @@ const scrapeInfos = (arg, callback) => {
 					{ key: "description", attribute: "textContent", selector: ".pv-entity__description" },
 				])
 			}
-
-			/**
-			 * 
-			 * @param {Number} duration -- Time to wait in ms }
-			 */
-			const idle = (duration = 100) => {
-				const start = Date.now()
-				while (Date.now() - start < duration);
-			}
-
-			/**
-			 * @param {String} clickSelector -- CSS selector}
-			 * @return {Promise<Object>} Scraped informations from the popup
-			 */
-			const waitForModalToLoad = (clickSelector = "") => {
-				const clickTimeStamping = Date.now()
-				document.querySelector(clickSelector).click()
-				const waitForModal = () => {
-					const isModalIn = document.querySelector("artdeco-modal")
-					if (!isModalIn && document.querySelector("artdeco-modal-overlay")) {
-						if (Date.now() - clickTimeStamping >= 30000) {
-							return false
-						}
-						// idle(100)
-						waitForModal()
-					} else {
-						return true
-					}
-				}
-				// idle(100)
-				return waitForModal()
-				// setTimeout(waitForModal, 100)
-			}
-
-
 			// Get all profile infos listed
 			const contactInfos = document.querySelectorAll(".pv-profile-section.pv-contact-info div.pv-profile-section__section-info")
-			if (contactInfos.length > 0) {
-				infos.details = getInfos([
-					{ key: "linkedinProfile", attribute: "href", selector: ".pv-contact-info__contact-type.ci-vanity-url .pv-contact-info__contact-link" },
-					{ key: "websites", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-websites.pv-contact-info__list" },
-					{ key: "twitter", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-twitter .pv-contact-info__contact-link" },
-					{ key: "phone", attribute: "href", selector: "section.pv-contact-info__contact-type.ci-phone .pv-contact-info__contact-link" },
-					{ key: "mail", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-email .pv-contact-info__contact-link" },
-				])
-			} else {
-				if (document.querySelector("a[data-control-name=\"contact_see_more\"]")) {
-					if (waitForModalToLoad("a[data-control-name=\"contact_see_more\"]")) {
-						infos.details = getInfos([
-							{ key: "linkedinProfile", attribute: "href", selector: ".ci-vanity-url .pv-contact-info__contact-link" },
-							{ key: "websites", attribute: "textContent", selector: ".ci-websites .pv-contact-info__contact-link" },
-							{ key: "twitter", attribute: "textContent", selector: ".ci-twitter .pv-contact-info__contact-link" },
-							{ key: "phone", attribute: "href", selector: ".ci-phone .pv-contact-info__contact-link" },
-							{ key: "mail", attribute: "textContent", selector: ".ci-email .pv-contact-info__contact-link" }
-						], document.querySelector("artdeco-modal"))
-					} else {
-						infos.details = { linkedinProfile: "", websites: "", twitter: "", phone: "", mail: "" }
-					}
-				} else {
-					infos.details = { linkedinProfile: "", websites: "", twitter: "", phone: "", mail: "" }
-				}
-			}
+			infos.details = getInfos([
+				{ key: "linkedinProfile", attribute: "href", selector: ".pv-contact-info__contact-type.ci-vanity-url .pv-contact-info__contact-link" },
+				{ key: "websites", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-websites.pv-contact-info__list" },
+				{ key: "twitter", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-twitter .pv-contact-info__contact-link" },
+				{ key: "phone", attribute: "href", selector: "section.pv-contact-info__contact-type.ci-phone .pv-contact-info__contact-link" },
+				{ key: "mail", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-email .pv-contact-info__contact-link" },
+			])
 
 			// Get all profile skills listed
 			const skills = document.querySelectorAll("ul.pv-featured-skills-list > li")
@@ -321,12 +314,32 @@ const scrapingProcess = async (tab, url, utils) => {
 	}
 	try {
 		await loadProfileSections(tab)
+
 		utils.log("All data loaded", "done")
 	} catch (error) {
 		utils.log("Error during the loading of data.", "warning")
 	}
 	utils.log("Scraping page...", "loading")
-	return await tab.evaluate(scrapeInfos)
+
+	let infos = await tab.evaluate(scrapeInfos)
+
+	const UI_SELECTORS = {
+		trigger: "a[data-control-name=\"contact_see_more\"]",
+		overlay: "artdeco-modal-overlay",
+		modal: "artdeco-modal"
+	}
+
+	/**
+	 * HACK: Tiny handler to fix scraping process with the LinkedIn UI
+	 */
+	if (await tab.isPresent(UI_SELECTORS.trigger)) {
+		await tab.click(UI_SELECTORS.trigger)
+		await tab.waitUntilVisible([ UI_SELECTORS.overlay, UI_SELECTORS.modal ], 75000, "and")
+		infos.details = await tab.evaluate(getDetails)
+		await tab.click(UI_SELECTORS.overlay)
+	}
+
+	return infos
 }
 
 // Function to format the infos for the csv file (less infos)
