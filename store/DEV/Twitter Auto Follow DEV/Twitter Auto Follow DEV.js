@@ -96,43 +96,6 @@ const getTweetsLanguages = (arg, cb) => {
 
 /**
  * @async
- * @description Function used loaded as much as possible tweets from a profile
- * the loading process can fail but no error will be thrown
- * @param {Object} tab -- Nickjs tab instance }
- * @return Promise<void>, no particular value returned
- */
-const loadAllTweets = async (tab) => {
-	let state = ""
-	while (state !== "DONE") {
-		try {
-			state = await tab.evaluate((arg, cb) => {
-				const startingTimestamp = Date.now()
-				const waitForNewTweets = () => {
-					const loadedTweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
-
-					if (!document.querySelector(".stream-container").dataset.minPosition) {
-						cb(null, "DONE")
-					} else if (loadedTweets <= arg.previousCount) {
-						if (Date.now() - startingTimestamp >= 30000) {
-							cb("Tweets cannot be loaded after 30s")
-						}
-						setTimeout(waitForNewTweets, 100)
-					} else {
-						cb(null)
-					}
-				}
-				waitForNewTweets()
-			}, { 
-				previousCount: await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length))
-			})
-		} catch (err) {
-			break
-		}
-	}
-}
-
-/**
- * @async
  * @description Function used to check if languages used from a tweet are in a given whitelist
  * @param {Tab} tab -- Nickjs Tab instance }
  * @param {Array} list -- Whitelisted languages }
@@ -230,8 +193,6 @@ const subscribe = async (tab, url, whitelist) => {
 		/**
 		 * NOTE: Does tweet languages found in the profile are in the provided whitelist
 		 */
-		// TODO: look if we need to load all tweets to check for languages issue #30
-		// await loadAllTweets(tab)
 		if (!await isLanguagesInList(tab, whitelist)) {
 			return utils.log(`Tweets from ${url} includes languages that aren't provided by your whitelist, follow request canceled`, "warning")
 		}
