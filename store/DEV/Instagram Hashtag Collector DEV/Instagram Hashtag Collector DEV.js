@@ -160,7 +160,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
 		}
 		/**
-		 * NOTE: If the selector used for clicking to a new post
+		 * NOTE: If the selector used for clicking to a new post isn't present
 		 * there is no need to continue the scraping process
 		 */
 		try {
@@ -298,7 +298,7 @@ const searchInput = async (tab, searchTerm, type) => {
 	 * NOTE: Waiting Instagram results
 	 */
 	await tab.waitUntilVisible(".coreSpriteSearchClear")
-	// TODO: tab.wait call
+	await tab.wait(1000)
 	const found = await tab.evaluate((arg, cb) => {
 		const urls =
 					Array
