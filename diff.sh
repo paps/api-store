@@ -1,4 +1,10 @@
 #!/usr/bin/env zsh
+#
+if [ $# -lt 1 ]
+then
+    echo "Usage: $0 js|json|md|lib"
+    exit 1
+fi
 
 unamestr=`uname`
 
@@ -13,23 +19,33 @@ else
   exit 1
 fi
 
-cd libs
-for i in *(.); do
-  dev=DEV/`echo $i | sed 's/\.js$/-DEV\.js/'`
-  $diffcmd $diffarg --context=2 "$i" "$dev"
-done
-cd ..
+if [[ "$1" == "lib" ]]; then
 
-cd store
-for i in */; do
-  if [[ "$i" != "DEV/" ]]; then
-    jsprod=$i`echo $i | sed 's/\/$/.js/'`
-    jsdev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.js/'`
-    jsonprod=$i`echo $i | sed 's/\/$/.json/'`
-    jsondev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.json/'`
-    mdprod=$i`echo $i | sed 's/\/$/.md/'`
-    mddev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.md/'`
-    $diffcmd $diffarg --context=2 "$jsprod" "$jsdev"
-  fi
-done
-cd ..
+  cd libs
+  for i in *(.); do
+    dev=DEV/`echo $i | sed 's/\.js$/-DEV\.js/'`
+    $diffcmd $diffarg --context=2 "$i" "$dev"
+  done
+  cd ..
+
+else
+
+  cd store
+  for i in */; do
+    if [[ "$i" != "DEV/" ]]; then
+      if [[ "$1" == "js" ]]; then
+        prod=$i`echo $i | sed 's/\/$/.js/'`
+        dev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.js/'`
+      elif [[ "$1" == "json" ]]; then
+        prod=$i`echo $i | sed 's/\/$/.json/'`
+        dev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.json/'`
+      elif [[ "$1" == "md" ]]; then
+        prod=$i`echo $i | sed 's/\/$/.md/'`
+        dev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.md/'`
+      fi
+      $diffcmd $diffarg --context=2 "$prod" "$dev"
+    fi
+  done
+  cd ..
+
+fi
