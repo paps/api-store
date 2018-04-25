@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-#
+
 if [ $# -lt 1 ]
 then
   echo "Usage: $0 js|json|md|lib"
