@@ -1,7 +1,9 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+
+const url = require("url")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -9,7 +11,6 @@ const buster = new Buster()
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -24,7 +25,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const createUrl = (search, circles) => {
 	const circlesOpt = `facetNetwork=["${circles.first ? "F" : ""}","${circles.second ? "S" : ""}","${circles.third ? "O" : ""}"]`
-	return (`https://www.linkedin.com/search/results/people/?keywords=${search}&${circlesOpt}`)
+	return (`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(search)}&${encodeURIComponent(circlesOpt)}`) // TODO: test + encodeURI
 }
 
 const scrapeResults = (arg, callback) => {
@@ -67,7 +68,15 @@ const scrapeResults = (arg, callback) => {
 				} else {
 					newInfos.currentJob = currentJob
 				}
-				if (result.querySelector("figure.search-result__image > img")) { newInfos.name = result.querySelector("figure.search-result__image > img").alt }
+				if (result.querySelector("figure.search-result__image > img")) {
+					newInfos.name = result.querySelector("figure.search-result__image > img").alt
+					/**
+					 * NOTE: If the script a CSS class named .ghost-person it means that the profile doesnt't contain an image
+					 */
+					if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
+						newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
+					}
+				}
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
 				if (arg.query) {
@@ -110,6 +119,19 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	return result
 }
 
+const isLinkedInSearchURL = (targetUrl) => {
+	const urlObject = url.parse(targetUrl)
+
+	if (urlObject && urlObject.hostname) {
+		if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
+			return 0
+		} else {
+			return -1
+		}
+	}
+	return 1
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
 	let [ searches, sessionCookie, circles, numberOfPage, queryColumn ] = utils.checkArguments([
@@ -121,10 +143,13 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "circles", type: "object", default: {first: true, second: true, third: true} },
 		{ name: "numberOfPage", type: "number", default: 5 },
-		{ name: "queryColumn", type: "boolean", default: false },
+		{ name: "queryColumn", type: "boolean", default: false }
 	])
+
 	if (typeof searches === "string") {
-		if (searches.indexOf("http") === 0) {
+		if (isLinkedInSearchURL(searches) === 0) {
+			searches = [ searches ]
+		} else if ((searches.toLowerCase().indexOf("http://") === 0) || (searches.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv(searches)
 		} else {
 			searches = [ searches ]
@@ -133,7 +158,19 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	await linkedIn.login(tab, sessionCookie)
 	let result = []
 	for (const search of searches) {
-		const searchUrl = createUrl(search, circles)
+		let searchUrl = ""
+		const isSearchURL = isLinkedInSearchURL(search)
+
+		if (isSearchURL === 0) {
+			searchUrl = search
+		} else if (isSearchURL === 1) {
+			searchUrl = createUrl(search, circles)
+		} else {
+			utils.log(`${search} doesn't represent a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
+			continue
+		}
+
+		// const searchUrl = (isLinkedInSearchURL(search)) ? search : createUrl(search, circles)
 		const query = queryColumn ? search : false
 		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query))
 	}
