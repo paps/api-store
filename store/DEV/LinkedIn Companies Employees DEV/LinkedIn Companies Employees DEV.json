@@ -26,11 +26,11 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie <a href=\"TODO\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie <a href=\"/api-store/3295/linkedin-companies-employees#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL of companies <a href=\"TODO\" target=\"_blank\">(?)</a>",
+						"label": "Spreadsheet URL of companies <a href=\"/api-store/3295/linkedin-companies-employees#section_spreadsheet\" target=\"_blank\">(?)</a>",
 						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},

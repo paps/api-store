@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-post-commenters",
-	"description": "Extract LinkedIn profiles, comments & names of everyone who commented a LinkedIn post.",
+	"description": "Extract LinkedIn profiles, comments & names of everyone who commented a LinkedIn post",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_post_likers/lkd_post_lks.png",
 	"hidden": false,
 	"gradientBegin": "#77A1D3",

@@ -5,8 +5,7 @@
 	"hidden": false,
 	"gradientBegin": "#ff00cc",
 	"gradientEnd": "#333399",
-	"argumentDescription": "Insert your <i>spreadsheet</i> URL inbetween the double quotes",
-	"argumentHelpAnchor": "#section_argument",
+	"argumentHelpAnchor": "#section_4googlespreadsheet",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/13EW6nmHZwwdlngew7G2BoKsHjRKEH_g6U-C9zvaLYII",
 		"csvName": "your_csv_name"
@@ -19,14 +18,13 @@
 				"fields": {
 					"spreadsheetUrl": {
 						"type": "url",
-						"label": "Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/3102/facebook-id-finder#section_4googlespreadsheet\">?</a>)"
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/3102/facebook-id-finder#section_4googlespreadsheet\">(?)</a>"
 					}
 				}
 			}
 		}
 	},
 	"argumentSchema": {
-		"require": true,
 		"type": "object",
 		"properties": {
 			"spreadsheetUrl": {
@@ -35,9 +33,8 @@
 				"required": true
 			},
 			"csvName": {
-				"title": "CSV file name",
-				"type": "string",
-				"required": true
+				"title": "Output CSV file name",
+				"type": "string"
 			}
 		}
 	}

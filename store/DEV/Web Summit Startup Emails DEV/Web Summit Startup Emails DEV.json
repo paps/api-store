@@ -2,7 +2,7 @@
 	"slug": "web-summit-startup-emails",
 	"description": "Get info & emails from Web Summit startups",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/web_summit_startup_emails/web_summit_startup_email.png",
-	"hidden": false,
+	"hidden": true,
 	"new": false,
 	"gradientBegin": "#00B6B9",
 	"gradientEnd": "#EE3268",

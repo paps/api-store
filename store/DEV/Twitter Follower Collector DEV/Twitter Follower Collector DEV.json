@@ -1,10 +1,11 @@
 {
 	"slug": "twitter-follower-collector",
-	"description": "Get a list of followers from a Twitter Profile",
-	"image": "",
-	"hidden": true,
-	"gradientBegin": "#E44D26",
-	"gradientEnd": "#F16529",
+	"description": "Extract a list of all followers from any Twitter account",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_follower_collector/twitter_follower_collector.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#2DAAE2",
+	"gradientEnd": "#EF629F",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_4aimaspecifictwitteraccountorseveralatatime",
 	"defaultArgument": {
@@ -12,7 +13,7 @@
 		"sessionCookie": "your_session_cookie"
 	},
 	"outputDescription": {
-		"profileUrl": "Profile url of a person following the account targeted",
+		"profileUrl": "Profile url of the person following the targeted account",
 		"name": "Name of the person",
 		"bio": "Bio of the person",
 		"isFollowing": "Url of the profile targeted"

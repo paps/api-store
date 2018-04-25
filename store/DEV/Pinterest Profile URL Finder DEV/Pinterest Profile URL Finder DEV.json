@@ -1,4 +1,13 @@
 {
+	"slug": "pinterest-profile-url-finder",
+	"description": "Find Pinterest profile URLs based on full names and/or company names",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/pinterest_profile_url_finder/Pinterest-Profile-URL-Finder.png",
+	"hidden": false,
+	"new": true,
+	"gradientBegin": "#db1327",
+	"gradientEnd": "#FCCF6B",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": true,
 	"argumentForm": {
 		"enabled": true,
@@ -28,7 +37,7 @@
 			},
 			"columnName": {
 				"type": "string",
-				"title": "Title of the storing names column in your document"
+				"title": "Column name (optional)"
 			},
 			"queries": {
 				"type": "array",

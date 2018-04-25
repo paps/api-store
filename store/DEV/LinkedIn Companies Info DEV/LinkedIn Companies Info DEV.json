@@ -20,7 +20,9 @@
 		"specialities": "List of the company's specialities as listed on LinkedIn",
 		"size": "X to Y employees",
 		"logo": "URL of the company logo used on LinkedIn",
-		"yearFounded": ""
+		"yearFounded": "",
+		"employeesOnLinkedIn": "Number of people that have the company on their LinkedIn profile",
+		"salesNavigatorLink": "Link to the company insights page if you use Sales Navigator"
 	},
 	"argumentHelpAnchor": "#section_4linkedinauthentication",
 	"defaultArgumentAllowed": false,

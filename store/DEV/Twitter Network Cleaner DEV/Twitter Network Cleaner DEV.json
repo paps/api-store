@@ -1,12 +1,13 @@
 {
 	"slug": "twitter-network-cleaner",
-	"description": "Unfollow every one in the list that isn't following you",
-	"image": "",
-	"hidden": true,
-	"gradientBegin": "#E44D26",
-	"gradientEnd": "#F16529",
+	"description": "Unfollow every one in a list that isn't following you",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_network_cleaner/twitter_network_cleaner_v1.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
-	"argumentHelpAnchor": "",
+	"argumentHelpAnchor": "#section_4createanicespreadsheet",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"sessionCookie": "your_session_cookie"

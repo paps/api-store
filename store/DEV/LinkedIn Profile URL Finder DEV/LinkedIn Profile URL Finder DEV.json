@@ -15,7 +15,7 @@
 		"linkedinUrl": "Matched LinkedIn profile URL (if found)",
 		"query": "The search query that lead to this URL"
 	},
-	"defaultArgumentAllowed": true,
+	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {

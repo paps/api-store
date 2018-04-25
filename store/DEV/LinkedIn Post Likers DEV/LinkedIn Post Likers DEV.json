@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-post-likers",
-	"description": "Extract LinkedIn profiles, names & jobs of everyone who liked a LinkedIn post.",
+	"description": "Extract LinkedIn profiles, names & jobs of everyone who liked a LinkedIn post",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_post_likers/lkd_post_lks.png",
 	"hidden": false,
 	"gradientBegin": "#e65c00",
