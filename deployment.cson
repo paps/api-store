@@ -1,0 +1,73 @@
+[
+	name: 'library'
+	apiKey: 'ENV:LIBRARY_API_KEY'
+	scripts:
+
+		# Global libs
+		# -----------
+		'lib-Nick-beta.coffee': 'libs/lib-Nick-beta.coffee'
+		'lib-PhongoLab-beta.coffee': 'libs/lib-PhongoLab-beta.coffee'
+		'lib-request-beta.coffee': 'libs/lib-request-beta.coffee'
+		'lib-Hunter.js': 'libs/lib-Hunter.js'
+		'lib-chrome-launcher.js': 'libs/lib-chrome-launcher.js'
+		'lib-StoreUtilities.js': 'libs/lib-StoreUtilities.js'
+		'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
+		'lib-WebSearch.js': 'libs/lib-WebSearch.js'
+
+		# API store
+		# ---------
+		'AngelList Market Companies Extractor.js': 'store/AngelList Market Companies Extractor/AngelList Market Companies Extractor.js'
+		'Domain Name Finder.js': 'store/Domain Name Finder/Domain Name Finder.js'
+		'Facebook Group Members.js': 'store/Facebook Group Members/Facebook Group Members.js'
+		'Facebook ID Finder.js': 'store/Facebook ID Finder/Facebook ID Finder.js'
+		'Facebook Profile URL Finder.js': 'store/Facebook Profile URL Finder/Facebook Profile URL Finder.js'
+		'Instagram Hashtag Collector.js': 'store/Instagram Hashtag Collector/Instagram Hashtag Collector.js'
+		'Instagram Profile URL Finder.js': 'store/Instagram Profile URL Finder/Instagram Profile URL Finder.js'
+		'LinkedIn Accept Invitations.js': 'store/LinkedIn Accept Invitations/LinkedIn Accept Invitations.js'
+		'LinkedIn Auto Endorse.js': 'store/LinkedIn Auto Endorse/LinkedIn Auto Endorse.js'
+		'LinkedIn Auto Withdraw.js': 'store/LinkedIn Auto Withdraw/LinkedIn Auto Withdraw.js'
+		'LinkedIn Companies Employees.js': 'store/LinkedIn Companies Employees/LinkedIn Companies Employees.js'
+		'LinkedIn Companies Info.js': 'store/LinkedIn Companies Info/LinkedIn Companies Info.js'
+		'LinkedIn Company URL Finder.js': 'store/LinkedIn Company URL Finder/LinkedIn Company URL Finder.js'
+		'LinkedIn Conversations-Hubspot Connector.js': 'store/LinkedIn Conversations-Hubspot Connector/LinkedIn Conversations-Hubspot Connector.js'
+		'LinkedIn Followers Insights.js': 'store/LinkedIn Followers Insights/LinkedIn Followers Insights.js'
+		'LinkedIn Group Members.js': 'store/LinkedIn Group Members/LinkedIn Group Members.js'
+		'LinkedIn Network Booster.js': 'store/LinkedIn Network Booster/LinkedIn Network Booster.js'
+		'LinkedIn Post Commenters.js': 'store/LinkedIn Post Commenters/LinkedIn Post Commenters.js'
+		'LinkedIn Post Likers.js': 'store/LinkedIn Post Likers/LinkedIn Post Likers.js'
+		'LinkedIn Profile Scraper.js': 'store/LinkedIn Profile Scraper/LinkedIn Profile Scraper.js'
+		'LinkedIn Profile URL Finder.js': 'store/LinkedIn Profile URL Finder/LinkedIn Profile URL Finder.js'
+		'LinkedIn Search and Invite.js': 'store/LinkedIn Search and Invite/LinkedIn Search and Invite.js'
+		'LinkedIn Search Export.js': 'store/LinkedIn Search Export/LinkedIn Search Export.js'
+		'LinkedIn-Hubspot Connector.js': 'store/LinkedIn-Hubspot Connector/LinkedIn-Hubspot Connector.js'
+		'Medium Post Clappers.js': 'store/Medium Post Clappers/Medium Post Clappers.js'
+		'Pinterest Profile URL Finder.js': 'store/Pinterest Profile URL Finder/Pinterest Profile URL Finder.js'
+		'Quora Topics Influencers.js': 'store/Quora Topics Influencers/Quora Topics Influencers.js'
+		'Sales Navigator to LinkedIn Url Converter.js': 'store/Sales Navigator to LinkedIn Url Converter/Sales Navigator to LinkedIn Url Converter.js'
+		'Twitter Auto Follow.js': 'store/Twitter Auto Follow/Twitter Auto Follow.js'
+		'Twitter Follower Collector.js': 'store/Twitter Follower Collector/Twitter Follower Collector.js'
+		'Twitter Following Collector.js': 'store/Twitter Following Collector/Twitter Following Collector.js'
+		'Twitter Network Cleaner.js': 'store/Twitter Network Cleaner/Twitter Network Cleaner.js'
+		'Twitter Profile URL Finder.js': 'store/Twitter Profile URL Finder/Twitter Profile URL Finder.js'
+		'Web Summit Startup Emails.js': 'store/Web Summit Startup Emails/Web Summit Startup Emails.js'
+
+		# scraping-challenges
+		# -------------------
+		'scraping-challenge-0.js': 'scraping-challenges/scraping-challenge-0.js'
+		'scraping-challenge-1.js': 'scraping-challenges/scraping-challenge-1.js'
+		'scraping-challenge-2.js': 'scraping-challenges/scraping-challenge-2.js'
+		'scraping-challenge-3.js': 'scraping-challenges/scraping-challenge-3.js'
+		'scraping-challenge-4.js': 'scraping-challenges/scraping-challenge-4.js'
+		'scraping-challenge-5.js': 'scraping-challenges/scraping-challenge-5.js'
+
+		# Script samples
+		# --------------
+		'sample-Nick.js': 'samples/sample-Nick.js'
+		'sample-CasperJS.js': 'samples/sample-CasperJS.js'
+		'sample-PhantomJS.js': 'samples/sample-PhantomJS.js'
+		'sample-Node.js': 'samples/sample-Node.js'
+		'sample-WhatsMyIp.js': 'samples/sample-WhatsMyIp.js'
+		'sample-Chromeless.js': 'samples/sample-Chromeless.js'
+		'Hacker News Front Page Tutorial.js': 'samples/Hacker News Front Page Tutorial.js'
+
+]
