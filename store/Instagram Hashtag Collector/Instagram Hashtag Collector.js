@@ -1,33 +1,39 @@
 // Phantombuster configuration {
-	"phantombuster command: nodejs"
-	"phantombuster package: 5"
-	"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster command: nodejs"
+"phantombuster package: 5"
+"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster flags: save-folder"
 
-	const url = require("url")
-	const Buster = require("phantombuster")
-	const buster = new Buster()
-	
-	const Nick = require("nickjs")
-	const nick = new Nick({
-		loadImages: false,
-		printPageErrors: false,
-		printResourceErrors: false,
-		printNavigation: false,
-		printAborts: false,
-		debug: false,
-	})
-	
-	const StoreUtilities = require("./lib-StoreUtilities")
-	const utils = new StoreUtilities(nick, buster)
+const url = require("url")
+const Buster = require("phantombuster")
+const buster = new Buster()
+
+const Nick = require("nickjs")
+const nick = new Nick({
+	loadImages: false,
+	printPageErrors: false,
+	printResourceErrors: false,
+	printNavigation: false,
+	printAborts: false,
+	debug: false,
+})
+
+const StoreUtilities = require("./lib-StoreUtilities")
+const utils = new StoreUtilities(nick, buster)
 // }
 
 const SCRAPING_SELECTORS = {
 	baseSelector: "div[role=dialog]",
 	profileSelector: "header a.notranslate",
 	likeSelector: "section div span > span",
+	yetAnotherLikeSelector: "section div a span", // NOTE: sometime the selector is not the same, so we need to handle another selector for the likes count
 	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
 	pubDateSelector: "time",
-	descriptionSelector: "ul > li:first-child span"
+	descriptionSelector: "ul > li:first-child span",
+	videoSelector: "article div:not([class]) video",
+	postImage: "article div:not([class]) img", // To scrape the post image, we need to specify article an the content div
+	profileImage: "article img",
+	location: "header div:last-of-type > div:last-of-type a:last-of-type" // Location if present in the post
 }
 
 /**
@@ -45,7 +51,7 @@ const instagramConnect = async (tab, sessionCookie) => {
 		secure: true,
 		httpOnly: true
 	})
-	await tab.open('https://instagram.com')
+	await tab.open("https://instagram.com")
 	try {
 		await tab.waitUntilVisible("main")
 		const name = await tab.evaluate((arg, cb) => {
@@ -74,25 +80,43 @@ const scrapePublication = (arg, cb) => {
 	if ((!postDescription) || (!postDescription.children)) {
 		postDescription = ""
 	} else {
-		postDescription = 
-			Array.from(postDescription.children)
-					.map(el => (el.textContent) ? el.textContent.trim() : "" )
-					.join(" ")
+		postDescription =
+			Array
+				.from(postDescription.children)
+				.map(el => (el.textContent) ? el.textContent.trim() : "" )
+				.join(" ")
 	}
 	/**
 	 * NOTE: If the publication have less than 10 likes,
 	 * there is no counter but all instagram users names
 	 */
-	if (baseSelector.querySelector(arg.selectors.likeSelector))
-		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim(), 10)
-	else
+	if (baseSelector.querySelector(arg.selectors.likeSelector)) {
+		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\s/g, ""), 10)
+	} else if (baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector)) {
+		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector).textContent.trim().replace(/\s/g, ""), 10)
+	} else {
 		data["likes"] = baseSelector.querySelectorAll(arg.selectors.likeAlternativeSelector).length
+	}
 
 	data["profileUrl"] = baseSelector.querySelector(arg.selectors.profileSelector).href || ""
 	data["profileName"] = baseSelector.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
 	data["date"] = baseSelector.querySelector(arg.selectors.pubDateSelector).dateTime || ""
 	data["description"] = postDescription
 	data["postUrl"] = baseSelector.querySelector(arg.selectors.pubDateSelector).parentElement.href || ""
+
+	if (baseSelector.querySelector(arg.selectors.videoSelector)) {
+		data["postVideo"] = baseSelector.querySelector(arg.selectors.videoSelector).src
+		data["videoThumbnail"] = baseSelector.querySelector(arg.selectors.videoSelector).poster
+	}
+
+	if (baseSelector.querySelector(arg.selectors.postImage)) {
+		data["postImage"] = baseSelector.querySelector(arg.selectors.postImage).src
+	}
+
+	if (baseSelector.querySelector(arg.selectors.location)) {
+		data["location"] = baseSelector.querySelector(arg.selectors.location).textContent.trim()
+	}
+
 	cb(null, data)
 }
 
@@ -136,7 +160,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
 		}
 		/**
-		 * NOTE: If the selector used for clicking to a new post
+		 * NOTE: If the selector used for clicking to a new post isn't present
 		 * there is no need to continue the scraping process
 		 */
 		try {
@@ -154,9 +178,6 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 				const waitForNewLoadedPost = () => {
 					const time = document.querySelector(`${arg.selectors.baseSelector} ${arg.selectors.pubDateSelector}`)
 					if ((!time) || (time.parentElement.href === arg.previousPost)) {
-						/**
-						 * HACK: No need to wait more than 30 seconds
-						 */
 						if ((Date.now() - startTime) >= 30000) {
 							cb("New post cannot be loaded after 30s")
 						}
@@ -174,6 +195,12 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		await tab.wait(1000 + (Math.random() * 1000))
 		i++
 	}
+	/**
+	 * NOTE: In order to continue the search we need to close the overlay
+	 */
+	if (await tab.isVisible(selectors.OVERLAY)) {
+		await tab.click(selectors.OVERLAY)
+	}
 	return true
 }
 
@@ -182,7 +209,106 @@ const loadPosts = async (tab, arr, count, hashtag) => {
  * @param {String} target
  * @return { Boolean } true if target represents an URL otherwise false
  */
-const isUrl = target => url.parse(target).hostname != null
+const isUrl = target => url.parse(target).hostname !== null
+
+/**
+ * @deprecated This function is not used for now
+ * @param {Object|Array} posts -- one or a list of scraped posts}
+ * @return {Object} All hashtags with their occurrence count
+ */
+const hashtagsOccurrences = (posts) => {
+	let allHashtags = []
+	let uniqueHashtags
+	let result = {}
+
+	/**
+	 * NOTE: collecting all hashtags from input
+	 */
+	if (Array.isArray(posts)) {
+		for (const post of posts) {
+			allHashtags = allHashtags.concat(post.description.match(/#[a-zA-Z0-9]+/g))
+		}
+	} else  {
+		allHashtags = posts.description.match(/#[a-zA-Z0-9]+/g)
+	}
+	/**
+	 * NOTE: removing duplicated hashtags & order to forging the result object
+	 */
+	uniqueHashtags = Array.from(new Set(allHashtags))
+	for (const hashtag of uniqueHashtags) {
+		result[hashtag] = 0
+	}
+
+	/**
+	 * NOTE: Incrementing hashtags if there is an occurence
+	 */
+	for (const one of allHashtags) {
+		result[one] += 1 
+	}
+
+	/**
+	 * NOTE: Filtering the most occured hashtag
+	 */
+	result["mostScrapedHashtag"] = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b)
+	return result
+}
+
+/**
+ * @deprecated This function is not used for now
+ * @description Function used to create a JS object representing the CSV output
+ * @param {Object} data -- JS object}
+ * @return {Object} CSV JS object
+ */
+const forgeCsvFromJSON = data => {
+	let csv = []
+	for (const one of data) {
+		let tmp = Object.assign({}, one)
+		tmp.mostScrapedHashtag = tmp.hashtagsOccurrences.mostScrapedHashtag
+		delete tmp.hashtagsOccurrences
+		csv.push(tmp)
+	}
+	return csv
+}
+
+/**
+ * @async
+ * @description
+ * @param {Tab} tab -- Nikcjs tab with an Instagram session }
+ * @param {String} searchTerm -- Input given by the user }
+ * @param {String} type -- Determine if we need to sort locations or hashtags URLs }
+ * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
+ */
+const searchInput = async (tab, searchTerm, type) => {
+
+	if (await tab.isPresent(".coreSpriteSearchClear")) {
+		await tab.screenshot(`${searchTerm}-${type}.jpg`)
+		await buster.saveText(await tab.getContent(), `${searchTerm}-${type}.html`)
+		await tab.click(".coreSpriteSearchClear")
+		await tab.wait(1000)
+	}
+
+	/**
+	 * Fill the search input
+	 */
+	await tab.sendKeys("nav input", searchTerm, {
+		reset: true,
+		keepFocus: true
+	})
+	/**
+	 * NOTE: Waiting Instagram results
+	 */
+	await tab.waitUntilVisible(".coreSpriteSearchClear")
+	await tab.wait(1000)
+	const found = await tab.evaluate((arg, cb) => {
+		const urls =
+					Array
+						.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+						.map(el => el.href)
+						.filter(el => el.startsWith(`https://www.instagram.com/explore/${arg.type}`))
+		cb(null, urls.shift())
+	}, { type })
+	return found
+}
 
 /**
  * @description Main function
@@ -192,8 +318,13 @@ const isUrl = target => url.parse(target).hostname != null
 	const MAX_POSTS = 1000
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
+	if (!sessionCookie) {
+		utils.log("The API needs a session cookie to navigate throught instagram.com", "error")
+		nick.exit(1)
+	}
+
 	if (!maxPosts) {
-		maxPosts = MAX_POSTS
+		maxPosts = MAX_POSTS // by default we'll scrape 1000 posts
 	}
 
 	if (!csvName) {
@@ -220,37 +351,44 @@ const isUrl = target => url.parse(target).hostname != null
 		await instagramConnect(tab, sessionCookie)
 	}
 
-	/**
-	 * If a hashtag starts with the character #, we just remove the character
-	 * NOTE: if the character # is at the end of the string, it's fine,
-	 * Chrome will open an URL like www.instagram.com/explore/tags/xxx/#
-	 */
-	hashtags = hashtags.map(el => el.startsWith("#") ? el.substr(1) : el)
-	const results = []
+	let results = []
 	for (const hashtag of hashtags) {
-		const [httpCode] = await tab.open(`https://www.instagram.com/explore/tags/${hashtag}`)
+		/**
+		 * NOTE: Simple process to check if we need to search an URL for hashtags or locations
+		 */
+		let targetUrl = ""
+		let inputType = hashtag.startsWith("#") ? "tags" : "locations"
+		let input = (inputType === "tags") ? hashtag.substr(1) : hashtag
+
+		targetUrl = await searchInput(tab, input, inputType)
+		if (!targetUrl) {
+			utils.log(`No urls found for ${hashtag}`, "error")
+			continue
+		}
+		const [httpCode] = await tab.open(targetUrl)
 		if (httpCode === 404) {
-			utils.log(`No results found for the tag ${hashtag}`, "error")
+			utils.log(`No results found for ${hashtag}`, "error")
 			continue
 		}
 
-		try { 
+		try {
 			await tab.waitUntilVisible("main")
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
-		utils.log(`Scraping posts using the tag ${hashtag} ...`, "loading")
+		utils.log(`Scraping posts using the ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
 		const hasTimeLeft = await loadPosts(tab, results, maxPosts, hashtag)
 		if (!hasTimeLeft) {
 			break
 		}
 	}
+	const csvResult = results
 	utils.log(`${results.length} posts scraped`, "done")
-	await utils.saveResults(results, results, csvName)
+	await utils.saveResults(results, csvResult, csvName)
 	nick.exit()
 })()
-.catch(err => {
-	utils.log(`Error during execution: ${err}`, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(`Error during execution: ${err}`, "error")
+		nick.exit(1)
+	})
