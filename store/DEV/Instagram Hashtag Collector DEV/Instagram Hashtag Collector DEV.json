@@ -1,7 +1,7 @@
 {
 	"slug": "instagram-hashtag-collector",
-	"description": "",
-	"image": "",
+	"description": "Extract the most recent posts for any hashtag on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#FCCF6B",
@@ -10,16 +10,15 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1hpdA_GRy-htfYt2QtzXq6KKW_3PNoyFPPci0DOMsW5I/edit#gid=0",
-		"columnName": "Hashtag"
+		"spreadsheetUrl": "#soloparking"
 	},
 	"outputDescription": {
-		"profileUrl": "Instagram poster profile URL",
-		"profileName": "Instagram poster username",
+		"profileUrl": "Profile URL of post author",
+		"profileName": "Instagram username of post author",
 		"postUrl": "Instagram post URL",
 		"date": "Post publication date",
-		"likes": "Like count for the post",
-		"hashtag": "Hashtag used to get the post"
+		"likes": "Number of likes the post received",
+		"hashtag": "Hashtag that lead to the post"
 	},
 	"argumentForm": {
 		"enabled": true,
@@ -28,33 +27,43 @@
 				"properties": {
 					"spreadsheetUrl": {
 						"required": true
-					},
-					"sessionCookie": {
-						"required": true
 					}
 				}
 			},
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or an Instagram Hashtag"
+						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/5391/instagram-hashtag-collector#section_argument\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either an Instagram hashtag beginning with # (like <i>#iseefaces</i>)",
+							"<b>OR</b> an Instagram location (like <i>New York, New York</i>)",
+							"<b>OR</b> a Google Spreadsheet URL (make sure your file is publicly available)",
+							"<b>OR</b> a CSV URL (make sure your file is publicly available)"
+						]
 					},
 					"sessionCookie": {
-						"helper": "Instagram cookie named sessionid"
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
 					},
 					"columnName": {
+						"label": "Spreadsheet column name for Instagram hashtags",
 						"placeholder": "Hashtag",
-						"default": "Hashtag"
+						"default": "Hashtag",
+						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
 					},
 					"maxPosts": {
+						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
-						"helper": "If you leave this field empty, the script will scrape 1000 posts per hashtags",
-						"placeholder": 1000
+						"helpers": [
+							"By default, the API will scrape a maximum of 250 posts per hashtag",
+							"You are limited to a maximum of 1000 posts per hashtag"
+						],
+						"placeholder": 250
 					},
 					"csvName": {
+						"label": "Output CSV name",
 						"type": "text",
-						"placeholder": "result",
-						"default": "result"
+						"placeholder": "result"
 					}
 				}
 			}
@@ -64,25 +73,23 @@
 		"type": "object",
 		"properties": {
 			"spreadsheetUrl": {
-				"type": "string",
-				"title": "Spreasheet URL"
+				"type": "string"
 			},
 			"sessionCookie": {
 				"type": "string",
-				"title": "Session cookie sessionid"
+				"required": true
 			},
 			"columnName": {
-				"type": "string",
-				"title": "Document column title of Instagram hashtags"
+				"type": "string"
 			},
 			"csvName": {
-				"type": "string",
-				"title": "Output CSV name"
+				"type": "string"
 			},
 			"maxPosts": {
 				"type": "number",
-				"title": "Maximum posts scraped per hashtags",
-				"default": 1000
+				"default": 250,
+				"maximum": 1000,
+				"minimum": 1
 			}
 		},
 		"oneOf": [

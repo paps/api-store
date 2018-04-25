@@ -33,17 +33,26 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"helper": "Enter either an Instagram hashtag <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL (make sure your file is publicly available)"
+						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/5391/instagram-hashtag-collector#section_argument\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either an Instagram hashtag beginning with # (like <i>#iseefaces</i>)",
+							"<b>OR</b> an Instagram location (like <i>New York, New York</i>)",
+							"<b>OR</b> a Google Spreadsheet URL (make sure your file is publicly available)",
+							"<b>OR</b> a CSV URL (make sure your file is publicly available)"
+						]
 					},
 					"sessionCookie": {
-						"helper": ""
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
 					},
 					"columnName": {
+						"label": "Spreadsheet column name for Instagram hashtags",
 						"placeholder": "Hashtag",
 						"default": "Hashtag",
-						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags (otherwise we'll use the first column)"
+						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
 					},
 					"maxPosts": {
+						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
 						"helpers": [
 							"By default, the API will scrape a maximum of 250 posts per hashtag",
@@ -52,6 +61,7 @@
 						"placeholder": 250
 					},
 					"csvName": {
+						"label": "Output CSV name",
 						"type": "text",
 						"placeholder": "result"
 					}
@@ -63,24 +73,20 @@
 		"type": "object",
 		"properties": {
 			"spreadsheetUrl": {
-				"type": "string",
-				"title": "Instagram hashtag or spreasheet URL"
+				"type": "string"
 			},
 			"sessionCookie": {
 				"type": "string",
-				"title": "Session cookie (<i>sessionid</i>)"
+				"required": true
 			},
 			"columnName": {
-				"type": "string",
-				"title": "Spreadsheet column name for Instagram hashtags"
+				"type": "string"
 			},
 			"csvName": {
-				"type": "string",
-				"title": "Output CSV name"
+				"type": "string"
 			},
 			"maxPosts": {
 				"type": "number",
-				"title": "Number of posts to scrape per hashtag",
 				"default": 250,
 				"maximum": 1000,
 				"minimum": 1
