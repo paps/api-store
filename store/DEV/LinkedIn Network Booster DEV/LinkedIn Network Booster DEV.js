@@ -134,34 +134,14 @@ const connectTo = async (selector, tab, message) => {
 	await tab.click(".send-invite__actions > button:nth-child(2)")
 	try {
 		// Sometimes this alert isn't shown but the user is still added
-		await tab.waitUntilVisible([".mn-invite-alert__svg-icon--success", ".mn-heathrow-toast__icon--success"], 10000, "or")
+		await tab.waitUntilVisible([
+			".mn-invite-alert__svg-icon--success",
+			".mn-heathrow-toast__icon--success",
+			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
+			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+		], 10000, "or")
 	} catch (error) {
-		/**
-		 * HACK: The new LinkedIn UI make the browser redirects after the bot sent the invitation
-		 * The API will check if the url match with the redirection pattern
-		 */
-		const url =  await tab.getUrl()
-		/**
-		 * NOTE: This regex will only determine if the bot was redirected to LinkedIn network management pages
-		 * to be simple: the URL needs to fit this pattern:
-		 * (http|https)://(www|all subdomains)/linkedin.com/mynetwork/route-to-redirection//tet/another/sub/linkedin/route?isSendInvite=(true|false)
-		 */
-		const isRedirected = /^(http?s:\/{2})?(w{3}|[a-z]{1,}).linkedin.com\/mynetwork\/([a-zA-Z0-9-_]+\/){1,}\?isSendInvite=?(true|false)$/
-		/**
-		 * NOTE: if isSendInvite is true, then everything is ok
-		 */
-		const isInvitationSent = /isSendInvite=true$/
-		if (isRedirected.test(url)) {
-			if (!isInvitationSent.test(url)) {
-				/**
-				 * The bot was redirected to an unexpected URL
-				 * We can consider that, it's an error during the connection process
-				 */
-				utils.log("Bot redirected but could not determined if the user was added", "warning")
-			}
-		} else {
-			utils.log("Button clicked but could not verify if the user was added.", "warning")
-		}
+		utils.log("Button clicked but could not verify if the user was added.", "warning")
 	}
 }
 
