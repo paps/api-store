@@ -281,8 +281,6 @@ const forgeCsvFromJSON = data => {
 const searchInput = async (tab, searchTerm, type) => {
 
 	if (await tab.isPresent(".coreSpriteSearchClear")) {
-		await tab.screenshot(`${searchTerm}-${type}.jpg`)
-		await buster.saveText(await tab.getContent(), `${searchTerm}-${type}.html`)
 		await tab.click(".coreSpriteSearchClear")
 		await tab.wait(1000)
 	}
