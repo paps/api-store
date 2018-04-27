@@ -1,8 +1,11 @@
-# Know who's talking about what
-Keep an eye on who's talking about the topics that interest you or your business. Starting from a hashtag or a list of hashtags, get a list of all the most recent posts on Instragram containing all the relevant info: author, image, number of likes and more.
+# Monitor Instagram data
+So you need to get data from Instagram? Just define which hashtags or locations you're interested in. This API will collect everything you need from IG's search result page and produce a neat CSV/Excel file.
+
+This is perfect to monitor what's happening around your **#brand** or **city**. Get a detailed report of everything that has been said on these topics and discover new profiles and hashtags to monitor / follow.
+
 
 # What will you need? ⚙️ 
-- **Instagram Hashtag or Spreadsheet URL**: Choose a specific hashtag like `#phantombuster` or enter a spreadsheet URL containing many hashtags
+- **Instagram hashtag, location or Spreadsheet URL**: Choose a specific hashtag beginning with # (like `#phantombuster`) or a location (like `New York, New York`) or enter a spreadsheet URL containing many hashtags
 - **Session cookie (sessionid)**: Your Instagram `sessionid` session cookie (more info below)
 
 # Which steps to follow?
@@ -21,9 +24,9 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 ## 4. Aim for a specific hashtag or several at a time {argument}
-In the 1st argument field **"`Instagram Hashtag or Spreadsheet URL`"** you have the choice to use this API for 1 hashtag at a time or several in one go:
-* One at a time: Just fill the form with a hashtag, example: `#phantombuster`
-* Several at a time: Paste the URL of a Google Spreadsheet filled with Instagram hashtags 
+In the 1st configuration field **"`Instagram Hashtag or Spreadsheet URL`"** you have the choice to use this API for 1 hashtag/location at a time or several in one go:
+* One at a time: Just fill the form with a hashtag beginning with # (example: `#phantombuster`) or a location (example: `New York, New York`)
+* Several at a time: Paste the URL of a Google Spreadsheet filled with Instagram hashtags (beginning with #) and/or locations
 
 ## 5. Get your Instagram session cookie 
 The session cookie you'll need to make this API work is called "`sessionid`",
