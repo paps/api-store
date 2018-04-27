@@ -243,7 +243,7 @@ const hashtagsOccurrences = (posts) => {
 	 * NOTE: Incrementing hashtags if there is an occurence
 	 */
 	for (const one of allHashtags) {
-		result[one] += 1 
+		result[one] += 1
 	}
 
 	/**
@@ -317,7 +317,7 @@ const searchInput = async (tab, searchTerm, type) => {
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
 	if (!sessionCookie) {
-		utils.log("The API needs a session cookie to navigate throught instagram.com", "error")
+		utils.log("The API needs a session cookie to navigate on instagram.com", "error")
 		nick.exit(1)
 	}
 
