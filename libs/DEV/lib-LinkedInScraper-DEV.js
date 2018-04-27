@@ -176,10 +176,11 @@ const scrapeInfos = (arg, callback) => {
 		 * the code below replace all br tags by a newline character, and remove elippsis string used by LinkedIn
 		 */
 		if (document.querySelector(".pv-top-card-section__summary-text")) {
+			let ellipsis = document.querySelector(".lt-line-clamp__ellipsis.lt-line-clamp__ellipsis--dummy")
+			ellipsis.parentNode.removeChild(ellipsis)
 			let tmpRaw =
 				document.querySelector(".pv-top-card-section__summary-text")
 					.innerHTML
-					.replace(/\.{3}/g, "")
 					.replace(/(<\/?br>)/g, "\n")
 			document.querySelector(".pv-top-card-section__summary-text").innerHTML = tmpRaw
 			infos.general.description = document.querySelector(".pv-top-card-section__summary-text").textContent.trim()

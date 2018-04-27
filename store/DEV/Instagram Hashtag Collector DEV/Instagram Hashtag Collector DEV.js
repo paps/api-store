@@ -213,7 +213,7 @@ const isUrl = target => url.parse(target).hostname !== null
 
 /**
  * @deprecated This function is not used for now
- * @param {Object|Array} posts -- one or a list of scraped posts}
+ * @param {Object|Array} posts -- one or a list of scraped posts
  * @return {Object} All hashtags with their occurrence count
  */
 const hashtagsOccurrences = (posts) => {
@@ -272,14 +272,12 @@ const forgeCsvFromJSON = data => {
 
 /**
  * @async
- * @description
- * @param {Tab} tab -- Nikcjs tab with an Instagram session }
- * @param {String} searchTerm -- Input given by the user }
- * @param {String} type -- Determine if we need to sort locations or hashtags URLs }
+ * @param {Tab} tab -- Nikcjs tab with an Instagram session
+ * @param {String} searchTerm -- Input given by the user
  * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
  */
-const searchInput = async (tab, searchTerm, type) => {
 
+const searchLocation = async (tab, searchTerm) => {
 	if (await tab.isPresent(".coreSpriteSearchClear")) {
 		await tab.click(".coreSpriteSearchClear")
 		await tab.wait(1000)
@@ -302,9 +300,9 @@ const searchInput = async (tab, searchTerm, type) => {
 					Array
 						.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
 						.map(el => el.href)
-						.filter(el => el.startsWith(`https://www.instagram.com/explore/${arg.type}`))
+						.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
 		cb(null, urls.shift())
-	}, { type })
+	})
 	return found
 }
 
@@ -356,9 +354,10 @@ const searchInput = async (tab, searchTerm, type) => {
 		 */
 		let targetUrl = ""
 		let inputType = hashtag.startsWith("#") ? "tags" : "locations"
-		let input = (inputType === "tags") ? hashtag.substr(1) : hashtag
-
-		targetUrl = await searchInput(tab, input, inputType)
+		targetUrl =
+				hashtag.startsWith("#")
+					? `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
+					: await searchLocation(tab, hashtag)
 		if (!targetUrl) {
 			utils.log(`No urls found for ${hashtag}`, "error")
 			continue

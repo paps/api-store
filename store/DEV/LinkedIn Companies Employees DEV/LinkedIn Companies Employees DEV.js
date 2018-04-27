@@ -74,26 +74,19 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 		utils.log(`Getting urls from page ${i}...`, "loading")
 		await tab.open(`https://www.linkedin.com/search/results/people/?facetCurrentCompany=["${id}"]&page=${i}`)
 		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
-
-		// NOTE: LinkedIn commercial use limit
-		if (await linkedIn.hasReachedCommercialLimit(tab)) {
-			const messageToPrint = await tab.evaluate((arg, cb) => {
-				const headLine = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info h2").textContent.trim() : ""
-				const subText = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info p:first-of-type").textContent.trim() : ""
-				const res = `${headLine}\n${subText}`
-				cb(null, res)
-			})
-			utils.log(messageToPrint, "warning")
-			break
-		}
-
 		if (selector === selectors[0]) {
 			break
 		} else {
 			await tab.scrollToBottom()
 			await tab.wait(200)
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
-			utils.log(`Got employees for page ${i}`, "done")
+			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+			if (hasReachedLimit) {
+				utils.log(hasReachedLimit, "warning")
+				break
+			} else {
+				utils.log(`Got employees for page ${i}`, "done")
+			}
 		}
 	}
 	utils.log(`All pages with employees scrapped for company with id: ${id}`, "done")
