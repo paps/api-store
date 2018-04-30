@@ -84,26 +84,14 @@ const scrapeCompanyInfo = (arg, callback) => {
 						el.querySelector("dd.org-company-card__company-details.company-size").textContent.trim()
 						:
 						"none"
-				//,
-				// relatedEmployees:
-				// 	el.querySelector(".org-company-connections__relevant-employee-subtext > strong")
-				// 		?
-				// 		parseInt(
-				// 			el
-				// 				.querySelector(".org-company-connections__relevant-employee-subtext > strong")
-				// 				.textContent.trim()
-				// 				.replace(/\s|\D/g, "")
-				// 			,10)
-				// 		:
-				// 		0
 			}
 		})
 		let iterator = 1
 		for (const one of relatedCompanies) {
-			result[`Company${iterator}LinkedInURL`] = one.url
-			result[`Company${iterator}Name`] = one.name
-			result[`Company${iterator}Sector`] = one.sector
-			result[`Company${iterator}EmployeesRange`] = one.employeesRanges
+			result[`RelatedCompany${iterator}LinkedInURL`] = one.url
+			result[`RelatedCompany${iterator}Name`] = one.name
+			result[`RelatedCompany${iterator}Sector`] = one.sector
+			result[`RelatedCompany${iterator}EmployeesRange`] = one.employeesRanges
 			iterator++
 		}
 	}
@@ -116,7 +104,6 @@ const getCompanyInfo = async (tab, link) => {
 	if (await tab.isPresent("section.org-similar-orgs")) {
 		await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
 	}
-	await tab.wait(2500)
 	return (await tab.evaluate(scrapeCompanyInfo, {link}))
 }
 
