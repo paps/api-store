@@ -77,8 +77,12 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 		if (selector === selectors[0]) {
 			break
 		} else {
+			for (let j = 0, k = 500; j < 10; j++, k += 500) {
+				await tab.wait(200)
+				await tab.scroll(0, k)
+			}
 			await tab.scrollToBottom()
-			await tab.wait(200)
+			await tab.wait(1500)
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
