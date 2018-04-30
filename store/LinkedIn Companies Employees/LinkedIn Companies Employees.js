@@ -44,7 +44,7 @@ const scrapeResults = (args, callback) => {
 			let currentJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
-				currentJob = currentJob.replace(/^.+ ?: ?\n/, '').trim()
+				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
 			}
 			if (url !== window.location.href + "#") {
 				linkedInUrls.push({
@@ -76,10 +76,20 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 		if (selector === selectors[0]) {
 			break
 		} else {
+			for (let j = 0, k = 500; j < 10; j++, k += 500) {
+				await tab.wait(200)
+				await tab.scroll(0, k)
+			}
 			await tab.scrollToBottom()
-			await tab.wait(200)
+			await tab.wait(1500)
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
-			utils.log(`Got employees for page ${i}`, "done")
+			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+			if (hasReachedLimit) {
+				utils.log(hasReachedLimit, "warning")
+				break
+			} else {
+				utils.log(`Got employees for page ${i}`, "done")
+			}
 		}
 	}
 	utils.log(`All pages with employees scrapped for company with id: ${id}`, "done")
@@ -94,25 +104,25 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
  * @throws String, the function will throw if there were an error while retrieving the data or if there is no handler
  */
 const getIdFromUrl = async (url, tab) => {
-	if (!isNaN(parseInt(url))) {
-		return parseInt(url)
+	if (!isNaN(parseInt(url, 10))) {
+		return parseInt(url, 10)
 	} else {
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			const [httpCode, httpStatus] = await tab.open(url)
-			if (httpCode == 404) {
+			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}
 			await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
 			let tmp = await tab.evaluate((argv, cb) => {
 				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
 				let u = new URL(ids)
-				ids = u.searchParams.get("facetCurrentCompany").split('\"\,\"').pop()
-				ids = ids.replace('\[\"', "").replace('\"\]', "")
+				ids = u.searchParams.get("facetCurrentCompany").split("\",\"").pop()
+				ids = ids.replace("[\"", "").replace("\"]", "")
 				cb(null, ids)
 			})
-			return parseInt(tmp)
+			return tmp.includes(",") ? tmp : parseInt(tmp, 10)
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
-			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1])
+			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
 		} else {
 			throw "could not get id from " + url
 		}
@@ -155,7 +165,7 @@ const getIdFromUrl = async (url, tab) => {
 	await utils.saveResults(result, csvResult, "result", ["url", "name", "job", "location", "currentJob", "companyUrl"])
 	nick.exit()
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
