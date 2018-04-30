@@ -50,20 +50,49 @@ const scrapeCompanyInfo = (arg, callback) => {
 		tmp = tmp.split("=").pop()
 		tmp = decodeURIComponent(tmp)
 		result.linkedinID =
-						    tmp.replace('[', '')
-							   .replace(']', '')
-							   .replace('\,','')
-							   .split('\"')
-							   .filter(el => (el !== '' && el !== ',') )
-							   .join(',')
+							tmp.replace("[", "")
+								.replace("]", "")
+								.replace(",","")
+								.split("\"")
+								.filter(el => (el !== "" && el !== ",") )
+								.join(",")
 	}
 	// "View in Sales Navigator" link, only present for LI premium users
 	if (document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn")) { result.salesNavigatorLink = document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn").href }
 	// Use link text from "see all employees" to get number of employees on LI
 	if (document.querySelector("a.snackbar-description-see-all-link > strong")) {
-		const employees = document.querySelector("a.snackbar-description-see-all-link > strong").textContent.match(/ ([\d,\. ]+) /)
-		if (Array.isArray(employees) && typeof(employees[1]) === 'string') {
-			result.employeesOnLinkedIn = parseInt(employees[1].trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10)
+		const employees = document.querySelector("a.snackbar-description-see-all-link > strong").textContent.match(/ ([\d,. ]+) /)
+		if (Array.isArray(employees) && typeof(employees[1]) === "string") {
+			result.employeesOnLinkedIn = parseInt(employees[1].trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10)
+		}
+	}
+
+	if (document.querySelector("section.org-similar-orgs")) {
+		const relatedCompanies = Array.from(document.querySelectorAll("section.org-similar-orgs > ul > li")).map(el => {
+			return {
+				url: el.querySelector("a") ? el.querySelector("a").href : "",
+				name: el.querySelector("dl > dt > h3") ? el.querySelector("dl > dt > h3").textContent.trim() : "",
+				sector:
+					el.querySelector("dd.org-company-card__company-details.company-industry")
+						?
+						el.querySelector("dd.org-company-card__company-details.company-industry").textContent.trim()
+						:
+						"",
+				employeesRanges:
+					el.querySelector("dd.org-company-card__company-details.company-size")
+						?
+						el.querySelector("dd.org-company-card__company-details.company-size").textContent.trim()
+						:
+						"none"
+			}
+		})
+		let iterator = 1
+		for (const one of relatedCompanies) {
+			result[`RelatedCompany${iterator}LinkedInURL`] = one.url
+			result[`RelatedCompany${iterator}Name`] = one.name
+			result[`RelatedCompany${iterator}Sector`] = one.sector
+			result[`RelatedCompany${iterator}EmployeesRange`] = one.employeesRanges
+			iterator++
 		}
 	}
 	callback(null, result)
@@ -72,6 +101,9 @@ const scrapeCompanyInfo = (arg, callback) => {
 const getCompanyInfo = async (tab, link) => {
 	await tab.open(link)
 	await tab.waitUntilVisible("div.organization-outlet")
+	if (await tab.isPresent("section.org-similar-orgs")) {
+		await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
+	}
 	return (await tab.evaluate(scrapeCompanyInfo, {link}))
 }
 
@@ -131,7 +163,7 @@ const getCompanyInfo = async (tab, link) => {
 	await linkedIn.saveCookie()
 	await utils.saveResult(result)
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
