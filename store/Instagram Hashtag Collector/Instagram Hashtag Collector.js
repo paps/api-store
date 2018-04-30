@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
