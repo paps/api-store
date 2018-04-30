@@ -3,7 +3,7 @@
 	"description": "Find Instagram profile URLs based on full names and/or company names",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/instagram_profile_url_finder/Instagram+Profile+URL+Finder.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentDescription": "",

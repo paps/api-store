@@ -3,7 +3,7 @@
 	"description": "Find Facebook profile URLs based on full names and/or company names",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/facebook_profile_url_finder/Facebook+profile+url+finder2.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#6b94e5",
 	"gradientEnd": "#ff7c7c",
 	"argumentDescription": "",
