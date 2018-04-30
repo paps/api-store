@@ -243,7 +243,7 @@ const hashtagsOccurrences = (posts) => {
 	 * NOTE: Incrementing hashtags if there is an occurence
 	 */
 	for (const one of allHashtags) {
-		result[one] += 1 
+		result[one] += 1
 	}
 
 	/**

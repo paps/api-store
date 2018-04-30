@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-hashtag-collector",
-	"description": "Extract the most recent posts for any hashtag on Instagram",
+	"description": "Extract the most recent posts for any hashtags or locations on Instagram",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
 	"hidden": true,
 	"new": true,
@@ -17,8 +17,9 @@
 		"profileName": "Instagram username of post author",
 		"postUrl": "Instagram post URL",
 		"date": "Post publication date",
-		"likes": "Number of likes the post received",
-		"hashtag": "Hashtag that lead to the post"
+		"likes": "Number of likes the post received or video views in case of a video post",
+		"location": "Where the photo was taken, if specified",
+		"hashtag": "Hashtag (or location) that lead to the post"
 	},
 	"argumentForm": {
 		"enabled": true,

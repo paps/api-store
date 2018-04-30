@@ -24,7 +24,7 @@ if [[ "$1" == "lib" ]]; then
   cd libs
   for i in *(.); do
     dev=DEV/`echo $i | sed 's/\.js$/-DEV\.js/'`
-    $diffcmd $diffarg --context=2 "$i" "$dev"
+    $diffcmd $diffarg --context=0 "$i" "$dev"
   done
   cd ..
 
@@ -43,7 +43,7 @@ else
         prod=$i`echo $i | sed 's/\/$/.md/'`
         dev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.md/'`
       fi
-      $diffcmd $diffarg --context=2 "$prod" "$dev"
+      $diffcmd $diffarg --context=0 "$prod" "$dev"
     fi
   done
   cd ..
