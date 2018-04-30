@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
 
 const url = require("url")
 
@@ -19,7 +19,7 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
@@ -112,7 +112,13 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			result = result.concat(await tab.evaluate(scrapeResults, {query}))
-			utils.log(`Got urls for page ${i}`, "done")
+			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+			if (hasReachedLimit) {
+				utils.log(hasReachedLimit, "warning")
+				break
+			} else {
+				utils.log(`Got urls for page ${i}`, "done")
+			}
 		}
 	}
 	utils.log("All pages with result scrapped.", "done")
@@ -177,7 +183,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 	await linkedIn.saveCookie()
 	utils.saveResult(result)
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
