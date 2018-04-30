@@ -2,7 +2,7 @@
 	"slug": "instagram-hashtag-collector",
 	"description": "Extract the most recent posts for any hashtags or locations on Instagram",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",

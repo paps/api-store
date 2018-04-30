@@ -3,7 +3,7 @@
 	"description": "Find Twitter profile URLs based on full names and/or company names",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_profile_url_finder/Twitter+Profile+URL+Finder.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#a5e4ff",
 	"gradientEnd": "#fccf6b",
 	"argumentDescription": "",

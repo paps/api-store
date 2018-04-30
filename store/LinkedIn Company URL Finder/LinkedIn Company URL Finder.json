@@ -3,7 +3,7 @@
 	"description": "From a list of company names, find their corresponding LinkedIn company page URLs",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_company_url_finder/linkedin+_company_url_finder.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#74d3ad",
 	"gradientEnd": "#f4935a",
 	"argumentHelpAnchor": "#section_argument",
