@@ -88,10 +88,10 @@ const scrapeCompanyInfo = (arg, callback) => {
 		})
 		let iterator = 1
 		for (const one of relatedCompanies) {
-			result[`Company${iterator}LinkedInURL`] = one.url
-			result[`Company${iterator}Name`] = one.name
-			result[`Company${iterator}Sector`] = one.sector
-			result[`Company${iterator}EmployeesRange`] = one.employeesRanges
+			result[`RelatedCompany${iterator}LinkedInURL`] = one.url
+			result[`RelatedCompany${iterator}Name`] = one.name
+			result[`RelatedCompany${iterator}Sector`] = one.sector
+			result[`RelatedCompany${iterator}EmployeesRange`] = one.employeesRanges
 			iterator++
 		}
 	}
