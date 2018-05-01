@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
@@ -35,7 +35,7 @@ const getTotalSendInvitations = (arg, cb) => {
 	 */
 	let digits = raw.match(/([\d,\. ]+)/g)
 	if (Array.isArray(digits)) {
-		digits.map(el => parseInt(el.trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10))
+		digits = digits.map(el => parseInt(el.trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10))
 	}
 	else {
 		return cb("Cannot find the invitations count", null)
@@ -110,6 +110,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	const selectors = ["ul.mn-invitation-list", "section.mn-invitation-manager__no-invites"]
 	let selector = await tab.waitUntilVisible(selectors, 5000, "or")
 
+	utils.log(`Please wait while the API goes to the oldest sent invite...`, "info")
 	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null)))
 	{
 		await tab.scrollToBottom()
@@ -127,7 +128,13 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		 * NOTE: Here we're waiting the end of the end of a loading animation
 		 * this animation is a way to wait a bit more to be sure of the end of page loading
 		 */
-		await tab.waitUntilPresent(_selectors.spinLoading)
+		try {
+			await tab.waitUntilPresent(_selectors.spinLoading)
+		} catch (e) {
+		}
+		if (Math.random() > 0.98) {
+			utils.log(`Still working...`, "info")
+		}
 	}
 
 	await tab.untilVisible(selectors, 5000, "or")
@@ -152,6 +159,9 @@ const hasReachedOldestInvitations = (arg, cb) => {
 			await tab.click(_selectors.withdrawBtn)
 			await tab.untilVisible(_selectors.withdrawSuccess)
 			await tab.wait(1000)
+			if (Math.random() > 0.95) {
+				utils.log(`Withdrawing invites (still ${linkedInWithdrawCount} invites left)...`, "info")
+			}
 		}
 	}
 	utils.log(`${peopleToRemove} invitations withdrawn`, "done")
