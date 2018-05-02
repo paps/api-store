@@ -25,7 +25,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const createUrl = (search, circles) => {
 	const circlesOpt = `facetNetwork=["${circles.first ? "F" : ""}","${circles.second ? "S" : ""}","${circles.third ? "O" : ""}"]`
-	return (`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(search)}&${encodeURIComponent(circlesOpt)}`) // TODO: test + encodeURI
+	return (`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(search)}&${circlesOpt}`) // TODO: test + encodeURI
 }
 
 const scrapeResults = (arg, callback) => {
