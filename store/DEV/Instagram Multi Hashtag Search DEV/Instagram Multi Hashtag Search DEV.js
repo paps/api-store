@@ -79,7 +79,7 @@ const scrapePublications = (arg, cb) => {
 
 const removeDuplicate = (el, arr) => {
 	for (const one of arr) {
-		if (arr.postUrl === el.postUrl) {
+		if (one.postUrl === el.postUrl || one.postUrl.startsWith(el.postUrl)) {
 			return false
 		}
 	}
@@ -206,7 +206,7 @@ const searchLocation = async (tab, searchTerm) => {
 		try {
 			await tab.waitUntilVisible("main")
 		} catch (err) {
-			utils.log(`Page is not opened: ${err.message || err}`, error)
+			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
 		utils.log(`Scraping posts using using the ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
@@ -218,7 +218,7 @@ const searchLocation = async (tab, searchTerm) => {
 		}
 	}
 
-	utils.log(`posts scraped`, "done")
+	utils.log("posts scraped", "done")
 	await utils.saveResults(results, results, csvName)
 	nick.exit()
 })()
