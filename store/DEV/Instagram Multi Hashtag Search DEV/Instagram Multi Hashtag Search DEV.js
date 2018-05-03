@@ -9,7 +9,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: true,
+	loadImages: false,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -110,6 +110,11 @@ const waitUntilNewDivs = (arg, cb) => {
 			if (Date.now() - startTime >= 30000) {
 				cb("No new posts loaded after 30s")
 			}
+			/**
+			 * HACK: if the amount is still equals, we need to scroll on more time
+			 * to be sure that there were divs loaded but not present in the DOM
+			 */
+			document.querySelector("article > div:last-of-type > div").scrollIntoView()
 			setTimeout(idle, 100)
 		} else {
 			cb(null)
@@ -118,7 +123,7 @@ const waitUntilNewDivs = (arg, cb) => {
 	idle()
 }
 
-const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("article > div:not([class]) > div > div").length)
+const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("article > div:not([class]) > div > div").length) 
 
 /**
  * @async
@@ -147,10 +152,12 @@ const loadPosts = async (tab, arr, count, term) => {
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
-		// let _divCount = await tab.evaluate(getPostsDivCount)
-		await tab.scrollToBottom()
-		// await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
-		await tab.evaluate(waitUntilImagesLoaded)
+		let _divCount = await tab.evaluate(getPostsDivCount)
+		await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
+		await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+	}
+	if (arr.length > count) {
+		arr.splice(count, arr.length)
 	}
 	return true
 }
