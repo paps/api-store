@@ -9,7 +9,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -86,6 +86,40 @@ const removeDuplicate = (el, arr) => {
 	return true
 }
 
+const waitUntilImagesLoaded = (arg, cb) => {
+	const startTime = Date.now()
+	const waitForImgs = () => {
+		for (const one of Array.from(document.querySelectorAll("img"))) {
+			if (!one.complete || !one.naturalWidth) {
+				if (Date.now() - startTime >= 30000) {
+					cb("Images aren't loaded after 30s")
+				}
+				setTimeout(waitForImgs, 100)
+			} else {
+				cb(null)
+			}
+		}
+	}
+	waitForImgs()
+}
+
+const waitUntilNewDivs = (arg, cb) => {
+	const startTime = Date.now()
+	const idle = () => {
+		if (document.querySelectorAll("article > div:not([class]) > div > div").length === arg.previousCount) {
+			if (Date.now() - startTime >= 30000) {
+				cb("No new posts loaded after 30s")
+			}
+			setTimeout(idle, 100)
+		} else {
+			cb(null)
+		}
+	}
+	idle()
+}
+
+const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("article > div:not([class]) > div > div").length)
+
 /**
  * @async
  * @description Function which scrape publications from the result page
@@ -113,9 +147,10 @@ const loadPosts = async (tab, arr, count, term) => {
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
+		// let _divCount = await tab.evaluate(getPostsDivCount)
 		await tab.scrollToBottom()
-		await tab.wait(2500)
-		// await tab.evaluate((arg, cb) => cb(null, document.querySelector(`a[href*="${arg.last}"]`).scrollIntoView()), { last: url.parse(res[res.length - 1].postUrl).path })
+		// await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+		await tab.evaluate(waitUntilImagesLoaded)
 	}
 	return true
 }
