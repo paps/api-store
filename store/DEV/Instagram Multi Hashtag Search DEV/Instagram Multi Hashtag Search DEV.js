@@ -57,6 +57,12 @@ const instagramConnect = async (tab, sessionCookie) => {
  */
 const isUrl = target => url.parse(target).hostname !== null
 
+/**
+ * @description Browser context function used to scrape all data from posts loaded in the DOM
+ * @param {Object} arg - Script context parameters
+ * @param {Function} cb - Callback function used to return to script context
+ * @return {Promise<Array>} Scraped posts
+ */
 const scrapePublications = (arg, cb) => {
 	let divs = document.querySelector(arg.rootSelector).querySelectorAll("div > div > div > div")
 	let res = Array.from(divs).map(el => {
@@ -184,6 +190,12 @@ const waitUntilNewDivs = (arg, cb) => {
 	idle()
 }
 
+/**
+ * @description Browser context function used to simply get the amount of posts loaded into the DOM
+ * @param {Object} arg - Scription context parameters
+ * @param {Fucntion} cb - Callback function used to return to script
+ * @return {Promise<Number>} Count of posts elements into the DOM
+ */
 const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("article > div:not([class]) > div > div").length) 
 
 /**
@@ -200,6 +212,10 @@ const loadPosts = async (tab, arr, count, term) => {
 		LAST_PUB: "article header ~ h2 ~ div:not([class])"
 	}
 	let scrapeCount = 0
+
+	/**
+	 * NOTE: Moving at the beginning of the list
+	 */
 	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.scroller).scrollIntoView()), { scroller: SELECTORS.LAST_PUB })
 
 	while (scrapeCount < count) {
@@ -208,21 +224,31 @@ const loadPosts = async (tab, arr, count, term) => {
 			utils.log(timeLeft.message, "warning")
 			return false
 		}
+
 		buster.progressHint(scrapeCount / count, `${term}`)
+		
 		let res = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.LAST_PUB })
+		
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
+
 		try {
 			let _divCount = await tab.evaluate(getPostsDivCount)
+
 			await tab.scrollToBottom()
 			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
 			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+
 		} catch (err) {
 			if (err.message.indexOf("Rate limit") > -1) {
 				utils.log("Instragram scraping limit reached, slowing down the API ...", "warning")
 				const startSlowDownTimestamp = Date.now()
 				while (!await tab.evaluate(retryLoading)) {
+					/**
+					 * NOTE: Yes, the slow down limit is hardcoded,
+					 * but the rate limit seems to be removed after 5 / 10 mins most of the time
+					 */
 					if (Date.now() - startSlowDownTimestamp >= 900000) {
 						utils.log("The limit still reached after 15 mins, resuming scraping process", "warning")
 						break
@@ -236,6 +262,7 @@ const loadPosts = async (tab, arr, count, term) => {
 			}
 		}
 	}
+
 	if (arr.length > count) {
 		arr.splice(count, arr.length)
 	}
