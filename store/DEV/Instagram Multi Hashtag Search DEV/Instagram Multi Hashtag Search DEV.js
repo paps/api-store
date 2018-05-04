@@ -121,10 +121,10 @@ const waitUntilNewDivs = (arg, cb) => {
 	const idle = () => {
 
 		/**
-		 * HACK: We need to see if the rate limit snack bar is in the DOM
+		 * HACK: We need to see if the rate limit snackbar is in the DOM
 		 */
 		if (document.querySelector("body > div:first-of-type a")) {
-			cb("Instagram let only performs 200 GraphQL calls per hours, please slow down the API use")
+			cb("GraphQL")
 		}
 		if (document.querySelectorAll("article > div:not([class]) > div > div").length === arg.previousCount) {
 			if (Date.now() - startTime >= 30000) {
@@ -173,14 +173,19 @@ const loadPosts = async (tab, arr, count, term) => {
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
-		await tab.screenshot(`${term}-${scrapeCount}-${count}.jpg`)
 		try {
 			let _divCount = await tab.evaluate(getPostsDivCount)
-			// await tab.scrollToBottom()
+			await tab.scrollToBottom()
 			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
 			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
 		} catch (err) {
-			console.log(err.message || err)
+
+			if (err.message.indexOf("GraphQL") > -1) {
+				utils.log("Instragram scraping limit reached, please slow down the API use", "error")
+				await tab.screenshot(`GraphQL-${term}.jpg`)
+			} else {
+				console.log(err.message || err)
+			}
 			break
 		}
 	}
