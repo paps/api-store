@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const MAX_POSTS = 1000
+const MAX_POSTS = 2500
 // }
 
 /**
@@ -210,12 +210,17 @@ const loadPosts = async (tab, arr, count, term) => {
 			await tab.scrollToBottom()
 			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
 			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+			await tab.wait(1000)
 
 		} catch (err) {
 			if (err.message.indexOf("Rate limit") > -1) {
 				utils.log("Instragram scraping limit reached, slowing down the API ...", "warning")
 				const startSlowDownTimestamp = Date.now()
 				while (!await tab.evaluate(retryLoading)) {
+					const timeLeft = await utils.checkTimeLeft()
+					if (!timeLeft.timeLeft) {
+						return false
+					}
 					/**
 					 * NOTE: Yes, the slow down limit is hardcoded,
 					 * but the rate limit seems to be removed after 5 / 10 mins most of the time
@@ -324,11 +329,15 @@ const filterResults = (rawResults) => {
 	return results
 }
 
+/**
+ * @param {Array} results - Results to format for the CSV output
+ * @return {Array} Formatted CSV output
+ */
 const craftCsvObject = results => {
 	const csvRes = results.map(el => {
 		let tmp = {
 			postUrl: el.postUrl ? el.postUrl : "",
-			matches: el.matches ? el.matches.join(" / ") : "",
+			matches: el.matches ? el.matches.join(" AND ") : "",
 			description: el.description ? el.description : ""
 		}
 
