@@ -88,9 +88,9 @@ const removeDuplicate = (el, arr) => {
 
 /**
  * HACK: Use this function if you run Nickjs with loadImages: true
- * @description Browser context function which wait that all images at screen are loaded
+ * @description Browser context function which perform a wait until all images are loaded at screen
  * @param {Object} arg - Script context parameters
- * @param {Function} cb - Function used to return to script context
+ * @param {Function} cb - Callback function used to return to script context
  */
 const waitUntilImagesLoaded = (arg, cb) => {
 	const startTime = Date.now()
@@ -116,15 +116,55 @@ const waitUntilImagesLoaded = (arg, cb) => {
 	waitForImgs()
 }
 
+/**
+ * NOTE: Beware that the function can block the execution of the script more than few minutes
+ * @description Browser context function performing loading retries until the rate limit is active
+ * @param {Object} arg - Script context parameters
+ * @param {Function} cb - Callback function used to return to script context
+ * @return {Promise<Boolean>} true if we can reload resume the scraping process otherwise false
+ */
+const retryLoading = (arg, cb) => {
+	const startTimestamp = Date.now()
+
+	const doReload = () => {
+		/**
+		 * "Emulating" human scroll going at the root of the container, and scrolling to the bottom
+		 */
+		document.querySelector("article div ~ h2").scrollIntoView()
+		document.querySelector("article > div:last-of-type > div").scrollIntoView()
+		/**
+		 * Does the snackbar still present in the DOM ?
+		 */
+		if (document.querySelector("body > div:first-of-type a")) {
+			if (Date.now() - startTimestamp >= 60000) {
+				cb(null, false)
+			}
+		} else {
+			document.querySelector("article div ~ h2").scrollIntoView()
+			document.querySelector("article > div:last-of-type > div").scrollIntoView()
+			setTimeout(() => {
+				cb(null, document.querySelector("body > div:first-of-type a") ? false : true)
+			}, 5000)
+		}
+		setTimeout(doReload, 30000)
+	}
+	doReload()
+}
+
+/**
+ * HACK: Use this function if you run Nickjs with loadImages: false
+ * @description Browser cntext function which perform a wait until new posts are loaded at screen
+ * @param {Object} arg - Scription context parameters
+ * @param {Fucntion} cb - Callback function used to return to script
+ */
 const waitUntilNewDivs = (arg, cb) => {
 	const startTime = Date.now()
 	const idle = () => {
-
 		/**
 		 * HACK: We need to see if the rate limit snackbar is in the DOM
 		 */
 		if (document.querySelector("body > div:first-of-type a")) {
-			cb("GraphQL")
+			cb("Rate limit")
 		}
 		if (document.querySelectorAll("article > div:not([class]) > div > div").length === arg.previousCount) {
 			if (Date.now() - startTime >= 30000) {
@@ -179,14 +219,21 @@ const loadPosts = async (tab, arr, count, term) => {
 			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
 			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
 		} catch (err) {
-
-			if (err.message.indexOf("GraphQL") > -1) {
-				utils.log("Instragram scraping limit reached, please slow down the API use", "error")
-				await tab.screenshot(`GraphQL-${term}.jpg`)
+			if (err.message.indexOf("Rate limit") > -1) {
+				utils.log("Instragram scraping limit reached, slowing down the API ...", "warning")
+				const startSlowDownTimestamp = Date.now()
+				while (!await tab.evaluate(retryLoading)) {
+					if (Date.now() - startSlowDownTimestamp >= 900000) {
+						utils.log("The limit still reached after 15 mins, resuming scraping process", "warning")
+						break
+					}
+					utils.log("Still slowing down the API process ...", "loading")
+				}
+				utils.log("Scraping process is resuming", "info")
 			} else {
 				console.log(err.message || err)
+				break
 			}
-			break
 		}
 	}
 	if (arr.length > count) {
@@ -320,7 +367,7 @@ const filterResults = (rawResults) => {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
-		utils.log(`Scraping posts using using the ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
+		utils.log(`Scraping posts using the ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
 		const hasTimeLeft = await loadPosts(tab, scrapedResult, maxPosts, term)
 		results[term] = [ ...scrapedResult ]
 		scrapedResult.length = 0
