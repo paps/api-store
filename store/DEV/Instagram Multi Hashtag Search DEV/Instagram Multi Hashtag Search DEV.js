@@ -181,6 +181,7 @@ const waitUntilNewDivs = (arg, cb) => {
 			 * HACK: if the amount is still equal, we need to scroll one more time
 			 * to be sure that there were divs loaded but not present in the DOM
 			 */
+			document.querySelector("article div ~ h2").scrollIntoView()
 			document.querySelector("article > div:last-of-type > div").scrollIntoView()
 			setTimeout(idle, 100)
 		} else {
@@ -225,7 +226,7 @@ const loadPosts = async (tab, arr, count, term) => {
 			return false
 		}
 
-		buster.progressHint(scrapeCount / count, `${term}`)
+		buster.progressHint(scrapeCount / count, term)
 		
 		let res = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.LAST_PUB })
 		
@@ -266,6 +267,7 @@ const loadPosts = async (tab, arr, count, term) => {
 	if (arr.length > count) {
 		arr.splice(count, arr.length)
 	}
+	buster.progressHint(1, term) // Not really usefull, but it might be a good feedback to let know the user that the current scraping process is over
 	return true
 }
 
@@ -321,12 +323,12 @@ const getIntersections = (firstTab, secondTab) => {
 }
 
 /**
- * @description
+ * @description The function will return every posts that match one more search terms
  * @param {Array} rawResults scraped posts
- * @return {Object} Object gathering all intersections from scraped posts
+ * @return {Array} Array containing only posts which matches with one or more search terms
  */
 const filterResults = (rawResults) => {
-	let results = {}
+	let results = []
 
 	for (const one of Object.keys(rawResults)) {
 		let currentKeyword = rawResults[one]
@@ -334,7 +336,19 @@ const filterResults = (rawResults) => {
 		delete allExecptCurrent[one]
 
 		for (const toInspect of Object.keys(allExecptCurrent)) {
-			results[`${one} & ${toInspect}`] = getIntersections(currentKeyword, allExecptCurrent[toInspect])
+			let found = getIntersections(currentKeyword, allExecptCurrent[toInspect])
+
+			for (const foundElement of found) {
+				const index = results.findIndex(el => el.postUrl === foundElement.postUrl)
+				if (index > -1) {
+					if (results[index].matches.indexOf(toInspect) < 0) {
+						results[index].matches.push(toInspect)
+					}
+				} else {
+					foundElement.matches = [ one, toInspect ]
+					results.push(foundElement)
+				}
+			}
 		}
 	}
 	return results
