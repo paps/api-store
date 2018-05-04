@@ -252,7 +252,7 @@ const loadPosts = async (tab, arr, count, term) => {
 					 */
 					if (Date.now() - startSlowDownTimestamp >= 900000) {
 						utils.log("The limit still reached after 15 mins, resuming scraping process", "warning")
-						break
+						return true
 					}
 					utils.log("Still slowing down the API process ...", "loading")
 				}
@@ -354,6 +354,26 @@ const filterResults = (rawResults) => {
 	return results
 }
 
+const craftCsvObject = results => {
+	const csvRes = results.map(el => {
+		let tmp = {
+			postUrl: el.postUrl ? el.postUrl : "",
+			matches: el.matches ? el.matches.join(" / ") : "",
+			description: el.description ? el.description : ""
+		}
+
+		if (el.postVideo !== "") {
+			tmp.postVideo = el.postVideo
+		}
+
+		if (el.postImage !== "") {
+			tmp.postImage = el.postImage
+		}
+		return tmp
+	})
+	return csvRes
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
@@ -428,7 +448,7 @@ const filterResults = (rawResults) => {
 	}
 
 	utils.log("posts scraped", "done")
-	await utils.saveResults(filteredResults, filteredResults, csvName)
+	await utils.saveResults(filteredResults, craftCsvObject(filteredResults), csvName)
 	nick.exit()
 })()
 	.catch(err => {
