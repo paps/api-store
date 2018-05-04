@@ -86,9 +86,22 @@ const removeDuplicate = (el, arr) => {
 	return true
 }
 
+/**
+ * HACK: Use this function if you run Nickjs with loadImages: true
+ * @description Browser context function which wait that all images at screen are loaded
+ * @param {Object} arg - Script context parameters
+ * @param {Function} cb - Function used to return to script context
+ */
 const waitUntilImagesLoaded = (arg, cb) => {
 	const startTime = Date.now()
 	const waitForImgs = () => {
+		/**
+		 * HACK: We need to see if the rate limit snack bar is in the DOM
+		 */
+		if (document.querySelector("body > div:first-of-type a")) {
+			cb("Instagram let only performs 200 GraphQL calls per hours, please slow down the API use")
+		}
+		
 		for (const one of Array.from(document.querySelectorAll("img"))) {
 			if (!one.complete || !one.naturalWidth) {
 				if (Date.now() - startTime >= 30000) {
@@ -106,12 +119,20 @@ const waitUntilImagesLoaded = (arg, cb) => {
 const waitUntilNewDivs = (arg, cb) => {
 	const startTime = Date.now()
 	const idle = () => {
+
+		/**
+		 * HACK: We need to see if the rate limit snack bar is in the DOM
+		 */
+		if (document.querySelector("body > div:first-of-type a")) {
+			cb("Instagram let only performs 200 GraphQL calls per hours, please slow down the API use")
+		}
 		if (document.querySelectorAll("article > div:not([class]) > div > div").length === arg.previousCount) {
 			if (Date.now() - startTime >= 30000) {
+				// cb(`${document.querySelectorAll("article > div:not([class]) > div > div").length} / ${arg.previousCount}`)
 				cb("No new posts loaded after 30s")
 			}
 			/**
-			 * HACK: if the amount is still equals, we need to scroll on more time
+			 * HACK: if the amount is still equal, we need to scroll one more time
 			 * to be sure that there were divs loaded but not present in the DOM
 			 */
 			document.querySelector("article > div:last-of-type > div").scrollIntoView()
@@ -152,9 +173,16 @@ const loadPosts = async (tab, arr, count, term) => {
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
-		let _divCount = await tab.evaluate(getPostsDivCount)
-		await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
-		await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+		await tab.screenshot(`${term}-${scrapeCount}-${count}.jpg`)
+		try {
+			let _divCount = await tab.evaluate(getPostsDivCount)
+			// await tab.scrollToBottom()
+			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
+			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
+		} catch (err) {
+			console.log(err.message || err)
+			break
+		}
 	}
 	if (arr.length > count) {
 		arr.splice(count, arr.length)
@@ -195,6 +223,42 @@ const searchLocation = async (tab, searchTerm) => {
 		cb(null, urls.shift())
 	})
 	return found
+}
+
+/**
+ * @param {Array} firstTab
+ * @param {Array} secondTab
+ * @return {Array} intersections posts from the 2 arrays
+ */
+const getIntersections = (firstTab, secondTab) => {
+	let intersections = []
+	for (const one of firstTab) {
+		let tmp = secondTab.filter(el => el.postUrl === one.postUrl)
+		if (tmp.length > 0) {
+			intersections = intersections.concat(tmp)
+		}
+	}
+	return intersections
+}
+
+/**
+ * @description
+ * @param {Array} rawResults scraped posts
+ * @return {Object} Object gathering all intersections from scraped posts
+ */
+const filterResults = (rawResults) => {
+	let results = {}
+
+	for (const one of Object.keys(rawResults)) {
+		let currentKeyword = rawResults[one]
+		let allExecptCurrent = Object.assign({}, rawResults)
+		delete allExecptCurrent[one]
+
+		for (const toInspect of Object.keys(allExecptCurrent)) {
+			results[`${one} & ${toInspect}`] = getIntersections(currentKeyword, allExecptCurrent[toInspect])
+		}
+	}
+	return results
 }
 
 ;(async () => {
@@ -260,8 +324,18 @@ const searchLocation = async (tab, searchTerm) => {
 		}
 	}
 
+	const filteredResults = filterResults(results)
+	/**
+	 * TODO: Do we need to output empty intersections ?
+	 */
+	for (const one of Object.keys(filteredResults)) {
+		if (filteredResults[one].length < 1) {
+			delete filteredResults[one]
+		}
+	}
+
 	utils.log("posts scraped", "done")
-	await utils.saveResults(results, results, csvName)
+	await utils.saveResults(filteredResults, filteredResults, csvName)
 	nick.exit()
 })()
 	.catch(err => {
