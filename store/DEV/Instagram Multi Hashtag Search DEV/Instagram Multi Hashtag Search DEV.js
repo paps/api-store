@@ -93,36 +93,6 @@ const removeDuplicate = (el, arr) => {
 }
 
 /**
- * HACK: Use this function if you run Nickjs with loadImages: true
- * @description Browser context function which perform a wait until all images are loaded at screen
- * @param {Object} arg - Script context parameters
- * @param {Function} cb - Callback function used to return to script context
- */
-const waitUntilImagesLoaded = (arg, cb) => {
-	const startTime = Date.now()
-	const waitForImgs = () => {
-		/**
-		 * HACK: We need to see if the rate limit snack bar is in the DOM
-		 */
-		if (document.querySelector("body > div:first-of-type a")) {
-			cb("Instagram let only performs 200 GraphQL calls per hours, please slow down the API use")
-		}
-		
-		for (const one of Array.from(document.querySelectorAll("img"))) {
-			if (!one.complete || !one.naturalWidth) {
-				if (Date.now() - startTime >= 30000) {
-					cb("Images aren't loaded after 30s")
-				}
-				setTimeout(waitForImgs, 100)
-			} else {
-				cb(null)
-			}
-		}
-	}
-	waitForImgs()
-}
-
-/**
  * NOTE: Beware that the function can block the execution of the script more than few minutes
  * @description Browser context function performing loading retries until the rate limit is active
  * @param {Object} arg - Script context parameters
