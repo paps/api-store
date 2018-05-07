@@ -80,18 +80,33 @@ const craftDomains = (argv, cb) => {
 	 */
 	for (const one of argv.blacklist) {
 		try {
-			blacklist.push(psl.get((new URL(one)).hostname))
+			let blackListElement = (new URL(one)).hostname
+			/**
+			 * Issue #51: Support wildcard domains
+			 */
+			if (Array.isArray(decodeURIComponent(blackListElement).match(/\*/g))) {
+				blackListElement = decodeURIComponent(blackListElement).replace(/\*/g, "")
+				blacklist.push(blackListElement)
+			} else {
+				blacklist.push(psl.get(blackListElement))
+			}
 		} catch (err) {}
 	}
 
 	const completeResults = argv.results.map(one => {
 		const _domain = psl.get((new URL(one.link)).hostname)
 		one.domain = _domain
+
 		/**
 		 * NOTE: Return an empty JS object if the current element is blacklisted,
 		 * otherwise the element
 		 */
-		return (blacklist.indexOf(_domain) > -1) ? {} : one
+		for (const blacklistElement of blacklist) {
+			if (_domain.match(blacklistElement)) {
+				return {}
+			}
+		}
+		return one
 	})
 	cb(null, completeResults)
 }
@@ -111,12 +126,13 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
 	const theDomain = getBestRankedDomain(results)
+	// Issue #56: return an empty line when no domain where found
 	return {
 		query,
-		domain: theDomain.domain,
-		title: theDomain.title,
-		description: theDomain.description,
-		link: theDomain.link,
+		domain: !theDomain ? "none" : theDomain.domain,
+		title: !theDomain ? "none" : theDomain.title,
+		description: !theDomain ? "none" : theDomain.description,
+		link: !theDomain ? "none" : theDomain.link,
 		codename: names.codename
 	}
 }
