@@ -19,7 +19,15 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const MAX_POSTS = 2500
+const MAX_POSTS = 1500
+
+const SELECTORS = {
+	LAST_PUB: "article header ~ h2 ~ div:not([class])",
+	LOADING_ERR: "body > div > div > div > a",
+	TOP_HEADER: "article div ~ h2",
+	SPINNER: "article > div:last-of-type > div",
+	POSTS: "article > div:not([class]) > div > div"
+}
 // }
 
 /**
@@ -93,43 +101,28 @@ const removeDuplicate = (el, arr) => {
 }
 
 /**
- * NOTE: Beware that the function can block the execution of the script more than few minutes
- * @description Browser context function performing loading retries until the rate limit is active
+ * @description Browser context function which checks if the loading error element is into the DOM
  * @param {Object} arg - Script context parameters
  * @param {Function} cb - Callback function used to return to script context
- * @return {Promise<Boolean>} true if we can reload resume the scraping process otherwise false
+ * @return {Promise<Boolean>} true if the selector is into the DOM otherwise false
  */
 const retryLoading = (arg, cb) => {
-	const startTimestamp = Date.now()
-
-	const doReload = () => {
-		/**
-		 * "Emulating" human scroll going at the root of the container, and scrolling to the bottom
-		 */
-		document.querySelector("article div ~ h2").scrollIntoView()
-		document.querySelector("article > div:last-of-type > div").scrollIntoView()
-		/**
-		 * Does the snackbar still present in the DOM ?
-		 */
-		if (document.querySelector("body > div:first-of-type a")) {
-			if (Date.now() - startTimestamp >= 60000) {
-				cb(null, false)
-			}
-		} else {
-			document.querySelector("article div ~ h2").scrollIntoView()
-			document.querySelector("article > div:last-of-type > div").scrollIntoView()
-			setTimeout(() => {
-				cb(null, document.querySelector("body > div:first-of-type a") ? false : true)
-			}, 5000)
-		}
-		setTimeout(doReload, 30000)
-	}
-	doReload()
+	/**
+	 * Emulating a page scrolling
+	 * If the limit is reached, it will create a snackbar error
+	 */
+	document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
+	document.querySelector(arg.selectors.SPINNER).scrollIntoView()
+	/**
+	 * HACK: Since we faking a scrolling event, we're waiting 5 seconds to let the selector been injected into the DOM tree
+	 */
+	setTimeout(() => {
+		cb(null, document.querySelector(arg.selectors.LOADING_ERR) ? false : true)
+	}, 5000)
 }
 
 /**
- * HACK: Use this function if you run Nickjs with loadImages: false
- * @description Browser cntext function which perform a wait until new posts are loaded at screen
+ * @description Browser context function which perform a wait until new posts are loaded at screen
  * @param {Object} arg - Scription context parameters
  * @param {Fucntion} cb - Callback function used to return to script
  */
@@ -139,10 +132,10 @@ const waitUntilNewDivs = (arg, cb) => {
 		/**
 		 * HACK: We need to see if the rate limit snackbar is in the DOM
 		 */
-		if (document.querySelector("body > div:first-of-type a")) {
+		if (document.querySelector(arg.selectors.LOADING_ERR)) {
 			cb("Rate limit")
 		}
-		if (document.querySelectorAll("article > div:not([class]) > div > div").length === arg.previousCount) {
+		if (document.querySelectorAll(arg.selectors.POSTS).length === arg.previousCount) {
 			if (Date.now() - startTime >= 30000) {
 				// cb(`${document.querySelectorAll("article > div:not([class]) > div > div").length} / ${arg.previousCount}`)
 				cb("No new posts loaded after 30s")
@@ -151,8 +144,8 @@ const waitUntilNewDivs = (arg, cb) => {
 			 * HACK: if the amount is still equal, we need to scroll one more time
 			 * to be sure that there were divs loaded but not present in the DOM
 			 */
-			document.querySelector("article div ~ h2").scrollIntoView()
-			document.querySelector("article > div:last-of-type > div").scrollIntoView()
+			document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
+			document.querySelector(arg.selectors.SPINNER).scrollIntoView()
 			setTimeout(idle, 100)
 		} else {
 			cb(null)
@@ -167,7 +160,7 @@ const waitUntilNewDivs = (arg, cb) => {
  * @param {Fucntion} cb - Callback function used to return to script
  * @return {Promise<Number>} Count of posts elements into the DOM
  */
-const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("article > div:not([class]) > div > div").length) 
+const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll(arg.selector).length) 
 
 /**
  * @async
@@ -179,9 +172,6 @@ const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll("articl
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
 const loadPosts = async (tab, arr, count, term) => {
-	const SELECTORS = {
-		LAST_PUB: "article header ~ h2 ~ div:not([class])"
-	}
 	let scrapeCount = 0
 
 	/**
@@ -205,18 +195,16 @@ const loadPosts = async (tab, arr, count, term) => {
 		scrapeCount += res.length
 
 		try {
-			let _divCount = await tab.evaluate(getPostsDivCount)
+			let _divCount = await tab.evaluate(getPostsDivCount, { selector: SELECTORS.POSTS })
 
 			await tab.scrollToBottom()
-			await tab.evaluate((arg, cb) => cb(null, document.querySelector("article > div:last-of-type > div").scrollIntoView()))
-			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount })
-			await tab.wait(1000)
-
+			await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.selector).scrollIntoView()), { selector: SELECTORS.SPINNER })
+			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount, selectors: SELECTORS })
 		} catch (err) {
 			if (err.message.indexOf("Rate limit") > -1) {
 				utils.log("Instragram scraping limit reached, slowing down the API ...", "warning")
 				const startSlowDownTimestamp = Date.now()
-				while (!await tab.evaluate(retryLoading)) {
+				while (!await tab.evaluate(retryLoading, { selectors: SELECTORS })) {
 					const timeLeft = await utils.checkTimeLeft()
 					if (!timeLeft.timeLeft) {
 						return false
@@ -230,8 +218,9 @@ const loadPosts = async (tab, arr, count, term) => {
 						return true
 					}
 					utils.log("Still slowing down the API process ...", "loading")
+					await tab.wait(30000) // Doing nothing for 30 seconds
 				}
-				utils.log("Scraping process is resuming", "info")
+				utils.log("Scraping process resumed", "info")
 			} else {
 				console.log(err.message || err)
 				break
@@ -242,7 +231,7 @@ const loadPosts = async (tab, arr, count, term) => {
 	if (arr.length > count) {
 		arr.splice(count, arr.length)
 	}
-	buster.progressHint(1, term) // Not really usefull, but it might be a good feedback to let know the user that the current scraping process is over
+	buster.progressHint(1, term) // Not really usefull, but it might be a good feedback to let know the user that the current scraping is over
 	return true
 }
 
@@ -417,16 +406,8 @@ const craftCsvObject = results => {
 	}
 
 	const filteredResults = filterResults(results)
-	/**
-	 * TODO: Do we need to output empty intersections ?
-	 */
-	for (const one of Object.keys(filteredResults)) {
-		if (filteredResults[one].length < 1) {
-			delete filteredResults[one]
-		}
-	}
 
-	utils.log("posts scraped", "done")
+	utils.log(`${filteredResults.length} posts scraped`, "done")
 	await utils.saveResults(filteredResults, craftCsvObject(filteredResults), csvName)
 	nick.exit()
 })()
