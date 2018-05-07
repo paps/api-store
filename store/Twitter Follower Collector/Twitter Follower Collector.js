@@ -22,7 +22,7 @@ const utils = new StoreUtilities(nick, buster)
 // }
 
 const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
+	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
 
 const twitterConnect = async (tab, sessionCookie) => {
