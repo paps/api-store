@@ -90,7 +90,9 @@ const craftDomains = (argv, cb) => {
 			} else {
 				blacklist.push(psl.get(blackListElement))
 			}
-		} catch (err) {}
+		} catch (err) {
+			console.log(err)
+		}
 	}
 
 	const completeResults = argv.results.map(one => {
@@ -122,7 +124,6 @@ const craftDomains = (argv, cb) => {
 const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
 	query = query.toLowerCase()
-	const firstResult = names.results[0]
 	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
 	const theDomain = getBestRankedDomain(results)
@@ -142,7 +143,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let {spreadsheetUrl, companies, columnName, blacklist} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else if (typeof(companies) === 'string') {
+	} else if (typeof(companies) === "string") {
 		companies = [companies]
 	}
 
@@ -173,7 +174,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	await utils.saveResult(result)
 	nick.exit()
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
