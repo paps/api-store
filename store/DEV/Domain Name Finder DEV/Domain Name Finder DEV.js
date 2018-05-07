@@ -155,7 +155,9 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const result = []
 	const webSearch = new WebSearch(tab, buster)
 
+	let i = 0
 	for (const query of companies) {
+		buster.progressHint(i / companies.length, query)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped scraping domain names: ${timeLeft.message}`, "warning")
@@ -170,6 +172,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
 		}
+		i++
 	}
 	await utils.saveResult(result)
 	nick.exit()
