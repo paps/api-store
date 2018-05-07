@@ -130,10 +130,10 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	// Issue #56: return an empty line when no domain where found
 	return {
 		query,
-		domain: !theDomain ? "none" : theDomain.domain,
-		title: !theDomain ? "none" : theDomain.title,
-		description: !theDomain ? "none" : theDomain.description,
-		link: !theDomain ? "none" : theDomain.link,
+		domain: theDomain ? theDomain.domain : "not found",
+		title: theDomain ? theDomain.title : "",
+		description: theDomain ? theDomain.description : "",
+		link: theDomain ? theDomain.link : "",
 		codename: names.codename
 	}
 }
