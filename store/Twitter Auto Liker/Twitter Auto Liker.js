@@ -30,7 +30,7 @@ let db
 
 const getDb = async (filename = DB_NAME) => {
 	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
-		"X-phantombuster-Key-1": buster.apiKey}
+		"X-Phantombuster-Key-1": buster.apiKey}
 	})
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
 		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
