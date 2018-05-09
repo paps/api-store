@@ -32,6 +32,7 @@ const getDb = async (filename = DB_NAME) => {
 	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
 		"X-Phantombuster-Key-1": buster.apiKey}
 	})
+
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
 		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
 		try {
@@ -49,7 +50,7 @@ const getDb = async (filename = DB_NAME) => {
 
 const filterUrls = (str, db) => {
 	for (const line of db) {
-		if (line.twitterUrl === str || line.twitterUrl.startsWith(str)) {
+		if (str === line.query || line.query.startsWith(str)) {
 			return false
 		}
 	}
@@ -57,7 +58,6 @@ const filterUrls = (str, db) => {
 }
 
 const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	let i = 0
 	const maxLength = data.length
 	const urls = []
@@ -67,7 +67,7 @@ const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 	}
 	while (i < numberOfProfilesPerLaunch && i < maxLength) {
 		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
+		urls.push(data[row])
 		data.splice(row, 1)
 		i++
 	}
@@ -263,7 +263,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 ;(async () => {
 	const tab = await nick.newTab()
 	db = await getDb()
-	const result = [ ...db ] // Value copy
+	const result = db.slice() // Value copy
 	let likedCount = 0
 	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch } = utils.validateArguments()
 
@@ -272,24 +272,27 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	}
 
 	if (typeof queries === "string") {
-		queries = [ (isTwitterUrl(queries)) ? queries : `https://twitter.com/${queries}` ]
+		queries = [ { url: (isTwitterUrl(queries)) ? queries : `https://twitter.com/${queries}`, query: queries } ]
 	} else if (Array.isArray(queries)) {
-		queries = queries.map(el => isUrl(el) ? el : `https://twitter.com/${el}`)
+
+		queries = queries.map(el => {
+			return { url: isUrl(el) ? el : `https://twitter.com/${el}`, query: el }
+		})
 	}
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			let tmp = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			queries = tmp.map(el => { return { url: isTwitterUrl(el) ? el : `https://twitter.com/${el}`, query: el } })
 		} else if (typeof spreadsheetUrl === "string") {
-			queries = [ (isTwitterUrl(spreadsheetUrl)) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}` ]
+			queries = [ { url: isTwitterUrl(spreadsheetUrl) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}`, query: spreadsheetUrl } ]
 		}
 	}
 
 	if (!numberOfProfilesPerLaunch) {
 		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH
 	}
-
-	queries = getProfilesToLike(queries.filter(el => filterUrls(el, db)), numberOfProfilesPerLaunch)
+	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
 	await twitterConnect(tab, sessionCookie)
 
 	for (const profile of queries) {
@@ -300,7 +303,8 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 		}
 		try {
 			let profileLiked = null
-			profileLiked = await loadProfileAndLike(tab, profile, likesCountPerProfile)
+			profileLiked = await loadProfileAndLike(tab, profile.url, likesCountPerProfile)
+			profileLiked.query = profile.query
 			likedCount += profileLiked.likeCount
 			result.push(profileLiked)
 			db.push(profileLiked)
