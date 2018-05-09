@@ -29,6 +29,10 @@
 					},
 					"sessionCookie": {
 						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_5getyourtwittersessioncookie\">?</a>)"
+					},
+					"followersPerAccount": {
+						"label": "Followers count to get per account",
+						"helper": "If you leave this field empty, the API will get all followers for every specified accounts"
 					}
 				}
 			}
@@ -48,6 +52,11 @@
 				"title": "Session Cookie",
 				"minLength": 10,
 				"required": true
+			},
+			"followersPerAccount": {
+				"type": "number",
+				"title": "Followers count to get per accounts",
+				"minimum": 1
 			}
 		}
 	}
