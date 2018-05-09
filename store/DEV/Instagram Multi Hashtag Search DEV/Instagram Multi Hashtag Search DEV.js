@@ -137,7 +137,6 @@ const waitUntilNewDivs = (arg, cb) => {
 		}
 		if (document.querySelectorAll(arg.selectors.POSTS).length === arg.previousCount) {
 			if (Date.now() - startTime >= 30000) {
-				// cb(`${document.querySelectorAll("article > div:not([class]) > div > div").length} / ${arg.previousCount}`)
 				cb("No new posts loaded after 30s")
 			}
 			/**

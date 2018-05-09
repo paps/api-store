@@ -34,7 +34,8 @@
 			"options": {
 				"fields": {
 					"search": {
-						"label": "Search terms"
+						"label": "Search terms",
+						"helper": "You can supply one (or more) Google spreadsheet / public csv URL(s) on this Array"
 					},
 					"sessionCookie": {
 						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
