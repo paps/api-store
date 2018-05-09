@@ -31,7 +31,7 @@
 						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_5getyourtwittersessioncookie\">?</a>)"
 					},
 					"followersPerAccount": {
-						"label": "Followers count to get per account",
+						"label": "Followers count per accounts",
 						"helper": "If you leave this field empty, the API will get all followers for every specified accounts"
 					}
 				}
