@@ -39,6 +39,8 @@ class DownloadError extends Error {
 const downloadCSV = async url => {
 	return new Promise((resolve, reject) => {
 		let hasRedirection = false
+		let httpCodeRedirection = null
+		let urlRediction = null
 		
 		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
 			if (err) {
@@ -48,19 +50,19 @@ const downloadCSV = async url => {
 			const parsedRequestURL = new URL(url)
 
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
-				reject(new DownloadError(302, "Could not download csv, maybe csv is not public."))
-				// reject("Could not download csv, maybe csv is not public.")
+				reject(new DownloadError(httpCodeRedirection, `Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public.`))
 			}
 
 			if (resp.statusCode > 400) {
 				reject(new DownloadError(resp.statusCode, `${url} is not available`))
-				// reject(`${url} is not available`)
 			}
 
 			resolve(resp.body)
 		})
 
 		httpStream.on('redirect', _url => {
+			httpCodeRedirection = httpStream.request.res.statusCode
+			urlRediction = _url
 			hasRedirection = true
 		})
 	})
