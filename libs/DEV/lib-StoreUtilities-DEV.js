@@ -9,26 +9,6 @@ const { URL } = require("url")
 // }
 
 /**
- * @classdesc Tiny class used to represent an Download Error
- */
-class DownloadError extends Error {
-	/**
-	 * @constructs DownloadError
-	 * @param {Number|String} httpCode - Http code fro the error download
-	 */
-	constructor (httpCode, ...params) {
-		super(...params)
-
-		if (Error.captureStackTrace) {
-			Error.captureStackTrace(this, DownloadError)
-		}
-
-		this.httpCode = httpCode
-		this.date = new Date()
-	}
-}
-
-/**
  * @async
  * @internal
  * @description Function used to download a CSV file from a given url
@@ -36,7 +16,7 @@ class DownloadError extends Error {
  * @return {Promise<String>} HTTP body response content
  * @throws if there were an error from needle or the Google spreadsheet is not shared
  */
-const downloadCSV = async url => {
+const _downloadCsv = async url => {
 	return new Promise((resolve, reject) => {
 		let hasRedirection = false
 		let httpCodeRedirection = null
@@ -49,19 +29,19 @@ const downloadCSV = async url => {
 			}
 
 			if (hasTimeout) {
-				reject(new DownloadError(resp.statusCode, "Could not download specified URL, socket hang up"))
+				reject(`Could not download specified URL, socket hang up, HTTP code: ${resp.statusCode}`)
 			}
 
 			const parsedRequestURL = new URL(url)
 
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
-				reject(new DownloadError(httpCodeRedirection, "Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public."))
+				reject(`Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public, HTTP code: ${httpCodeRedirection}`)
 			}
 
 			if (resp.statusCode >= 400) {
-				reject(new DownloadError(resp.statusCode, `${url} is not available`))
+				reject(`${url} is not available, HTTP code: ${resp.statusCode}`)
 			}
-
+			
 			resolve(resp.body)
 		})
 
@@ -74,7 +54,6 @@ const downloadCSV = async url => {
 		httpStream.on("timeout", data => {
 			hasTimeout = true
 		})
-
 	})
 }
 
@@ -86,15 +65,14 @@ const downloadCSV = async url => {
  * @param {Object} urlRepresentation - nodejs URL object
  * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
  */
-const _handleDrive = async (url, urlRepresentation) => {
+const _handleDrive = async (urlObject) => {
 	let _url = null
-	let httpRes
 	let docPathnameValidator = "/file/d/"
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
 
-	if (urlRepresentation.pathname === "/open") {
-		if (urlRepresentation.searchParams.get("id")) {
-			let id = urlRepresentation.searchParams.get("id")
+	if (urlObject.pathname === "/open") {
+		if (urlObject.searchParams.get("id")) {
+			let id = urlObject.searchParams.get("id")
 
 			if (id.endsWith("/")) {
 				id = id.slice(0, -1)
@@ -102,8 +80,8 @@ const _handleDrive = async (url, urlRepresentation) => {
 
 			_url = `${gdocsTemplateURL}${id}/export?format=csv`
 		}
-	} else if (urlRepresentation.pathname.startsWith(docPathnameValidator)) {
-		let craftedPathname = urlRepresentation.pathname.replace(docPathnameValidator, "")
+	} else if (urlObject.pathname.startsWith(docPathnameValidator)) {
+		let craftedPathname = urlObject.pathname.replace(docPathnameValidator, "")
 
 		if (craftedPathname.indexOf("/") > -1) {
 			craftedPathname = craftedPathname.split("/").shift()
@@ -112,15 +90,10 @@ const _handleDrive = async (url, urlRepresentation) => {
 	}
 
 	if (!_url) {
-		return null
+		throw `Cannot find a way to download given URL: ${url}`
 	}
 
-	try {
-		httpRes = await downloadCSV(_url)
-	} catch (err) {
-		return err
-	}
-	return httpRes
+	return await _downloadCsv(_url)
 }
 
 /**
@@ -131,30 +104,29 @@ const _handleDrive = async (url, urlRepresentation) => {
  * @param {Object} urlRepresentation - nodejs URL object
  * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
  */
-const _handleDocs = async (url, urlRepresentation) => {
+const _handleDocs = async (urlObject) => {
 	let _url = null
-	let pathnameValdidator = "/spreadsheets/d/"
-	let httpRes
+	let pathnameValidator = "/spreadsheets/d/"
 
-	if (urlRepresentation.pathname.startsWith(pathnameValdidator)) {
+	if (urlObject.pathname.startsWith(pathnameValidator)) {
 		let gid = null
-		let craftedPathname = urlRepresentation.pathname.split(pathnameValdidator).pop()
+		let docId = urlObject.pathname.split(pathnameValidator).pop()
 
 		/* NOTE: Removing trailing pathname "/edit" if present */
-		craftedPathname = craftedPathname.endsWith("/edit") ? craftedPathname.split("/edit").shift() : craftedPathname
+		docId = docId.endsWith("/edit") ? docId.split("/edit").shift() : docId
 
-		if (craftedPathname.endsWith("/")) {
-			craftedPathname = craftedPathname.slice(0, -1)
+		if (docId.endsWith("/")) {
+			docId = docId.slice(0, -1)
 		}
 
-		if (urlRepresentation.hash) {
-			if (urlRepresentation.hash.indexOf("gid=") > -1) {
-				gid = urlRepresentation.hash.split("gid=").pop()
+		if (urlObject.hash) {
+			if (urlObject.hash.indexOf("gid=") > -1) {
+				gid = urlObject.hash.split("gid=").pop()
 			}
 		}
 
 
-		_url = `https://docs.google.com/spreadsheets/d/${craftedPathname}/export?format=csv`
+		_url = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`
 
 		if (gid && typeof gid === "string") {
 			_url += `&gid=${gid}`
@@ -162,15 +134,10 @@ const _handleDocs = async (url, urlRepresentation) => {
 	}
 
 	if (!_url) {
-		return null
+		throw `Cannot find a way to download given URL: ${url}`
 	}
 
-	try {
-		httpRes = await downloadCSV(_url)
-	} catch (err) {
-		return err
-	}
-	return httpRes
+	return await _downloadCsv(_url)
 }
 
 /**
@@ -181,16 +148,7 @@ const _handleDocs = async (url, urlRepresentation) => {
  * @param {Object} urlRepresentation - nodejs URL object
  * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
  */
-const _handleDefault = async (url, urlRepresentation) => {
-	let httpRes
-
-	try {
-		httpRes = await downloadCSV(url)
-	} catch (err) {
-		return err
-	}
-	return httpRes
-}
+const _handleDefault = async (urlObject) => await _downloadCsv(urlObject.toString())
 
 class StoreUtilities {
 	constructor(nick, buster) {
@@ -261,7 +219,7 @@ class StoreUtilities {
 			throw `${url} is not a valid URL.`
 		}
 	
-		let parseRawResult = null
+		let httpContent = null
 	
 		/**
 		 * NOTE: The function can for now handle
@@ -270,21 +228,14 @@ class StoreUtilities {
 		 * - Phantombuster S3 / direct CSV links
 		 */
 		if (urlObj.hostname === "docs.google.com") {
-			parseRawResult = await _handleDocs(url, urlObj)
+			httpContent = await _handleDocs(urlObj)
 		} else if (urlObj.hostname === "drive.google.com") {
-			parseRawResult = await _handleDrive(url, urlObj)
+			httpContent = await _handleDrive(urlObj)
 		} else {
-			parseRawResult = await _handleDefault(url, urlObj)
+			httpContent = await _handleDefault(urlObj)
 		}
 	
-		/**
-		 * NOTE: Download failure ?
-		 */
-		if (parseRawResult instanceof DownloadError) {
-			throw `${parseRawResult.message}, HTTP code: ${parseRawResult.httpCode}`
-		}
-	
-		let raw = Papa.parse(parseRawResult)
+		let raw = Papa.parse(httpContent)
 		let data = raw.data
 		let result = []
 	
