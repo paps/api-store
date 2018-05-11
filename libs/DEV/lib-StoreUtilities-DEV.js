@@ -41,7 +41,7 @@ const _downloadCsv = async url => {
 			if (resp.statusCode >= 400) {
 				reject(`${url} is not available, HTTP code: ${resp.statusCode}`)
 			}
-			
+
 			resolve(resp.body)
 		})
 
@@ -60,83 +60,68 @@ const _downloadCsv = async url => {
 /**
  * @async
  * @internal
- * @description Private function used to forge CSV downloadable URL
- * @param {String} url - Google Drive URL to use
- * @param {Object} urlRepresentation - nodejs URL object
- * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ * @description Private handler used to download a csv file from Google Docs or Google Drive
+ * @param {Object} urlObject - node URL object representing the target URL
+ * @return {Promise<Object>} Http body response
+ * @throws if there were an error during the download process
  */
-const _handleDrive = async (urlObject) => {
+const _handleGoogle = async (urlObject) => {
 	let _url = null
-	let docPathnameValidator = "/file/d/"
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
+	let docIdPattern
 
-	if (urlObject.pathname === "/open") {
-		if (urlObject.searchParams.get("id")) {
-			let id = urlObject.searchParams.get("id")
+	if (urlObject.hostname === "docs.google.com") {
+		docIdPattern = "/spreadsheets/d/"
 
-			if (id.endsWith("/")) {
-				id = id.slice(0, -1)
+		if (urlObject.pathname.startsWith(docIdPattern)) {
+			let gid = null
+			let docId = urlObject.pathname.split(docIdPattern).pop()
+
+			docId = docId.endsWith("/edit") ? docId.split("/edit").shift() : docId
+
+			if (docId.endsWith("/")) {
+				docId = docId.slice(0, -1)
 			}
 
-			_url = `${gdocsTemplateURL}${id}/export?format=csv`
-		}
-	} else if (urlObject.pathname.startsWith(docPathnameValidator)) {
-		let craftedPathname = urlObject.pathname.replace(docPathnameValidator, "")
+			if (urlObject.hash) {
+				if (urlObject.hash.indexOf("gid=") > -1) {
+					gid = urlObject.hash.split("gid=").pop()
+				}
+			}			
+			_url = `${gdocsTemplateURL}${docId}/export?format=csv`
 
-		if (craftedPathname.indexOf("/") > -1) {
-			craftedPathname = craftedPathname.split("/").shift()
-		}
-		_url = `${gdocsTemplateURL}${craftedPathname}/export?format=csv`
-	}
-
-	if (!_url) {
-		throw `Cannot find a way to download given URL: ${url}`
-	}
-
-	return await _downloadCsv(_url)
-}
-
-/**
- * @async
- * @internal
- * @description Private function used to forge CSV downloadable URL
- * @param {String} url - Google Docs URL to use
- * @param {Object} urlRepresentation - nodejs URL object
- * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
- */
-const _handleDocs = async (urlObject) => {
-	let _url = null
-	let pathnameValidator = "/spreadsheets/d/"
-
-	if (urlObject.pathname.startsWith(pathnameValidator)) {
-		let gid = null
-		let docId = urlObject.pathname.split(pathnameValidator).pop()
-
-		/* NOTE: Removing trailing pathname "/edit" if present */
-		docId = docId.endsWith("/edit") ? docId.split("/edit").shift() : docId
-
-		if (docId.endsWith("/")) {
-			docId = docId.slice(0, -1)
-		}
-
-		if (urlObject.hash) {
-			if (urlObject.hash.indexOf("gid=") > -1) {
-				gid = urlObject.hash.split("gid=").pop()
+			if (gid && typeof gid === "string") {
+				_url += `&gid=${gid}`
 			}
 		}
 
+	} else if (urlObject.hostname === "drive.google.com") {
+		docIdPattern = "/file/d/"
 
-		_url = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`
+		if (urlObject.pathname === "/open") {
+			if (urlObject.searchParams.get("id")) {
+				let docId = urlObject.searchParams.get("id")
 
-		if (gid && typeof gid === "string") {
-			_url += `&gid=${gid}`
+				if (docId.endsWith("/")) {
+					docId = docId.slice(0, -1)
+				}
+				_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+			}
+		} else if (urlObject.pathname.startsWith(docIdPattern)) {
+			let extractedDocId = urlObject.pathname.replace(docIdPattern, "")
+
+			if (extractedDocId.indexOf("/") > -1) {
+				extractedDocId = extractedDocId.split("/").shift()
+			}
+			_url = `${gdocsTemplateURL}${extractedDocId}/export?format=csv`
 		}
 	}
 
-	if (!_url) {
-		throw `Cannot find a way to download given URL: ${url}`
-	}
+	console.log(_url)
 
+	if (!_url) {
+		throw `Cannot find a way to download given URL: ${urlObject.toString()}`
+	}
 	return await _downloadCsv(_url)
 }
 
@@ -227,10 +212,8 @@ class StoreUtilities {
 		 * - drive.google.com domain
 		 * - Phantombuster S3 / direct CSV links
 		 */
-		if (urlObj.hostname === "docs.google.com") {
-			httpContent = await _handleDocs(urlObj)
-		} else if (urlObj.hostname === "drive.google.com") {
-			httpContent = await _handleDrive(urlObj)
+		if (urlObj.hostname === "docs.google.com" || urlObj.hostname === "drive.google.com") {
+			httpContent = await _handleGoogle(urlObj)
 		} else {
 			httpContent = await _handleDefault(urlObj)
 		}
