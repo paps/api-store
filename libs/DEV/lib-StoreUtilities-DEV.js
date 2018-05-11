@@ -41,10 +41,15 @@ const downloadCSV = async url => {
 		let hasRedirection = false
 		let httpCodeRedirection = null
 		let urlRediction = null
+		let hasTimeout = false
 		
 		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
 			if (err) {
 				reject(err)
+			}
+
+			if (hasTimeout) {
+				reject(new DownloadError(resp.statusCode, `Could not download specified, socket hang up`))
 			}
 
 			const parsedRequestURL = new URL(url)
@@ -53,7 +58,7 @@ const downloadCSV = async url => {
 				reject(new DownloadError(httpCodeRedirection, `Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public.`))
 			}
 
-			if (resp.statusCode > 400) {
+			if (resp.statusCode >= 400) {
 				reject(new DownloadError(resp.statusCode, `${url} is not available`))
 			}
 
@@ -65,6 +70,11 @@ const downloadCSV = async url => {
 			urlRediction = _url
 			hasRedirection = true
 		})
+
+		httpStream.on('timeout', data => {
+			hasTimeout = true
+		})
+
 	})
 }
 
