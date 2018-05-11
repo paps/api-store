@@ -117,8 +117,6 @@ const _handleGoogle = async (urlObject) => {
 		}
 	}
 
-	console.log(_url)
-
 	if (!_url) {
 		throw `Cannot find a way to download given URL: ${urlObject.toString()}`
 	}
