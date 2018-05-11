@@ -32,8 +32,8 @@ class DownloadError extends Error {
  * @async
  * @internal
  * @description Function used to download a CSV file from a given url
- * @param {String} url - the URL to check
- * @return {Promise<String>} The body content if downloaded
+ * @param {String} url - Target URL to download
+ * @return {Promise<String>} HTTP body response content
  * @throws if there were an error from needle or the Google spreadsheet is not shared
  */
 const downloadCSV = async url => {
@@ -49,13 +49,13 @@ const downloadCSV = async url => {
 			}
 
 			if (hasTimeout) {
-				reject(new DownloadError(resp.statusCode, `Could not download specified, socket hang up`))
+				reject(new DownloadError(resp.statusCode, "Could not download specified URL, socket hang up"))
 			}
 
 			const parsedRequestURL = new URL(url)
 
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
-				reject(new DownloadError(httpCodeRedirection, `Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public.`))
+				reject(new DownloadError(httpCodeRedirection, "Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public."))
 			}
 
 			if (resp.statusCode >= 400) {
@@ -65,19 +65,27 @@ const downloadCSV = async url => {
 			resolve(resp.body)
 		})
 
-		httpStream.on('redirect', _url => {
+		httpStream.on("redirect", _url => {
 			httpCodeRedirection = httpStream.request.res.statusCode
 			urlRediction = _url
 			hasRedirection = true
 		})
 
-		httpStream.on('timeout', data => {
+		httpStream.on("timeout", data => {
 			hasTimeout = true
 		})
 
 	})
 }
 
+/**
+ * @async
+ * @internal
+ * @description Private function used to forge CSV downloadable URL
+ * @param {String} url - Google Drive URL to use
+ * @param {Object} urlRepresentation - nodejs URL object
+ * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ */
 const _handleDrive = async (url, urlRepresentation) => {
 	let _url = null
 	let httpRes
@@ -107,14 +115,22 @@ const _handleDrive = async (url, urlRepresentation) => {
 		return null
 	}
 
-	try {
+	try {
 		httpRes = await downloadCSV(_url)
 	} catch (err) {
-		return new Error(err)
+		return err
 	}
 	return httpRes
 }
 
+/**
+ * @async
+ * @internal
+ * @description Private function used to forge CSV downloadable URL
+ * @param {String} url - Google Docs URL to use
+ * @param {Object} urlRepresentation - nodejs URL object
+ * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ */
 const _handleDocs = async (url, urlRepresentation) => {
 	let _url = null
 	let pathnameValdidator = "/spreadsheets/d/"
@@ -157,6 +173,14 @@ const _handleDocs = async (url, urlRepresentation) => {
 	return httpRes
 }
 
+/**
+ * @async
+ * @internal
+ * @description Private function used to forge CSV downloadable URL
+ * @param {String} url - URL to use
+ * @param {Object} urlRepresentation - nodejs URL object
+ * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ */
 const _handleDefault = async (url, urlRepresentation) => {
 	let httpRes
 
@@ -221,13 +245,16 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
+	// Function to get data from a google spreadsheet or from a csv
 	async getDataFromCsv (url, columnName, printLogs = true) {
-		// const buster = this.buster
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
 		}
-	
+
+		/**
+		 * NOTE: no need to continue, if the url input is malformatted
+		 */
 		try {
 			urlObj = new URL(url)
 		} catch (err) {
@@ -236,6 +263,12 @@ class StoreUtilities {
 	
 		let parseRawResult = null
 	
+		/**
+		 * NOTE: The function can for now handle
+		 * - docs.google.com domain
+		 * - drive.google.com domain
+		 * - Phantombuster S3 / direct CSV links
+		 */
 		if (urlObj.hostname === "docs.google.com") {
 			parseRawResult = await _handleDocs(url, urlObj)
 		} else if (urlObj.hostname === "drive.google.com") {
@@ -244,6 +277,9 @@ class StoreUtilities {
 			parseRawResult = await _handleDefault(url, urlObj)
 		}
 	
+		/**
+		 * NOTE: Download failure ?
+		 */
 		if (parseRawResult instanceof DownloadError) {
 			throw `${parseRawResult.message}, HTTP code: ${parseRawResult.httpCode}`
 		}
@@ -252,6 +288,10 @@ class StoreUtilities {
 		let data = raw.data
 		let result = []
 	
+		/**
+		 * HACK: Downloaded content check
+		 * if there were MissingQuotes error during parsing process, we assume that the data is not representing a CSV
+		 */
 		if (raw.errors.find(el => el.code === "MissingQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
@@ -276,72 +316,6 @@ class StoreUtilities {
 		}
 		return result
 	}
-
-	// Function to get data from a google spreadsheet or from a csv
-	// async getDataFromCsv(url, columnName, printLogs = true) {
-	// 	const buster = this.buster
-	// 	if (printLogs) {
-	// 		this.log(`Getting data from ${url}...`, "loading")
-	// 	}
-	// 	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
-	// 	const match = url.match(urlRegex)
-	// 	if (match) {
-	// 		if (match[3] === "docs.google.com") {
-	// 			/**
-	// 			 * NOTE: the gid parameter is used by Google spreadsheet to access to a specific in a document
-	// 			 * If there weren't any gid given in the URL, no gid will be append to the crafted URL
-	// 			 * No worry Google will give the sheet in document
-	// 			 */
-	// 			let gid = null
-	// 			if (url.indexOf("gid=") > -1) {
-	// 				gid = url.split("gid=").pop()
-	// 			}
-	// 			if (match[8] === "edit") {
-	// 				url = `https://docs.google.com/${match[6]}export?format=csv`
-	// 			} else {
-	// 				url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
-	// 			}
-	// 			/**
-	// 			 * NOTE: If we got an gid just append it to the crafted URL
-	// 			 */
-	// 			if (gid !== null) {
-	// 				url += `&gid=${gid}`
-	// 			}
-	// 		}
-	// 		const file = await downloadCSV(url)
-	// 		let raw = Papa.parse(file)
-	// 		let data = raw.data
-
-	// 		/**
-	// 		 * HACK: if Papaparse returns a MissingQuotes error
-	// 		 * it means that the file doesn't represent a CSV
-	// 		 */
-	// 		if (raw.errors.find((el) => el.code === "MissingQuotes"))
-	// 			throw `${url} doesn't represent a CSV file`
-
-	// 		//let data = (Papa.parse(file)).data
-	// 		let column = 0
-	// 		if (columnName) {
-	// 			for (var i = 0; i < data[0].length; i++) {
-	// 				if (data[0][i] === columnName) {
-	// 					column = i
-	// 					break
-	// 				}
-	// 			}
-	// 			if (column !== i) {
-	// 				throw `No title ${columnName} in csv file.`
-	// 			}
-	// 			data.shift()
-	// 		}
-	// 		const result = data.map(line => line[column])
-	// 		if (printLogs) {
-	// 			this.log(`Got ${result.length} lines from csv.`, "done")
-	// 		}
-	// 		return result
-	// 	} else {
-	// 		throw `${url} is not a valid URL.`
-	// 	}
-	// }
 
 	// Tells the script if it should exit or not, based on execution time left
 	async checkTimeLeft() {
