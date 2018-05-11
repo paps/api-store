@@ -81,6 +81,7 @@ const downloadCSV = async url => {
 const _handleDrive = async (url, urlRepresentation) => {
 	let _url = null
 	let httpRes
+	let docPathnameValidator = "/file/d/"
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
 
 	if (urlRepresentation.pathname === "/open") {
@@ -93,6 +94,13 @@ const _handleDrive = async (url, urlRepresentation) => {
 
 			_url = `${gdocsTemplateURL}${id}/export?format=csv`
 		}
+	} else if (urlRepresentation.pathname.startsWith(docPathnameValidator)) {
+		let craftedPathname = urlRepresentation.pathname.replace(docPathnameValidator, "")
+
+		if (craftedPathname.indexOf("/") > -1) {
+			craftedPathname = craftedPathname.split("/").shift()
+		}
+		_url = `${gdocsTemplateURL}${craftedPathname}/export?format=csv`
 	}
 
 	if (!_url) {
