@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -24,7 +24,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 
 let db = null
 const DB_NAME = "database-linkedin-profile-scraper.csv"
@@ -33,7 +33,7 @@ const MAX_SKILLS = 6
 // }
 
 const getDB = async (name = DB_NAME) => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
+	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
 		"X-Phantombuster-Key-1": buster.apiKey }
 	})
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
@@ -52,7 +52,7 @@ const getDB = async (name = DB_NAME) => {
 }
 
 const getLastExecJSON = async (filename) => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
+	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
 		"X-Phantombuster-Key-1": buster.apiKey }
 	})
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
@@ -139,8 +139,8 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 	}
-	
-	if (infos.skills.length > 0) { 
+
+	if (infos.skills.length > 0) {
 		for (let i = 0; i < skillsToRet; i++) {
 			if (i > infos.skills.length) {
 				break

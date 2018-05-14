@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -23,7 +23,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 let linkedInScraper
 let db
 // }
@@ -46,7 +46,7 @@ const getDb = async () => {
 			return []
 		}
 	} else {
-		throw "Could not load bot database."
+		throw "Could not load database of previously added profiles."
 	}
 }
 
@@ -226,6 +226,20 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 	db.push(scrapedProfile)
 }
 
+const getFieldsFromArray = (arr) => {
+	const fields = []
+	for (const line of arr) {
+		if (line && (typeof(line) == 'object')) {
+			for (const field of Object.keys(line)) {
+				if (fields.indexOf(field) < 0) {
+					fields.push(field)
+				}
+			}
+		}
+	}
+	return fields
+}
+
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey] = utils.checkArguments([
@@ -252,12 +266,12 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}
 	}
-	await buster.saveText(Papa.unparse(db), DB_NAME)
+	await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
 	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
-	.catch((err) => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.catch((err) => {
+	utils.log(err, "error")
+	nick.exit(1)
+})
