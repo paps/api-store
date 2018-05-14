@@ -1,10 +1,10 @@
 {
 	"slug": "twitter-auto-liker",
 	"description": "Automatically like the last tweets of a list of Twitter profiles",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/twitter_auto_follow.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_liker/twitter_auto_liker_2.png",
 	"argumentDescription": "",
-	"gradientBegin": "#E44D26",
-	"gradientEnd": "#F16529",
+	"gradientBegin": "#FFB75E",
+	"gradientEnd": "#6eaeb9",
 	"hidden": true,
 	"new": true,
 	"defaultArgument": {
