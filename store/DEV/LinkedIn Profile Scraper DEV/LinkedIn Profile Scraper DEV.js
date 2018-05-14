@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
@@ -24,48 +24,28 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 
-let db = null
-const DB_NAME = "database-linkedin-profile-scraper.csv"
-const JSON_NAME = "result.json"
+const DB_NAME = "result"
 const MAX_SKILLS = 6
 // }
 
-const getDB = async (name = DB_NAME) => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
+const getDB = async () => {
+	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
 		"X-Phantombuster-Key-1": buster.apiKey }
 	})
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${name}`
+		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}.csv`
 		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
+			await buster.download(url, `${DB_NAME}.csv`)
+			const file = fs.readFileSync(`${DB_NAME}.csv`, "UTF-8")
 			const data = Papa.parse(file, { header: true }).data
 			return data
 		} catch (err) {
 			return []
 		}
 	} else {
-		throw "Could not load bot database."
-	}
-}
-
-const getLastExecJSON = async (filename) => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: { 
-		"X-Phantombuster-Key-1": buster.apiKey }
-	})
-	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${filename}`
-		try {
-			await buster.download(url, filename)
-			const file = fs.readFileSync(filename, "UTF-8")
-			return JSON.parse(file)
-		} catch (err) {
-			return []
-		}
-	} else {
-		throw `Could not load bot file: ${filename}.`
+		throw "Could not load database of already scraped profiles."
 	}
 }
 
@@ -75,7 +55,7 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 	const maxLength = data.length
 	const urls = []
 	if (maxLength === 0) {
-		utils.log("Input is empty or every profiles specified are scraped.", "warning")
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
 
@@ -91,7 +71,8 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 
 const filterRows = (str, db) => {
 	for (const line of db) {
-		if (str.startsWith(line.linkedinProfile)) {
+		const regex = new RegExp(`/in/${line.profileId}($|/)`)
+		if (str.match(regex) || (str === line.baseUrl)) {
 			return false
 		}
 	}
@@ -139,8 +120,8 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 	}
-	
-	if (infos.skills.length > 0) { 
+
+	if (infos.skills.length > 0) {
 		for (let i = 0; i < skillsToRet; i++) {
 			if (i > infos.skills.length) {
 				break
@@ -155,9 +136,7 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	utils.log("Getting the arguments...", "loading")
-	db = await getDB()
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -169,31 +148,35 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 		numberOfAddsPerLaunch = urls.length
 	}
 
+	const db = noDatabase ? [] : await getDB()
+
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+	console.log(`URLs to scrape: ${JSON.stringify(urls, undefined, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
-	// Two variables to save csv and json
-	const result = await getLastExecJSON(JSON_NAME)
-	const csvResult = [].concat(db)
+
+	const result = []
 	for (const url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Stopping the scraping: ${timeLeft.message}`, "warning")
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
-		let infos
 		try {
-			infos = await linkedInScraper.scrapeProfile(tab, url)
+			utils.log(`Opening page ${url}`, "loading")
+			const infos = await linkedInScraper.scrapeProfile(tab, url)
 			/**
 			 * NOTE: the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
 			 * the lib still return the "basic" csv output
 			 */
+			const craftedCsv = _craftCsv(infos.json)
+			craftedCsv.baseUrl = url
+			craftedCsv.profileId = linkedIn.getUsername(await tab.getUrl())
+			db.push(craftedCsv)
 			result.push(infos.json)
-			csvResult.push(_craftCsv(infos.json))
-			db.push(infos.csv)
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
@@ -201,10 +184,18 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 	}
 
 	await linkedIn.saveCookie()
-	await utils.saveResults(result, csvResult)
-	await utils.saveResult(csvResult, "database-linkedin-profile-scraper")
+	try {
+		await buster.setResultObject(result)
+	} catch (e) {
+		utils.log(`Could not save result object: ${e.message || e}`, "warning")
+	}
+	if (noDatabase) {
+		nick.exit()
+	} else {
+		await utils.saveResult(db, DB_NAME) // deprecated call :(
+	}
 })()
-	.catch(err => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.catch(err => {
+	utils.log(err, "error")
+	nick.exit(1)
+})

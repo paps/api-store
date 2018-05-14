@@ -74,13 +74,13 @@ const loadProfilesUsingScrollDown = async (tab) => {
 }
 
 nick.newTab().then(async (tab) => {
-	let {sessionCookie, numberOfProfilesToAdd, hasNoteSended, hasMutualConnections } = utils.validateArguments()
+	let {sessionCookie, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections } = utils.validateArguments()
 
-	if (typeof hasNoteSended === "undefined") {
-		hasNoteSended = false
+	if (typeof hasNoteSent !== "boolean") {
+		hasNoteSent = false
 	}
 
-	if (typeof hasMutualConnections === "undefined") {
+	if (typeof hasMutualConnections !== "boolean") {
 		hasMutualConnections = false
 	}
 
@@ -94,7 +94,7 @@ nick.newTab().then(async (tab) => {
 		nick.exit()
 	}
 	await loadProfilesUsingScrollDown(tab)
-	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSended, hasMutualConnections)
+	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
 
 	if (invites.length > 0) {
 		await tab.click("button[data-control-name=\"accept_all\"]")

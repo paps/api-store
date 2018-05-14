@@ -13,6 +13,7 @@
 		'lib-StoreUtilities.js': 'libs/lib-StoreUtilities.js'
 		'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
 		'lib-WebSearch.js': 'libs/lib-WebSearch.js'
+		'lib-LinkedInScraper.js': 'libs/lib-LinkedInScraper.js'
 
 		# API store
 		# ---------
