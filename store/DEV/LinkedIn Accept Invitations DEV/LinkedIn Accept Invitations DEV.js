@@ -23,17 +23,44 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
 // Accept all profiles visible on the page and returns an Array of added profiles.
-const acceptInvites = async (tab, nbProfiles) => {
+const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 	return await tab.evaluate(function (arg, done) {
 		jQuery.noConflict()
-		const invites = jQuery("ul.mn-invitation-list > li").map(function (i) {
+		let invites = jQuery("ul.mn-invitation-list > li").map(function (i) {
+			return this
+		})
+
+		/**
+		 * Will only get invitations which have 1 or more mutual connections
+		 */
+		if (arg.hasMutualConn) {
+			invites  = invites.filter(function filterMutual(i) {
+				if (jQuery(this).find(".member-insights").length > 0) {
+					return this
+				}
+			})
+		}
+
+		/**
+		 * Will only get invitations with a message
+		 */
+		if (arg.hasNote) {
+			invites = invites.filter(function filterNote(i) {
+				if (jQuery(this).find(".invitation-card__custom-message-container").length > 0) {
+					return this
+				}
+			})
+		}
+
+
+		invites = invites.map(function accept(i) {
 			if (i < arg.nbProfiles) {
-				jQuery(this).find("input[type='checkbox']").click()
-				return this.querySelector("a[data-control-name='profile']").href
+				jQuery(this).find("input[type=\"checkbox\"]").click()
+				return this.querySelector("a[data-control-name=\"profile\"]").href
 			}
 		})
 		done(null, jQuery.makeArray(invites)) // Success
-	}, { nbProfiles })
+	}, { nbProfiles, hasNote, hasMutualConn })
 }
 
 const loadProfilesUsingScrollDown = async (tab) => {
@@ -47,7 +74,15 @@ const loadProfilesUsingScrollDown = async (tab) => {
 }
 
 nick.newTab().then(async (tab) => {
-	const {sessionCookie, numberOfProfilesToAdd} = utils.validateArguments()
+	let {sessionCookie, numberOfProfilesToAdd, hasNoteSended, hasMutualConnections } = utils.validateArguments()
+
+	if (typeof hasNoteSended === "undefined") {
+		hasNoteSended = false
+	}
+
+	if (typeof hasMutualConnections === "undefined") {
+		hasMutualConnections = false
+	}
 
 	const selectors = [ "label.invitation-card__checkbox-label", "section.mn-invitation-manager__no-invites" ]
 
@@ -59,22 +94,27 @@ nick.newTab().then(async (tab) => {
 		nick.exit()
 	}
 	await loadProfilesUsingScrollDown(tab)
-	let invites = await acceptInvites(tab, numberOfProfilesToAdd)
-	await tab.click(`button[data-control-name="accept_all"]`)
+	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSended, hasMutualConnections)
 
-	await tab.wait(2000)
+	if (invites.length > 0) {
+		await tab.click("button[data-control-name=\"accept_all\"]")
 
-	// Verbose
-	utils.log(`A total of ${invites.length} profile${invites.length != 1 ? 's have' : ' has'} been added`, "done")
-	for (invite of invites)
-		console.log(`\t${invite}`)
+		await tab.wait(2000)
+
+		// Verbose
+		utils.log(`A total of ${invites.length} profile${invites.length !== 1 ? "s have" : " has"} been added`, "done")
+		for (const invite of invites)
+			console.log(`\t${invite}`)
+	} else {
+		utils.log("No invites found with given criterias", "done")
+	}
 	await linkedIn.saveCookie()
 })
-.then(() => {
-	utils.log("Job done!", "done")
-	nick.exit(0)
-})
-.catch((err) => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.then(() => {
+		utils.log("Job done!", "done")
+		nick.exit(0)
+	})
+	.catch((err) => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
