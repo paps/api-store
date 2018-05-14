@@ -70,55 +70,69 @@ const scrapeLikes = (arg, callback) => {
 
 // Function to launch every others and handle errors
 const getLikes = async (tab, postUrl) => {
+	let results = []
 	const selectors = {}
-	try {
-		await tab.open(postUrl)
-	} catch (error) {
-		utils.log("Could not open publication URL please check the validity of the URL", "error")
-		nick.exit(1)
+	if (!Array.isArray(postUrl)) {
+		postUrl = [ postUrl ]
 	}
-	try {
-		/**
-		 * NOTE: to check if the opened page is a real article, we need to check:
-		 * If we got selectors for like, comment, and likes count
-		 * We store, selectors in selectors.likes variable
-		 */
-		selectors.likes = await tab.waitUntilVisible(["button.feed-shared-social-counts__num-likes.feed-shared-social-counts__count-value",
-		"button.feed-shared-social-counts", "button.feed-shared-social-counts__nums-likes", "button.reader-social-bar__like-count.reader-social-bar__count"], 15000, "or")
-		await tab.click(selectors.likes)
-		/**
-		 * NOTE: this waitUntilVisible call checks if we got:
-		 * - some selectors loaded in order to open the popup in order to scrape the likers
-		 */
-		 selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
-	} catch (error) {
-		utils.log("Publication URL seems not to be a publication", "error")
-		nick.exit(1)
+
+	for (const url of postUrl) {
+		try {
+			await tab.open(url)
+		} catch (error) {
+			utils.log("Could not open publication URL please check the validity of the URL", "error")
+			nick.exit(1)
+		}
+		try {
+			/**
+			 * NOTE: to check if the opened page is a real article, we need to check:
+			 * If we got selectors for like, comment, and likes count
+			 * We store, selectors in selectors.likes variable
+			 */
+			selectors.likes = await tab.waitUntilVisible(["button.feed-shared-social-counts__num-likes.feed-shared-social-counts__count-value",
+				"button.feed-shared-social-counts", "button.feed-shared-social-counts__nums-likes",
+				"button.reader-social-bar__like-count.reader-social-bar__count"], 15000, "or")
+			await tab.click(selectors.likes)
+			/**
+			 * NOTE: this waitUntilVisible call checks if we got:
+			 * - some selectors loaded in order to open the popup in order to scrape the likers
+			 */
+			selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
+		} catch (error) {
+			utils.log("Publication URL seems not to be a publication", "error")
+			nick.exit(1)
+		}
+		try {
+			await loadAllLikes(tab, selectors.list)
+			utils.log("All likes loaded, scrapping all likes...", "done")
+		} catch (error) {
+			utils.log("Could not load likes", "warning")
+		}
+		results = results.concat(await tab.evaluate(scrapeLikes))
 	}
-	try {
-		await loadAllLikes(tab, selectors.list)
-		utils.log("All likes loaded, scrapping all likes...", "done")
-	} catch (error) {
-		utils.log("Could not load likes", "warning")
-	}
-	return(await tab.evaluate(scrapeLikes))
+	return results
 }
 
 // Main function to launch everything and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
-	const [ sessionCookie, postUrl, csvName ] = utils.checkArguments([
-		{ name: "sessionCookie", type: "string", length: 10 },
-		{ name: "postUrl", type: "string", length: 10 },
-		{ name: "csvName", type: "string", default: "result" },
-	])
+	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
+
+	if (!csvName) {
+		csvName = "result"
+	}
+
+	if (postUrl.indexOf("linkedin.com/") < 0) {
+		postUrl = await utils.getDataFromCsv(postUrl, columnName)
+	}
+
 	await linkedIn.login(tab, sessionCookie)
 	const results = await getLikes(tab, postUrl)
 	utils.log(`Got ${results.length} likers.`, "done")
 	await linkedIn.saveCookie()
 	await utils.saveResult(results, csvName)
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
