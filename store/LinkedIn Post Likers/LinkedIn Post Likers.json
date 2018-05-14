@@ -30,7 +30,12 @@
 					"postUrl": {
 						"label": "Post URL <a href=\"/api-store/2880/linkedin-post-likers#section_posturl\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste a LinkedIn post URL here",
+						"helper": "Paste a LinkedIn post URL or a public Google Spreadsheet / CSV URL",
 						"type": "url"
+					},
+					"columnName": {
+						"label": "Column name from which to get LinkedIn posts URLs",
+						"placeholder": "column"
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file <a href=\"/api-store/2880/linkedin-post-likers#section_5nameyourfuturecsv\" target=\"_blank\">(?)</a>"
@@ -50,6 +55,9 @@
 			"postUrl": {
 				"type": "string",
 				"required": true
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"csvName": {
 				"type": "string",
