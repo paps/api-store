@@ -32,12 +32,12 @@ const callComments = (arg, callback) => {
 		headers: arg.headers,
 		data: arg.search
 	})
-	.done(data => {
-		callback(null, data)
-	})
-	.fail(err => {
-		callback(err)
-	})
+		.done(data => {
+			callback(null, data)
+		})
+		.fail(err => {
+			callback(err)
+		})
 }
 
 const linkedinObjectToResult = response => {
@@ -49,7 +49,7 @@ const linkedinObjectToResult = response => {
 				newComment.profileLink =  `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
 				newComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
 				newComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
-				newComment.fullName = newComment.firstName + ' ' + newComment.lastName
+				newComment.fullName = newComment.firstName + " " + newComment.lastName
 				newComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
 			}
 			if (element.comment && element.comment.values && element.comment.values[0]) {
@@ -109,31 +109,43 @@ const onHttpRequest = (e) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const [sessionCookie, postUrl, csvName] = utils.checkArguments([
+	let [sessionCookie, postUrl, csvName] = utils.checkArguments([
 		{name: "sessionCookie", type: "string", length: 10},
 		{name: "postUrl", type: "string", length: 10},
 		{ name: "csvName", type: "string", default: "result" },
 	])
-	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+	let result = []
+
+	if (postUrl.indexOf("linkedin.com/") < 0) {
+		postUrl = await utils.getDataFromCsv(postUrl)
+	} else {
+		postUrl = [ postUrl ]
+	}
+
 	await linkedIn.login(tab, sessionCookie)
-	await tab.open(postUrl)
-	await tab.waitUntilVisible("#show_prev")
-	await tab.click("#show_prev")
-	await tab.wait(3000)
-	if (!gl.search) {
+	
+	for (const url of postUrl) {
+		tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+		await tab.open(url)
+		await tab.waitUntilVisible("#show_prev")
 		await tab.click("#show_prev")
 		await tab.wait(3000)
 		if (!gl.search) {
-			throw("Could not get comments on this page.")
+			await tab.click("#show_prev")
+			await tab.wait(3000)
+			if (!gl.search) {
+				throw("Could not get comments on this page.")
+			}
 		}
+		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
+		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total)))
+		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	}
-	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
-	const result = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total))
+
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
