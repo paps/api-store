@@ -52,11 +52,8 @@
 						]
 					},
 					"hunterApiKey": {
-						"label": "Hunter.io API key",
-						"placeholder": "xxx",
-						"default": "yolo",
-						"inputType": "string",
-						"helper": "Leave empty to not use Hunter.io services"
+						"label": "Email discovery: Hunter.io API key (optional)",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					}
 				}
 			}
@@ -90,7 +87,8 @@
 				"maxLength": 280
 			},
 			"hunterApiKey": {
-				"type": "string"
+				"type": "string",
+				"maxLength": 50
 			}
 		}
 	}

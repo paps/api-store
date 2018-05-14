@@ -60,9 +60,8 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"hunterApiKey": {
-						"label": "Hunter.io API key",
-						"placeholder": "xxx",
-						"helper": "Leave this field empty if you don't want to use Hunter"
+						"label": "Email discovery: Hunter.io API key (optional)",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
 					"numberOfAddsPerLaunch": {
 						"label": "Number of profiles to visit per launch (25 max.)",
@@ -88,7 +87,8 @@
 				"type": "string"
 			},
 			"hunterApiKey": {
-				"type": "string"
+				"type": "string",
+				"maxLength": 50
 			},
 			"numberOfAddsPerLaunch": {
 				"type": "number",
