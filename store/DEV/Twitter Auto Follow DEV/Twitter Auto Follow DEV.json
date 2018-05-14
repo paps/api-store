@@ -24,12 +24,13 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_4createanicespreadsheet\">?</a>)"
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_4createanicespreadsheet\">(?)</a>"
 					},
 					"sessionCookie": {
-						"label": "Session Cookie auth_token (<a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_5getyourtwittersessioncookie\">?</a>)"
+						"label": "Session Cookie auth_token <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_5getyourtwittersessioncookie\">(?)</a>"
 					},
 					"numberOfAddsPerLaunch": {
+						"label": "Number of adds per launch",
 						"helper": "The maximum is 50 per launch and if you leave this empty it will be set to 20 by default."
 					}
 				}
@@ -41,19 +42,16 @@
 		"properties": {
 			"spreadsheetUrl": {
 				"type": "string",
-				"title": "Twitter account or Spreadsheet URL",
 				"minLength": 1,
 				"required": true
 			},
 			"sessionCookie": {
 				"type": "string",
-				"title": "Session Cookie auth_token",
 				"minLength": 1,
 				"required": true
 			},
 			"numberOfAddsPerLaunch": {
 				"type": "number",
-				"title": "Number of adds per launch",
 				"minimum": 1,
 				"maximum": 50,
 				"required": false

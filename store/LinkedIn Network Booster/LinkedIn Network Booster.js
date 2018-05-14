@@ -1,11 +1,10 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster package: 5"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const fs = require("fs")
 const Papa = require("papaparse")
-const _ = require("underscore")
 const needle = require("needle")
 
 const Buster = require("phantombuster")
@@ -14,7 +13,6 @@ const buster = new Buster()
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -25,7 +23,9 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-let db;
+const LinkedInScraper = require("./lib-LinkedInScraper")
+let linkedInScraper
+let db
 // }
 
 const DB_NAME = "database-linkedin-network-booster.csv"
@@ -35,7 +35,7 @@ const getDb = async () => {
 	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
 		"X-Phantombuster-Key-1": buster.apiKey
 	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
+	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
 		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
 		try {
 			await buster.download(url, DB_NAME)
@@ -46,7 +46,7 @@ const getDb = async () => {
 			return []
 		}
 	} else {
-		throw "Could not load bot database."
+		throw "Could not load database of previously added profiles."
 	}
 }
 
@@ -63,7 +63,7 @@ const checkDb = (str, db) => {
 
 // Get only a certain number of urls to add
 const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	data = data.filter((item, pos) => data.indexOf(item) === pos) // Remove duplicates
 	let i = 0
 	const maxLength = data.length
 	const urls = []
@@ -84,9 +84,9 @@ const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
 const getFirstName = (arg, callback) => {
 	let name = ""
 	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-	  name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
 	} else if (document.querySelector("div.presence-entity__image")) {
-	  name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
 	}
 	if (!name.length) {
 		callback(null, "")
@@ -134,7 +134,12 @@ const connectTo = async (selector, tab, message) => {
 	await tab.click(".send-invite__actions > button:nth-child(2)")
 	try {
 		// Sometimes this alert isn't shown but the user is still added
-		await tab.waitUntilVisible([".mn-invite-alert__svg-icon--success", ".mn-heathrow-toast__icon--success"], 10000, "or")
+		await tab.waitUntilVisible([
+			".mn-invite-alert__svg-icon--success",
+			".mn-heathrow-toast__icon--success",
+			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
+			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+		], 10000, "or")
 	} catch (error) {
 		utils.log("Button clicked but could not verify if the user was added.", "warning")
 	}
@@ -142,16 +147,19 @@ const connectTo = async (selector, tab, message) => {
 
 // Full function to add someone with different cases
 const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
+	let scrapedProfile = {}
 	try {
-		const [httpCode, httpStatus] = await tab.open(url.replace(/.+linkedin\.com/, "linkedin.com"))
-		if (httpCode !== 200) {
-			throw("Not http code 200")
-		}
-		await tab.waitUntilVisible("#profile-wrapper", 10000)
+		/**
+		 * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
+		 */
+		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
+		scrapedProfile = scrapingResult.csv
+		scrapedProfile.baseUrl = url
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
 		if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
-			db.push({profileId: "unavailable", baseUrl: url})
+			scrapedProfile.profileId = "unavailable"
+			db.push(scrapedProfile)
 			throw(`${url} is not a valid LinkedIn URL.`)
 		} else {
 			throw(`Error while loading ${url}:\n${error}`)
@@ -164,37 +172,33 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		"button.message.primary, button.pv-s-profile-actions--message", // we can message the person (invite already accepted)
 		"button.follow.primary", // only follow button visible (can't connect)
 		".pv-top-card-section__invitation-pending", // invite pending (already added this profile)
-		".pv-dashboard-section"] // we cannot connect with ourselves...
+		".pv-dashboard-section", // we cannot connect with ourselves...
+		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // Yet another CSS selector for pending request, this is part of the new LinkedIn UI
+	]
 	let selector
 	try {
-		selector = await tab.waitUntilVisible(selectors, 10000, "or")
+		selector = await tab.waitUntilVisible(selectors, 15000, "or")
 	} catch (error) {
-		const newUrl = await tab.getUrl()
-		if (url !== newUrl) {
-			await tab.open(newUrl)
-			try {
-				selector = await tab.waitUntilVisible(selectors, 10000, "or")
-			} catch (error) {
-				throw(`${url} didn't load correctly.`)
-			}
-		} else {
-			throw(`${url} didn't load correctly.`)
-		}
+		throw(`${url} didn't load correctly`)
 	}
 	const currentUrl = await tab.getUrl()
-	const profileId = linkedIn.getUsername(currentUrl)
+	scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
 	if (!checkDb(currentUrl, db)) {
-		utils.log(`Already added ${profileId}.`, "done")
+		utils.log(`Already added ${scrapedProfile.profileId}.`, "done")
 	} else {
 		// 1- Case when you can add directly
 		if (selector === selectors[0]) {
-			await connectTo(selector, tab, message)
-			utils.log(`Added ${url}.`, "done")
+			if (await tab.isPresent(selectors[7])) {
+				utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
+			} else {
+				await connectTo(selector, tab, message)
+				utils.log(`Added ${url}.`, "done")
+			}
 		} else if (selector === selectors[1]) { // 2- Case when you need to use the (...) button before and add them from there
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
 					// Add them into the already added username object
-					db.push({profileId, baseUrl: url})
+					db.push(scrapedProfile)
 					throw("Email needed to add this person.")
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
@@ -203,7 +207,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 					utils.log(`Added ${url}.`, "done")
 				}
 			} else {
-				throw `Is in third circle and the onlySecondCircle option is set to true`
+				throw "Is in third circle and the onlySecondCircle option is set to true"
 			}
 		} else if (selector === selectors[2]) { // 3- Case when this people already invited you (auto accept)
 			await tab.click(selector)
@@ -219,19 +223,35 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
 		}
 	}
 	// Add them into the already added username object
-	db.push({profileId, baseUrl: url})
+	db.push(scrapedProfile)
+}
+
+const getFieldsFromArray = (arr) => {
+	const fields = []
+	for (const line of arr) {
+		if (line && (typeof(line) == 'object')) {
+			for (const field of Object.keys(line)) {
+				if (fields.indexOf(field) < 0) {
+					fields.push(field)
+				}
+			}
+		}
+	}
+	return fields
 }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName] = utils.checkArguments([
+	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 280 },
 		{ name: "onlySecondCircle", type: "boolean", default: false },
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
-		{ name: "columnName", type: "string", default: "" }
+		{ name: "columnName", type: "string", default: "" },
+		{ name: "hunterApiKey", type: "string", default: "" },
 	])
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await getDb()
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
@@ -243,11 +263,12 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Adding ${url}...`, "loading")
 			await addLinkedinFriend(url, tab, message, onlySecondCircle)
 		} catch (error) {
-			utils.log(`Could not add ${url} because of an error: ${error}.`, "warning")
+			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}
 	}
-	await buster.saveText(Papa.unparse(db), DB_NAME)
+	await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
 	await linkedIn.saveCookie()
+	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
 .catch((err) => {

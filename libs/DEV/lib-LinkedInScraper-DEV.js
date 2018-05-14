@@ -50,8 +50,8 @@ const loadProfileSections = async tab => {
 
 /**
  * @description Browser context function used to scrape all contact infos from LinkedIn profile
- * @param {Object} arg 
- * @param {Function} callback 
+ * @param {Object} arg
+ * @param {Function} callback
  * @return Object LinkedIn profile contact infos
  */
 const getDetails = (arg, callback) => {
@@ -410,9 +410,9 @@ class LinkedInScraper {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
-		if (hunterApiKey) {
+		if (typeof(hunterApiKey) == "string") {
 			require("coffee-script/register")
-			this.hunter = new (require("./lib-Hunter"))(hunterApiKey)
+			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 		}
 	}
 
@@ -464,13 +464,13 @@ class LinkedInScraper {
 				} else {
 					hunterPayload.domain = companyUrl
 				}
-				this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
+				//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
 				const hunterSearch = await this.hunter.find(hunterPayload)
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
-				result.details.emailFromHunter = hunterSearch.email
+				result.details.mailFromHunter = hunterSearch.email
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
-				result.details.emailFromHunter = ""
+				result.details.mailFromHunter = ""
 			}
 		}
 		csvResult = craftCsvObject(result)

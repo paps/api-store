@@ -5,13 +5,13 @@
 	"argumentDescription": "",
 	"gradientBegin": "#FFB75E",
 	"gradientEnd": "#6eaeb9",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
 		"sessionCookie": "session_cookie",
 		"spreadsheetUrl": "phbuster"
 	},
-	"defaultArgumentAllowed": true,
+	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -25,22 +25,26 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_4createanicespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
 					},
 					"sessionCookie": {
+						"label": "Twitter session cookie <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"columnName": {
+						"label": "Document column name title of Twitter profiles",
 						"helper": "By default the script will take all contents from the first column",
-						"placeholder": "Twitter Profile column"
+						"placeholder": "Twitter Profile"
 					},
 					"numberOfProfilesPerLaunch": {
-						"helper": "By default the script will like 1 profile per launch",
-						"label": "Number of profiles to like per launch",
+						"label": "Number of profiles like per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the script will like 10 profile per launch",
 						"inputType": "number",
 						"placeholder": 10
 					},
 					"likesCountPerProfile": {
+						"label": "Amount of tweets to like for each profiles visited <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "By default the script will like 1 tweet per profile",
 						"inputType": "number",
 						"placeholder": 1
@@ -58,28 +62,23 @@
 		"type": "object",
 		"properties": {
 			"spreadsheetUrl": {
-				"title": "Spreadsheet URL",
 				"type": "string"
 			},
 			"sessionCookie": {
 				"type": "string",
-				"title": "Twitter session cookie",
 				"required": true
 			},
 			"columnName": {
-				"type": "string",
-				"title": "Document column name title of Twitter profiles"
+				"type": "string"
 			},
 			"numberOfProfilesPerLaunch": {
 				"type": "number",
-				"title": "Profiles count to like per launch",
 				"minimum": 1,
 				"maximum": 10,
 				"default": 1
 			},
 			"likesCountPerProfile": {
 				"type": "number",
-				"title": "Amount of tweets to like for each profiles visited",
 				"minimum": 1,
 				"maximum": 1000,
 				"default": 1

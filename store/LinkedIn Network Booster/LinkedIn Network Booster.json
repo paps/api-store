@@ -6,6 +6,7 @@
 	"gradientEnd": "#8EDEF1",
 	"argumentDescription": "",
 	"hidden": false,
+	"updated": true,
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
@@ -50,6 +51,10 @@
 							"You are limited by LinkedIn to 280 characters",
 							"Leave empty to send invites without message (not recommended)"
 						]
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional)",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					}
 				}
 			}
@@ -81,6 +86,10 @@
 			"message": {
 				"type": "string",
 				"maxLength": 280
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
 			}
 		}
 	}

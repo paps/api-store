@@ -9,7 +9,7 @@ const needle = require("needle")
 const url = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
-	
+
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
@@ -252,7 +252,7 @@ const isUrl = target => url.parse(target).hostname !== null
 
 /**
  * @description Tiny function used tio check if a given string represents a Twitter URL
- * @param { String } target 
+ * @param { String } target
  * @return { Boolean } true if target represents an Twitter URL otherwise false
  */
 const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
@@ -321,7 +321,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	await buster.saveText(Papa.unparse(db), DB_NAME)
 	nick.exit()
 })()
-	.catch(err => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.catch(err => {
+	utils.log(err, "error")
+	nick.exit(1)
+})
