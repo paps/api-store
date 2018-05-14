@@ -93,12 +93,12 @@ const ajaxGet = (arg, callback) => {
 		headers: arg.headers,
 		data: arg.search
 	})
-	.done(data => {
-		callback(null, data)
-	})
-	.fail(err => {
-		callback(err)
-	})
+		.done(data => {
+			callback(null, data)
+		})
+		.fail(err => {
+			callback(err)
+		})
 }
 
 const onHttpRequest = (e) => {
@@ -115,31 +115,44 @@ const onHttpRequest = (e) => {
 	const [sessionCookie] = utils.checkArguments([
 		{name: "sessionCookie", type: "string", length: 10}
 	])
+
+	let result = []
+
 	await linkedIn.login(tab, sessionCookie)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+
+	// NOTE: First selector contains all followers, the second one is the LinkedIn picture when the current profile doesn't have any followers
+	const feedSelectors = [ "ul.feed-following-list", ".feed-followers__empty-state-illustration" ]
+
 	await tab.open("https://www.linkedin.com/feed/followers/")
-	await tab.waitUntilVisible("ul.feed-following-list")
-	await tab.scrollToBottom()
-	await tab.wait(2000)
-	if (!gl.search || !gl.headers) {
+	const selectorFound = await tab.waitUntilVisible(feedSelectors, 7500, "or")
+
+	if (selectorFound === feedSelectors[0]) {
+		await tab.scrollToBottom()
 		await tab.wait(2000)
 		if (!gl.search || !gl.headers) {
-			throw "Could not load followers."
+			await tab.wait(2000)
+			if (!gl.search || !gl.headers) {
+				throw "Could not load followers."
+			}
 		}
-	}
-	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
-	let result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total))
-	result.sort((a, b) => (parseInt(b.followers) - parseInt(a.followers)))
-	for (const follower of result) {
-		if (follower.followers === 0) {
-			follower.followers = "Not provided by LinkedIn"
+		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+		const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
+		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total))
+		result.sort((a, b) => (parseInt(b.followers) - parseInt(a.followers)))
+		for (const follower of result) {
+			if (follower.followers === 0) {
+				follower.followers = "Not provided by LinkedIn"
+			}
 		}
+	} else {
+		utils.log("No followers found from the given profile", "warning")
 	}
+
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, "followers")
 })()
-.catch(err => {
-	utils.log(err, "error")
-	nick.exit(1)
-})
+	.catch(err => {
+		utils.log(err, "error")
+		nick.exit(1)
+	})
