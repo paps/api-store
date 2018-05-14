@@ -109,15 +109,12 @@ const onHttpRequest = (e) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let [sessionCookie, postUrl, csvName] = utils.checkArguments([
-		{name: "sessionCookie", type: "string", length: 10},
-		{name: "postUrl", type: "string", length: 10},
-		{ name: "csvName", type: "string", default: "result" },
-	])
+	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
+
 	let result = []
 
 	if (postUrl.indexOf("linkedin.com/") < 0) {
-		postUrl = await utils.getDataFromCsv(postUrl)
+		postUrl = await utils.getDataFromCsv(postUrl, columnName)
 	} else {
 		postUrl = [ postUrl ]
 	}
