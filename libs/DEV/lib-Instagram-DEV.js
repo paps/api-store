@@ -81,7 +81,8 @@ class Instagram {
 			}
 
 			if (baseSelector[1].querySelector(arg.selectors.likeSelector)) {
-				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\s/g, ""), 10)
+				// HACK: We only need digits frol the scraped tex
+				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
 			} else {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
 					data.likes = baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector).length
