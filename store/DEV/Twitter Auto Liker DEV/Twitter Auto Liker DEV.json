@@ -24,13 +24,13 @@
 			},
 			"options": {
 				"fields": {
-					"spreadsheetUrl": {
-						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_4createanicespreadsheet\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
-					},
 					"sessionCookie": {
 						"label": "Twitter session cookie <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_4createanicespreadsheet\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
 					},
 					"columnName": {
 						"label": "Document column name title of Twitter profiles",
@@ -61,12 +61,12 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"spreadsheetUrl": {
-				"type": "string"
-			},
 			"sessionCookie": {
 				"type": "string",
 				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
