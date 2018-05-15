@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -19,6 +19,10 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+const Instagram = require("./lib-Instagram-DEV")
+const instagram = new Instagram(nick, buster, utils)
+
 // }
 
 const SCRAPING_SELECTORS = {
@@ -35,88 +39,17 @@ const SCRAPING_SELECTORS = {
 	location: "header div:last-of-type > div:last-of-type a:last-of-type" // Location if present in the post
 }
 
-/**
- * @description Function used to log as an Instagram user
- * @param {Object} tab - Nickjs tab
- * @param {String} sessionCookie - sessionid Instagram cookie
- * @throws If it were an error during the login process
- */
-const instagramConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to instagram...", "loading")
-	await nick.setCookie({
-		name: "sessionid",
-		value: sessionCookie,
-		domain: "www.instagram.com",
-		secure: true,
-		httpOnly: true
-	})
-	await tab.open("https://instagram.com")
-	try {
-		await tab.waitUntilVisible("main")
-		const name = await tab.evaluate((arg, cb) => {
-			const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
-			cb(null, url.pathname.replace(/\//g, ""))
-		})
-		utils.log(`Connected as ${name}`, "done")
-	} catch (error) {
-		throw "Could not connect to Instagram with that sessionCookie."
-	}
-}
+const getPostUrl = (arg, cb) => {
+	let scrapedUrl
 
-
-/**
- * @description Publication scrapper
- * @param {Object} arg
- * @param {Function} cb
- * @return {Object} A scrapped publication
- */
-const scrapePublication = (arg, cb) => {
-	let data = {}
-
-	const baseSelector = document.querySelector(arg.selectors.baseSelector)
-	let postDescription = baseSelector.querySelector(arg.selectors.descriptionSelector)
-
-	if ((!postDescription) || (!postDescription.children)) {
-		postDescription = ""
+	if (document.querySelector(".coreSpriteHeartOpen")) {
+		scrapedUrl = document.querySelector(".coreSpriteHeartOpen").parentNode.href
+		scrapedUrl = new URL(scrapedUrl)
+		scrapedUrl = `${scrapedUrl.protocol}//${scrapedUrl.hostname}${scrapedUrl.pathname}`
 	} else {
-		postDescription =
-			Array
-				.from(postDescription.children)
-				.map(el => (el.textContent) ? el.textContent.trim() : "" )
-				.join(" ")
+		scrapedUrl = ""
 	}
-	/**
-	 * NOTE: If the publication have less than 10 likes,
-	 * there is no counter but all instagram users names
-	 */
-	if (baseSelector.querySelector(arg.selectors.likeSelector)) {
-		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\s/g, ""), 10)
-	} else if (baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector)) {
-		data["likes"] = parseInt(baseSelector.querySelector(arg.selectors.yetAnotherLikeSelector).textContent.trim().replace(/\s/g, ""), 10)
-	} else {
-		data["likes"] = baseSelector.querySelectorAll(arg.selectors.likeAlternativeSelector).length
-	}
-
-	data["profileUrl"] = baseSelector.querySelector(arg.selectors.profileSelector).href || ""
-	data["profileName"] = baseSelector.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
-	data["date"] = baseSelector.querySelector(arg.selectors.pubDateSelector).dateTime || ""
-	data["description"] = postDescription
-	data["postUrl"] = baseSelector.querySelector(arg.selectors.pubDateSelector).parentElement.href || ""
-
-	if (baseSelector.querySelector(arg.selectors.videoSelector)) {
-		data["postVideo"] = baseSelector.querySelector(arg.selectors.videoSelector).src
-		data["videoThumbnail"] = baseSelector.querySelector(arg.selectors.videoSelector).poster
-	}
-
-	if (baseSelector.querySelector(arg.selectors.postImage)) {
-		data["postImage"] = baseSelector.querySelector(arg.selectors.postImage).src
-	}
-
-	if (baseSelector.querySelector(arg.selectors.location)) {
-		data["location"] = baseSelector.querySelector(arg.selectors.location).textContent.trim()
-	}
-
-	cb(null, data)
+	cb(null, scrapedUrl)
 }
 
 /**
@@ -149,11 +82,12 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(timeLeft.message, "warning")
 			return false
 		}
-		let currentPost = null
+		let currentPost = {}
 		try {
-			currentPost = await tab.evaluate(scrapePublication, { selectors: SCRAPING_SELECTORS })
+			currentPost.url = await tab.evaluate(getPostUrl)
+			// currentPost = await tab.evaluate(scrapePublication, { selectors: SCRAPING_SELECTORS })
 			currentPost.hashtag = hashtag
-			utils.log(`${currentPost.postUrl} scraped`, "done")
+			utils.log(`${currentPost.url} found`, "done")
 			arr.push(currentPost)
 		} catch (err) {
 			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
@@ -275,7 +209,6 @@ const forgeCsvFromJSON = data => {
  * @param {String} searchTerm -- Input given by the user
  * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
  */
-
 const searchLocation = async (tab, searchTerm) => {
 	if (await tab.isPresent(".coreSpriteSearchClear")) {
 		await tab.click(".coreSpriteSearchClear")
@@ -343,10 +276,12 @@ const searchLocation = async (tab, searchTerm) => {
 	}
 
 	if (typeof sessionCookie === "string") {
-		await instagramConnect(tab, sessionCookie)
+		await instagram.login(tab, sessionCookie)
+		// await instagramConnect(tab, sessionCookie)
 	}
 
 	let results = []
+	let scrapingResults = []
 	for (const hashtag of hashtags) {
 		/**
 		 * NOTE: Simple process to check if we need to search an URL for hashtags or locations
@@ -378,10 +313,30 @@ const searchLocation = async (tab, searchTerm) => {
 		if (!hasTimeLeft) {
 			break
 		}
+
+		for (const one of results) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			try {
+				await tab.open(one.url)
+				let scrapedData = await instagram.scrapePost(tab)
+				scrapedData.postUrl = one.url
+				scrapedData.hashtag = one.hashtag
+				utils.log(`${scrapedData.postUrl} scraped`, "done")
+				scrapingResults.push(scrapedData)
+			} catch (err) {
+				utils.log(`Cannot scrape ${one.url}`, "info")
+				continue
+			}
+		}
+
 	}
-	const csvResult = results
-	utils.log(`${results.length} posts scraped`, "done")
-	await utils.saveResults(results, csvResult, csvName)
+	const csvResult = scrapingResults
+	utils.log(`${scrapingResults.length} posts scraped`, "done")
+	await utils.saveResults(scrapingResults, csvResult, csvName)
 	nick.exit()
 })()
 	.catch(err => {
