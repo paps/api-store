@@ -2,7 +2,7 @@
 	"slug": "linkedin-accept-invitations",
 	"description": "Add incoming pending invitations automatically",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Accept_Invitations/lkd_logo_invitation.png",
-	"hidden": false,
+	"hidden": true,
 	"gradientBegin": "#F4D03F",
 	"gradientEnd": "#16A085",
 	"argumentHelpAnchor": "#section_argument",
@@ -25,7 +25,7 @@
 						"placeholder": 5,
 						"label": "Number of invitations to accept per launch (max. 50) <a href=\"/api-store/2885/linkedin-accept-invitations#section_5howmanyconnectionsperiteration\" target=\"_blank\">(?)</a>"
 					},
-					"hasNoteSended": {
+					"hasNoteSent": {
 						"label": "Will only accept invitations with a message",
 						"type": "checkbox"
 					},
@@ -50,7 +50,7 @@
 				"minimum": 1,
 				"maximum": 50
 			},
-			"hasNoteSended": {
+			"hasNoteSent": {
 				"type": "boolean",
 				"default": false
 			},
