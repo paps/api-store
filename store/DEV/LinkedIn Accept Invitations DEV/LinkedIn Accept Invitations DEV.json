@@ -2,7 +2,7 @@
 	"slug": "linkedin-accept-invitations",
 	"description": "Add incoming pending invitations automatically",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Accept_Invitations/lkd_logo_invitation.png",
-	"hidden": true,
+	"hidden": false,
 	"gradientBegin": "#F4D03F",
 	"gradientEnd": "#16A085",
 	"argumentHelpAnchor": "#section_argument",
