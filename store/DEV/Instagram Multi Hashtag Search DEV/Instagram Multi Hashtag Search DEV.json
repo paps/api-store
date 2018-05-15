@@ -1,7 +1,7 @@
 {
 	"slug": "instagram-multi-hashtag-search",
-	"description": "",
-	"image": "",
+	"description": "Find posts that match multiple hashtags or locations on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Multi_Hashtag_Search/instagram_multi_hashtag_search.png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#FCCF6B",

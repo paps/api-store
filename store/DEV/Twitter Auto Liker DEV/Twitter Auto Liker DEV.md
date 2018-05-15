@@ -28,9 +28,13 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 ## 4. Create a nice Spreadsheet
-In this 1st argument field paste the URL of a spreadsheet filled with Twitter profile URLs, all **on column A**
+In the "Spreadsheet URL" field, paste the URL of a spreadsheet filled with Twitter profile URLs, all **on column A**.
 
-The API would follow each one of those 1 by 1
+The API will like tweets of those profiles over time.
+
+If you do not put the profile URLs in the first column, you can specify the name of the column you used thanks to the "Column name" field in the configuration.
+
+To get Twitter profile URLs, you can use our other Twitter APIs such as [Follower Collector](/api-store/4130/twitter-follower-collector), [Following Collector](/api-store/4457/twitter-following-collector) or [Profile URL Finder](/api-store/4485/twitter-profile-url-finder).
 
 ## 5. Get your Twitter Session cookie
 The Session Cookie you'll need to make this API work is called "`auth_token`",
@@ -56,7 +60,7 @@ or
 
 * Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Configuration_.
 
-_// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
+_// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
 
 ## 6. Configure repetitive launches
 
@@ -73,3 +77,12 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 <center>More bots like this one will be added to Phantombuster,</center>
 <center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
 <center>Don't forget to like our amazing tweets [@phbuster](https://twitter.com/phbuster) 😜</center>
+
+# ⚙ ️HTTP API 🤓
+
+If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_queries_** which must be an array of Twitter handles or Twitter profile URLs (strings). Additionally, you should set **_noDatabase_** to `true` so that the API does not maintain a state on its own (so that you can re-launch the same query to unlike tweets for example).
+
+It should look just like this :
+`{ "queries": ["phbuster", "paps__"], "noDatabase": true }`
+
+Please note that launching the API on the same profiles multiple times will like/unlike their tweets.

@@ -292,9 +292,10 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	db = await getDb()
 	let likedCount = 0
-	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch } = utils.validateArguments()
+	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase} = utils.validateArguments()
+
+	db = noDatabase ? [] : await getDb()
 
 	if (!csvName) {
 		csvName = DEFAULT_RES_NAME
@@ -350,7 +351,9 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 
 	utils.log(`${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked for ${result.length} profile${(result.length === 1) ? "" : "s" }`, "done")
 	await utils.saveResults(result, jsonToCsv(result), csvName)
-	await buster.saveText(Papa.unparse(jsonToCsv(db, true)), DB_NAME)
+	if (!noDatabase) {
+		await buster.saveText(Papa.unparse(jsonToCsv(db, true)), DB_NAME)
+	}
 	nick.exit()
 })()
 .catch(err => {

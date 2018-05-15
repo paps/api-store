@@ -33,26 +33,21 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
 					},
 					"columnName": {
-						"label": "Document column name title of Twitter profiles",
-						"helper": "By default the script will take all contents from the first column",
+						"label": "Column name from which Twitter profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
 						"placeholder": "Twitter Profile"
 					},
 					"numberOfProfilesPerLaunch": {
-						"label": "Number of profiles like per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
-						"helper": "By default the script will like 10 profile per launch",
+						"label": "Number of profiles to process per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will open 10 profile per launch",
 						"inputType": "number",
 						"placeholder": 10
 					},
 					"likesCountPerProfile": {
-						"label": "Amount of tweets to like for each profiles visited <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
-						"helper": "By default the script will like 1 tweet per profile",
+						"label": "Number of likes to send per profile per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will like 1 tweet per profile per launch",
 						"inputType": "number",
 						"placeholder": 1
-					},
-					"csvName": {
-						"type": "text",
-						"placeholder": "result",
-						"default": "result"
 					}
 				}
 			}
@@ -82,10 +77,6 @@
 				"minimum": 1,
 				"maximum": 1000,
 				"default": 1
-			},
-			"csvName": {
-				"type": "string",
-				"title": "Output CSV name"
 			}
 		},
 		"oneOf": [
