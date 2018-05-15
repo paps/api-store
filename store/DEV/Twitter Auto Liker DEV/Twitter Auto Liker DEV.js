@@ -21,11 +21,9 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const DEFAULT_RES_NAME = "result"
-const DB_NAME = "twitter-auto-liker.csv"
+const DB_NAME = "result.csv"
 const DEFAULT_LIKE_COUNT = 1
 const DEFAULT_PROFILE_LAUNCH = 1
-let db
 // }
 
 const getDb = async (filename = DB_NAME) => {
@@ -55,7 +53,7 @@ const getDb = async (filename = DB_NAME) => {
 
 const filterUrls = (str, db) => {
 	for (const line of db) {
-		if (str === line.query || line.query.startsWith(str)) {
+		if (str === line.query) {
 			return false
 		}
 	}
@@ -67,7 +65,7 @@ const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 	const maxLength = data.length
 	const urls = []
 	if (maxLength === 0) {
-		utils.log("Input is empty or every profiles scpecified are scraped.", "warning")
+		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
 		nick.exit()
 	}
 	while (i < numberOfProfilesPerLaunch && i < maxLength) {
@@ -160,29 +158,6 @@ const getLoadedTweetsCount = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
 }
 
-const jsonToCsv = (data, generateCsvDb = false) => {
-	let res = []
-
-	if (generateCsvDb) {
-		let uniquesProfiles = data.map(el => el.query)
-		uniquesProfiles = Array.from((new Set(uniquesProfiles)))
-		res = uniquesProfiles.map(el => { return { query: el } })
-	} else {
-		for (const one of data) {
-			for (const url of one.urls) {
-				res.push({
-					likeCount: one.likeCount ? one.likeCount : 0,
-					url,
-					query: one.query ? one.query : "",
-					twitterUrl: one.twitterUrl ? one.twitterUrl : ""
-				})
-			}
-		}
-	}
-
-	return res
-}
-
 /**
  * @description Function used to open a profile and like a certain amount of tweets
  * @throws if there were an error during when opening the profile or during the like procedure
@@ -232,7 +207,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 		 * wa can just wait that there is more tweets at screen
 		 */
 		try {
-			const state = await tab.evaluate((arg, cb) => {
+			const state = await tab.evaluate({ previousTweetsCount: loadedCount }, (arg, cb) => {
 				const startingTimestamp = Date.now()
 				const waitForNewTweets = () => {
 					const loadedTweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
@@ -251,9 +226,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 					}
 				}
 				waitForNewTweets()
-			},
-			{ previousTweetsCount: loadedCount }
-			)
+			})
 
 			/**
 			 * HACK: Sometimes the visual tweets count on the profile doesn't represent the loaded tweet count,
@@ -263,7 +236,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 				break
 			}
 		} catch (err) {
-			utils.log(`Error during tweets loading: ${err.message || err}`, "info")
+			utils.log(`Error during loading of tweets: ${err.message || err}`, "info")
 			break
 		}
 	}
@@ -293,16 +266,12 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 ;(async () => {
 	const tab = await nick.newTab()
 	let likedCount = 0
-	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase} = utils.validateArguments()
+	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase} = utils.validateArguments()
 
-	db = noDatabase ? [] : await getDb()
-
-	if (!csvName) {
-		csvName = DEFAULT_RES_NAME
-	}
+	let db = noDatabase ? [] : await getDb()
 
 	if (typeof queries === "string") {
-		queries = [ { url: (isTwitterUrl(queries)) ? queries : `https://twitter.com/${queries}`, query: queries } ]
+		queries = [ { url: (isUrl(queries)) ? queries : `https://twitter.com/${queries}`, query: queries } ]
 	} else if (Array.isArray(queries)) {
 
 		queries = queries.map(el => {
@@ -313,9 +282,9 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
 			let tmp = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-			queries = tmp.map(el => { return { url: isTwitterUrl(el) ? el : `https://twitter.com/${el}`, query: el } })
+			queries = tmp.map(el => { return { url: isUrl(el) ? el : `https://twitter.com/${el}`, query: el } })
 		} else if (typeof spreadsheetUrl === "string") {
-			queries = [ { url: isTwitterUrl(spreadsheetUrl) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}`, query: spreadsheetUrl } ]
+			queries = [ { url: isUrl(spreadsheetUrl) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}`, query: spreadsheetUrl } ]
 		}
 	}
 
@@ -323,7 +292,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH
 	}
 
-	const result = await getDb(`${csvName}.json`)
+	const result = []
 
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
 	await twitterConnect(tab, sessionCookie)
@@ -343,18 +312,22 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 			db.push(profileLiked)
 		} catch (err) {
 			utils.log(`Cannot like ${profile} due to: ${err.message || err}`, "error")
-			utils.log(`Dumping error stack: ${err.stack || ""}`, "error")
-			await tab.screenshot(`${Date.now()}.jpg`)
-			continue
 		}
 	}
 
-	utils.log(`${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked for ${result.length} profile${(result.length === 1) ? "" : "s" }`, "done")
-	await utils.saveResults(result, jsonToCsv(result), csvName)
-	if (!noDatabase) {
-		await buster.saveText(Papa.unparse(jsonToCsv(db, true)), DB_NAME)
+	utils.log(`Total of ${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked (${result.length} profile${(result.length === 1) ? "" : "s" })`, "done")
+
+	try {
+		await buster.setResultObject(result)
+	} catch (e) {
+		utils.log(`Could not save result object: ${e.message || e}`, "warning")
 	}
+	if (!noDatabase) {
+		await buster.saveText(Papa.unparse(db), DB_NAME)
+	}
+
 	nick.exit()
+
 })()
 .catch(err => {
 	utils.log(err.message || err, "error")
