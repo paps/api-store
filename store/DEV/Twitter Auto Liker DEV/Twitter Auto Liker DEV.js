@@ -34,11 +34,16 @@ const getDb = async (filename = DB_NAME) => {
 	})
 
 	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
+		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${filename}`
 		try {
 			await buster.download(url, filename)
 			const file = fs.readFileSync(filename, "UTF-8")
-			const data = Papa.parse(file, { header: true }).data
+			let data
+			if (filename.endsWith(".json")) {
+				data = JSON.parse(file)
+			} else {
+				data = Papa.parse(file, { header: true }).data
+			}
 			return data
 		} catch (err) {
 			return []
@@ -111,11 +116,11 @@ const twitterConnect = async (tab, sessionCookie) => {
  * @description
  * @param {Object} arg - Arguments to pass in browser context
  * @param {Function} cb - Function to quit browser context
- * @return {Promise<Number>} Tweets liked count
+ * @return {Promise<Object>} Tweets liked count & URLs
  */
 const likeTweets = (arg, cb) => {
 	const tweetsLoaded = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
-
+	const tweetURLs = []
 	/**
 	 * NOTE: If the script loaded more tweets than likesCount, then we remove trailing tweets to get the exact count
 	 */
@@ -124,8 +129,9 @@ const likeTweets = (arg, cb) => {
 	}
 	for (const one of tweetsLoaded) {
 		one.querySelector(".HeartAnimation").click()
+		tweetURLs.push(`https://twitter.com${one.dataset.permalinkPath}`)
 	}
-	cb(null, tweetsLoaded.length)
+	cb(null, { likeCount: tweetsLoaded.length, urls: tweetURLs })
 }
 
 /**
@@ -154,6 +160,29 @@ const getLoadedTweetsCount = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
 }
 
+const jsonToCsv = (data, generateCsvDb = false) => {
+	let res = []
+
+	if (generateCsvDb) {
+		let uniquesProfiles = data.map(el => el.query)
+		uniquesProfiles = Array.from((new Set(uniquesProfiles)))
+		res = uniquesProfiles.map(el => { return { query: el } })
+	} else {
+		for (const one of data) {
+			for (const url of one.urls) {
+				res.push({
+					likeCount: one.likeCount ? one.likeCount : 0,
+					url,
+					query: one.query ? one.query : "",
+					twitterUrl: one.twitterUrl ? one.twitterUrl : ""
+				})
+			}
+		}
+	}
+
+	return res
+}
+
 /**
  * @description Function used to open a profile and like a certain amount of tweets
  * @throws if there were an error during when opening the profile or during the like procedure
@@ -175,7 +204,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 		tweetsCount = await tab.evaluate(getTweetsCount)
 	} catch (err) {
 		utils.log(`Cannot open profile ${url}, due to ${err.message || err}`, "warning")
-		return { twitterUrl: url, likeCount: 0 }
+		return { twitterUrl: url, likeCount: 0, urls: [] }
 	}
 	/**
 	 * NOTE: If the likeCount parameter is bigger than the total tweets count, the script will like every tweets
@@ -239,8 +268,9 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 		}
 	}
 	utils.log(`Liking ${likesCount}`, "info")
-	const likeCount = await tab.evaluate(likeTweets, { likesCount })
-	return { twitterUrl: url, likeCount }
+	const scrapedData = await tab.evaluate(likeTweets, { likesCount })
+	scrapedData.twitterUrl = url
+	return scrapedData
 }
 
 /**
@@ -263,7 +293,6 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 ;(async () => {
 	const tab = await nick.newTab()
 	db = await getDb()
-	const result = db.slice() // Value copy
 	let likedCount = 0
 	let {spreadsheetUrl, columnName, csvName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch } = utils.validateArguments()
 
@@ -292,6 +321,9 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	if (!numberOfProfilesPerLaunch) {
 		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH
 	}
+
+	const result = await getDb(`${csvName}.json`)
+
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
 	await twitterConnect(tab, sessionCookie)
 
@@ -317,8 +349,8 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	}
 
 	utils.log(`${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked for ${result.length} profile${(result.length === 1) ? "" : "s" }`, "done")
-	await utils.saveResults(result, result, csvName)
-	await buster.saveText(Papa.unparse(db), DB_NAME)
+	await utils.saveResults(result, jsonToCsv(result), csvName)
+	await buster.saveText(Papa.unparse(jsonToCsv(db, true)), DB_NAME)
 	nick.exit()
 })()
 .catch(err => {
