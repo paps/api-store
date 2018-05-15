@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -19,6 +19,8 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const Instagram = require("./lib-Instagram-DEV")
+const instagram = new Instagram(nick, buster, utils)
 const MAX_POSTS = 1500
 
 const SELECTORS = {
@@ -29,34 +31,6 @@ const SELECTORS = {
 	POSTS: "article > div:not([class]) > div > div"
 }
 // }
-
-/**
- * @description Function used to log as an Instagram user
- * @param {Object} tab - Nickjs tab
- * @param {String} sessionCookie - sessionid Instagram cookie
- * @throws If it were an error during the login process
- */
-const instagramConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to instagram...", "loading")
-	await nick.setCookie({
-		name: "sessionid",
-		value: sessionCookie,
-		domain: "www.instagram.com",
-		secure: true,
-		httpOnly: true
-	})
-	await tab.open("https://instagram.com")
-	try {
-		await tab.waitUntilVisible("main")
-		const name = await tab.evaluate((arg, cb) => {
-			const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
-			cb(null, url.pathname.replace(/\//g, ""))
-		})
-		utils.log(`Connected as ${name}`, "done")
-	} catch (error) {
-		throw "Could not connect to Instagram with that sessionCookie."
-	}
-}
 
 /**
  * @description Tiny function used to check if a given string represents an URL
@@ -323,19 +297,9 @@ const filterResults = (rawResults) => {
  */
 const craftCsvObject = results => {
 	const csvRes = results.map(el => {
-		let tmp = {
-			postUrl: el.postUrl ? el.postUrl : "",
-			matches: el.matches ? el.matches.join(" AND ") : "",
-			description: el.description ? el.description : ""
-		}
+		let tmp = el
 
-		if (el.postVideo !== "") {
-			tmp.postVideo = el.postVideo
-		}
-
-		if (el.postImage !== "") {
-			tmp.postImage = el.postImage
-		}
+		tmp.matches = el.matches ? el.matches.join(" AND ") : ""
 		return tmp
 	})
 	return csvRes
@@ -367,7 +331,7 @@ const craftCsvObject = results => {
 		}
 	}
 
-	await instagramConnect(tab, sessionCookie)
+	await instagram.login(tab, sessionCookie)
 
 	let results = {}
 	let scrapedResult = []
@@ -405,9 +369,23 @@ const craftCsvObject = results => {
 	}
 
 	const filteredResults = filterResults(results)
+	const scrapedData = []
 
-	utils.log(`${filteredResults.length} posts scraped`, "done")
-	await utils.saveResults(filteredResults, craftCsvObject(filteredResults), csvName)
+	for (const post of filteredResults) {
+		try {
+			await tab.open(post.postUrl)
+			let scrapingRes = await instagram.scrapePost(tab)
+			scrapingRes.postUrl = post.postUrl
+			scrapingRes.matches = post.matches
+			scrapedData.push(scrapingRes)
+		} catch (err) {
+			utils.log(`Cannot scrape ${post.postUrl}`, "info")
+			continue
+		}
+	}
+
+	utils.log(`${scrapedData.length} posts scraped`, "done")
+	await utils.saveResults(scrapedData, craftCsvObject(scrapedData), csvName)
 	nick.exit()
 })()
 	.catch(err => {
