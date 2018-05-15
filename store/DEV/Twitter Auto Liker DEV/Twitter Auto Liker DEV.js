@@ -316,12 +316,12 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 		}
 	}
 
-	utils.log(`${likedCount} tweets liked for ${result.length} profiles`, "done")
+	utils.log(`${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked for ${result.length} profile${(result.length === 1) ? "" : "s" }`, "done")
 	await utils.saveResults(result, result, csvName)
 	await buster.saveText(Papa.unparse(db), DB_NAME)
 	nick.exit()
 })()
 .catch(err => {
-	utils.log(err, "error")
+	utils.log(err.message || err, "error")
 	nick.exit(1)
 })
