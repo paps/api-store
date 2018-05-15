@@ -25,50 +25,48 @@ _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
 
 ## IN CSV 
-1. LinkedIn profil link
-2. Description
-3. First name
-4. Last name
+1. LinkedIn profile link
+1. Headline
+1. Description
+1. First name
+1. Last name
 <img src="https://phantombuster.imgix.net/api-store/Linkedin_profile_scrapper/keyword_short.png" style="float:right; border:none;box-shadow:none;">
 
-5. Full name
-6. N° of subscribers
-7. Company name
-8. Current job title
-9. Description of the current job
-10. Location of that job
-11. Mail (if available)
-12. Phone number (if available)
-13. Twitter (if available)
-14. Skill 1
-15. Skill 2
-16. Skill 3
+1. Full name
+1. N° of subscribers
+1. Company name
+1. Current job title
+1. Description of the current job
+1. Location of that job
+1. Email (if available)
+1. **Discovered email** (New! [See below](#section_email_discovery))
+1. Phone number (if available)
+1. Twitter (if available)
+1. Website (if available)
+1. Profile image URL
+1. Skills
+1. Number of endorsements per skill
 
 ## IN JSON
 
 **In addition to everything listed above:**
-17. Profile image URL
-18. Headline
-19. Connections
-20. Description field
+- Connections
 <img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/owl_gif_wow.gif" style="float:right; border:none;box-shadow:none;">
 
-21. Following infos from all listed Job
-* Company name
-* Company URL
-* Job title
-* Date range
-* Location
-* Description
-22. Following infos from all listed education
-* School name
-* School URL
-* Degree
-* Degree specifications
-* Date range
-* Description
-23. Website (if available)
-24. Number of endorsements for each of the 3 skills
+- Following infos from all listed Job
+	* Company name
+	* Company URL
+	* Job title
+	* Date range
+	* Location
+	* Description
+- Following infos from all listed education
+	* School name
+	* School URL
+	* Degree
+	* Degree specifications
+	* Date range
+	* Description
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -88,10 +86,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Linkedin authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
-* Using Chrome, go to your LinkedIn homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your LinkedIn homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab
@@ -106,12 +104,12 @@ or
 
 <center>![](https://phantombuster.imgix.net/api-store/li_at+3.png)</center/>
 
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Argument_)
+* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your API _Configuration_
 
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
+_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
 
 ## 5. Add a Google Spreadsheet 📑
-Below your session cookie you’ll find _spreadsheetUrl_
+Below your session cookie you’ll find _Spreadsheet URL_
 
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
 <center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
@@ -122,6 +120,20 @@ Add every linkedIn profiles link in column A (**one link per row**)
 
 You can also enter a CSV file URL, it will work the same :)
 
+## 6. Email discovery (optional) { email_discovery }
+
+**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+
+To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+
+<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
+
+Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
+
+Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
+
+**Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your scraping to **40 profiles per day**.
+
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
@@ -130,19 +142,42 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 This will launch the bot and, if you didn't already change the spreadsheet URL, will collect the information of the Phantombuster team.
 
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
 
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
 
-# ⚙ ️HTTP API 🤓
+Every time the API is launched, it will scrape 10 profiles and then stop. (This number can be changed in the configuration, the maximum is 25 per launch.)
 
-If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_profileUrls_** which must be an array of strings.
+To do so, simply hit the “Settings” button to define when your API is launched:
 
-It should look just like this :
-`"profileUrls": ["www.linkedin.com/in/foo", "www.linkedin.com/in/bar"]`
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+To forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API. (Read more below about LinkedIn's limits.)
+
 
 # Limits
 
 Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf. Like *Uncle Ben* once said, *"With great power comes great responsibility."*
 
-We have noticed that visiting more than 80 connections per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than one launch per day of 80 scraped profiles for this reason.
+We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 4 launches per day of 20 scraped profiles for this reason.
+
+**Note:** When [email discovery](#section_email_discovery) is enabled, we recommend you divide this limit by 2 (that is, **40 profiles per day**).
 
 Having a LinkedIn Premium subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
+
+
+
+
+# ⚙ ️HTTP API 🤓
+
+If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_profileUrls_** which must be an array of strings. Additionally, you should set **_noDatabase_** to `true` so that the API does not maintain a state on its own (so that you can re-scrape the same profiles).
+
+It should look just like this :
+`{ "profileUrls": ["www.linkedin.com/in/foo", "www.linkedin.com/in/bar"], "noDatabase": true, "sessionCookie": "xxxx" }`
+

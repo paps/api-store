@@ -134,6 +134,20 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 	return ret
 }
 
+const getFieldsFromArray = (arr) => {
+	const fields = []
+	for (const line of arr) {
+		if (line && (typeof(line) == 'object')) {
+			for (const field of Object.keys(line)) {
+				if (fields.indexOf(field) < 0) {
+					fields.push(field)
+				}
+			}
+		}
+	}
+	return fields
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase} = utils.validateArguments()
@@ -192,7 +206,7 @@ const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResult(db, DB_NAME) // deprecated call :(
+		await utils.saveResult(db, DB_NAME, getFieldsFromArray(db)) // deprecated call :(
 	}
 })()
 .catch(err => {

@@ -36,7 +36,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberOfAddsPerLaunch": {
-						"label": "Number of invites per launch (10 max.)",
+						"label": "Number of invites per launch (10 max.) <a href=\"/api-store/2818/linkedin-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},

@@ -80,29 +80,72 @@ const filterRows = (str, db) => {
 }
 
 /**
- * @description Adding a certain amount of skills for the CSV output
- * @param {Object} json - JSON output
- * @param {Object} csv - CSV output
- * @param {Number} skillsToRet - Count of skills to add
- * @return {Object} Formatted CSV output
+ * @todo Use this function when others validations in this API are done
+ * @description Tiny function used to return as much as possible skills from a lib-LinkedInScraper JSON result
+ * @param {Object} infos -- Result object formatted for the JSON output
+ * @param {Number} [skillsToRet] -- Count of skills to return
+ * @return {Object} CSV object with the count of skills asked
  */
-const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
+const _craftCsv = (infos, skillsToRet = MAX_SKILLS) => {
+	let job = {}
+	let ret = {}
 
-	delete csv.skill1
-	delete csv.skill2
-	delete csv.skill3
+	if (infos.jobs && infos.jobs[0]) {
+		job = infos.jobs[0]
+	}
+
+	const hasDetails = infos.hasOwnProperty("details")
+	const hasGeneral = infos.hasOwnProperty("general")
+
+	/**
+	 * HACK: this function use the same code from craftCsvObject from lib-LinkedInScraper
+	 * but it will return if possible skillsToRet count skills (default 6)
+	 */
+
+	ret = {
+		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
+		description: (hasGeneral) ? (infos.general.description || null) : null,
+		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
+		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
+		lastName: (hasGeneral) ? (infos.general.lastName || null) : null,
+		fullName: (hasGeneral) ? (infos.general.fullName || null) : null,
+		subscribers: (hasGeneral) ? (infos.general.subscribers || null) : null,
+		company: job.companyName || null,
+		companyUrl: job.companyUrl || null,
+		jobTitle: job.jobTitle || null,
+		jobDescription: job.description || null,
+		location: job.location || null,
+		mail: (hasDetails) ? (infos.details.mail || null) : null,
+		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
+		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
+		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
+	}
 
 	if (infos.skills.length > 0) {
 		for (let i = 0; i < skillsToRet; i++) {
 			if (i > infos.skills.length) {
 				break
 			}
-			csv[`skill${i+1}`] = infos.skills[i].name
-			csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+			ret[`skill${i+1}`] = infos.skills[i].name
+			ret[`endorsement${i+1}`] = infos.skills[i].endorsements
 		}
 	}
 
-	return csv
+	return ret
+}
+
+const getFieldsFromArray = (arr) => {
+	const fields = []
+	for (const line of arr) {
+		if (line && (typeof(line) == 'object')) {
+			for (const field of Object.keys(line)) {
+				if (fields.indexOf(field) < 0) {
+					fields.push(field)
+				}
+			}
+		}
+	}
+	return fields
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -143,10 +186,10 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
 			 * the lib still return the "basic" csv output
 			 */
-			const finalCsv = addSkills(infos.json, infos.csv)
-			finalCsv.baseUrl = url
-			finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
-			db.push(finalCsv)
+			const craftedCsv = _craftCsv(infos.json)
+			craftedCsv.baseUrl = url
+			craftedCsv.profileId = linkedIn.getUsername(await tab.getUrl())
+			db.push(craftedCsv)
 			result.push(infos.json)
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
@@ -163,7 +206,7 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResult(db, DB_NAME) // deprecated call :(
+		await utils.saveResult(db, DB_NAME, getFieldsFromArray(db)) // deprecated call :(
 	}
 })()
 .catch(err => {

@@ -2,7 +2,7 @@
 	"slug": "linkedin-search-export",
 	"description": "Collects LinkedIn search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
-	"hidden": true,
+	"hidden": false,
 	"gradientBegin": "#057212",
 	"gradientEnd": "#0099F7",
 	"argumentHelpAnchor": "#section_argument",

@@ -410,7 +410,7 @@ class LinkedInScraper {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
-		if (typeof(hunterApiKey) == "string") {
+		if ((typeof(hunterApiKey) == "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 		}

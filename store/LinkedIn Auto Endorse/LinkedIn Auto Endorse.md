@@ -76,28 +76,20 @@ This will launch the bot and, if you didn't already change the spreadsheet URL, 
 
 # ⚙️️Repetition setup ⚙️
 
-Now that your bot is ready, you just have to customize it to make it work repetitively.
+Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the bot is launched, it will endorse the first 3 skills of up to 10 profiles and stop.
+Every time the API is launched, it will endorse the first 3 skills of up to 10 profiles and stop.
 
-Simply hit the “Settings” button to define when your bot is launched.
+To do so, simply hit the “Settings” button to define when your API is launched.
 
-<center>![](https://phantombuster.imgix.net/api-store/LinkedIn_Network_Booster/lnb_settings.JPG)</center>
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
-Follow this GIF example to run it 20 times per day:
+Then, select a frequency:
 
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/repetitive.gif)</center>
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
-_The bot will be executed only if the time corresponds to all the criteria._  
-
-Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.  
-
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/welcome+nerd+zone.gif)</center>
-
-<center>---</center>
+Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
 
 There you go, you only have to wait for endorsement to be made for you!
 
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>

@@ -81,19 +81,12 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 - To do so, simply hit the “Settings” button to define when your bot is launched.
 
 
-- Follow this GIF example to run it twice a day __(at 9am 🕘 & 1pm 🕐)__:
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Accept_Invitations/Sep-19-2017+11-39-02.gif)</center>
+Then, select a frequency:
 
-<center>*The bot will be executed only if the time corresponds to all the criteria.*</center>
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
-
-<center>---</center>
-
-
-
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
 
 

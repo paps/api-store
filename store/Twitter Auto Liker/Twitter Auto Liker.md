@@ -68,7 +68,15 @@ Twitter will limit this automation over time (if you force this, you can be bann
 
 That is why this API will only like up to **10 tweets per launch**. To like many tweets, simply configure repetitive launches. All your follow requests will be spread out over days or weeks if necessary.
 
-To do so, go into "Settings" > "Launch" > "Repetitvely". A good setting is something like "Once per working hour".
+To do so, simply hit the “Settings” button to define when your API is launched.
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
@@ -83,6 +91,6 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_queries_** which must be an array of Twitter handles or Twitter profile URLs (strings). Additionally, you should set **_noDatabase_** to `true` so that the API does not maintain a state on its own (so that you can re-launch the same query to unlike tweets for example).
 
 It should look just like this :
-`{ "queries": ["phbuster", "paps__"], "noDatabase": true }`
+`{ "queries": ["phbuster", "paps__"], "noDatabase": true, "sessionCookie": "xxxx" }`
 
 Please note that launching the API on the same profiles multiple times will like/unlike their tweets.

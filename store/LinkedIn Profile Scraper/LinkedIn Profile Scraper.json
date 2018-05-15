@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-profile-scraper",
-	"description": "Collects valuable information you need from LinkedIn profiles",
+	"description": "Collects valuable information you need from LinkedIn profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
 	"hidden": false,
 	"updated": true,
@@ -61,11 +61,11 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional)",
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
 					"numberOfAddsPerLaunch": {
-						"label": "Number of profiles to visit per launch (25 max.)",
+						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					}

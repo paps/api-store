@@ -67,7 +67,15 @@ Twitter will not let anyone follow many people over a short period of time (if y
 
 That is why this API will only send up to **50 follow requests per launch**. To add many people, simply configure repetitive launches. All your follow requests will be spread out over days or weeks if necessary.
 
-To do so, go into "Settings" > "Launch" > "Repetitvely". A good setting is something like "Once per working hour".
+To do so, simply hit the “Settings” button to define when your API is launched.
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!

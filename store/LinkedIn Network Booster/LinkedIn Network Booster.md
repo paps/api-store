@@ -94,37 +94,52 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-This will launch the bot and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn connection requests. 
+This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn connection requests.
 
 # ⚙️️Repetition setup ⚙️
 
-Now that your bot is ready, you just have to customize it to make it work repetitively.
+Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the bot is launched, it will send 10 connection requests and stop.
+Every time the API is launched, it will send 10 connection requests and stop. (You can lower this value in the API's configuration.)
 
-To do so, simply hit the “Settings” button to define when your bot is launched.
+To do so, simply hit the “Settings” button to define when your API is launched.
 
-<center>![](https://phantombuster.imgix.net/api-store/LinkedIn_Network_Booster/lnb_settings.JPG)</center>
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
-Follow this GIF example to run it 20 times per day:
+Then, select a frequency:
 
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/repetitive.gif)</center>
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
-_The bot will be executed only if the time corresponds to all the criteria._  
-
-Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.  
+Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
 <center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/welcome+nerd+zone.gif)</center>
 
 
-
 There you go, you only have to wait for connections to be made for you!
+
+
+# Email discovery (optional) { email_discovery }
+
+**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+
+To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+
+<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
+
+Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
+
+Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
+
+**Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your visits to **40 profiles per day**.
+
 
 
 # Limits
 
 Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf. Like *Uncle Ben* once said, *"With great power comes great responsibility."*
 
-We have noticed that adding more than 80 connections per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 6 launches per day of 10 connection requests for this reason.
+We have noticed that adding more than 80 connections per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 8 launches per day of 10 connection requests for this reason.
+
+**Note:** When [email discovery](#section_email_discovery) is enabled, we recommend you divide this limit by 2 (that is, **40 profiles per day**).
 
 Having a LinkedIn Premium subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
