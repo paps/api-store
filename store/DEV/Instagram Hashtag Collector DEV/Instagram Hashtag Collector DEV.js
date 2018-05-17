@@ -39,19 +39,6 @@ const SCRAPING_SELECTORS = {
 	location: "header div:last-of-type > div:last-of-type a:last-of-type" // Location if present in the post
 }
 
-const getPostUrl = (arg, cb) => {
-	let scrapedUrl
-
-	if (document.querySelector(".coreSpriteHeartOpen")) {
-		scrapedUrl = document.querySelector(".coreSpriteHeartOpen").parentNode.href
-		scrapedUrl = new URL(scrapedUrl)
-		scrapedUrl = `${scrapedUrl.protocol}//${scrapedUrl.hostname}${scrapedUrl.pathname}`
-	} else {
-		scrapedUrl = ""
-	}
-	cb(null, scrapedUrl)
-}
-
 /**
  * @async
  * @description Function which scrape publications from the result page
@@ -62,6 +49,7 @@ const getPostUrl = (arg, cb) => {
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
 const loadPosts = async (tab, arr, count, hashtag) => {
+	const scrapingTab = await nick.newTab()
 	const selectors = {
 		MOST_RECENT: "article > div:not([class]) > div > div a img",
 		MOST_POPULAR: "article div:not([class]) > div > div a img",
@@ -84,10 +72,10 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		}
 		let currentPost = {}
 		try {
-			currentPost.url = await tab.evaluate(getPostUrl)
-			// currentPost = await tab.evaluate(scrapePublication, { selectors: SCRAPING_SELECTORS })
+			await scrapingTab.open(await tab.getUrl())
+			currentPost = await instagram.scrapePost(scrapingTab)
 			currentPost.hashtag = hashtag
-			utils.log(`${currentPost.url} found`, "done")
+			utils.log(`${currentPost.postUrl} scraped`, "done")
 			arr.push(currentPost)
 		} catch (err) {
 			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
@@ -134,6 +122,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 	if (await tab.isVisible(selectors.OVERLAY)) {
 		await tab.click(selectors.OVERLAY)
 	}
+	await scrapingTab.close()
 	return true
 }
 
@@ -207,7 +196,7 @@ const forgeCsvFromJSON = data => {
  * @async
  * @param {Tab} tab -- Nikcjs tab with an Instagram session
  * @param {String} searchTerm -- Input given by the user
- * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
+ * @return {Promise<String>|<Promise<undefined>} If found the url from search result otherwise nothing
  */
 const searchLocation = async (tab, searchTerm) => {
 	if (await tab.isPresent(".coreSpriteSearchClear")) {
@@ -277,11 +266,9 @@ const searchLocation = async (tab, searchTerm) => {
 
 	if (typeof sessionCookie === "string") {
 		await instagram.login(tab, sessionCookie)
-		// await instagramConnect(tab, sessionCookie)
 	}
 
 	let results = []
-	let scrapingResults = []
 	for (const hashtag of hashtags) {
 		/**
 		 * NOTE: Simple process to check if we need to search an URL for hashtags or locations
@@ -313,30 +300,10 @@ const searchLocation = async (tab, searchTerm) => {
 		if (!hasTimeLeft) {
 			break
 		}
-
-		for (const one of results) {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
-			try {
-				await tab.open(one.url)
-				let scrapedData = await instagram.scrapePost(tab)
-				scrapedData.postUrl = one.url
-				scrapedData.hashtag = one.hashtag
-				utils.log(`${scrapedData.postUrl} scraped`, "done")
-				scrapingResults.push(scrapedData)
-			} catch (err) {
-				utils.log(`Cannot scrape ${one.url}`, "info")
-				continue
-			}
-		}
-
 	}
-	const csvResult = scrapingResults
-	utils.log(`${scrapingResults.length} posts scraped`, "done")
-	await utils.saveResults(scrapingResults, csvResult, csvName)
+	const csvResult = results
+	utils.log(`${results.length} posts scraped`, "done")
+	await utils.saveResults(results, csvResult, csvName)
 	nick.exit()
 })()
 	.catch(err => {
