@@ -85,7 +85,11 @@ class Instagram {
 				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
 			} else {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
-					data.likes = baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector).length
+					data.likes =
+						Array
+						.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
+						.filter(el => el.href !== `${document.location.href}#`)
+						.length
 				} else {
 					data.likes = 0
 				}

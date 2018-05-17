@@ -78,7 +78,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`${currentPost.postUrl} scraped`, "done")
 			arr.push(currentPost)
 		} catch (err) {
-			utils.log(`Error while loading: ${await tab.getUrl()}`, "warning")
+			utils.log(`Error while scraping: ${await tab.getUrl()}`, "warning")
 		}
 		/**
 		 * NOTE: If the selector used for clicking to a new post isn't present
