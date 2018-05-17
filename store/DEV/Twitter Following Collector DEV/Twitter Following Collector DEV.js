@@ -21,8 +21,10 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 // }
 
+const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
+
 const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name").textContent.trim())
+	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
 
 const twitterConnect = async (tab, sessionCookie) => {
@@ -68,10 +70,11 @@ const scrapeFollowers = (arg, callback) => {
 }
 
 const getTwitterFollowers = async (tab, twitterHandle) => {
-	utils.log(`Getting accounts followed by ${twitterHandle}`, "loading")
-	if (twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
 	}
+	twitterHandle = removeNonPrintableChars(twitterHandle)
+	utils.log(`Getting accounts followed by ${twitterHandle}`, "loading")
 	await tab.open(`https://twitter.com/${twitterHandle}/following`)
 	await tab.waitUntilVisible("div.GridTimeline")
 	let loop = true
