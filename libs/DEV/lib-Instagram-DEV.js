@@ -65,7 +65,7 @@ class Instagram {
 			throw `Post at: ${await tab.getUrl()} seems to be removed`
 		}
 
-		const scrapedData = await tab.evaluate((arg, cb) => {
+		let scrapedData = await tab.evaluate((arg, cb) => {
 			let data = {}
 
 			const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
@@ -81,11 +81,15 @@ class Instagram {
 			}
 
 			if (baseSelector[1].querySelector(arg.selectors.likeSelector)) {
-				// HACK: We only need digits frol the scraped tex
+				// HACK: We only need digits frol the scraped text
 				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
 			} else {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
-					data.likes = baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector).length
+					data.likes =
+						Array
+						.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
+						.filter(el => el.href !== `${document.location.href}#`)
+						.length
 				} else {
 					data.likes = 0
 				}
@@ -110,7 +114,7 @@ class Instagram {
 
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
-
+		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}
 }
