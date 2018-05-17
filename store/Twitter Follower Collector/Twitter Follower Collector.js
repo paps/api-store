@@ -22,6 +22,8 @@ const utils = new StoreUtilities(nick, buster)
 const MAX_FOLLOWERS_PER_ACCOUNT = -1
 // }
 
+const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
+
 const scrapeUserName = (arg, callback) => {
 	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
@@ -70,8 +72,11 @@ const scrapeFollowers = (arg, callback) => {
 
 const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
 	utils.log(`Getting followers for ${twitterHandle}`, "loading")
-	if (twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
+	// HACK: the regex should handle @xxx
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
+		// HACK: removing non printables characters from the extracted handle
+		twitterHandle = removeNonPrintableChars(twitterHandle)
 	}
 	await tab.open(`https://twitter.com/${twitterHandle}/followers`)
 	await tab.waitUntilVisible("div.GridTimeline", 10000)
@@ -142,6 +147,8 @@ const jsonToCsv = json => {
 	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
 		twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
 	}
+	// HACK: removing non printables characters if the input doesn't reprsent a URL
+	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let csvResult = []
 	const jsonResult = []
 	for (const twitterUrl of twitterUrls) {

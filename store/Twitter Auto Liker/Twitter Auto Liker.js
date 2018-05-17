@@ -26,6 +26,18 @@ const DEFAULT_LIKE_COUNT = 1
 const DEFAULT_PROFILE_LAUNCH = 1
 // }
 
+const getValidUrlOrHandle = str => {
+	const matchRes = str.match(/twitter\.com\/(@?[A-z0-9_]+)/)
+	if (matchRes) {
+		let handle = matchRes[1].replace(/[^a-zA-Z0-9_@]+/g, "")
+		return `https://twitter.com/${handle}`
+	} else {
+		return str.replace(/[^a-zA-Z0-9_@]+/g, "")
+	}
+}
+
+
+
 const getDb = async (filename = DB_NAME) => {
 	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
 		"X-Phantombuster-Key-1": buster.apiKey}
@@ -270,23 +282,21 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 
 	let db = noDatabase ? [] : await getDb()
 
-	if (typeof queries === "string") {
-		queries = [ { url: (isUrl(queries)) ? queries : `https://twitter.com/${queries}`, query: queries } ]
-	} else if (Array.isArray(queries)) {
-
-		queries = queries.map(el => {
-			return { url: isUrl(el) ? el : `https://twitter.com/${el}`, query: el }
-		})
-	}
-
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			let tmp = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-			queries = tmp.map(el => { return { url: isUrl(el) ? el : `https://twitter.com/${el}`, query: el } })
-		} else if (typeof spreadsheetUrl === "string") {
-			queries = [ { url: isUrl(spreadsheetUrl) ? spreadsheetUrl : `https://twitter.com/${spreadsheetUrl}`, query: spreadsheetUrl } ]
+			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		} else {
+			queries = spreadsheetUrl
 		}
 	}
+
+	if (typeof queries === "string") {
+		queries = [ queries ]
+	}
+	queries = queries.map(el => {
+		return { url: getValidUrlOrHandle(el), query: getValidUrlOrHandle(el) }
+	})
+
 
 	if (!numberOfProfilesPerLaunch) {
 		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH

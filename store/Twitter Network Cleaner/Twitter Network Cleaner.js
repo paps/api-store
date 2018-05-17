@@ -21,6 +21,8 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 // }
 
+const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
+
 const scrapeUserName = (arg, callback) => {
 	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
 }
@@ -96,9 +98,10 @@ const getTwitterFollowers = async (tab, twitterUrl) => {
 }
 
 const unfollow = async (tab, twitterHandle) => {
-	if (twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/([A-z0-9\_]+)/)[1]
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
 	}
+	twitterHandle = removeNonPrintableChars(twitterHandle)
 
 	utils.log(`Unfollowing ${twitterHandle}...`, "loading")
 
