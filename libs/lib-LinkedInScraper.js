@@ -370,7 +370,7 @@ const craftCsvObject = infos => {
 		skill1: (infos.skills && infos.skills[0]) ? infos.skills[0].name : null,
 		skill2: (infos.skills && infos.skills[1]) ? infos.skills[1].name : null,
 		skill3: (infos.skills && infos.skills[2]) ? infos.skills[2].name : null,
-		allSkills: (infos.allSkills) ? infos.allSkills : ""
+		allSkills: (infos.allSkills) ? infos.allSkills : null
 	}
 }
 

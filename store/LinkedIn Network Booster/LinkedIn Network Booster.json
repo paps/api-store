@@ -53,7 +53,7 @@
 						]
 					},
 					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional)",
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					}
 				}
