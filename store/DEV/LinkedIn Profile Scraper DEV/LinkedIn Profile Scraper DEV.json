@@ -115,6 +115,15 @@
 						}
 					}
 				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
 			}
 		]
 	}

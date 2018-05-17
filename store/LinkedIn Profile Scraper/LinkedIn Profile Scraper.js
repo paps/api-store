@@ -125,6 +125,10 @@ const getFieldsFromArray = (arr) => {
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	} else {
+		if (typeof profileUrls === "string") {
+			urls = [profileUrls]
+		}
 	}
 
 	if (!numberOfAddsPerLaunch) {
