@@ -367,6 +367,7 @@ const craftCsvObject = infos => {
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
+		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
 		skill1: (infos.skills && infos.skills[0]) ? infos.skills[0].name : null,
 		skill2: (infos.skills && infos.skills[1]) ? infos.skills[1].name : null,
 		skill3: (infos.skills && infos.skills[2]) ? infos.skills[2].name : null,
@@ -471,9 +472,11 @@ class LinkedInScraper {
 				const hunterSearch = await this.hunter.find(hunterPayload)
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
 				result.details.mailFromHunter = hunterSearch.email
+				result.details.companyWebsite = companyUrl || ""
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
 				result.details.mailFromHunter = ""
+				result.details.companyWebsite = ""
 			}
 		}
 		csvResult = craftCsvObject(result)
