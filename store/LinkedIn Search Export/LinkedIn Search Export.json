@@ -39,7 +39,8 @@
 					"search": {
 						"helpers": [
 							"Enter either a text search <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
-							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available",
+							"<b>OR</b> make an advanced search on LinkedIn and paste the URL you're sent to here"
 						],
 						"label": "LinkedIn search terms <a href=\"/api-store/3149/linkedin-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
 						"placeholder": "iOS developer"

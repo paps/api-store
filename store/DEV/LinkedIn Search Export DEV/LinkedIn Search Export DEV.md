@@ -71,7 +71,9 @@ In the _search_ text field, simply enter the terms you want to search on the Lin
 
 You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) containing a list of searches to run. It's that easy! (make sure your file is publicly accessible)
 
-More advanced search queries are also possible using keywords allowed by LinkedIn: OR & AND (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even _school:_, _company:_... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>)
+**More advanced search queries are also possible** using keywords allowed by LinkedIn: `OR` & `AND` (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even `school:`, `company:`... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>).
+
+**Even more advanced:** You can also paste into the _search_ field a LinkedIn search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field.
 
 ## 6. Which circles 💫?
 
