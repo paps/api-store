@@ -1,4 +1,8 @@
-# Export info from LinkedIn profiles
+<center>**New! This API now supports [email discovery](#section_email_discovery).**</center>
+
+<hr />
+
+# Extract info from LinkedIn profiles
 
 When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn profiles you're targeting in a CSV file.
 

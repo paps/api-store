@@ -1,3 +1,7 @@
+<center>**New! This API now supports [email discovery](#section_email_discovery).**</center>
+
+<hr />
+
 # You have to grow your LinkedIn network for 3 reasons
 1. LinkedIn is a highly competitive network. **Get higher in search results** by increasing your 1st and 2nd degree connection network.
 
