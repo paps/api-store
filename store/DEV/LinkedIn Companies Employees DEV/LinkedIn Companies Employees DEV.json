@@ -43,7 +43,7 @@
 					"numberOfCompanyPerLaunch": {
 						"label": "Number of companies to scrape per launch",
 						"placeholder": 10,
-						"inputType": 10
+						"inputType": "number"
 					}
 				}
 			}
