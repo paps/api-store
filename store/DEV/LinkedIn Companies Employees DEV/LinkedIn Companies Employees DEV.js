@@ -228,6 +228,8 @@ const getIdFromUrl = async (url, tab) => {
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not scrape company ${companyUrl} because ${error}`, "error")
+			// Saving bad entries in order to not retry on next launch
+			result.push({ url: companyUrl, employees: [{ url: "none", name: "none", job: "none", location: "none", currentJob: "none", companyUrl: "none" }] })
 		}
 	}
 	db = db.concat(jsonToCsv(result))
