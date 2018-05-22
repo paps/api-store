@@ -159,6 +159,14 @@ const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url, 10))) {
 		return parseInt(url, 10)
 	} else {
+
+		/**
+		 * Redirecting /sales/company/xxx URLs to /company/xxx URLs
+		 */
+		if (url.match(/\/sales\/company/)) {
+			url = url.replace(/\/sales\/company/, "/company")
+		}
+
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			const [httpCode, httpStatus] = await tab.open(url)
 			if (httpCode === 404) {

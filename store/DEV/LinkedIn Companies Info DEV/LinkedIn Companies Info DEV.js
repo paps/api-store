@@ -159,6 +159,10 @@ const isLinkedUrl = target => {
 					}
 				} else {
 					link = company
+					// Redirecting LinkedIn sales company URLs to regular LinkedIn company URLs
+					if (link.match(/\/sales\/company/)) {
+						link = link.replace(/\/sales\/company/, "/company")
+					}
 				}
 				result.push(await getCompanyInfo(tab, link))
 				utils.log(`Got linkedin infos for ${company}`, "done")
