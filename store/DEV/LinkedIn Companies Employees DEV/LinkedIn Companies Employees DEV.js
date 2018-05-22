@@ -3,6 +3,10 @@
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
+const fs = require("fs")
+const needle = require("needle")
+const Papa = require("papaparse")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -21,7 +25,55 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+const DB_NAME = "result.csv"
 // }
+
+// Get the file containing the data for this bot
+const getDb = async () => {
+	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
+		"X-Phantombuster-Key-1": buster.apiKey
+	}})
+	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
+		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
+		try {
+			await buster.download(url, DB_NAME)
+			const file = fs.readFileSync(DB_NAME, "UTF-8")
+			const data = Papa.parse(file, {header: true}).data
+			return data
+		} catch (error) {
+			return []
+		}
+	} else {
+		throw "Could not load database of previously added profiles."
+	}
+}
+
+const filterUrls = (url, db) => {
+	for (const one of db) {
+		if (url === one.companyUrl) {
+			return false
+		}
+	}
+	return true
+}
+
+const getUrlsToAdd = (data, numberOfCompanyPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	let i = 0
+	const maxLength = data.length
+	const urls = []
+	if (maxLength === 0) {
+		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		nick.exit()
+	}
+	while (i < numberOfCompanyPerLaunch && i < maxLength) {
+		const row = Math.floor(Math.random() * data.length)
+		urls.push(data[row].trim())
+		data.splice(row, 1)
+		i++
+	}
+	return urls
+}
 
 const jsonToCsv = json => {
 	const csv = []
@@ -130,8 +182,9 @@ const getIdFromUrl = async (url, tab) => {
 }
 
 ;(async () => {
+	let db = await getDb()
 	const tab = await nick.newTab()
-	let [sessionCookie, urls, numberOfPagePerCompany, waitTime] = utils.checkArguments([
+	let [sessionCookie, urls, numberOfPagePerCompany, waitTime, numberOfCompanyPerLaunch] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ many: [
 			{ name: "companiesUrl", type: "object", length: 1 },
@@ -139,10 +192,19 @@ const getIdFromUrl = async (url, tab) => {
 		] },
 		{ name: "numberOfPagePerCompany", type: "number", default: 10 },
 		{ name: "waitTime", type: "number", default: 2000 },
+		{ name: "numberOfCompanyPerLaunch", type: "number", default: 0 },
 	])
+
 	if (typeof urls === "string") {
 		urls = await utils.getDataFromCsv(urls)
 	}
+
+	if(numberOfCompanyPerLaunch === 0) {
+		numberOfCompanyPerLaunch = urls.length
+	}
+
+	urls = getUrlsToAdd(urls.filter(str => filterUrls(str, db)), numberOfCompanyPerLaunch)
+
 	await linkedIn.login(tab, sessionCookie)
 	let result = []
 	for (const companyUrl of urls) {
@@ -160,9 +222,11 @@ const getIdFromUrl = async (url, tab) => {
 			utils.log(`Could not scrape company ${companyUrl} because ${error}`, "error")
 		}
 	}
-	const csvResult = jsonToCsv(result)
+	db = db.concat(jsonToCsv(result))
+	const csvResult = db
 	await linkedIn.saveCookie()
-	await utils.saveResults(result, csvResult, "result", ["url", "name", "job", "location", "currentJob", "companyUrl"])
+	await utils.saveResult(csvResult)
+	// await utils.saveResults(result, csvResult, "result", ["url", "name", "job", "location", "currentJob", "companyUrl"])
 	nick.exit()
 })()
 	.catch(err => {
