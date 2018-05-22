@@ -39,6 +39,11 @@
 						"placeholder": 10,
 						"inputType": "number",
 						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					},
+					"numberOfCompanyPerLaunch": {
+						"label": "Number of companies to scrape per launch",
+						"placeholder": 10,
+						"inputType": "number"
 					}
 				}
 			}
@@ -59,6 +64,10 @@
 			"numberOfPagePerCompany": {
 				"type": "number",
 				"required": true,
+				"minimum": 1
+			},
+			"numberOfCompanyPerLaunch": {
+				"type": "number",
 				"minimum": 1
 			}
 		}

@@ -44,7 +44,7 @@ const getDb = async () => {
 			return []
 		}
 	} else {
-		throw "Could not load database of previously added profiles."
+		throw "Could not load database of previously scraped companies."
 	}
 }
 
@@ -63,7 +63,7 @@ const getUrlsToAdd = (data, numberOfCompanyPerLaunch) => {
 	const maxLength = data.length
 	const urls = []
 	if (maxLength === 0) {
-		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		utils.log("Spreadsheet is empty or all companies from this sheet are already scraped.", "warning")
 		nick.exit()
 	}
 	while (i < numberOfCompanyPerLaunch && i < maxLength) {
@@ -137,11 +137,10 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
-				utils.log(hasReachedLimit, "warning")
+				utils.log(hasReachedLimit, "info")
 				break
-			} else {
-				utils.log(`Got employees for page ${i}`, "done")
 			}
+			utils.log(`Got employees for page ${i}`, "done")
 		}
 	}
 	utils.log(`All pages with employees scrapped for company with id: ${id}`, "done")
@@ -163,8 +162,8 @@ const getIdFromUrl = async (url, tab) => {
 		/**
 		 * Redirecting /sales/company/xxx URLs to /company/xxx URLs
 		 */
-		if (url.match(/\/sales\/company/)) {
-			url = url.replace(/\/sales\/company/, "/company")
+		if (url.indexOf("/sales/company/") > -1) {
+			url = url.replace("/sales/company/", "/company/")
 		}
 
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){

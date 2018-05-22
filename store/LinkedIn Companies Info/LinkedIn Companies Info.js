@@ -3,6 +3,8 @@
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
+const { URL } = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -107,6 +109,15 @@ const getCompanyInfo = async (tab, link) => {
 	return (await tab.evaluate(scrapeCompanyInfo, {link}))
 }
 
+const isLinkedUrl = target => {
+	try {
+		let urlRepresentation = new URL(target)
+		return urlRepresentation.hostname.indexOf("linkedin.com") > -1
+	} catch (err) {
+		return false
+	}
+}
+
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
@@ -124,11 +135,7 @@ const getCompanyInfo = async (tab, link) => {
 	const result = []
 	for (const company of companies) {
 		if (company.length > 0) {
-			if (company.indexOf("www.linkedin.com") >= 0) {
-				fullUrl = true
-			} else {
-				fullUrl = false
-			}
+			fullUrl = isLinkedUrl(company)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				utils.log(`Stopped getting companies infos: ${timeLeft.message}`, "warning")
@@ -152,6 +159,10 @@ const getCompanyInfo = async (tab, link) => {
 					}
 				} else {
 					link = company
+					// Redirecting LinkedIn sales company URLs to regular LinkedIn company URLs
+					if (link.match(/\/sales\/company/)) {
+						link = link.replace(/\/sales\/company/, "/company")
+					}
 				}
 				result.push(await getCompanyInfo(tab, link))
 				utils.log(`Got linkedin infos for ${company}`, "done")
