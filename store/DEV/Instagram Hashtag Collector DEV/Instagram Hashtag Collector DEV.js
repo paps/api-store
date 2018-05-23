@@ -25,20 +25,6 @@ const instagram = new Instagram(nick, buster, utils)
 
 // }
 
-const SCRAPING_SELECTORS = {
-	baseSelector: "div[role=dialog]",
-	profileSelector: "header a.notranslate",
-	likeSelector: "section div span > span",
-	yetAnotherLikeSelector: "section div a span", // NOTE: sometime the selector is not the same, so we need to handle another selector for the likes count
-	likeAlternativeSelector: "section:nth-child(2) a:not([href='#'])",
-	pubDateSelector: "time",
-	descriptionSelector: "ul > li:first-child span",
-	videoSelector: "article div:not([class]) video",
-	postImage: "article div:not([class]) img", // To scrape the post image, we need to specify article an the content div
-	profileImage: "article img",
-	location: "header div:last-of-type > div:last-of-type a:last-of-type" // Location if present in the post
-}
-
 /**
  * @async
  * @description Function which scrape publications from the result page
@@ -51,11 +37,11 @@ const SCRAPING_SELECTORS = {
 const loadPosts = async (tab, arr, count, hashtag) => {
 	const scrapingTab = await nick.newTab()
 	const selectors = {
+		OVERLAY: "div[role=dialog]",
+		PUB_DATE_SELECTOR: "div[role=dialog] time",
 		MOST_RECENT: "article > div:not([class]) > div > div a img",
 		MOST_POPULAR: "article div:not([class]) > div > div a img",
-		OVERLAY:  "div[role=dialog]",
 		NEXT_POST: "div[role=dialog] a.coreSpriteRightPaginationArrow",
-		IMG_SELECTOR: "div[role=dialog] img"
 	}
 	let i = 0
 	try {
@@ -97,18 +83,18 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			await tab.evaluate((arg, cb) => {
 				const startTime = Date.now()
 				const waitForNewLoadedPost = () => {
-					const time = document.querySelector(`${arg.selectors.baseSelector} ${arg.selectors.pubDateSelector}`)
+					const time = document.querySelector(arg.selectors.PUB_DATE_SELECTOR)
 					if ((!time) || (time.parentElement.href === arg.previousPost)) {
 						if ((Date.now() - startTime) >= 30000) {
 							cb("New post cannot be loaded after 30s")
 						}
-						setTimeout(waitForNewLoadedPost, 100)
+						setTimeout(waitForNewLoadedPost, 200)
 					} else {
 						cb(null)
 					}
 				}
 				waitForNewLoadedPost()
-			}, { selectors: SCRAPING_SELECTORS, previousPost: currentPost.postUrl })
+			}, { selectors, previousPost: currentPost.postUrl })
 		} catch(err) {
 			utils.log(`Error occured while scrapping: ${err.message || err}`, "error")
 			return false
@@ -235,13 +221,10 @@ const searchLocation = async (tab, searchTerm) => {
 	const MAX_POSTS = 1000
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
-	if (!sessionCookie) {
-		utils.log("The API needs a session cookie to navigate on instagram.com", "error")
-		nick.exit(1)
-	}
-
 	if (!maxPosts) {
 		maxPosts = MAX_POSTS // by default we'll scrape 1000 posts
+	} else if (maxPosts > MAX_POSTS) {
+		maxPosts = MAX_POSTS
 	}
 
 	if (!csvName) {
@@ -260,13 +243,7 @@ const searchLocation = async (tab, searchTerm) => {
 		}
 	}
 
-	if (maxPosts > MAX_POSTS) {
-		maxPosts = MAX_POSTS
-	}
-
-	if (typeof sessionCookie === "string") {
-		await instagram.login(tab, sessionCookie)
-	}
+	await instagram.login(tab, sessionCookie)
 
 	let results = []
 	for (const hashtag of hashtags) {

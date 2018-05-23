@@ -1,4 +1,5 @@
 class Instagram {
+
 	constructor(nick, buster, utils) {
 		this.nick = nick
 		this.buster = buster
@@ -13,10 +14,9 @@ class Instagram {
 	 */
 	async login(tab, cookie) {
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
-			this.utils.log("Invalid Instagram session cookie. Did you specify one ?", "error")
+			this.utils.log("Invalid Instagram session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
 		}
-		
 		this.utils.log("Connecting to instagram...", "loading")
 		await this.nick.setCookie({
 			name: "sessionid",
@@ -27,19 +27,19 @@ class Instagram {
 		})
 		await tab.open("https://instagram.com")
 		try {
-			await tab.waitUntilVisible("main")
+			await tab.waitUntilVisible("main", 15000)
 			const name = await tab.evaluate((arg, cb) => {
 				const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
 		} catch (error) {
-			throw "Could not connect to Instagram with the given session cookie."
+			throw "Could not connect to Instagram with this session cookie."
 		}
 	}
 
 	/**
-	 * @description 
+	 * @description
 	 * @param {*} tab - Nickjs Tab with a Instagram post opened
 	 * @return {Promise<Object>} Scraped post
 	 * @throws if the page doesn't represent a Instagram post or if there was an error during the scraping process
@@ -49,8 +49,8 @@ class Instagram {
 		const SCRAPING_SELECTORS = {
 			baseSelector: "article header ~ div",
 			profileSelector: "header a.notranslate",
-			likeSelector: "section > div span", // Use it when if the value represent a number
-			alternativeLikeSelector: "section > div > a", // Use it when there are less than 10 likes (counting links)
+			likeSelector: "section > div span", // Used when the value represents a number
+			alternativeLikeSelector: "section > div > a", // Used when there is less than 10 likes (counting links)
 			pubDateSelector: "time",
 			descriptionSelector: "ul > li:first-child span",
 			videoSelector: "article video",
@@ -62,7 +62,7 @@ class Instagram {
 		try {
 			await tab.waitUntilVisible("article", 7500)
 		} catch (err) {
-			throw `Post at: ${await tab.getUrl()} seems to be removed`
+			throw `Could not load post ${await tab.getUrl()}, was it removed?`
 		}
 
 		let scrapedData = await tab.evaluate((arg, cb) => {
@@ -81,7 +81,7 @@ class Instagram {
 			}
 
 			if (baseSelector[1].querySelector(arg.selectors.likeSelector)) {
-				// HACK: We only need digits frol the scraped text
+				// we only need digits from the scraped text
 				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
 			} else {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
