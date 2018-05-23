@@ -10,7 +10,8 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "#soloparking"
+		"spreadsheetUrl": "#soloparking",
+		"sessionCookie": "sessionid"
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",
@@ -19,7 +20,9 @@
 		"date": "Post publication date",
 		"likes": "Number of likes the post received or video views in case of a video post",
 		"location": "Where the photo was taken, if specified",
-		"hashtag": "Hashtag (or location) that lead to the post"
+		"hashtag": "Hashtag (or location) that lead to the post",
+		"postVideo": "Link to raw video file, if available",
+		"videoThumbnail": "Link to raw video thumbnail, if available"
 	},
 	"argumentForm": {
 		"enabled": true,

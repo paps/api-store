@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -19,7 +19,8 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const MAX_POSTS = 1500
+const Instagram = require("./lib-Instagram")
+const instagram = new Instagram(nick, buster, utils)
 
 const SELECTORS = {
 	LAST_PUB: "article header ~ h2 ~ div:not([class])",
@@ -29,34 +30,6 @@ const SELECTORS = {
 	POSTS: "article > div:not([class]) > div > div"
 }
 // }
-
-/**
- * @description Function used to log as an Instagram user
- * @param {Object} tab - Nickjs tab
- * @param {String} sessionCookie - sessionid Instagram cookie
- * @throws If it were an error during the login process
- */
-const instagramConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to instagram...", "loading")
-	await nick.setCookie({
-		name: "sessionid",
-		value: sessionCookie,
-		domain: "www.instagram.com",
-		secure: true,
-		httpOnly: true
-	})
-	await tab.open("https://instagram.com")
-	try {
-		await tab.waitUntilVisible("main")
-		const name = await tab.evaluate((arg, cb) => {
-			const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
-			cb(null, url.pathname.replace(/\//g, ""))
-		})
-		utils.log(`Connected as ${name}`, "done")
-	} catch (error) {
-		throw "Could not connect to Instagram with that sessionCookie."
-	}
-}
 
 /**
  * @description Tiny function used to check if a given string represents an URL
@@ -159,7 +132,7 @@ const waitUntilNewDivs = (arg, cb) => {
  * @param {Fucntion} cb - Callback function used to return to script
  * @return {Promise<Number>} Count of posts elements into the DOM
  */
-const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll(arg.selector).length) 
+const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll(arg.selector).length)
 
 /**
  * @async
@@ -186,9 +159,9 @@ const loadPosts = async (tab, arr, count, term) => {
 		}
 
 		buster.progressHint(scrapeCount / count, term)
-		
+
 		let res = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.LAST_PUB })
-		
+
 		res = res.filter(el => removeDuplicate(el, arr))
 		arr.push(...res)
 		scrapeCount += res.length
@@ -232,41 +205,6 @@ const loadPosts = async (tab, arr, count, term) => {
 	}
 	buster.progressHint(1, term) // Not really usefull, but it might be a good feedback to let know the user that the current scraping is over
 	return true
-}
-
-/**
- * @async
- * @param {Tab} tab -- Nikcjs tab with an Instagram session
- * @param {String} searchTerm -- Input given by the user
- * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
- */
-const searchLocation = async (tab, searchTerm) => {
-	if (await tab.isPresent(".coreSpriteSearchClear")) {
-		await tab.click(".coreSpriteSearchClear")
-		await tab.wait(1000)
-	}
-
-	/**
-	 * Fill the search input
-	 */
-	await tab.sendKeys("nav input", searchTerm, {
-		reset: true,
-		keepFocus: true
-	})
-	/**
-	 * NOTE: Waiting Instagram results
-	 */
-	await tab.waitUntilVisible(".coreSpriteSearchClear")
-	await tab.wait(1000)
-	const found = await tab.evaluate((arg, cb) => {
-		const urls =
-					Array
-						.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
-						.map(el => el.href)
-						.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
-		cb(null, urls.shift())
-	})
-	return found
 }
 
 /**
@@ -323,19 +261,9 @@ const filterResults = (rawResults) => {
  */
 const craftCsvObject = results => {
 	const csvRes = results.map(el => {
-		let tmp = {
-			postUrl: el.postUrl ? el.postUrl : "",
-			matches: el.matches ? el.matches.join(" AND ") : "",
-			description: el.description ? el.description : ""
-		}
+		let tmp = el
 
-		if (el.postVideo !== "") {
-			tmp.postVideo = el.postVideo
-		}
-
-		if (el.postImage !== "") {
-			tmp.postImage = el.postImage
-		}
+		tmp.matches = el.matches ? el.matches.join(" AND ") : ""
 		return tmp
 	})
 	return csvRes
@@ -346,13 +274,8 @@ const craftCsvObject = results => {
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	let terms = []
 
-	if (!sessionCookie) {
-		utils.log("The API needs a session cookie to navigate on instagram.com", "error")
-		nick.exit(1)
-	}
-
 	if (!maxPosts) {
-		maxPosts = MAX_POSTS
+		maxPosts = 1000
 	}
 
 	if (!csvName) {
@@ -367,7 +290,7 @@ const craftCsvObject = results => {
 		}
 	}
 
-	await instagramConnect(tab, sessionCookie)
+	await instagram.login(tab, sessionCookie)
 
 	let results = {}
 	let scrapedResult = []
@@ -378,9 +301,9 @@ const craftCsvObject = results => {
 		targetUrl =
 				term.startsWith("#")
 					? `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
-					: await searchLocation(tab, term)
+					: await instagram.searchLocation(tab, term)
 		if (!targetUrl) {
-			utils.log(`No urls found for ${term}`, "error")
+			utils.log(`No search result page found for ${term}`, "error")
 			continue
 		}
 		const [httpCode] = await tab.open(targetUrl)
@@ -390,12 +313,12 @@ const craftCsvObject = results => {
 		}
 
 		try {
-			await tab.waitUntilVisible("main")
+			await tab.waitUntilVisible("main", 15000)
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
-		utils.log(`Scraping posts using the ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
+		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
 		const hasTimeLeft = await loadPosts(tab, scrapedResult, maxPosts, term)
 		results[term] = [ ...scrapedResult ]
 		scrapedResult.length = 0
@@ -405,9 +328,24 @@ const craftCsvObject = results => {
 	}
 
 	const filteredResults = filterResults(results)
+	const scrapedData = []
 
-	utils.log(`${filteredResults.length} posts scraped`, "done")
-	await utils.saveResults(filteredResults, craftCsvObject(filteredResults), csvName)
+	for (const post of filteredResults) {
+		try {
+			utils.log(`Scraping matching post ${post.postUrl}`, "info")
+			buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
+			await tab.open(post.postUrl)
+			let scrapingRes = await instagram.scrapePost(tab)
+			scrapingRes.postUrl = post.postUrl
+			scrapingRes.matches = post.matches
+			scrapedData.push(scrapingRes)
+		} catch (err) {
+			utils.log(`Could not scrape ${post.postUrl}`, "warning")
+		}
+	}
+
+	utils.log(`${scrapedData.length} posts scraped`, "done")
+	await utils.saveResults(scrapedData, craftCsvObject(scrapedData), csvName)
 	nick.exit()
 })()
 	.catch(err => {

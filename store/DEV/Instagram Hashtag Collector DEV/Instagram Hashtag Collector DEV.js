@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 
 // }
@@ -179,41 +179,6 @@ const forgeCsvFromJSON = data => {
 }
 
 /**
- * @async
- * @param {Tab} tab -- Nikcjs tab with an Instagram session
- * @param {String} searchTerm -- Input given by the user
- * @return {Promise<String>|<Promise<undefined>} If found the url from search result otherwise nothing
- */
-const searchLocation = async (tab, searchTerm) => {
-	if (await tab.isPresent(".coreSpriteSearchClear")) {
-		await tab.click(".coreSpriteSearchClear")
-		await tab.wait(1000)
-	}
-
-	/**
-	 * Fill the search input
-	 */
-	await tab.sendKeys("nav input", searchTerm, {
-		reset: true,
-		keepFocus: true
-	})
-	/**
-	 * NOTE: Waiting Instagram results
-	 */
-	await tab.waitUntilVisible(".coreSpriteSearchClear")
-	await tab.wait(1000)
-	const found = await tab.evaluate((arg, cb) => {
-		const urls =
-					Array
-						.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
-						.map(el => el.href)
-						.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
-		cb(null, urls.shift())
-	})
-	return found
-}
-
-/**
  * @description Main function
  */
 ;(async () => {
@@ -255,9 +220,9 @@ const searchLocation = async (tab, searchTerm) => {
 		targetUrl =
 				hashtag.startsWith("#")
 					? `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
-					: await searchLocation(tab, hashtag)
+					: await instagram.searchLocation(tab, hashtag)
 		if (!targetUrl) {
-			utils.log(`No urls found for ${hashtag}`, "error")
+			utils.log(`No search result page found for ${hashtag}`, "error")
 			continue
 		}
 		const [httpCode] = await tab.open(targetUrl)
@@ -267,12 +232,12 @@ const searchLocation = async (tab, searchTerm) => {
 		}
 
 		try {
-			await tab.waitUntilVisible("main")
+			await tab.waitUntilVisible("main", 15000)
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
 		}
-		utils.log(`Scraping posts using the ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
+		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
 		const hasTimeLeft = await loadPosts(tab, results, maxPosts, hashtag)
 		if (!hasTimeLeft) {
 			break
