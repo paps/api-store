@@ -343,6 +343,21 @@ const craftCsvObject = infos => {
 		job = infos.jobs[0]
 	}
 
+	let job2 = {}
+	if (infos.jobs && infos.jobs[1]) {
+		job2 = infos.jobs[1]
+	}
+
+	let school = {}
+	if (infos.schools && infos.schools[0]) {
+		school = infos.schools[0]
+	}
+
+	let school2 = {}
+	if (infos.schools && infos.schools[1]) {
+		school2 = infos.schools[1]
+	}
+
 	/**
 	 * We should know if infos object contains all fields in order to return the CSV formatted Object
 	 * If the scraping process failed to retrieve some data, the function will fill gaps by a null value
@@ -363,6 +378,23 @@ const craftCsvObject = infos => {
 		jobTitle: job.jobTitle || null,
 		jobDescription: job.description || null,
 		location: job.location || null,
+		company2: job2.companyName || null,
+		companyUrl2: job2.companyUrl || null,
+		jobTitle2: job2.jobTitle || null,
+		jobDescription2: job2.description || null,
+		location2: job2.location || null,
+		school: school.schoolName || null,
+		schoolUrl: school.schoolUrl || null,
+		schoolDegree: school.degree || null,
+		schoolDescription: school.description || null,
+		schoolDegreeSpec: school.degreeSpec || null,
+		schoolDateRange: school.dateRange || null,
+		school2: school2.schoolName || null,
+		schoolUrl2: school2.schoolUrl || null,
+		schoolDegree2: school2.degree || null,
+		schoolDescription2: school2.description || null,
+		schoolDegreeSpec2: school2.degreeSpec || null,
+		schoolDateRange2: school2.dateRange || null,
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,

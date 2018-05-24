@@ -324,8 +324,7 @@ class StoreUtilities {
 	}
 
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
-	async saveResults(jsonResult, csvResult, name = "result", schema) {
-		const buster = this.buster
+	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		this.log("Saving data...", "loading")
 		if (schema) {
 			const newResult = []
@@ -342,14 +341,18 @@ class StoreUtilities {
 			}
 			csvResult = newResult
 		}
-		const csvUrl = await buster.saveText(await jsonexport(csvResult), name + ".csv")
+		const csvUrl = await this.buster.saveText(await jsonexport(csvResult), name + ".csv")
 		this.log(`CSV saved at ${csvUrl}`, "done")
-		const jsonUrl = await buster.saveText(JSON.stringify(jsonResult), name + ".json")
-		this.log(`JSON saved at ${jsonUrl}`, "done")
+		const backupResultObject = { csvUrl }
+		if (saveJson) {
+			const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
+			this.log(`JSON saved at ${jsonUrl}`, "done")
+			backupResultObject.jsonUrl = jsonUrl
+		}
 		try {
-			await buster.setResultObject(jsonResult)
+			await this.buster.setResultObject(jsonResult)
 		} catch (error) {
-			await buster.setResultObject({ csvUrl, jsonUrl })
+			await this.buster.setResultObject(backupResultObject)
 		}
 		this.log("Data successfully saved!", "done")
 		if (this.test) {

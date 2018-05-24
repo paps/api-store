@@ -181,7 +181,9 @@ const getFieldsFromArray = (arr) => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResult(db, DB_NAME, getFieldsFromArray(db)) // deprecated call :(
+		await utils.saveResults(result, db, DB_NAME, getFieldsFromArray(db), false)
+		nick.exit(0)
+		// await utils.saveResult(db, DB_NAME, getFieldsFromArray(db)) // deprecated call :(
 	}
 })()
 .catch(err => {
