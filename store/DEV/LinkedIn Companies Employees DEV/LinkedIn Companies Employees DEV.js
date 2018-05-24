@@ -155,14 +155,13 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
  * @return {String} Cleaned URL or original URL if there is nothing to be remove
  */
 const handleSubdomains = (url) => {
-	const pattern = /^[^www]+\./
-	const replacePattern = /^[a-zA-Z]+\./
+	const replacePattern = /^[a-zA-Z]{1,5}\.linkedin\.com/
 	let forgedUrl
 
 	try {
 		forgedUrl = new URL(url)
-		if (forgedUrl.hostname.match(pattern)) {
-			forgedUrl.hostname = forgedUrl.hostname.replace(replacePattern, "www.")
+		if (forgedUrl.hostname.match(replacePattern)) {
+			forgedUrl.hostname = forgedUrl.hostname.replace(replacePattern, "www.linkedin.com")
 			return forgedUrl.toString()
 		}
 		return url
