@@ -362,6 +362,32 @@ class StoreUtilities {
 		}
 	}
 
+	/**
+	 * @async
+	 * @param {String} filename - Agent DB filename to retrieve
+	 * @param {Boolean} [parseData] - if true will try to parse downloaded data to a CSV representation otherwise nothing
+	 * @return {Promise<Array<String>>|Promise<String>} an array representing a CSV othersiwe file content into a string
+	 */
+	async getDb(filename) {
+		const res = await needle("get", `https://phantombuster.com/api/v1/agent/${this.buster.agentId}`, {},
+			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } }
+		)
+
+		if (res.body && res.body.status === "success" && res.body.data.awsFolder && res.body.data.userAwsFolder) {
+			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
+			try {
+				const httpRes = await needle("get", url)
+				const data = Papa.parse(httpRes.body, { header: true }).data
+				return data
+			} catch (err) {
+				console.log(err)
+				return []
+			}
+		} else {
+			throw "Could not load agent database."
+		}
+	}
+
 	// Function to check if the result is correct for test purposes
 	_testResult(result) {
 		const minLength = this.testRunObject.resMinLength || this.testRunObject.minResLength
