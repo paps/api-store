@@ -7,6 +7,8 @@ const fs = require("fs")
 const needle = require("needle")
 const Papa = require("papaparse")
 
+const { URL } = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -148,6 +150,27 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 }
 
 /**
+ * @description Function used to remove subdomains from a given URL
+ * @param {String} url LinkedIn URL
+ * @return {String} Cleaned URL or original URL if there is nothing to be remove
+ */
+const handleSubdomains = (url) => {
+	const replacePattern = /^[a-zA-Z]{1,5}\.linkedin\.com/
+	let forgedUrl
+
+	try {
+		forgedUrl = new URL(url)
+		if (forgedUrl.hostname.match(replacePattern)) {
+			forgedUrl.hostname = forgedUrl.hostname.replace(replacePattern, "www.linkedin.com")
+			return forgedUrl.toString()
+		}
+		return url
+	} catch (err) {
+		return url
+	}
+}
+
+/**
  * @description Function used to retrieve the LinkedIn company ID
  * @param {String} url this parameter can be an ID or an URL
  * @param {Object} tab object
@@ -158,20 +181,27 @@ const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url, 10))) {
 		return parseInt(url, 10)
 	} else {
-
 		/**
 		 * Redirecting /sales/company/xxx URLs to /company/xxx URLs
 		 */
 		if (url.indexOf("/sales/company/") > -1) {
 			url = url.replace("/sales/company/", "/company/")
+			if (url.indexOf("/people") > -1) {
+				url = url.replace("/people", "")
+			}
 		}
 
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
+			url = handleSubdomains(url) // Removing the subdomain (if present) from the given URL
 			const [httpCode, httpStatus] = await tab.open(url)
 			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}
-			await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
+			try {
+				await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
+			} catch(err) {
+				throw `no employees found from the LinkedIn company page`
+			}
 			let tmp = await tab.evaluate((argv, cb) => {
 				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
 				let u = new URL(ids)
