@@ -4,7 +4,134 @@ const Papa = require("papaparse")
 const {promisify} = require("util")
 const jsonexport = promisify(require("jsonexport"))
 const validator = require("is-my-json-valid")
+const needle = require("needle")
+const { URL } = require("url")
 // }
+
+/**
+ * @async
+ * @internal
+ * @description Function used to download a CSV file from a given url
+ * @param {String} url - Target URL to download
+ * @return {Promise<String>} HTTP body response content
+ * @throws if there were an error from needle or the Google spreadsheet is not shared
+ */
+const _downloadCsv = async url => {
+	return new Promise((resolve, reject) => {
+		let hasRedirection = false
+		let httpCodeRedirection = null
+		let urlRediction = null
+		let hasTimeout = false
+
+		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
+			if (err) {
+				reject(err)
+			}
+
+			if (hasTimeout) {
+				reject(`Could not download specified URL, socket hang up, HTTP code: ${resp.statusCode}`)
+			}
+
+			const parsedRequestURL = new URL(url)
+
+			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
+				reject(`Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public, HTTP code: ${httpCodeRedirection}`)
+			}
+
+			if (resp.statusCode >= 400) {
+				reject(`${url} is not available, HTTP code: ${resp.statusCode}`)
+			}
+
+			resolve(resp.body)
+		})
+
+		httpStream.on("redirect", _url => {
+			httpCodeRedirection = httpStream.request.res.statusCode
+			urlRediction = _url
+			hasRedirection = true
+		})
+
+		httpStream.on("timeout", data => {
+			hasTimeout = true
+		})
+	})
+}
+
+/**
+ * @async
+ * @internal
+ * @description Private handler used to download a csv file from Google Docs or Google Drive
+ * @param {Object} urlObject - node URL object representing the target URL
+ * @return {Promise<Object>} Http body response
+ * @throws if there were an error during the download process
+ */
+const _handleGoogle = async (urlObject) => {
+	let _url = null
+	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
+	let docIdPattern
+
+	if (urlObject.hostname === "docs.google.com") {
+		docIdPattern = "/spreadsheets/d/"
+
+		if (urlObject.pathname.startsWith(docIdPattern)) {
+			let gid = null
+			let docId = urlObject.pathname.split(docIdPattern).pop()
+
+			docId = docId.endsWith("/edit") ? docId.split("/edit").shift() : docId
+
+			if (docId.endsWith("/")) {
+				docId = docId.slice(0, -1)
+			}
+
+			if (urlObject.hash) {
+				if (urlObject.hash.indexOf("gid=") > -1) {
+					gid = urlObject.hash.split("gid=").pop()
+				}
+			}
+			_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+
+			if (gid && typeof gid === "string") {
+				_url += `&gid=${gid}`
+			}
+		}
+
+	} else if (urlObject.hostname === "drive.google.com") {
+		docIdPattern = "/file/d/"
+
+		if (urlObject.pathname === "/open") {
+			if (urlObject.searchParams.get("id")) {
+				let docId = urlObject.searchParams.get("id")
+
+				if (docId.endsWith("/")) {
+					docId = docId.slice(0, -1)
+				}
+				_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+			}
+		} else if (urlObject.pathname.startsWith(docIdPattern)) {
+			let extractedDocId = urlObject.pathname.replace(docIdPattern, "")
+
+			if (extractedDocId.indexOf("/") > -1) {
+				extractedDocId = extractedDocId.split("/").shift()
+			}
+			_url = `${gdocsTemplateURL}${extractedDocId}/export?format=csv`
+		}
+	}
+
+	if (!_url) {
+		throw `Cannot find a way to download given URL: ${urlObject.toString()}`
+	}
+	return await _downloadCsv(_url)
+}
+
+/**
+ * @async
+ * @internal
+ * @description Private function used to forge CSV downloadable URL
+ * @param {String} url - URL to use
+ * @param {Object} urlRepresentation - nodejs URL object
+ * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ */
+const _handleDefault = async (urlObject) => await _downloadCsv(urlObject.toString())
 
 class StoreUtilities {
 	constructor(nick, buster) {
@@ -59,6 +186,67 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
+	// Function to get data from a google spreadsheet or from a csv
+	async getDataFromCsv2 (url, columnName, printLogs = true) {
+		let urlObj = null
+		if (printLogs) {
+			this.log(`Getting data from ${url}...`, "loading")
+		}
+
+		/**
+		 * NOTE: no need to continue, if the url input is malformatted
+		 */
+		try {
+			urlObj = new URL(url)
+		} catch (err) {
+			throw `${url} is not a valid URL.`
+		}
+
+		let httpContent = null
+
+		/**
+		 * NOTE: The function can for now handle
+		 * - docs.google.com domain
+		 * - drive.google.com domain
+		 * - Phantombuster S3 / direct CSV links
+		 */
+		if (urlObj.hostname === "docs.google.com" || urlObj.hostname === "drive.google.com") {
+			httpContent = await _handleGoogle(urlObj)
+		} else {
+			httpContent = await _handleDefault(urlObj)
+		}
+
+		let raw = Papa.parse(httpContent)
+		let data = raw.data
+		let result = []
+		/**
+		 * HACK: Downloaded content check
+		 * if there were MissingQuotes error during parsing process, we assume that the data is not representing a CSV
+		 */
+		if (raw.errors.find(el => el.code === "MissingQuotes")) {
+			throw `${url} doesn't represent a CSV file`
+		}
+
+		let column = 0
+		if (columnName) {
+			let i
+			for (i = 0; i < data[0].length; i++) {
+				if (data[0][i] === columnName) {
+					column = i
+					break
+				}
+			}
+			if (column !== i) {
+				throw `No title ${columnName} in csv file.`
+			}
+			data.shift()
+		}
+		result = data.map(line => line[column])
+		if (printLogs) {
+			this.log(`Got ${result.length} lines from csv.`, "done")
+		}
+		return result
+	}
 
 	// Function to get data from a google spreadsheet or from a csv
 	async getDataFromCsv(url, columnName, printLogs = true) {

@@ -22,7 +22,7 @@ const _downloadCsv = async url => {
 		let httpCodeRedirection = null
 		let urlRediction = null
 		let hasTimeout = false
-		
+
 		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
 			if (err) {
 				reject(err)
@@ -87,7 +87,7 @@ const _handleGoogle = async (urlObject) => {
 				if (urlObject.hash.indexOf("gid=") > -1) {
 					gid = urlObject.hash.split("gid=").pop()
 				}
-			}			
+			}
 			_url = `${gdocsTemplateURL}${docId}/export?format=csv`
 
 			if (gid && typeof gid === "string") {
@@ -187,7 +187,7 @@ class StoreUtilities {
 	}
 
 	// Function to get data from a google spreadsheet or from a csv
-	async getDataFromCsv (url, columnName, printLogs = true) {
+	async getDataFromCsv2 (url, columnName, printLogs = true) {
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -201,9 +201,9 @@ class StoreUtilities {
 		} catch (err) {
 			throw `${url} is not a valid URL.`
 		}
-	
+
 		let httpContent = null
-	
+
 		/**
 		 * NOTE: The function can for now handle
 		 * - docs.google.com domain
@@ -215,11 +215,10 @@ class StoreUtilities {
 		} else {
 			httpContent = await _handleDefault(urlObj)
 		}
-	
+
 		let raw = Papa.parse(httpContent)
 		let data = raw.data
 		let result = []
-	
 		/**
 		 * HACK: Downloaded content check
 		 * if there were MissingQuotes error during parsing process, we assume that the data is not representing a CSV
@@ -227,7 +226,7 @@ class StoreUtilities {
 		if (raw.errors.find(el => el.code === "MissingQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
-	
+
 		let column = 0
 		if (columnName) {
 			let i
@@ -247,6 +246,51 @@ class StoreUtilities {
 			this.log(`Got ${result.length} lines from csv.`, "done")
 		}
 		return result
+	}
+
+	// Function to get data from a google spreadsheet or from a csv
+	async getDataFromCsv(url, columnName, printLogs = true) {
+		const buster = this.buster
+		if (printLogs) {
+			this.log(`Getting data from ${url}...`, "loading")
+		}
+		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
+		const match = url.match(urlRegex)
+		if (match) {
+			if (match[3] === "docs.google.com") {
+				if (match[8] === "edit") {
+					url = `https://docs.google.com/${match[6]}export?format=csv`
+				} else {
+					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
+				}
+			}
+			await buster.download(url, "sheet.csv")
+			const file = fs.readFileSync("sheet.csv", "UTF-8")
+			if (file.indexOf("<!DOCTYPE html>") >= 0) {
+				throw "Could not download csv, maybe csv is not public."
+			}
+			let data = (Papa.parse(file)).data
+			let column = 0
+			if (columnName) {
+				for (var i = 0; i < data[0].length; i++) {
+					if (data[0][i] === columnName) {
+						column = i
+						break
+					}
+				}
+				if (column !== i) {
+					throw `No title ${columnName} in csv file.`
+				}
+				data.shift()
+			}
+			const result = data.map(line => line[column])
+			if (printLogs) {
+				this.log(`Got ${result.length} lines from csv.`, "done")
+			}
+			return result
+		} else {
+			throw `${url} is not a valid URL.`
+		}
 	}
 
 	// Tells the script if it should exit or not, based on execution time left
