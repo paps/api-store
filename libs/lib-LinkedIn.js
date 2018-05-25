@@ -60,6 +60,11 @@ class LinkedIn {
 				})
 				if ((typeof(name) === "string") && (name.length > 0)) {
 					this.utils.log(`Connected successfully as ${name}`, "done")
+					if (await tab.isPresent(".nav-item__profile-member-photo.nav-item__icon.ghost-person")) {
+						console.log("")
+						this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
+						console.log("")
+					}
 					return null
 				}
 			}
