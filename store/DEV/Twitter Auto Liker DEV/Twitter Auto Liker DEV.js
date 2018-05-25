@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -16,7 +16,7 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
 const DEFAULT_LIKE_COUNT = 1

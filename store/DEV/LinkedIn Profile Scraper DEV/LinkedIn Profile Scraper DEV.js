@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -16,7 +16,7 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
