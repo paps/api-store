@@ -143,6 +143,10 @@ class Instagram {
 				data.postImage = baseSelector[0].querySelector(arg.selectors.postImageSelector).src
 			}
 
+			if (baseSelector[1].querySelector(arg.selectors.pubDateSelector)) {
+				data.pubDate = baseSelector[1].querySelector(arg.selectors.pubDateSelector).dateTime
+			}
+
 			if (document.querySelector(arg.selectors.location)) {
 				data.location = document.querySelector(arg.selectors.location).textContent.trim()
 			}
