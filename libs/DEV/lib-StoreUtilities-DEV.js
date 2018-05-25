@@ -377,6 +377,10 @@ class StoreUtilities {
 			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
 			try {
 				const httpRes = await needle("get", url)
+				// No need to continue if the body is not representing a string, if the needle failed due to a bad filename body will be an error object
+				if (typeof httpRes.body !== "string") {
+					return []
+				}
 				const data = Papa.parse(httpRes.body, { header: true }).data
 				return data
 			} catch (err) {
