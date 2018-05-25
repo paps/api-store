@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -17,11 +17,12 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const fs = require("fs")
 const Papa = require("papaparse")
 const needle = require("needle")
+const dbFileName = "database-twitter-auto-follow.csv"
 // }
 
 /**
@@ -31,32 +32,6 @@ const needle = require("needle")
  */
 const scrapeUserName = (arg, callback) => {
 	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-/**
- * @description Create or get the file containing the people already added
- * @return {Array} Contains all people already added
- */
-const getDb = async () => {
-	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
-		"X-Phantombuster-Key-1": buster.apiKey }
-	})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const dbFileName = "database-twitter-auto-follow.csv"
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${dbFileName}`
-		try {
-			await buster.download(url, dbFileName)
-			const file = fs.readFileSync(dbFileName, "UTF-8")
-			const data = Papa.parse(file, { header: true }).data
-			return data
-		} catch (error) {
-			// TODO: usefull ??
-			await buster.saveText("url,handle", dbFileName)
-			return []
-		}
-	} else {
-		throw "Could not load bot database."
-	}
 }
 
 /**
@@ -291,7 +266,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	if(!numberOfAddsPerLaunch) {
 		numberOfAddsPerLaunch = 20
 	}
-	let db = await getDb()
+	let db = await utils.getDb(dbFileName)
 	let profiles = await getProfilesToAdd(spreadsheetUrl, db, numberOfAddsPerLaunch)
 	await twitterConnect(tab, sessionCookie)
 	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList)

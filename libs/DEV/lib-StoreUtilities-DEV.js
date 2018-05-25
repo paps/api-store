@@ -365,7 +365,6 @@ class StoreUtilities {
 	/**
 	 * @async
 	 * @param {String} filename - Agent DB filename to retrieve
-	 * @param {Boolean} [parseData] - if true will try to parse downloaded data to a CSV representation otherwise nothing
 	 * @return {Promise<Array<String>>|Promise<String>} an array representing a CSV othersiwe file content into a string
 	 */
 	async getDb(filename) {
@@ -377,14 +376,15 @@ class StoreUtilities {
 			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
 			try {
 				const httpRes = await needle("get", url)
-				// No need to continue if the body is not representing a string, if the needle failed due to a bad filename body will be an error object
-				if (typeof httpRes.body !== "string") {
+				// When requesting a bad / non existing URL at phantombuster s3, needle will return a JS Object representing an access denied xml document
+				// The function will return an empty array
+				if (httpRes.raw && typeof httpRes.body === "string") {
+					const data = Papa.parse(httpRes.raw.toString(), { header: true }).data
+					return data
+				} else {
 					return []
 				}
-				const data = Papa.parse(httpRes.body, { header: true }).data
-				return data
 			} catch (err) {
-				console.log(err)
 				return []
 			}
 		} else {

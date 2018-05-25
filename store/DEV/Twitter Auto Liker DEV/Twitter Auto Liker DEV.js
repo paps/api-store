@@ -1,11 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js"
 
-const fs = require("fs")
-const Papa = require("papaparse")
-const needle = require("needle")
 const url = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +16,7 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
 const DEFAULT_LIKE_COUNT = 1
@@ -33,33 +30,6 @@ const getValidUrlOrHandle = str => {
 		return `https://twitter.com/${handle}`
 	} else {
 		return str.replace(/[^a-zA-Z0-9_@]+/g, "")
-	}
-}
-
-
-
-const getDb = async (filename = DB_NAME) => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
-		"X-Phantombuster-Key-1": buster.apiKey}
-	})
-
-	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${filename}`
-		try {
-			await buster.download(url, filename)
-			const file = fs.readFileSync(filename, "UTF-8")
-			let data
-			if (filename.endsWith(".json")) {
-				data = JSON.parse(file)
-			} else {
-				data = Papa.parse(file, { header: true }).data
-			}
-			return data
-		} catch (err) {
-			return []
-		}
-	} else {
-		throw "Could not load bot database."
 	}
 }
 
@@ -280,7 +250,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	let likedCount = 0
 	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase} = utils.validateArguments()
 
-	let db = noDatabase ? [] : await getDb()
+	let db = noDatabase ? [] : await utils.getDb(DB_NAME)
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
@@ -333,7 +303,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 		utils.log(`Could not save result object: ${e.message || e}`, "warning")
 	}
 	if (!noDatabase) {
-		await buster.saveText(Papa.unparse(db), DB_NAME)
+		await utils.saveResults(db, db, DB_NAME.split(".").shift(), undefined, false)
 	}
 
 	nick.exit()

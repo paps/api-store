@@ -1,14 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
-
-const fs = require("fs")
-const Papa = require("papaparse")
-const needle = require("needle")
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
+
+const Papa = require("papaparse")
 
 const Nick = require("nickjs")
 const nick = new Nick({
@@ -19,7 +17,7 @@ const nick = new Nick({
 	printAborts: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -28,25 +26,6 @@ const DB_NAME = "linkedin-profile-visitor.csv"
 const DEFAULT_VISIT_COUNT = 1
 let db
 // }
-
-const getDb = async () => {
-	const resp = await needle("GET", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
-		"X-Phantombuster-Key-1": buster.apiKey }
-	})
-	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}`
-		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
-			const data = Papa.parse(file, { header: true }).data
-			return data
-		} catch (err) {
-			return []
-		}
-	} else {
-		throw "Could not load bot database."
-	}
-}
 
 const checkDb = (str, db) => {
 	for (const line of db) {
@@ -77,7 +56,7 @@ const getUrlsToScrape = (data, numberOfVisitsPerLaunch) => {
 }
 
 ;(async () => {
-	db = await getDb()
+	db = await utils.getDb(DB_NAME)
 	const tab = await nick.newTab()
 	const linkedInScraper = new LinkedInScraper(utils)
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfVisitsPerLaunch, profileUrls } = utils.validateArguments()
@@ -88,7 +67,7 @@ const getUrlsToScrape = (data, numberOfVisitsPerLaunch) => {
 	} else if (Array.isArray(profileUrls)) {
 		urls = [ profileUrls ]
 	}
-	
+
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	}

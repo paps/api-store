@@ -1,11 +1,9 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
-const fs = require("fs")
 const Papa = require("papaparse")
-const needle = require("needle")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +17,7 @@ const nick = new Nick({
 	printAborts: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -29,26 +27,6 @@ let db
 // }
 
 const DB_NAME = "database-linkedin-network-booster.csv"
-
-// Get the file containing the data for this bot
-const getDb = async () => {
-	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
-		"X-Phantombuster-Key-1": buster.apiKey
-	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
-		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
-			const data = Papa.parse(file, {header: true}).data
-			return data
-		} catch (error) {
-			return []
-		}
-	} else {
-		throw "Could not load database of previously added profiles."
-	}
-}
 
 // Check if a url is already in the csv
 const checkDb = (str, db) => {
@@ -252,7 +230,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "hunterApiKey", type: "string", default: "" },
 	])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
-	db = await getDb()
+	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
 	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))

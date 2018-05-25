@@ -1,11 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-
-const fs = require("fs")
-const needle = require("needle")
-const Papa = require("papaparse")
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js"
 
 const { URL } = require("url")
 
@@ -23,32 +19,12 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const DB_NAME = "result.csv"
 // }
-
-// Get the file containing the data for this bot
-const getDb = async () => {
-	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
-		"X-Phantombuster-Key-1": buster.apiKey
-	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
-		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
-			const data = Papa.parse(file, {header: true}).data
-			return data
-		} catch (error) {
-			return []
-		}
-	} else {
-		throw "Could not load database of previously scraped companies."
-	}
-}
 
 const filterUrls = (url, db) => {
 	for (const one of db) {
@@ -200,7 +176,7 @@ const getIdFromUrl = async (url, tab) => {
 			try {
 				await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
 			} catch(err) {
-				throw `no employees found from the LinkedIn company page`
+				throw "no employees found from the LinkedIn company page"
 			}
 			let tmp = await tab.evaluate((argv, cb) => {
 				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
@@ -219,7 +195,7 @@ const getIdFromUrl = async (url, tab) => {
 }
 
 ;(async () => {
-	let db = await getDb()
+	let db = await utils.getDb(DB_NAME)
 	const tab = await nick.newTab()
 	let [sessionCookie, urls, numberOfPagePerCompany, waitTime, numberOfCompanyPerLaunch] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
