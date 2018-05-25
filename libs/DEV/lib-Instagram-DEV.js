@@ -122,9 +122,9 @@ class Instagram {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
 					data.likes =
 						Array
-						.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
-						.filter(el => el.href !== `${document.location.href}#`)
-						.length
+							.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
+							.filter(el => el.href !== `${document.location.href}#`)
+							.length
 				} else {
 					data.likes = 0
 				}
@@ -149,6 +149,26 @@ class Instagram {
 
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
+
+		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
+		if (await tab.isPresent(".coreSpriteRightChevron")) {
+			scrapedData.postImage = [ scrapedData.postImage ]
+			while (await tab.isPresent(".coreSpriteRightChevron")) {
+				await tab.click(".coreSpriteRightChevron")
+				await tab.waitUntilVisible("article img")
+				const img = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
+					if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
+					} else {
+						return cb(null, "")
+					}
+				}, { selectors: SCRAPING_SELECTORS })
+				scrapedData.postImage.push(img)
+				await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+			}
+		}
+
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}
