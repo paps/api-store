@@ -20,7 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const querystring = require("querystring")
+let voyagerHeadersFound = false
 // }
 
 const gl = {}
@@ -99,12 +99,53 @@ const getAllComments = async (tab, headers, search, max) => {
 }
 
 const onHttpRequest = (e) => {
-	if (e.request.url.indexOf("https://www.linkedin.com/voyager/api/feed/comments") > -1) {
+	if ((e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1) && !voyagerHeadersFound) {
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
-		gl.search = querystring.parse(e.request.url.replace("https://www.linkedin.com/voyager/api/feed/comments?", ""))
+		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "CHRON", updateId: null }
 		gl.url = "https://www.linkedin.com/voyager/api/feed/comments"
+		voyagerHeadersFound = true
 	}
+}
+
+/**
+ * @description Browser context function used to retrieve the current LinkedIn article URN
+ * The URN is mandatory to perform Voyager API calls to get all commenters for the current article
+ * @param {Object} arg
+ * @param {Function} cb
+ * @return {Promise<String>} the article URN
+ */
+const searchUrnArticle = (arg, cb) => {
+	const rawData = Array.from(document.querySelectorAll("body > code"))
+		.map(el => {
+			// Some voyager payloads aren't representings JSON objects so we can skip those payloads
+			try {
+				return JSON.parse(el.textContent)
+			} catch (err) {
+				return
+			}
+		})
+		.filter(el => typeof el !== "undefined")
+	// Since URNs and others related informations for the current article are into JS objects we need to find objects with specific patterns
+	for (const seek of rawData) {
+		if (typeof seek === "object") {
+			// If the current article is not a pulse article we're only looking for urn field into data named object
+			if (seek.data && seek.data.urn && seek.data.urn.indexOf("urn:li:activity:") === 0) {
+				return cb(null, seek.data.urn)
+			}
+			if (Array.isArray(seek.included)) {
+				for (const entry of seek.included) {
+					if (entry.linkedInArticleUrn) {
+						if (entry.linkedInArticleUrn.indexOf("urn:li:linkedInArticle:") === 0) {
+							entry.linkedInArticleUrn = entry.linkedInArticleUrn.split(":").pop()
+							return cb(null, `article:${entry.linkedInArticleUrn}`)
+						}
+					}
+				}
+			}
+		}
+	}
+	cb(null, null)
 }
 
 ;(async () => {
@@ -124,22 +165,19 @@ const onHttpRequest = (e) => {
 	}
 
 	await linkedIn.login(tab, sessionCookie)
-	
+
 	for (const url of postUrl) {
 		tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 		await tab.open(url)
-		await tab.waitUntilVisible("#show_prev")
-		await tab.click("#show_prev")
+		await tab.waitUntilVisible(".comment")
+		const urn = await tab.evaluate(searchUrnArticle)
+		gl.search.updateId = urn
 		await tab.wait(3000)
-		if (!gl.search) {
-			await tab.click("#show_prev")
-			await tab.wait(3000)
-			if (!gl.search) {
-				throw("Could not get comments on this page.")
-			}
+		if (!gl.search.updateId) {
+			throw "Could not get comments on this page."
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
-		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total)))
+		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
 		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	}
 
