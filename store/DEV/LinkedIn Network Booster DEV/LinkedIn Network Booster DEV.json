@@ -14,7 +14,7 @@
 		"numberOfAddsPerLaunch": 10,
 		"onlySecondCircle": false,
 		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
-		"noScraping": false
+		"disableScraping": false
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

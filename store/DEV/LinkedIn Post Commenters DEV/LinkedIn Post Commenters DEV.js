@@ -41,9 +41,30 @@ const callComments = (arg, callback) => {
 }
 
 const linkedinObjectToResult = response => {
+	// console.log("Raw response:", JSON.stringify(response, null, 4))
 	const res = []
 	if (response.elements) {
 		for (const element of response.elements) {
+			if (element.socialDetail) {
+				if (Array.isArray(element.socialDetail.elements)) {
+					for (const nested in element.socialDetail.elements) {
+						const nestedComment = {}
+						if (nested.commenter && nested.commenter["com.linkedin.voyager.feed.MemberActor"] && nested.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
+							if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
+								nestedComment.profileLink = `https://linkedin.com/in/${nested.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
+								nestedComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
+								nestedComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
+								nestedComment.fullName = nestedComment.firstName + " " + nestedComment.lastName
+								nestedComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
+							}
+							if (nested.socialDetail.elements.comment && nested.socialDetail.elements.comment.values && nested.socialDetail.elements.comment.values[0]) {
+								nestedComment.comment = nested.comment.values[0].value
+							}
+							res.push(nestedComment)
+						}
+					}
+				}
+			}
 			const newComment = {}
 			if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
 				newComment.profileLink =  `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
@@ -89,7 +110,7 @@ const getAllComments = async (tab, headers, search, max) => {
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
 		} catch (error) {
-			console.log(error)
+			console.log(error.message || err)
 			await tab.wait(2000)
 			++fail
 		}
@@ -102,7 +123,7 @@ const onHttpRequest = (e) => {
 	if ((e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1) && !voyagerHeadersFound) {
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
-		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "CHRON", updateId: null }
+		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "RELEVANCE", updateId: null }
 		gl.url = "https://www.linkedin.com/voyager/api/feed/comments"
 		voyagerHeadersFound = true
 	}
@@ -130,9 +151,6 @@ const searchUrnArticle = (arg, cb) => {
 	for (const seek of rawData) {
 		if (typeof seek === "object") {
 			// If the current article is not a pulse article we're only looking for urn field into data named object
-			if (seek.data && seek.data.urn && seek.data.urn.indexOf("urn:li:activity:") === 0) {
-				return cb(null, seek.data.urn)
-			}
 			if (Array.isArray(seek.included)) {
 				for (const entry of seek.included) {
 					if (entry.linkedInArticleUrn) {
@@ -140,8 +158,16 @@ const searchUrnArticle = (arg, cb) => {
 							entry.linkedInArticleUrn = entry.linkedInArticleUrn.split(":").pop()
 							return cb(null, `article:${entry.linkedInArticleUrn}`)
 						}
+					} else if (entry.shareUrn) {
+						if (entry.shareUrn.indexOf("urn:li:ugcPost:") === 0) {
+							entry.shareUrn = entry.shareUrn.split(":").pop()
+							return cb(null, `ugcPost:${entry.shareUrn}`)
+						}
 					}
 				}
+			}
+			if (seek.data && seek.data.urn && seek.data.urn.indexOf("urn:li:activity:") === 0) {
+				return cb(null, seek.data.urn)
 			}
 		}
 	}
@@ -180,6 +206,7 @@ const searchUrnArticle = (arg, cb) => {
 		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
 		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	}
+	console.log(result.length)
 
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)
