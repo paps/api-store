@@ -160,7 +160,7 @@ Then, select a frequency:
 
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
-To forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
 For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API. (Read more below about LinkedIn's limits.)
 
