@@ -65,3 +65,20 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 <center>More bots like this one will be added to Phantombuster,</center>
 <center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
 
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
+
+Every time the API is launched, it will scrape 10 companies and then stop. (This number can be changed in the configuration.)
+
+To do so, simply hit the “Settings” button to define when your API is launched:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+For example, 10 profiles companies per launch, 4 launches per day: you'll have a total of 40 companies per day. We recommend not exceeding these values with this API.
