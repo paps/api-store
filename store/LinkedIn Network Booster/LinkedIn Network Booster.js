@@ -3,9 +3,7 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
-const fs = require("fs")
 const Papa = require("papaparse")
-const needle = require("needle")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -29,26 +27,6 @@ let db
 // }
 
 const DB_NAME = "database-linkedin-network-booster.csv"
-
-// Get the file containing the data for this bot
-const getDb = async () => {
-	const response = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, {headers: {
-		"X-Phantombuster-Key-1": buster.apiKey
-	}})
-	if (response.body && response.body.status === "success" && response.body.data.awsFolder && response.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
-		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
-			const data = Papa.parse(file, {header: true}).data
-			return data
-		} catch (error) {
-			return []
-		}
-	} else {
-		throw "Could not load database of previously added profiles."
-	}
-}
 
 // Check if a url is already in the csv
 const checkDb = (str, db) => {
@@ -146,14 +124,19 @@ const connectTo = async (selector, tab, message) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
+const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScraping) => {
 	let scrapedProfile = {}
 	try {
 		/**
 		 * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
 		 */
-		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
-		scrapedProfile = scrapingResult.csv
+		if (!disableScraping) {
+			const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
+			scrapedProfile = scrapingResult.csv
+		} else {
+			await tab.open(url)
+			await tab.waitUntilVisible("#profile-wrapper", 15000)
+		}
 		scrapedProfile.baseUrl = url
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
@@ -242,7 +225,7 @@ const getFieldsFromArray = (arr) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey] = utils.checkArguments([
+	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 280 },
@@ -250,9 +233,10 @@ nick.newTab().then(async (tab) => {
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
 		{ name: "columnName", type: "string", default: "" },
 		{ name: "hunterApiKey", type: "string", default: "" },
+		{ name: "disableScraping", type: "boolean", default: false },
 	])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
-	db = await getDb()
+	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
 	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
@@ -261,7 +245,7 @@ nick.newTab().then(async (tab) => {
 	for (const url of urls) {
 		try {
 			utils.log(`Adding ${url}...`, "loading")
-			await addLinkedinFriend(url, tab, message, onlySecondCircle)
+			await addLinkedinFriend(url, tab, message, onlySecondCircle, disableScraping)
 		} catch (error) {
 			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}

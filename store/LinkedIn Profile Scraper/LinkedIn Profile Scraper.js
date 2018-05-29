@@ -3,10 +3,6 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
-const fs = require("fs")
-const Papa = require("papaparse")
-const needle = require("needle")
-
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -29,25 +25,6 @@ const LinkedInScraper = require("./lib-LinkedInScraper")
 const DB_NAME = "result"
 const MAX_SKILLS = 6
 // }
-
-const getDB = async () => {
-	const resp = await needle("get", `https://phantombuster.com/api/v1/agent/${buster.agentId}`, {}, { headers: {
-		"X-Phantombuster-Key-1": buster.apiKey }
-	})
-	if (resp.body && resp.body.status === "success" && resp.body.data.awsFolder && resp.body.data.userAwsFolder) {
-		const url = `https://phantombuster.s3.amazonaws.com/${resp.body.data.userAwsFolder}/${resp.body.data.awsFolder}/${DB_NAME}.csv`
-		try {
-			await buster.download(url, `${DB_NAME}.csv`)
-			const file = fs.readFileSync(`${DB_NAME}.csv`, "UTF-8")
-			const data = Papa.parse(file, { header: true }).data
-			return data
-		} catch (err) {
-			return []
-		}
-	} else {
-		throw "Could not load database of already scraped profiles."
-	}
-}
 
 const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -137,7 +114,7 @@ const getFieldsFromArray = (arr) => {
 		numberOfAddsPerLaunch = urls.length
 	}
 
-	const db = noDatabase ? [] : await getDB()
+	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
 
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, undefined, 4)}`)
@@ -183,7 +160,6 @@ const getFieldsFromArray = (arr) => {
 	} else {
 		await utils.saveResults(result, db, DB_NAME, getFieldsFromArray(db), false)
 		nick.exit(0)
-		// await utils.saveResult(db, DB_NAME, getFieldsFromArray(db)) // deprecated call :(
 	}
 })()
 .catch(err => {

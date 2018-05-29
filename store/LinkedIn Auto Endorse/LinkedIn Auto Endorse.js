@@ -18,9 +18,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const fs = require("fs")
 const Papa = require("papaparse")
-const needle = require("needle")
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
@@ -109,40 +107,6 @@ const scrollDown = async (tab) => {
 }
 
 /**
- * @description Create or get a file containing the profile already endorsed
- * @return {Array} Contains all profile already endorsed
- * @throws if an error occured during the database loading
- */
-const getDb = async () => {
-	const response = await needle(
-		"get",
-		`https://phantombuster.com/api/v1/agent/${buster.agentId}`,
-		{},
-		{ headers: { "X-Phantombuster-Key-1":buster.apiKey } }
-	)
-
-	if (
-		response.body && response.body.status === "success" &&
-		response.body.data.awsFolder &&
-		response.body.data.userAwsFolder
-	) {
-		const url = `https://phantombuster.s3.amazonaws.com/${response.body.data.userAwsFolder}/${response.body.data.awsFolder}/${DB_NAME}`
-		try {
-			await buster.download(url, DB_NAME)
-			const file = fs.readFileSync(DB_NAME, "UTF-8")
-			const data = Papa.parse(file, { header: true }).data
-			return data
-		} catch (error) {
-			// don't scare the user on first run
-			//utils.log(`Could not load database of already endorsed profiles: ${error.toString()}`, "warning")
-			return []
-		}
-	} else {
-		throw "The bot cannot load his database"
-	}
-}
-
-/**
  * @description Function used to remove all already endorsed profiles
  * @param {String} spreadsheetUrl containing all profiles urls
  * @param {Array} db containing all profiles already endorsed
@@ -173,8 +137,8 @@ const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
 
 /**
  * @description Browser context function used to endorse & retrieve all skills endorsed
- * @param {Object} argv 
- * @param {Fucntion} cb 
+ * @param {Object} argv
+ * @param {Fucntion} cb
  */
 const endorseProfile = (argv, cb) => {
 	let data = []
@@ -205,10 +169,10 @@ nick.newTab().then(async (tab) => {
 	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName ] = utils.checkArguments([
 		{name: "sessionCookie", type: "string", length: 10},
 		{name: "spreadsheetUrl", type: "string", length: 10},
-		{name: "numberOfEndorsePerLaunch", type: "string", default: "10"},
+		{name: "numberOfEndorsePerLaunch", type: "number", default: 10},
 		{name: "columnName", type: "string", default: ""}
 	])
-	const db = await getDb()
+	const db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
 

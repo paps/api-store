@@ -77,6 +77,10 @@ const getTweetsLanguages = (arg, cb) => {
  * @return {Promise<Boolean>} true if every languages are in the whitelist otherwise false at the first occurence
  */
 const isLanguagesInList = async (tab, list) => {
+	if (list.length < 1) {
+		return true
+	}
+
 	const langsScraped = await tab.evaluate(getTweetsLanguages)
 
 	/**
@@ -90,12 +94,6 @@ const isLanguagesInList = async (tab, list) => {
 		return false
 	}
 
-	/**
-	 * NOTE: No
-	 */
-	if (list.length < 1) {
-		return true
-	}
 	for (const lang of langsScraped) {
 		if (list.indexOf(lang) < 0) {
 			return false
