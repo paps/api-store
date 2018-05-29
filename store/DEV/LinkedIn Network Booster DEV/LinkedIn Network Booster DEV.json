@@ -13,7 +13,8 @@
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
 		"numberOfAddsPerLaunch": 10,
 		"onlySecondCircle": false,
-		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards"
+		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
+		"noScraping": false
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -55,6 +56,10 @@
 					"hunterApiKey": {
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
+					},
+					"disableScraping": {
+						"label": "Disable the scraping process",
+						"helper": "If the scraping process is disabled, it will speed up the API global execution time"
 					}
 				}
 			}
@@ -90,6 +95,9 @@
 			"hunterApiKey": {
 				"type": "string",
 				"maxLength": 50
+			},
+			"disableScraping": {
+				"type": "boolean"
 			}
 		}
 	}

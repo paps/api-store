@@ -124,14 +124,19 @@ const connectTo = async (selector, tab, message) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (url, tab, message, onlySecondCircle) => {
+const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScraping) => {
 	let scrapedProfile = {}
 	try {
 		/**
 		 * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
 		 */
-		const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
-		scrapedProfile = scrapingResult.csv
+		if (!disableScraping) {
+			const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
+			scrapedProfile = scrapingResult.csv
+		} else {
+			await tab.open(url)
+			await tab.waitUntilVisible("#profile-wrapper", 15000)
+		}
 		scrapedProfile.baseUrl = url
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
@@ -220,7 +225,7 @@ const getFieldsFromArray = (arr) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey] = utils.checkArguments([
+	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 280 },
@@ -228,6 +233,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
 		{ name: "columnName", type: "string", default: "" },
 		{ name: "hunterApiKey", type: "string", default: "" },
+		{ name: "disableScraping", type: "boolean", default: false },
 	])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
@@ -239,7 +245,7 @@ nick.newTab().then(async (tab) => {
 	for (const url of urls) {
 		try {
 			utils.log(`Adding ${url}...`, "loading")
-			await addLinkedinFriend(url, tab, message, onlySecondCircle)
+			await addLinkedinFriend(url, tab, message, onlySecondCircle, disableScraping)
 		} catch (error) {
 			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}
