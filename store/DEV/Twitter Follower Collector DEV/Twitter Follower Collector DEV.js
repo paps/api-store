@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
@@ -20,6 +20,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const MAX_FOLLOWERS_PER_ACCOUNT = -1
+let slowDownProcess = false
 // }
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
@@ -72,10 +73,10 @@ const scrapeFollowers = (arg, callback) => {
 
 const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
 	utils.log(`Getting followers for ${twitterHandle}`, "loading")
-	// HACK: the regex should handle @xxx
+	// the regex should handle @xxx
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
-		// HACK: removing non printables characters from the extracted handle
+		// removing non printables characters from the extracted handle
 		twitterHandle = removeNonPrintableChars(twitterHandle)
 	}
 	await tab.open(`https://twitter.com/${twitterHandle}/followers`)
@@ -89,7 +90,7 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 			break
 		}
 		/**
-		 * NOTE: Issue #47 Ability to limit the total number of profiles collected
+		 * Issue #47 Ability to limit the total number of profiles collected
 		 */
 		if (followersPerAccount > 0) {
 			if (await tab.evaluate(getFollowersNb) >= followersPerAccount) {
@@ -133,6 +134,17 @@ const jsonToCsv = json => {
 	return csv
 }
 
+const interceptHttpResponses = (e) => {
+	if (e.response.url.indexOf("/followers/users?") > -1) {
+		// utils.log(`${e.response.url} => ${e.response.status}, http msg: ${e.response.statusText}`, "info")
+		if (e.response.status === 429) {
+			slowDownProcess = true
+		} else {
+			slowDownProcess = false
+		}
+	}
+}
+
 
 ;(async () => {
 	const tab = await nick.newTab()
@@ -147,7 +159,9 @@ const jsonToCsv = json => {
 	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
 		twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
 	}
-	// HACK: removing non printables characters if the input doesn't reprsent a URL
+	// follow all HTTP queries to check if we got 429 status code
+	tab.driver.client.on("Network.responseReceived", interceptHttpResponses)
+	// removing non printables characters if the input doesn't reprsent a URL
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let csvResult = []
 	const jsonResult = []
@@ -158,6 +172,12 @@ const jsonToCsv = json => {
 				utils.log(`Script stopped: ${timeLeft.message}`, "warning")
 				break
 			}
+			// For now if an HTTP repsonse was 429, the API will exit
+			// TODO: reduce XHR calls or find a better way to scrape data
+			if (slowDownProcess) {
+				utils.log("Too many requests performed for Twitter, the API will exit", "warning")
+				break
+			}
 			const followers = await getTwitterFollowers(tab, twitterUrl, followersPerAccount)
 			const newJson = {isFollowing: twitterUrl, followers}
 			const newCsv = jsonToCsv(newJson)
@@ -165,6 +185,7 @@ const jsonToCsv = json => {
 			jsonResult.push(newJson)
 		}
 	}
+	tab.driver.client.removeListener("Network.responseReceived", inspector)
 	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "name", "bio", "isFollowing"])
 	nick.exit()
 })()
