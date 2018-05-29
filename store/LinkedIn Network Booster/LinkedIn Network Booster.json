@@ -58,8 +58,7 @@
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
 					"disableScraping": {
-						"label": "Disable the scraping process",
-						"helper": "If the scraping process is disabled, it will speed up the API global execution time"
+						"rightLabel": "<b>Disable profile scraping</b> (not recommended — can speed up the API but prevents email discovery)"
 					}
 				}
 			}
