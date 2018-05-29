@@ -185,7 +185,7 @@ const interceptHttpResponses = (e) => {
 			jsonResult.push(newJson)
 		}
 	}
-	tab.driver.client.removeListener("Network.responseReceived", inspector)
+	tab.driver.client.removeListener("Network.responseReceived", interceptHttpResponses)
 	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "name", "bio", "isFollowing"])
 	nick.exit()
 })()
