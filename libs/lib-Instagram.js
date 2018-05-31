@@ -29,7 +29,7 @@ class Instagram {
 		try {
 			await tab.waitUntilVisible("main", 15000)
 			const name = await tab.evaluate((arg, cb) => {
-				const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
+				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
@@ -45,29 +45,29 @@ class Instagram {
  	 * @return {Promise<String>|<Promise<undefined>>} If found the url from search result otherwise nothing
  	 */
 	async searchLocation(tab, searchTerm) {
-		if (await tab.isPresent(".coreSpriteSearchClear")) {
-			await tab.click(".coreSpriteSearchClear")
+		if (await tab.isPresent("nav div[role=button]")) {
+			await tab.click("nav div[role=button]")
 			await tab.wait(1000)
 		}
 
-		/**
-	 	 * Fill the search input
-	 	 */
+		// Fill the search input
 		await tab.sendKeys("nav input", searchTerm, {
 			reset: true,
 			keepFocus: true
 		})
-		/**
-	 	 * NOTE: Waiting Instagram results
-	 	 */
-		await tab.waitUntilVisible(".coreSpriteSearchClear")
+		// Waiting Instagram results
+		await tab.waitUntilVisible("nav div[role=button]", 7500)
 		await tab.wait(1000)
 		const found = await tab.evaluate((arg, cb) => {
 			const urls =
 						Array
-							.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+							.from(document.querySelectorAll("nav div[class=\"\"] a"))
 							.map(el => el.href)
 							.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
+			// Array
+			// 	.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+			// 	.map(el => el.href)
+			// 	.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
 			cb(null, urls.shift())
 		})
 		return found
@@ -122,9 +122,9 @@ class Instagram {
 				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
 					data.likes =
 						Array
-						.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
-						.filter(el => el.href !== `${document.location.href}#`)
-						.length
+							.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
+							.filter(el => el.href !== `${document.location.href}#`)
+							.length
 				} else {
 					data.likes = 0
 				}
@@ -143,12 +143,36 @@ class Instagram {
 				data.postImage = baseSelector[0].querySelector(arg.selectors.postImageSelector).src
 			}
 
+			if (baseSelector[1].querySelector(arg.selectors.pubDateSelector)) {
+				data.pubDate = baseSelector[1].querySelector(arg.selectors.pubDateSelector).dateTime
+			}
+
 			if (document.querySelector(arg.selectors.location)) {
 				data.location = document.querySelector(arg.selectors.location).textContent.trim()
 			}
 
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
+
+		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
+		if (await tab.isPresent(".coreSpriteRightChevron")) {
+			scrapedData.postImage = [ scrapedData.postImage ]
+			while (await tab.isPresent(".coreSpriteRightChevron")) {
+				await tab.click(".coreSpriteRightChevron")
+				await tab.waitUntilVisible("article img")
+				const img = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
+					if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
+					} else {
+						return cb(null, "")
+					}
+				}, { selectors: SCRAPING_SELECTORS })
+				scrapedData.postImage.push(img)
+				await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+			}
+		}
+
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}

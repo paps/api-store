@@ -22,8 +22,9 @@ const utils = new StoreUtilities(nick, buster)
 
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
-
 // }
+
+const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
 
 /**
  * @async
@@ -41,7 +42,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		PUB_DATE_SELECTOR: "div[role=dialog] time",
 		MOST_RECENT: "article > div:not([class]) > div > div a img",
 		MOST_POPULAR: "article div:not([class]) > div > div a img",
-		NEXT_POST: "div[role=dialog] a.coreSpriteRightPaginationArrow",
+		NEXT_POST: "div[role=dialog] a[role=button]:last-of-type"
 	}
 	let i = 0
 	try {
@@ -50,6 +51,8 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		await tab.click(selectors.MOST_POPULAR)
 	}
 	await tab.waitUntilVisible(selectors.OVERLAY)
+	// Saving className of the carousel switch selector, will be used to check later if the bot reached the last post
+	const carouselNextSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: selectors.NEXT_POST })
 	while (i < count) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -67,16 +70,22 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`Error while scraping: ${await tab.getUrl()}`, "warning")
 		}
 		/**
-		 * NOTE: If the selector used for clicking to a new post isn't present
+		 * If the selector used for clicking to a new post isn't present
 		 * there is no need to continue the scraping process
 		 */
 		try {
-			if (!await tab.isPresent(selectors.NEXT_POST)) {
+			// We need to check if the last selector used to switch images from the carousel is the same
+			// If not there is no more image to look
+			const hasMorePosts = await tab.evaluate(getClassNameFromGenericSelector, { selector: selectors.NEXT_POST })
+			if (hasMorePosts !== carouselNextSelector) {
 				break
 			}
+			// if (!await tab.isPresent(selectors.NEXT_POST)) {
+			// 	break
+			// }
 			await tab.click(selectors.NEXT_POST)
 			/**
-			 * NOTE: Method used to wait that a new post is fully loaded
+			 * Method used to wait that a new post is fully loaded
 			 * For now there is no cleaner way to wait the new article,
 			 * if there is no change after 30 seconds, the script should abort the wait process
 			 */
@@ -103,7 +112,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 		i++
 	}
 	/**
-	 * NOTE: In order to continue the search we need to close the overlay
+	 * In order to continue the search we need to close the overlay
 	 */
 	if (await tab.isVisible(selectors.OVERLAY)) {
 		await tab.click(selectors.OVERLAY)
@@ -130,7 +139,7 @@ const hashtagsOccurrences = (posts) => {
 	let result = {}
 
 	/**
-	 * NOTE: collecting all hashtags from input
+	 * collecting all hashtags from input
 	 */
 	if (Array.isArray(posts)) {
 		for (const post of posts) {
@@ -140,7 +149,7 @@ const hashtagsOccurrences = (posts) => {
 		allHashtags = posts.description.match(/#[a-zA-Z0-9]+/g)
 	}
 	/**
-	 * NOTE: removing duplicated hashtags & order to forging the result object
+	 * removing duplicated hashtags & order to forging the result object
 	 */
 	uniqueHashtags = Array.from(new Set(allHashtags))
 	for (const hashtag of uniqueHashtags) {
@@ -148,14 +157,14 @@ const hashtagsOccurrences = (posts) => {
 	}
 
 	/**
-	 * NOTE: Incrementing hashtags if there is an occurence
+	 * Incrementing hashtags if there is an occurence
 	 */
 	for (const one of allHashtags) {
 		result[one] += 1
 	}
 
 	/**
-	 * NOTE: Filtering the most occured hashtag
+	 * Filtering the most occured hashtag
 	 */
 	result["mostScrapedHashtag"] = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b)
 	return result
@@ -213,7 +222,7 @@ const forgeCsvFromJSON = data => {
 	let results = []
 	for (const hashtag of hashtags) {
 		/**
-		 * NOTE: Simple process to check if we need to search an URL for hashtags or locations
+		 * Simple process to check if we need to search an URL for hashtags or locations
 		 */
 		let targetUrl = ""
 		let inputType = hashtag.startsWith("#") ? "tags" : "locations"

@@ -86,9 +86,7 @@ const retryLoading = (arg, cb) => {
 	 */
 	document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
 	document.querySelector(arg.selectors.SPINNER).scrollIntoView()
-	/**
-	 * HACK: Since we faking a scrolling event, we're waiting 5 seconds to let the selector been injected into the DOM tree
-	 */
+	// Since we faking a scrolling event, we're waiting 5 seconds to let the selector been injected into the DOM tree
 	setTimeout(() => {
 		cb(null, document.querySelector(arg.selectors.LOADING_ERR) ? false : true)
 	}, 5000)
@@ -103,7 +101,7 @@ const waitUntilNewDivs = (arg, cb) => {
 	const startTime = Date.now()
 	const idle = () => {
 		/**
-		 * HACK: We need to see if the rate limit snackbar is in the DOM
+		 * We need to see if the rate limit snackbar is in the DOM
 		 */
 		if (document.querySelector(arg.selectors.LOADING_ERR)) {
 			cb("Rate limit")
@@ -113,7 +111,7 @@ const waitUntilNewDivs = (arg, cb) => {
 				cb("No new posts loaded after 30s")
 			}
 			/**
-			 * HACK: if the amount is still equal, we need to scroll one more time
+			 * if the amount is still equal, we need to scroll one more time
 			 * to be sure that there were divs loaded but not present in the DOM
 			 */
 			document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
@@ -147,7 +145,7 @@ const loadPosts = async (tab, arr, count, term) => {
 	let scrapeCount = 0
 
 	/**
-	 * NOTE: Moving at the beginning of the list
+	 * Moving at the beginning of the list
 	 */
 	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.scroller).scrollIntoView()), { scroller: SELECTORS.LAST_PUB })
 
@@ -182,7 +180,7 @@ const loadPosts = async (tab, arr, count, term) => {
 						return false
 					}
 					/**
-					 * NOTE: Yes, the slow down limit is hardcoded,
+					 * Yes, the slow down limit is hardcoded,
 					 * but the rate limit seems to be removed after 5 / 10 mins most of the time
 					 */
 					if (Date.now() - startSlowDownTimestamp >= 900000) {
