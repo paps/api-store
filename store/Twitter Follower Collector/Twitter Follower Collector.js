@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
@@ -20,6 +20,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const MAX_FOLLOWERS_PER_ACCOUNT = -1
+let slowDownProcess = false
 // }
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
@@ -70,32 +71,48 @@ const scrapeFollowers = (arg, callback) => {
 	callback(null, results)
 }
 
+const waitWhileHttpErrors = async tab => {
+	const slowDownStart = Date.now()
+	let tries = 1
+	utils.log("Slowing down the API due to Twitter rate limit", "warning")
+	while (slowDownProcess) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			return
+		}
+		await tab.scroll(0, 0) // Need to move at the top of the page in order to trigger the next scrollToBottom()
+		await tab.scrollToBottom()
+		await tab.wait(30000) // Wait 30 secs
+		utils.log(`Twitter Rate limit isn't reset (retry counter: ${tries})`, "loading")
+		tries++
+	}
+	utils.log(`Resuming the API scraping process (Rate limit duration: ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
+}
+
 const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
 	utils.log(`Getting followers for ${twitterHandle}`, "loading")
-	// HACK: the regex should handle @xxx
+	// the regex should handle @xxx
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
-		// HACK: removing non printables characters from the extracted handle
+		// removing non printables characters from the extracted handle
 		twitterHandle = removeNonPrintableChars(twitterHandle)
 	}
 	await tab.open(`https://twitter.com/${twitterHandle}/followers`)
 	await tab.waitUntilVisible("div.GridTimeline", 10000)
-	let loop = true
 	let n = await tab.evaluate(getDivsNb)
-	while (loop) {
+	while (true) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting followers for ${twitterHandle}: ${timeLeft.message}`, "warning")
 			break
 		}
 		/**
-		 * NOTE: Issue #47 Ability to limit the total number of profiles collected
+		 * Issue #47 Ability to limit the total number of profiles collected
 		 */
 		if (followersPerAccount > 0) {
 			if (await tab.evaluate(getFollowersNb) >= followersPerAccount) {
 				utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
-				loop = false
-				continue
+				break
 			}
 		}
 		await tab.scrollToBottom()
@@ -104,8 +121,12 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 			n = await tab.evaluate(getDivsNb)
 			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "info")
 		} catch (error) {
-			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
-			loop = false
+			if (slowDownProcess) {
+				await waitWhileHttpErrors(tab)
+			} else {
+				utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
+				break
+			}
 		}
 	}
 	let followers = await tab.evaluate(scrapeFollowers)
@@ -133,6 +154,17 @@ const jsonToCsv = json => {
 	return csv
 }
 
+const interceptHttpResponses = (e) => {
+	if (e.response.url.indexOf("/followers/users?") > -1) {
+		// console.log("HTTP status code:", e.response.status)
+		if (e.response.status === 429) {
+			slowDownProcess = true
+		} else {
+			slowDownProcess = false
+		}
+	}
+}
+
 
 ;(async () => {
 	const tab = await nick.newTab()
@@ -147,7 +179,9 @@ const jsonToCsv = json => {
 	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
 		twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
 	}
-	// HACK: removing non printables characters if the input doesn't reprsent a URL
+	// follow all HTTP queries to check if we got 429 status code
+	tab.driver.client.on("Network.responseReceived", interceptHttpResponses)
+	// removing non printables characters if the input doesn't reprsent a URL
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let csvResult = []
 	const jsonResult = []

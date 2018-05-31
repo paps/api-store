@@ -31,13 +31,11 @@ const callComments = (arg, callback) => {
 		type: "GET",
 		headers: arg.headers,
 		data: arg.search
+	}).done(data => {
+		callback(null, data)
+	}).fail(err => {
+		callback(err)
 	})
-		.done(data => {
-			callback(null, data)
-		})
-		.fail(err => {
-			callback(err)
-		})
 }
 
 const commentToCsv = element => {
@@ -102,7 +100,7 @@ const getAllComments = async (tab, headers, search, max) => {
 				await tab.wait((2000 + Math.round(Math.random() * 2000)))
 			}
 		} catch (error) {
-			console.log(error.message || err)
+			//console.log(error.message)
 			await tab.wait(2000)
 			++fail
 		}
@@ -112,7 +110,7 @@ const getAllComments = async (tab, headers, search, max) => {
 }
 
 const onHttpRequest = (e) => {
-	if ((e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1) && !voyagerHeadersFound) {
+	if (!voyagerHeadersFound && (e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1)) {
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
 		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "CHRON", updateId: null }
@@ -184,8 +182,8 @@ const searchUrnArticle = (arg, cb) => {
 
 	await linkedIn.login(tab, sessionCookie)
 
+	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (const url of postUrl) {
-		tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 		await tab.open(url)
 		await tab.waitUntilVisible(".comment")
 		const urn = await tab.evaluate(searchUrnArticle)
@@ -196,7 +194,6 @@ const searchUrnArticle = (arg, cb) => {
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
 		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
-		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	}
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)

@@ -78,7 +78,7 @@ const waitWhileHttpErrors = async tab => {
 	while (slowDownProcess) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			return false
+			return
 		}
 		await tab.scroll(0, 0) // Need to move at the top of the page in order to trigger the next scrollToBottom()
 		await tab.scrollToBottom()
@@ -86,7 +86,7 @@ const waitWhileHttpErrors = async tab => {
 		utils.log(`Twitter Rate limit isn't reset (retry counter: ${tries})`, "loading")
 		tries++
 	}
-	utils.log(`Resuming the API scraping process (Rate limit duration: ${(Date.now() - slowDownStart) / 60000} minutes)`, "info")
+	utils.log(`Resuming the API scraping process (Rate limit duration: ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
 
 const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
@@ -99,9 +99,8 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 	}
 	await tab.open(`https://twitter.com/${twitterHandle}/followers`)
 	await tab.waitUntilVisible("div.GridTimeline", 10000)
-	let loop = true
 	let n = await tab.evaluate(getDivsNb)
-	while (loop) {
+	while (true) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting followers for ${twitterHandle}: ${timeLeft.message}`, "warning")
@@ -113,8 +112,7 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 		if (followersPerAccount > 0) {
 			if (await tab.evaluate(getFollowersNb) >= followersPerAccount) {
 				utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
-				loop = false
-				continue
+				break
 			}
 		}
 		await tab.scrollToBottom()
@@ -126,8 +124,8 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 			if (slowDownProcess) {
 				await waitWhileHttpErrors(tab)
 			} else {
-				loop = false
 				utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
+				break
 			}
 		}
 	}
@@ -194,12 +192,6 @@ const interceptHttpResponses = (e) => {
 				utils.log(`Script stopped: ${timeLeft.message}`, "warning")
 				break
 			}
-			// For now if an HTTP repsonse was 429, the API will exit
-			// TODO: reduce XHR calls or find a better way to scrape data
-			if (slowDownProcess) {
-				utils.log("Too many requests performed for Twitter, the API will exit", "warning")
-				break
-			}
 			const followers = await getTwitterFollowers(tab, twitterUrl, followersPerAccount)
 			const newJson = {isFollowing: twitterUrl, followers}
 			const newCsv = jsonToCsv(newJson)
@@ -207,7 +199,6 @@ const interceptHttpResponses = (e) => {
 			jsonResult.push(newJson)
 		}
 	}
-	tab.driver.client.removeListener("Network.responseReceived", interceptHttpResponses)
 	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "name", "bio", "isFollowing"])
 	nick.exit()
 })()
