@@ -40,43 +40,32 @@ const callComments = (arg, callback) => {
 		})
 }
 
+const commentToCsv = element => {
+	const newComment = {}
+	if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
+		newComment.profileLink = `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
+		newComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
+		newComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
+		newComment.fullName = newComment.firstName + " " + newComment.lastName
+		newComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
+	}
+	if (element.comment && element.comment.values && element.comment.values[0]) {
+		newComment.comment = element.comment.values[0].value
+	}
+	return newComment
+}
+
 const linkedinObjectToResult = response => {
-	// console.log("Raw response:", JSON.stringify(response, null, 4))
 	const res = []
 	if (response.elements) {
 		for (const element of response.elements) {
-			if (element.socialDetail) {
-				if (Array.isArray(element.socialDetail.elements)) {
-					for (const nested in element.socialDetail.elements) {
-						const nestedComment = {}
-						if (nested.commenter && nested.commenter["com.linkedin.voyager.feed.MemberActor"] && nested.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
-							if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
-								nestedComment.profileLink = `https://linkedin.com/in/${nested.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
-								nestedComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
-								nestedComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
-								nestedComment.fullName = nestedComment.firstName + " " + nestedComment.lastName
-								nestedComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
-							}
-							if (nested.socialDetail.elements.comment && nested.socialDetail.elements.comment.values && nested.socialDetail.elements.comment.values[0]) {
-								nestedComment.comment = nested.comment.values[0].value
-							}
-							res.push(nestedComment)
-						}
-					}
+			if (element.socialDetail && element.socialDetail.comments) {
+				if (Array.isArray(element.socialDetail.comments.elements)) {
+					const nested = element.socialDetail.comments.elements.map(one => commentToCsv(one))
+					res.push(...nested)
 				}
 			}
-			const newComment = {}
-			if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
-				newComment.profileLink =  `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
-				newComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
-				newComment.lastName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.lastName
-				newComment.fullName = newComment.firstName + " " + newComment.lastName
-				newComment.occupation = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.occupation
-			}
-			if (element.comment && element.comment.values && element.comment.values[0]) {
-				newComment.comment = element.comment.values[0].value
-			}
-			res.push(newComment)
+			res.push(commentToCsv(element))
 		}
 	}
 	return res
@@ -109,6 +98,9 @@ const getAllComments = async (tab, headers, search, max) => {
 			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
+			if (response.elements.length < 100) {
+				await tab.wait((2000 + Math.round(Math.random() * 2000)))
+			}
 		} catch (error) {
 			console.log(error.message || err)
 			await tab.wait(2000)
@@ -123,7 +115,7 @@ const onHttpRequest = (e) => {
 	if ((e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1) && !voyagerHeadersFound) {
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
-		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "RELEVANCE", updateId: null }
+		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "CHRON", updateId: null }
 		gl.url = "https://www.linkedin.com/voyager/api/feed/comments"
 		voyagerHeadersFound = true
 	}
@@ -206,8 +198,6 @@ const searchUrnArticle = (arg, cb) => {
 		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
 		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	}
-	console.log(result.length)
-
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)
 })()
