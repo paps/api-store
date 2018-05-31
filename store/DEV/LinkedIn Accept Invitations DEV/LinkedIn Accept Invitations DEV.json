@@ -26,11 +26,11 @@
 						"label": "Number of invitations to accept per launch (max. 50) <a href=\"/api-store/2885/linkedin-accept-invitations#section_5howmanyconnectionsperiteration\" target=\"_blank\">(?)</a>"
 					},
 					"hasNoteSent": {
-						"label": "Will only accept invitations with a message",
+						"rightLabel": "Will only accept invitations with a message",
 						"type": "checkbox"
 					},
 					"hasMutualConnections": {
-						"label": "Will only accept invitations with at least one mutual connection",
+						"rightLabel": "Will only accept invitations with at least one mutual connection",
 						"type": "checkbox"
 					}
 				}
