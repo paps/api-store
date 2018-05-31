@@ -29,7 +29,8 @@ class Instagram {
 		try {
 			await tab.waitUntilVisible("main", 15000)
 			const name = await tab.evaluate((arg, cb) => {
-				const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
+				// const url = new URL(document.querySelector("a.coreSpriteDesktopNavProfile").href)
+				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
@@ -50,24 +51,24 @@ class Instagram {
 			await tab.wait(1000)
 		}
 
-		/**
-	 	 * Fill the search input
-	 	 */
+		// Fill the search input
 		await tab.sendKeys("nav input", searchTerm, {
 			reset: true,
 			keepFocus: true
 		})
-		/**
-	 	 * NOTE: Waiting Instagram results
-	 	 */
-		await tab.waitUntilVisible(".coreSpriteSearchClear")
+		// Waiting Instagram results
+		await tab.waitUntilVisible([ ".coreSpriteSearchClear", "nav div[role=button]" ], "or", 7500)
 		await tab.wait(1000)
 		const found = await tab.evaluate((arg, cb) => {
 			const urls =
 						Array
-							.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+							.from(document.querySelectorAll("nav div[class=\"\"] a"))
 							.map(el => el.href)
 							.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
+						// Array
+						// 	.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
+						// 	.map(el => el.href)
+						// 	.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
 			cb(null, urls.shift())
 		})
 		return found
