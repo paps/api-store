@@ -10,6 +10,7 @@
 		'lib-WebSearch-DEV.js': 'libs/DEV/lib-WebSearch-DEV.js'
 		'lib-LinkedInScraper-DEV.js': 'libs/DEV/lib-LinkedInScraper-DEV.js'
 		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
+		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
 
 		# API store DEV
 		# -------------
