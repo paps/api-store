@@ -13,10 +13,10 @@
 		"sessionCookie": "your_session_cookie"
 	},
 	"outputDescription": {
-		"profileUrl": "Profile url of the person followed by the targeted account",
+		"profileUrl": "Profile url of the person following the targeted account",
 		"name": "Name of the person",
 		"bio": "Bio of the person",
-		"isFollowedBy": "Url of the profile targeted"
+		"isFollowing": "Url of the profile targeted"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -29,6 +29,10 @@
 					},
 					"sessionCookie": {
 						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_5getyourtwittersessioncookie\">?</a>)"
+					},
+					"followersPerAccount": {
+						"label": "Number of followers to scrape per Twitter account",
+						"helper": "If you leave this field empty, the API will try to get as much followers as possible for every Twitter account"
 					}
 				}
 			}
@@ -48,6 +52,11 @@
 				"title": "Session Cookie",
 				"minLength": 10,
 				"required": true
+			},
+			"followersPerAccount": {
+				"type": "number",
+				"title": "Followers count to get per accounts",
+				"minimum": 1
 			}
 		}
 	}

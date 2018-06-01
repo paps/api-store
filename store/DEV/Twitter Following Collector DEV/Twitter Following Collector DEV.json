@@ -25,10 +25,10 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Twitter account or Spreadsheet URL <a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_4aimaspecifictwitteraccountorseveralatatime\">(?)</a>"
+						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
 					},
 					"sessionCookie": {
-						"label": "Session Cookie 'auth_token' <a target=\"_blank\" href=\"/api-store/4130/twitter-follower-collector#section_5getyourtwittersessioncookie\">(?)</a>"
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_5getyourtwittersessioncookie\">?</a>)"
 					},
 					"followersPerAccount": {
 						"label": "Number of followers to scrape per Twitter account",
