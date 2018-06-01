@@ -15,6 +15,7 @@
 		'lib-WebSearch.js': 'libs/lib-WebSearch.js'
 		'lib-LinkedInScraper.js': 'libs/lib-LinkedInScraper.js'
 		'lib-Instagram.js': 'libs/lib-Instagram.js'
+		'lib-Twitter.js': 'libs/lib-Twitter.js'
 
 		# API store
 		# ---------
