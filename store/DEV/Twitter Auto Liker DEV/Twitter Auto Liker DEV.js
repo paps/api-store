@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -18,6 +18,8 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
 const DB_NAME = "result.csv"
 const DEFAULT_LIKE_COUNT = 1
 const DEFAULT_PROFILE_LAUNCH = 1
@@ -57,39 +59,6 @@ const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 		i++
 	}
 	return urls
-}
-
-/**
- * @description Get username of a twitter account
- * @param {Object} arg
- * @param {Function} callback
- */
-const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-/**
- * @description Connects to twitter with a session ID
- * @param {Object} tab Nick tab in use
- * @param {String} sessionCookie Your session cookie for twitter
- */
-const twitterConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to Twitter...", "loading")
-	try {
-		await nick.setCookie({
-			name: "auth_token",
-			value: sessionCookie,
-			domain: ".twitter.com",
-			httpOnly: true,
-			secure: true
-		})
-		await tab.open("https://twitter.com/")
-		await tab.waitUntilVisible(".DashboardProfileCard")
-		utils.log(`Connected as ${await tab.evaluate(scrapeUserName)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-		nick.exit(1)
-	}
 }
 
 /**
@@ -275,7 +244,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 	const result = []
 
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
-	await twitterConnect(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie)
 
 	for (const profile of queries) {
 		const timeLeft = await utils.checkTimeLeft()
