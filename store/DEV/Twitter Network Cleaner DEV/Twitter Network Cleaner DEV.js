@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,83 +19,11 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
 // }
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
-
-const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-const twitterConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to Twitter...", "loading")
-	try {
-		await nick.setCookie({
-			name: "auth_token",
-			value: sessionCookie,
-			domain: ".twitter.com",
-			httpOnly: true,
-			secure: true
-		})
-		await tab.open("https://twitter.com/")
-		await tab.waitUntilVisible(".DashboardProfileCard")
-		utils.log(`Connected as ${await tab.evaluate(scrapeUserName)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-		nick.exit(1)
-	}
-}
-
-const getFollowersNb = (arg, callback) => {
-	callback(null, document.querySelectorAll(`div.GridTimeline div[data-test-selector="ProfileTimelineUser"]`).length)
-}
-
-const getDivsNb = (arg, callback) => {
-	callback(null, document.querySelectorAll("div.GridTimeline-items > div.Grid").length)
-}
-
-const scrapeFollowers = (arg, callback) => {
-	const followers = document.querySelectorAll(`div.Grid-cell[data-test-selector="ProfileTimelineUser"]`)
-
-	const results = []
-
-	for (const follower of followers) {
-		const newFollower = {}
-		if (follower.querySelector("div.ProfileCard > a")) {newFollower.profileUrl = follower.querySelector("div.ProfileCard > a").href}
-		if (follower.querySelector("a.fullname")) {newFollower.name = follower.querySelector("a.fullname").textContent.trim()}
-		if (follower.querySelector("p.ProfileCard-bio")) {newFollower.bio = follower.querySelector("p.ProfileCard-bio").textContent.trim()}
-		results.push(newFollower)
-	}
-	callback(null, results)
-}
-
-const getTwitterFollowers = async (tab, twitterUrl) => {
-	utils.log(`Getting your followers...`, "loading")
-	await tab.open(twitterUrl)
-	await tab.waitUntilVisible("div.GridTimeline")
-	let loop = true
-	let n = await tab.evaluate(getDivsNb)
-	while (loop) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Stopped getting your followers: ${timeLeft.message}`, "warning")
-			await utils.saveResult([])
-			nick.exit()
-		}
-		await tab.scrollToBottom()
-		try {
-			await tab.waitUntilVisible(`div.GridTimeline-items > div.Grid:nth-child(${n+1})`)
-			n = await tab.evaluate(getDivsNb)
-			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "info")
-		} catch (error) {
-			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} followers.`, "done")
-			loop = false
-		}
-	}
-	const followers = await tab.evaluate(scrapeFollowers)
-	utils.log(`Scraped all your followers`, "done")
-	return followers
-}
 
 const unfollow = async (tab, twitterHandle) => {
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
@@ -107,7 +35,7 @@ const unfollow = async (tab, twitterHandle) => {
 
 	const [httpCode, httpStatus] = await tab.open(`https://twitter.com/${twitterHandle}`)
 	/**
-	 * NOTE: If we can't load the twitter profile, we just notify the user with an error
+	 * If we can't load the twitter profile, we just notify the user with an error
 	 */
 	if (httpCode >= 400 && httpCode <= 500)
 		return utils.log(`${twitterHandle} doesn't represent a valid twitter profile`, "warning")
@@ -130,11 +58,11 @@ const unfollow = async (tab, twitterHandle) => {
 	let {spreadsheetUrl, sessionCookie} = utils.validateArguments()
 
 	/**
-	 * NOTE: Just in case arguments got unexpected trailing whitespaces, tabs, ...
+	 * Just in case arguments got unexpected trailing whitespaces, tabs, ...
 	 */
 	spreadsheetUrl = spreadsheetUrl.trim()
 	sessionCookie = sessionCookie.trim()
-	await twitterConnect(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie)
 
 	let twitterProfiles = [spreadsheetUrl]
 	/* Checking if we have an url from buster.arguments */
@@ -149,7 +77,8 @@ const unfollow = async (tab, twitterHandle) => {
 		}
 
 	}
-	const followers = await getTwitterFollowers(tab, "https://twitter.com/followers")
+	utils.log("Getting your followers...", "loading")
+	const followers = await twitter.collectFollowers(tab, "https://twitter.com/followers")
 	const peopleUnfollowed = []
 	for (const url of twitterProfiles) {
 		if (url) {
