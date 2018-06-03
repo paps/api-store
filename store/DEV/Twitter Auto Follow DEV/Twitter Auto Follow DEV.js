@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,44 +19,10 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const fs = require("fs")
-const Papa = require("papaparse")
-const needle = require("needle")
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
 const dbFileName = "database-twitter-auto-follow.csv"
 // }
-
-/**
- * @description Get username of a twitter account
- * @param {Object} arg
- * @param {Function} callback
- */
-const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-/**
- * @description Connects to twitter with a session ID
- * @param {Object} tab Nick tab in use
- * @param {String} sessionCookie Your session cookie for twitter
- */
-const twitterConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to Twitter...", "loading")
-	try {
-		await nick.setCookie({
-			name: "auth_token",
-			value: sessionCookie,
-			domain: ".twitter.com",
-			httpOnly: true,
-			secure: true
-		})
-		await tab.open("https://twitter.com/")
-		await tab.waitUntilVisible(".DashboardProfileCard")
-		utils.log(`Connected as ${await tab.evaluate(scrapeUserName)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-		nick.exit(1)
-	}
-}
 
 /**
  * @description Browser context function used to scrape languages used for every tweets loaded in the current page
@@ -266,7 +232,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	}
 	let db = await utils.getDb(dbFileName)
 	let profiles = await getProfilesToAdd(spreadsheetUrl, db, numberOfAddsPerLaunch)
-	await twitterConnect(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie)
 	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList)
 	utils.log(`Added successfully ${added.length} profile.`, "done")
 	db = db.concat(added)
