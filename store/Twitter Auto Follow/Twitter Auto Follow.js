@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,44 +19,12 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const fs = require("fs")
-const Papa = require("papaparse")
-const needle = require("needle")
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
 const dbFileName = "database-twitter-auto-follow.csv"
 // }
 
-/**
- * @description Get username of a twitter account
- * @param {Object} arg
- * @param {Function} callback
- */
-const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-/**
- * @description Connects to twitter with a session ID
- * @param {Object} tab Nick tab in use
- * @param {String} sessionCookie Your session cookie for twitter
- */
-const twitterConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to Twitter...", "loading")
-	try {
-		await nick.setCookie({
-			name: "auth_token",
-			value: sessionCookie,
-			domain: ".twitter.com",
-			httpOnly: true,
-			secure: true
-		})
-		await tab.open("https://twitter.com/")
-		await tab.waitUntilVisible(".DashboardProfileCard")
-		utils.log(`Connected as ${await tab.evaluate(scrapeUserName)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-		nick.exit(1)
-	}
-}
+const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
 /**
  * @description Browser context function used to scrape languages used for every tweets loaded in the current page
@@ -84,7 +52,7 @@ const isLanguagesInList = async (tab, list) => {
 	const langsScraped = await tab.evaluate(getTweetsLanguages)
 
 	/**
-	 * NOTE: No tweets scraped:
+	 * No tweets scraped:
 	 * - No tweets from the user ?
 	 * - Protected mode ?
 	 * - An error ?
@@ -120,13 +88,11 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 		result = [spreadsheetUrl]
 	}
 
-	// BUG: Column name is passed into filter function
-	// HACK: to fix, we need have an formated spreadsheet otherwise it's difficult
 	result = result.filter(el => {
 		for (const line of db) {
 			el = el.toLowerCase()
 			const regex = new RegExp(`twitter\.com\/${line.handle}$`)
-			if (el === line.handle || el === line.url || el.match(regex)) {
+			if (el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex)) {
 				return false
 			}
 		}
@@ -160,11 +126,11 @@ const subscribe = async (tab, url, whitelist) => {
 		throw `${url} isn't a valid twitter profile.`
 	}
 	/**
-	 * NOTE: Aren't we following the profile ?
+	 * Aren't we following the profile ?
 	 */
 	if (selector === ".ProfileNav-item .follow-text") {
 		/**
-		 * NOTE: Does tweet languages found in the profile are in the provided whitelist
+		 * Does tweet languages found in the profile are in the provided whitelist
 		 */
 		if (!await isLanguagesInList(tab, whitelist)) {
 			return utils.log(`Tweets from ${url} includes languages that aren't provided by your whitelist, follow request canceled`, "warning")
@@ -173,26 +139,26 @@ const subscribe = async (tab, url, whitelist) => {
 		const result = await tab.waitUntilVisible([ ".ProfileNav-item .following-text", ".pending" ], 5000, "or")
 		await tab.wait(1000)
 		/**
-		 * NOTE:Is the target profile in protected mode ?
+		 * Is the target profile in protected mode ?
 		 */
 		if (await tab.isPresent(".pending")) {
 			return utils.log(`Follow request for ${url} is in pending state`, "info")
 		}
 		/**
-		 * NOTE: Did we reach the daily follow limit
+		 * Did we reach the daily follow limit
 		 */
 		if (await tab.isVisible(".alert-messages")) {
 			utils.log("Twitter daily follow limit reached", "error")
 			throw "TLIMIT"
 		}
 		/**
-		 * NOTE: Follow process is a success
+		 * Follow process is a success
 		 */
 		if (result === ".ProfileNav-item .following-text") {
 			return utils.log(`${url} followed`, "done")
 		}
 		/**
-		 * NOTE: Are we already following the profile
+		 * Are we already following the profile
 		 */
 	} else if (selector === ".ProfileNav-item .following-text") {
 		return utils.log(`You are already following ${url}.`, "warning")
@@ -226,7 +192,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 		const pmatch = profile.match(getUsernameRegex) // Get twitter user name (handle)
 		if (pmatch) {
 			newAdd.url = profile
-			newAdd.handle = pmatch[1]
+			newAdd.handle = removeNonPrintableChars(pmatch[1])
 		} else if (profile.match(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)) { // Check if profile is a valid URL
 			newAdd.url = profile
 		} else {
@@ -266,11 +232,11 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	}
 	let db = await utils.getDb(dbFileName)
 	let profiles = await getProfilesToAdd(spreadsheetUrl, db, numberOfAddsPerLaunch)
-	await twitterConnect(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie)
 	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList)
 	utils.log(`Added successfully ${added.length} profile.`, "done")
 	db = db.concat(added)
-	await utils.saveResult(db, "database-twitter-auto-follow")
+	await utils.saveResult(db, dbFileName.split(".").shift())
 	nick.exit()
 })()
 	.catch(err => {

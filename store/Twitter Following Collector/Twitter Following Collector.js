@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,85 +19,25 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
+const MAX_FOLLOWERS_PER_ACCOUNT = -1
 // }
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
-const scrapeUserName = (arg, callback) => {
-	callback(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
-}
-
-const twitterConnect = async (tab, sessionCookie) => {
-	utils.log("Connecting to Twitter...", "loading")
-	try {
-		await nick.setCookie({
-			name: "auth_token",
-			value: sessionCookie,
-			domain: ".twitter.com",
-			httpOnly: true,
-			secure: true
-		})
-		await tab.open("https://twitter.com/")
-		await tab.waitUntilVisible(".DashboardProfileCard")
-		utils.log(`Connected as ${await tab.evaluate(scrapeUserName)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-		nick.exit(1)
-	}
-}
-
-const getFollowersNb = (arg, callback) => {
-	callback(null, document.querySelectorAll(`div.GridTimeline div[data-test-selector="ProfileTimelineUser"]`).length)
-}
-
-const getDivsNb = (arg, callback) => {
-	callback(null, document.querySelectorAll("div.GridTimeline-items > div.Grid").length)
-}
-
-const scrapeFollowers = (arg, callback) => {
-	const followers = document.querySelectorAll(`div.Grid-cell[data-test-selector="ProfileTimelineUser"]`)
-
-	const results = []
-
-	for (const follower of followers) {
-		const newFollower = {}
-		if (follower.querySelector("div.ProfileCard > a")) {newFollower.profileUrl = follower.querySelector("div.ProfileCard > a").href}
-		if (follower.querySelector("a.fullname")) {newFollower.name = follower.querySelector("a.fullname").textContent.trim()}
-		if (follower.querySelector("p.ProfileCard-bio")) {newFollower.bio = follower.querySelector("p.ProfileCard-bio").textContent.trim()}
-		results.push(newFollower)
-	}
-	callback(null, results)
-}
-
-const getTwitterFollowers = async (tab, twitterHandle) => {
+const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount) => {
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
 	}
 	twitterHandle = removeNonPrintableChars(twitterHandle)
 	utils.log(`Getting accounts followed by ${twitterHandle}`, "loading")
-	await tab.open(`https://twitter.com/${twitterHandle}/following`)
-	await tab.waitUntilVisible("div.GridTimeline")
-	let loop = true
-	let n = await tab.evaluate(getDivsNb)
-	while (loop) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Stopped getting accounts followed by ${twitterHandle}: ${timeLeft.message}`, "warning")
-			break
-		}
-		await tab.scrollToBottom()
-		try {
-			await tab.waitUntilVisible(`div.GridTimeline-items > div.Grid:nth-child(${n+1})`)
-			n = await tab.evaluate(getDivsNb)
-			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} accounts followed.`, "info")
-		} catch (error) {
-			utils.log(`Loaded ${await tab.evaluate(getFollowersNb)} account followed.`, "done")
-			loop = false
-		}
+	try {
+		return await twitter.collectFollowers(tab, `https://twitter.com/${twitterHandle}/following`, followersPerAccount)
+	} catch (err) {
+		console.log(err.message || err)
+		return []
 	}
-	const followers = await tab.evaluate(scrapeFollowers)
-	utils.log(`Scraped all accounts followed by ${twitterHandle}`, "done")
-	return followers
 }
 
 const jsonToCsv = json => {
@@ -110,11 +50,14 @@ const jsonToCsv = json => {
 	return csv
 }
 
-
 ;(async () => {
 	const tab = await nick.newTab()
-	let {spreadsheetUrl, sessionCookie} = utils.validateArguments()
-	await twitterConnect(tab, sessionCookie)
+	let {spreadsheetUrl, sessionCookie, followersPerAccount} = utils.validateArguments()
+	if (!followersPerAccount) {
+		followersPerAccount = MAX_FOLLOWERS_PER_ACCOUNT
+	}
+
+	await twitter.login(tab, sessionCookie)
 	let twitterUrls = [spreadsheetUrl]
 	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
 		twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
@@ -128,7 +71,7 @@ const jsonToCsv = json => {
 				utils.log(`Script stopped: ${timeLeft.message}`, "warning")
 				break
 			}
-			const followers = await getTwitterFollowers(tab, twitterUrl)
+			const followers = await getTwitterFollowers(tab, twitterUrl, followersPerAccount)
 			const newJson = {isFollowedBy: twitterUrl, followers}
 			const newCsv = jsonToCsv(newJson)
 			csvResult = csvResult.concat(newCsv)

@@ -37,7 +37,7 @@ const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => 
 	try {
 		return await twitter.collectFollowers(tab, `https://twitter.com/${twitterHandle}/followers`, followersPerAccount)
 	} catch (err) {
-		console.log(err.message || err)
+		utils.log(`Loaded 0 followers.`, "done")
 		return []
 	}
 }
