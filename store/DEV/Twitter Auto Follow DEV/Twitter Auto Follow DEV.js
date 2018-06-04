@@ -24,6 +24,8 @@ const twitter = new Twitter(nick, buster, utils)
 const dbFileName = "database-twitter-auto-follow.csv"
 // }
 
+const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
+
 /**
  * @description Browser context function used to scrape languages used for every tweets loaded in the current page
  * @param {Object} arg -- Arguments passed to browser context }
@@ -177,6 +179,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	const added = []
 	let i = 1
 	for (let profile of profiles) {
+		profile = removeNonPrintableChars(profile)
 		if (i > numberOfAddsPerLaunch) {
 			utils.log(`Already added ${numberOfAddsPerLaunch}.`, "info")
 			return added
