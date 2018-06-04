@@ -7,10 +7,6 @@ parserOptions:
   ecmaVersion: 8
   sourceType: module
 rules:
-  indent:
-    - error
-    - tab
-    - outerIIFEBody: 1
   linebreak-style:
     - error
     - unix
@@ -41,7 +37,7 @@ rules:
     - error
     - only-multiline
   no-array-constructor:
-    - error 
+    - error
   no-var:
     - error
   no-empty:
