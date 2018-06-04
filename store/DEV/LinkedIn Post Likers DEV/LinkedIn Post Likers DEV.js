@@ -69,14 +69,11 @@ const scrapeLikes = (arg, callback) => {
 }
 
 // Function to launch every others and handle errors
-const getLikes = async (tab, postUrl) => {
+const getLikes = async (tab, urls) => {
 	let results = []
 	const selectors = {}
-	if (!Array.isArray(postUrl)) {
-		postUrl = [ postUrl ]
-	}
 
-	for (const url of postUrl) {
+	for (const url of urls) {
 		try {
 			await tab.open(url)
 		} catch (error) {
@@ -85,7 +82,7 @@ const getLikes = async (tab, postUrl) => {
 		}
 		try {
 			/**
-			 * NOTE: to check if the opened page is a real article, we need to check:
+			 * to check if the opened page is a real article, we need to check:
 			 * If we got selectors for like, comment, and likes count
 			 * We store, selectors in selectors.likes variable
 			 */
@@ -94,7 +91,7 @@ const getLikes = async (tab, postUrl) => {
 				"button.reader-social-bar__like-count.reader-social-bar__count"], 15000, "or")
 			await tab.click(selectors.likes)
 			/**
-			 * NOTE: this waitUntilVisible call checks if we got:
+			 * this waitUntilVisible call checks if we got:
 			 * - some selectors loaded in order to open the popup in order to scrape the likers
 			 */
 			selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
@@ -114,7 +111,6 @@ const getLikes = async (tab, postUrl) => {
 			return el
 		})
 		results = results.concat(likes)
-		// results = results.concat(await tab.evaluate(scrapeLikes))
 	}
 	return results
 }
@@ -130,6 +126,8 @@ const getLikes = async (tab, postUrl) => {
 
 	if (postUrl.indexOf("linkedin.com/") < 0) {
 		postUrl = await utils.getDataFromCsv(postUrl, columnName)
+	} else {
+		postUrl = [ postUrl ]
 	}
 
 	await linkedIn.login(tab, sessionCookie)

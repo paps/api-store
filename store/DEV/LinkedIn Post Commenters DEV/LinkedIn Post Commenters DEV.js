@@ -100,7 +100,6 @@ const getAllComments = async (tab, headers, search, max) => {
 				await tab.wait((2000 + Math.round(Math.random() * 2000)))
 			}
 		} catch (error) {
-			//console.log(error.message)
 			await tab.wait(2000)
 			++fail
 		}
@@ -194,7 +193,7 @@ const searchUrnArticle = (arg, cb) => {
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
-		commenters = commenters.map(el => {
+		commenters.map(el => {
 			el.postUrl = url
 			return el
 		})

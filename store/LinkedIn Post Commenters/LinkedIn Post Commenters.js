@@ -100,7 +100,6 @@ const getAllComments = async (tab, headers, search, max) => {
 				await tab.wait((2000 + Math.round(Math.random() * 2000)))
 			}
 		} catch (error) {
-			//console.log(error.message)
 			await tab.wait(2000)
 			++fail
 		}
@@ -193,7 +192,12 @@ const searchUrnArticle = (arg, cb) => {
 			throw "Could not get comments on this page."
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
-		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
+		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
+		commenters.map(el => {
+			el.postUrl = url
+			return el
+		})
+		result = result.concat(commenters)
 	}
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)

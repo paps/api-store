@@ -64,11 +64,25 @@ const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 const loadProfilesUsingScrollDown = async (tab) => {
 	utils.log("Scrolling down...", "loading")
 	await tab.scrollToBottom()
-	await tab.wait(3000)
+	await tab.wait(1000)
 	await tab.scrollToBottom()
-	await tab.wait(3000)
+	await tab.wait(1000)
 	await tab.scrollToBottom()
-	await tab.wait(3000)
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
+	await tab.scrollToBottom()
+	await tab.wait(1000)
 }
 
 nick.newTab().then(async (tab) => {

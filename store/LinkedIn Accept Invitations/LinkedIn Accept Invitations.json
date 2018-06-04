@@ -24,6 +24,14 @@
 						"inputType": "number",
 						"placeholder": 5,
 						"label": "Number of invitations to accept per launch (max. 50) <a href=\"/api-store/2885/linkedin-accept-invitations#section_5howmanyconnectionsperiteration\" target=\"_blank\">(?)</a>"
+					},
+					"hasNoteSent": {
+						"rightLabel": "<b>Only</b> accept invitations with a message",
+						"type": "checkbox"
+					},
+					"hasMutualConnections": {
+						"rightLabel": "<b>Only</b> accept invitations with at least one mutual connection",
+						"type": "checkbox"
 					}
 				}
 			}
@@ -41,6 +49,14 @@
 				"type": "number",
 				"minimum": 1,
 				"maximum": 50
+			},
+			"hasNoteSent": {
+				"type": "boolean",
+				"default": false
+			},
+			"hasMutualConnections": {
+				"type": "boolean",
+				"default": false
 			}
 		}
 	}
