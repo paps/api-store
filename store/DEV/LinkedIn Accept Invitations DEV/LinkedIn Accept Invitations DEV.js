@@ -26,9 +26,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 	return await tab.evaluate(function (arg, done) {
 		jQuery.noConflict()
-		let invites = jQuery("ul.mn-invitation-list > li").map(function (i) {
-			return this
-		})
+		let invites = jQuery("ul.mn-invitation-list > li")
 
 		/**
 		 * Will only get invitations which have 1 or more mutual connections
