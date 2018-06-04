@@ -193,7 +193,12 @@ const searchUrnArticle = (arg, cb) => {
 			throw "Could not get comments on this page."
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
-		result = result.concat(await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10)))
+		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
+		commenters = commenters.map(el => {
+			el.postUrl = url
+			return el
+		})
+		result = result.concat(commenters)
 	}
 	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)

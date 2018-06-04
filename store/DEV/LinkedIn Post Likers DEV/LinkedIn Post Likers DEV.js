@@ -108,7 +108,13 @@ const getLikes = async (tab, postUrl) => {
 		} catch (error) {
 			utils.log("Could not load likes", "warning")
 		}
-		results = results.concat(await tab.evaluate(scrapeLikes))
+		let likes = await tab.evaluate(scrapeLikes)
+		likes.map(el => {
+			el.postUrl = url
+			return el
+		})
+		results = results.concat(likes)
+		// results = results.concat(await tab.evaluate(scrapeLikes))
 	}
 	return results
 }
