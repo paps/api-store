@@ -154,11 +154,28 @@ class Instagram {
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
 
+		// Sometimes the selector used to get likes count for a Instagram video isn't present
+		// if (scrapedData.postVideo && await tab.isPresent("section span[role=\"button\"]")) {
+		// 	scrapedData.views = scrapedData.likes
+		// 	await tab.click("section span[role=\"button\"]")
+		// 	await tab.waitUntilVisible("section span[role=\"button\"] ~ div span")
+		// 	scrapedData.likes = await tab.evaluate((arg, cb) => {
+		// 		cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
+		// 	}, { selector: "section span[role=\"button\"] ~ div span" })
+		// }
+
+		const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
+
 		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
-		if (await tab.isPresent(".coreSpriteRightChevron")) {
+		if (await tab.isPresent("div[role=\"button\"] ~ a[role=\"button\"]")) {
+			const nextCarouselSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
 			scrapedData.postImage = [ scrapedData.postImage ]
-			while (await tab.isPresent(".coreSpriteRightChevron")) {
-				await tab.click(".coreSpriteRightChevron")
+			while (true) {
+				let hasMoreImages = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
+				if (hasMoreImages !== nextCarouselSelector) {
+					break
+				}
+				await tab.click("div[role=\"button\"] ~ a[role=\"button\"]")
 				await tab.waitUntilVisible("article img")
 				const img = await tab.evaluate((arg, cb) => {
 					const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
