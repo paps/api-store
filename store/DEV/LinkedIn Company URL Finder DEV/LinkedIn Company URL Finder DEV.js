@@ -12,7 +12,7 @@ const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
@@ -31,7 +31,7 @@ const utils = new StoreUtilities(nick, buster)
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster)
+	const webSearch = new WebSearch(tab, buster, true)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
 
 	const toReturn = []
