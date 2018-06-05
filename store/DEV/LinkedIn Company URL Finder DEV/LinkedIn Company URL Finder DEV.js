@@ -31,7 +31,7 @@ const utils = new StoreUtilities(nick, buster)
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster, true)
+	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
 
 	const toReturn = []
