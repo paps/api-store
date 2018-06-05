@@ -12,7 +12,7 @@ const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	userAgent,
 	printPageErrors: false,
 	printResourceErrors: false,
