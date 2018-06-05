@@ -154,15 +154,20 @@ class Instagram {
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
 
+		const isLikeSelectorInDOM = await tab.evaluate((arg, cb) => {
+			let isInDOM = document.querySelector("header ~ div section span[role=\"button\"]")
+			cb(null, isInDOM !== null ? true : false)
+		})
+
 		// Sometimes the selector used to get likes count for a Instagram video isn't present
-		// if (scrapedData.postVideo && await tab.isPresent("section span[role=\"button\"]")) {
-		// 	scrapedData.views = scrapedData.likes
-		// 	await tab.click("section span[role=\"button\"]")
-		// 	await tab.waitUntilVisible("section span[role=\"button\"] ~ div span")
-		// 	scrapedData.likes = await tab.evaluate((arg, cb) => {
-		// 		cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
-		// 	}, { selector: "section span[role=\"button\"] ~ div span" })
-		// }
+		if (scrapedData.postVideo && isLikeSelectorInDOM) {
+			scrapedData.views = scrapedData.likes
+			await tab.click("section span[role=\"button\"]")
+			await tab.waitUntilVisible("section span[role=\"button\"] ~ div span")
+			scrapedData.likes = await tab.evaluate((arg, cb) => {
+				cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
+			}, { selector: "section span[role=\"button\"] ~ div span" })
+		}
 
 		const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
 
