@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Instagram = require("./lib-Instagram")
+const Instagram = require("./lib-Instagram-DEV")
 const instagram = new Instagram(nick, buster, utils)
 // }
 
@@ -67,6 +67,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`${currentPost.postUrl} scraped`, "done")
 			arr.push(currentPost)
 		} catch (err) {
+			console.log(err.message || err)
 			utils.log(`Error while scraping: ${await tab.getUrl()}`, "warning")
 		}
 		/**
