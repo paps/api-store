@@ -1,0 +1,68 @@
+{
+	"slug": "medium-post-clappers",
+	"description": "Get all clappers' profiles from a single or many Medium posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/medium_post_clappers/medium_post_clappers_mini.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#029E74",
+	"gradientEnd": "#516395",
+	"argumentHelpAnchor": "#section_4mediumauthentication",
+	"defaultArgument": {
+		"uid": "uid_cookie",
+		"sid": "sid_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1AZtxGlz5yzV_0nezbtS28wxkI9ZdS1Ev71NnNuL6AgY/edit?usp=sharing",
+		"csvName": "csv_name"
+	},
+	"outputDescription": {
+		"profileurl": "Medium profile URL",
+		"name": "Name of the clapper",
+		"description": "position of the clapper",
+		"articleurl": "link of the original targeted article"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"label": "Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/3610/medium-post-clappers#section_5settingupanicespreadsheet\">?</a>)"
+					},
+					"uid": {
+						"label": "UID cookie (<a target=\"_blank\" href=\"/api-store/3610/medium-post-clappers#section_4mediumauthentication\">?</a>)"
+					},
+					"sid": {
+						"label": "SID cookie (<a target=\"_blank\" href=\"/api-store/3610/medium-post-clappers#section_4mediumauthentication\">?</a>)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"require": true,
+		"type": "object",
+		"properties": {
+			"uid": {
+				"type": "string",
+				"title": "Cookie uid",
+				"required": true
+			},
+			"sid": {
+				"type": "string",
+				"title": "Cookie sid",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet url",
+				"required": true
+			},
+			"csvName": {
+				"type": "string",
+				"title": "Name of output CSV",
+				"required": true
+			}
+		}
+	}
+}
