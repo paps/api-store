@@ -1,3 +1,12 @@
+const _getCarouselElement = (arg, cb) => {
+	const baseSelector = document.querySelectorAll(arg.baseSelector)
+	if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+		return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).src)
+	} else {
+		return cb(null, "")
+	}
+}
+
 /**
  * @async
  * @internal
@@ -12,24 +21,37 @@ const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
 
 	if (await tab.isPresent(".coreSpriteRightChevron")) {
 		scrapedData.postImage = [ scrapedData.postImage ]
+		scrapedData.postVideo = [ scrapedData.postVideo ]
+		scrapedData.videoThumbnail = [ scrapedData.videoThumbnail ]
 		while (await tab.isPresent(".coreSpriteRightChevron")) {
 			await tab.click(".coreSpriteRightChevron")
 			await tab.waitUntilVisible("article img")
 			await tab.wait(1000)
-			const img = await tab.evaluate((arg, cb) => {
-				const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
-				if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
-					return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
-				} else {
-					return cb(null, "")
-				}
-			}, { selectors: selectors })
-			scrapedData.postImage.push(img)
+
+			let carouselElement
+			if (await tab.isPresent("video")) {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postVideo.push(carouselElement)
+				let thumbnail = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.baseSelector)
+					if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).poster)
+					} else {
+						return cb(null, "")
+					}
+				}, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.videoThumbnail.push(thumbnail)
+			} else {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.postImageSelector })
+				scrapedData.postImage.push(carouselElement)
+			}
 			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
 		}
 	} else if (await tab.isPresent("div[role=\"button\"] ~ a[role=\"button\"]")) {
 		const nextCarouselSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
 		scrapedData.postImage = [ scrapedData.postImage ]
+		scrapedData.postVideo = [ scrapedData.postVideo ]
+		scrapedData.videoThumbnail = [ scrapedData.videoThumbnail ]
 		while (true) {
 			let hasMoreImages = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
 			if (hasMoreImages !== nextCarouselSelector) {
@@ -38,18 +60,40 @@ const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
 			await tab.click("div[role=\"button\"] ~ a[role=\"button\"]")
 			await tab.waitUntilVisible("article img")
 			await tab.wait(1000)
-			const img = await tab.evaluate((arg, cb) => {
-				const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
-				if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
-					return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
-				} else {
-					return cb(null, "")
-				}
-			}, { selectors: selectors })
-			scrapedData.postImage.push(img)
+
+			let carouselElement
+			if (await tab.isPresent("video")) {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postVideo.push(carouselElement)
+				let thumbnail = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.baseSelector)
+					if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).poster)
+					} else {
+						return cb(null, "")
+					}
+				}, { baseSelector: selectors.baseSelector, scrapingSelector: selector.videoSelector })
+				scrapedData.videoThumbnail.push(thumbnail)
+			} else {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postImage.push(carouselElement)
+			}
 			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
 		}
 	}
+
+	if (Array.isArray(scrapedData.postImage) && scrapedData.postImage.length === 1) {
+		scrapedData.postImage = scrapedData.postImage.shift()
+	}
+
+	if (Array.isArray(scrapedData.postVideo) && scrapedData.postVideo.length === 1) {
+		scrapedData.postVideo = scrapedData.postVideo.shift()
+	}
+
+	if (Array.isArray(scrapedData.videoThumbnail) && scrapedData.videoThumbnail.length === 1) {
+		scrapedData.videoThumbnail = scrapedData.videoThumbnail.shift()
+	}
+
 	return scrapedData
 }
 

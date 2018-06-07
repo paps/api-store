@@ -1,3 +1,102 @@
+const _getCarouselElement = (arg, cb) => {
+	const baseSelector = document.querySelectorAll(arg.baseSelector)
+	if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+		return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).src)
+	} else {
+		return cb(null, "")
+	}
+}
+
+/**
+ * @async
+ * @internal
+ * @description Internal function used to get all images from a given post
+ * @param {Tab} tab - Nickjs Tab instance with an Instagram post loaded
+ * @param {Object} scrapedData - Existing scraped data
+ * @param {Object} selectors - Instagram CSS selectors used
+ * @return {Promise<Object>} Scraped data with all images found in the post
+ */
+const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
+	const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
+
+	if (await tab.isPresent(".coreSpriteRightChevron")) {
+		scrapedData.postImage = [ scrapedData.postImage ]
+		scrapedData.postVideo = [ scrapedData.postVideo ]
+		scrapedData.videoThumbnail = [ scrapedData.videoThumbnail ]
+		while (await tab.isPresent(".coreSpriteRightChevron")) {
+			await tab.click(".coreSpriteRightChevron")
+			await tab.waitUntilVisible("article img")
+			await tab.wait(1000)
+
+			let carouselElement
+			if (await tab.isPresent("video")) {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postVideo.push(carouselElement)
+				let thumbnail = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.baseSelector)
+					if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).poster)
+					} else {
+						return cb(null, "")
+					}
+				}, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.videoThumbnail.push(thumbnail)
+			} else {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.postImageSelector })
+				scrapedData.postImage.push(carouselElement)
+			}
+			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+		}
+	} else if (await tab.isPresent("div[role=\"button\"] ~ a[role=\"button\"]")) {
+		const nextCarouselSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
+		scrapedData.postImage = [ scrapedData.postImage ]
+		scrapedData.postVideo = [ scrapedData.postVideo ]
+		scrapedData.videoThumbnail = [ scrapedData.videoThumbnail ]
+		while (true) {
+			let hasMoreImages = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
+			if (hasMoreImages !== nextCarouselSelector) {
+				break
+			}
+			await tab.click("div[role=\"button\"] ~ a[role=\"button\"]")
+			await tab.waitUntilVisible("article img")
+			await tab.wait(1000)
+
+			let carouselElement
+			if (await tab.isPresent("video")) {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postVideo.push(carouselElement)
+				let thumbnail = await tab.evaluate((arg, cb) => {
+					const baseSelector = document.querySelectorAll(arg.baseSelector)
+					if (baseSelector[0].querySelector(arg.scrapingSelector)) {
+						return cb(null, baseSelector[0].querySelector(arg.scrapingSelector).poster)
+					} else {
+						return cb(null, "")
+					}
+				}, { baseSelector: selectors.baseSelector, scrapingSelector: selector.videoSelector })
+				scrapedData.videoThumbnail.push(thumbnail)
+			} else {
+				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
+				scrapedData.postImage.push(carouselElement)
+			}
+			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+		}
+	}
+
+	if (Array.isArray(scrapedData.postImage) && scrapedData.postImage.length === 1) {
+		scrapedData.postImage = scrapedData.postImage.shift()
+	}
+
+	if (Array.isArray(scrapedData.postVideo) && scrapedData.postVideo.length === 1) {
+		scrapedData.postVideo = scrapedData.postVideo.shift()
+	}
+
+	if (Array.isArray(scrapedData.videoThumbnail) && scrapedData.videoThumbnail.length === 1) {
+		scrapedData.videoThumbnail = scrapedData.videoThumbnail.shift()
+	}
+
+	return scrapedData
+}
+
 class Instagram {
 
 	constructor(nick, buster, utils) {
@@ -64,10 +163,6 @@ class Instagram {
 							.from(document.querySelectorAll("nav div[class=\"\"] a"))
 							.map(el => el.href)
 							.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
-			// Array
-			// 	.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
-			// 	.map(el => el.href)
-			// 	.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
 			cb(null, urls.shift())
 		})
 		return found
@@ -110,8 +205,9 @@ class Instagram {
 				postDescription = ""
 			} else {
 				postDescription =
-					Array.from(postDescription.children)
-						.map(el => (el.textContent) ? el.textContent.trim() : "")
+					Array.from(postDescription.childNodes)
+						.filter(el => (el.nodeType === Node.TEXT_NODE) || (el.tagName.toLowerCase() === "a")) // only scraping html text nodes and HTML links
+						.map(el => el.textContent ? el.textContent.trim() : "")
 						.join(" ")
 			}
 
@@ -132,7 +228,7 @@ class Instagram {
 
 			data.profileUrl = document.querySelector(arg.selectors.profileSelector).href || ""
 			data.profileName = document.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
-			data.description = postDescription
+			data.description = postDescription.trim()
 
 			if (baseSelector[0].querySelector(arg.selectors.videoSelector)) {
 				data.postVideo = baseSelector[0].querySelector(arg.selectors.videoSelector).src
@@ -154,24 +250,24 @@ class Instagram {
 			cb(null, data)
 		}, { selectors: SCRAPING_SELECTORS })
 
-		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
-		if (await tab.isPresent(".coreSpriteRightChevron")) {
-			scrapedData.postImage = [ scrapedData.postImage ]
-			while (await tab.isPresent(".coreSpriteRightChevron")) {
-				await tab.click(".coreSpriteRightChevron")
-				await tab.waitUntilVisible("article img")
-				const img = await tab.evaluate((arg, cb) => {
-					const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
-					if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
-						return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
-					} else {
-						return cb(null, "")
-					}
-				}, { selectors: SCRAPING_SELECTORS })
-				scrapedData.postImage.push(img)
-				await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
-			}
+		const isLikeSelectorInDOM = await tab.evaluate((arg, cb) => {
+			let isInDOM = document.querySelector("header ~ div section span[role=\"button\"]")
+			cb(null, isInDOM !== null ? true : false)
+		})
+
+		// Sometimes the selector used to get likes count for a Instagram video isn't present
+		if (scrapedData.postVideo && isLikeSelectorInDOM) {
+			scrapedData.views = scrapedData.likes
+			await tab.click("section span[role=\"button\"]")
+			const likesSelectors = [ "section span[role=\"button\"] ~ div span", "section span[role=\"button\"] ~ div > div:last-of-type" ]
+			const foundSelector = await tab.waitUntilVisible(likesSelectors, 7500, "or")
+			scrapedData.likes = await tab.evaluate((arg, cb) => {
+				cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
+			}, { selector: foundSelector })
 		}
+
+		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
+		scrapedData = await _extractImagesFromCarousel(tab, scrapedData, SCRAPING_SELECTORS)
 
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
