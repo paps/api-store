@@ -184,7 +184,7 @@ const searchUrnArticle = (arg, cb) => {
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (const url of postUrl) {
 		await tab.open(url)
-		await tab.waitUntilVisible(".comment")
+		await tab.waitUntilVisible(".comment", 10000)
 		const urn = await tab.evaluate(searchUrnArticle)
 		gl.search.updateId = urn
 		await tab.wait(3000)
