@@ -6,6 +6,8 @@
 const Buster = require("phantombuster")
 const buster = new Buster()
 
+const url = require("url")
+
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
@@ -23,6 +25,10 @@ const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 const MAX_FOLLOWERS_PER_ACCOUNT = -1
 // }
+
+const isUrl = str => url.parse(str).hostname !== null
+
+const isTwitter = str => url.parse(str).hostname === "twitter.com"
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
@@ -62,9 +68,13 @@ const jsonToCsv = json => {
 
 	await twitter.login(tab, sessionCookie)
 	let twitterUrls = [spreadsheetUrl]
-	if (spreadsheetUrl.indexOf("docs.google.com") > -1) {
-		twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
+
+	if (isUrl(spreadsheetUrl)) {
+		if (!isTwitter(spreadsheetUrl)) {
+			twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
+		}
 	}
+
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let csvResult = []
 	const jsonResult = []
