@@ -163,10 +163,11 @@ class Instagram {
 		if (scrapedData.postVideo && isLikeSelectorInDOM) {
 			scrapedData.views = scrapedData.likes
 			await tab.click("section span[role=\"button\"]")
-			await tab.waitUntilVisible("section span[role=\"button\"] ~ div span")
+			const likesSelectors = [ "section span[role=\"button\"] ~ div span", "section span[role=\"button\"] ~ div > div:last-of-type" ]
+			const foundSelector = await tab.waitUntilVisible(likesSelectors, 7500, "or")
 			scrapedData.likes = await tab.evaluate((arg, cb) => {
 				cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
-			}, { selector: "section span[role=\"button\"] ~ div span" })
+			}, { selector: foundSelector })
 		}
 
 		const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
