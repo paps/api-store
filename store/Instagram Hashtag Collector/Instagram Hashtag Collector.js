@@ -50,7 +50,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 	} catch (e) {
 		await tab.click(selectors.MOST_POPULAR)
 	}
-	await tab.waitUntilVisible(selectors.OVERLAY)
+	await tab.waitUntilVisible(selectors.OVERLAY, 15000)
 	// Saving className of the carousel switch selector, will be used to check later if the bot reached the last post
 	const carouselNextSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: selectors.NEXT_POST })
 	while (i < count) {

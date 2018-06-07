@@ -67,7 +67,6 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			utils.log(`${currentPost.postUrl} scraped`, "done")
 			arr.push(currentPost)
 		} catch (err) {
-			console.log(err.message || err)
 			utils.log(`Error while scraping: ${await tab.getUrl()}`, "warning")
 		}
 		/**
