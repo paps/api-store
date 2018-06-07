@@ -1,3 +1,58 @@
+/**
+ * @async
+ * @internal
+ * @description Internal function used to get all images from a given post
+ * @param {Tab} tab - Nickjs Tab instance with an Instagram post loaded
+ * @param {Object} scrapedData - Existing scraped data
+ * @param {Object} selectors - Instagram CSS selectors used
+ * @return {Promise<Object>} Scraped data with all images found in the post
+ */
+const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
+	const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
+
+	if (await tab.isPresent(".coreSpriteRightChevron")) {
+		scrapedData.postImage = [ scrapedData.postImage ]
+		while (await tab.isPresent(".coreSpriteRightChevron")) {
+			await tab.click(".coreSpriteRightChevron")
+			await tab.waitUntilVisible("article img")
+			await tab.wait(1000)
+			const img = await tab.evaluate((arg, cb) => {
+				const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
+				if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
+					return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
+				} else {
+					return cb(null, "")
+				}
+			}, { selectors: selectors })
+			scrapedData.postImage.push(img)
+			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+		}
+	} else if (await tab.isPresent("div[role=\"button\"] ~ a[role=\"button\"]")) {
+		const nextCarouselSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
+		scrapedData.postImage = [ scrapedData.postImage ]
+		while (true) {
+			let hasMoreImages = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
+			if (hasMoreImages !== nextCarouselSelector) {
+				break
+			}
+			await tab.click("div[role=\"button\"] ~ a[role=\"button\"]")
+			await tab.waitUntilVisible("article img")
+			await tab.wait(1000)
+			const img = await tab.evaluate((arg, cb) => {
+				const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
+				if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
+					return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
+				} else {
+					return cb(null, "")
+				}
+			}, { selectors: selectors })
+			scrapedData.postImage.push(img)
+			await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
+		}
+	}
+	return scrapedData
+}
+
 class Instagram {
 
 	constructor(nick, buster, utils) {
@@ -64,10 +119,6 @@ class Instagram {
 							.from(document.querySelectorAll("nav div[class=\"\"] a"))
 							.map(el => el.href)
 							.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
-			// Array
-			// 	.from(document.querySelectorAll("span.coreSpriteSearchIcon ~ div:nth-of-type(2) a"))
-			// 	.map(el => el.href)
-			// 	.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
 			cb(null, urls.shift())
 		})
 		return found
@@ -110,8 +161,9 @@ class Instagram {
 				postDescription = ""
 			} else {
 				postDescription =
-					Array.from(postDescription.children)
-						.map(el => (el.textContent) ? el.textContent.trim() : "")
+					Array.from(postDescription.childNodes)
+						.filter(el => (el.nodeType === Node.TEXT_NODE) || (el.tagName.toLowerCase() === "a")) // only scraping html text nodes and HTML links
+						.map(el => el.textContent ? el.textContent.trim() : "")
 						.join(" ")
 			}
 
@@ -132,7 +184,7 @@ class Instagram {
 
 			data.profileUrl = document.querySelector(arg.selectors.profileSelector).href || ""
 			data.profileName = document.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
-			data.description = postDescription
+			data.description = postDescription.trim()
 
 			if (baseSelector[0].querySelector(arg.selectors.videoSelector)) {
 				data.postVideo = baseSelector[0].querySelector(arg.selectors.videoSelector).src
@@ -170,31 +222,8 @@ class Instagram {
 			}, { selector: foundSelector })
 		}
 
-		const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
-
 		// Tiny enhancement to get all images from the current post if the carousel right selector is present in the DOM tree
-		if (await tab.isPresent("div[role=\"button\"] ~ a[role=\"button\"]")) {
-			const nextCarouselSelector = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
-			scrapedData.postImage = [ scrapedData.postImage ]
-			while (true) {
-				let hasMoreImages = await tab.evaluate(getClassNameFromGenericSelector, { selector: "div[role=\"button\"] ~ a[role=\"button\"]" })
-				if (hasMoreImages !== nextCarouselSelector) {
-					break
-				}
-				await tab.click("div[role=\"button\"] ~ a[role=\"button\"]")
-				await tab.waitUntilVisible("article img")
-				const img = await tab.evaluate((arg, cb) => {
-					const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
-					if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
-						return cb(null, baseSelector[0].querySelector(arg.selectors.postImageSelector).src)
-					} else {
-						return cb(null, "")
-					}
-				}, { selectors: SCRAPING_SELECTORS })
-				scrapedData.postImage.push(img)
-				await tab.wait(1000) // Preventing Instagram auto like when switching images to quickly
-			}
-		}
+		scrapedData = await _extractImagesFromCarousel(tab, scrapedData, SCRAPING_SELECTORS)
 
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
