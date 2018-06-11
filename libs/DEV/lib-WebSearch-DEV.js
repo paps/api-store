@@ -194,6 +194,10 @@ const _doSearch = async function (query) {
 	 */
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.log("No results from the engine", engine.name)
+		if (typeof this.lockEngine === "string") {
+			await this.tab.screenshot(`error-${httpCode}-${this.engines[this.engineUsed].name}-${query}.jpg`)
+			await this.buster.saveText(await this.tab.getContent(), `error-${httpCode}-${this.engines[this.engineUsed].name}-${query}.html`)
+		}
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 	}
 
@@ -210,10 +214,18 @@ const _doSearch = async function (query) {
 
 /**
  * @internal
- * @description Function used to choice which engine will be used for a next research
+ * @description Function used to choose which engine will be used for a next research
  * @return {Number}
  */
 const _switchEngine = function () {
+	if (typeof this.lockEngine === "string") {
+		this.verbose && console.log("-- _switchEngine(): using test parameter")
+		const engine = this.engines.findIndex(el => el.name === this.lockEngine)
+		if (engine < 0) {
+			throw `Can't find engine ${this.lockEngine}, use a correct engine when testing`
+		}
+		return engine
+	}
 	let availableEngines = []
 	for (let i = 0; i < this.engines.length; i++) {
 		if (this.enginesDown.indexOf(i) < 0) {
@@ -240,13 +252,14 @@ class WebSearch {
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
 	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
-	constructor(tab, buster, verbose = false) {
+	constructor(tab, buster, verbose = false, lockEngine = null) {
 		this.engines = _defaultEgines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
 		this.verbose = verbose
 		this.enginesDown = []
 		this.tab = tab
 		this.buster = buster
+		this.lockEngine = lockEngine
 		this.nbRequestsBeforeDeletingCookies = Math.round(50 + Math.random() * 50) // 50 <=> 100
 	}
 
@@ -298,6 +311,12 @@ class WebSearch {
 				codenameList += this.engines[this.engineUsed].codename
 				break
 			} catch (e) {
+				if (typeof this.lockEngine === "string") {
+					console.log("------ Is baseSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].baseSelector))
+					console.log("------ Is noResultsSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].noResultsSelector))
+					await this.tab.screenshot(`error-${this.engines[this.engineUsed].name}-${query}.jpg`)
+					await this.buster.saveText(await this.tab.getContent(), `error-${this.engines[this.engineUsed].name}-${query}.html`)
+				}
 				this.verbose && console.log(`-- Switching to a new engine because exception: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				if (this.allEnginesDown()) {
@@ -327,7 +346,12 @@ class WebSearch {
 	 * @description Getter to know if there are some engines available
 	 * @return {Boolean}
 	 */
-	allEnginesDown() { return this.enginesDown.length >= this.engines.length }
+	allEnginesDown() {
+		if (this.lockEngine) {
+			return this.enginesDown.length >= 1
+		}
+		return this.enginesDown.length >= this.engines.length
+	}
 
 	/**
 	 * @description Simple function which wipe all values in engineDown
