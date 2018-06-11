@@ -69,10 +69,12 @@ const assertEmptyResults = async (webSearch, test, loopCount) => {
 
 ;(async () => {
 	const oneResultTest = "test"
-	const noResultTest = "\"fdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdbfdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdbfdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdbfdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdbfdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdbfdsufjdhfdvhgfvcnxjhdsvbfhdskbfkdjshfbdsjkbhbgdfhjkgbdghjfdb\""
+	// Giant random string used to avoid results for web engines
+	const noResultTest = "\"zjwj7l67fzddk09dgem6lcsi8qlbxdtxorx1bhpc298r93bk36d1m5bupfkzn1pgquur1ved65k6mgrb5xsydqibjjfoinaq1cxqtcqslqxmrj8bcmvh9cwgfrrdjfejz9i3u7xi7gawyu92bok2azr9nghy8gsf8v960ss6hzs215w5vibt14wiqipxqbg22bblvv301twerd8k7xckat9immnlgdveuhkk9r2enzdct0xlbj4juihunv9dmxdvlz0n657g5t37nvxwy9gmodmp81mbm8ushxobkp0wn5cfbuip6io44p03wnendqs9em4nx2tzpo19jjvhjnlc\""
 
-	const enginesToTest = defaultEngines.map(el => el.name)
-	enginesToTest.pop()
+	const ignoredEngines = [ "yandex" ] // Always getting captcha
+
+	const enginesToTest = defaultEngines.map(el => el.name).filter(el => ignoredEngines.indexOf(el) < 0)
 
 	const iterations = 1
 
