@@ -1,0 +1,6 @@
+[
+	name: 'Testing'
+	apiKey: 'ENV:TESTING_API_KEY'
+	scripts:
+		'WebSearch Tests.js': 'testing/WebSearch Tests.js'
+]
