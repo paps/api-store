@@ -91,8 +91,22 @@ const getFirstName = (arg, callback) => {
 	}
 }
 
+const forgeMsg = (msg, scrapedProfile) => {
+	const matches = msg.match(/#[a-zA-Z0-9]+#/gm)
+	for (const one of matches) {
+		let field = one.replace(/#/g, "")
+		if (scrapedProfile[field]) {
+			msg = msg.replace(one, scrapedProfile[field])
+		} else {
+			msg = msg.replace(one, "")
+			utils.log(`Tag ${one} can't be found in the given profile`, "warning")
+		}
+	}
+	return msg
+}
+
 // Function to add someone
-const connectTo = async (selector, tab, message) => {
+const connectTo = async (selector, tab, message, scrapedProfile) => {
 	const firstName = await tab.evaluate(getFirstName)
 	await tab.click(selector)
 	await tab.waitUntilVisible(".send-invite__actions > button:nth-child(1)")
@@ -100,6 +114,8 @@ const connectTo = async (selector, tab, message) => {
 		throw("Email needed.")
 	}
 	if (message.length > 0) {
+		message = forgeMsg(message, scrapedProfile)
+		utils.log(`Message to send: ${message}`, "info")
 		await tab.click(".send-invite__actions > button:nth-child(1)")
 		// Write the message
 		await tab.waitUntilVisible("#custom-message")
@@ -174,7 +190,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 			if (await tab.isPresent(selectors[7])) {
 				utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 			} else {
-				await connectTo(selector, tab, message)
+				await connectTo(selector, tab, message, scrapedProfile)
 				utils.log(`Added ${url}.`, "done")
 			}
 		} else if (selector === selectors[1]) { // 2- Case when you need to use the (...) button before and add them from there
@@ -186,7 +202,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
 					const selector = await tab.waitUntilVisible(["li.connect", ".pv-s-profile-actions--connect"], 5000, "or")
-					await connectTo(selector, tab, message)
+					await connectTo(selector, tab, message, scrapedProfile)
 					utils.log(`Added ${url}.`, "done")
 				}
 			} else {
