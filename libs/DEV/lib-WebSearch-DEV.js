@@ -1,6 +1,5 @@
 /**
- * NOTE:
- * This array contains Objects storing CSS selectors in order to scrape data from results
+ *  * This array contains Objects storing CSS selectors in order to scrape data from results
  *
  * - name: The web engine name
  * - baseUrl: The part of the url to forge with the research
@@ -10,7 +9,7 @@
  * - descriptionSelector: CSS selector representing the description of a result
  * - noResultsSelector: CSS selector used to check if we're facing a failed research
  */
-const _defaultEgines = [
+const _defaultEngines = [
 	{
 		"name": "google.com",
 		"codename": "G(com)",
@@ -134,7 +133,7 @@ const _defaultEgines = [
 ]
 
 /**
- * NOTE: Those two objects are representing:
+ * Those two objects are representing:
  * - How a web engine used in the class WebSearch
  * - How a web research will be formatted bu the class WebSearch
  */
@@ -190,7 +189,7 @@ const _doSearch = async function (query) {
 	result.codename = engine.codename
 
 	/**
-	 * NOTE: Error while opening the url
+	 * Error while opening the url
 	 */
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.log("No results from the engine", engine.name)
@@ -250,10 +249,10 @@ class WebSearch {
 	 * @param {Object} tab - nickjs tab object
 	 * @param {Object} buster - Phantombuster api instance
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
-	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
+	 * If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
 	constructor(tab, buster, verbose = false, lockEngine = null) {
-		this.engines = _defaultEgines
+		this.engines = _defaultEngines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
 		this.verbose = verbose
 		this.enginesDown = []
@@ -286,7 +285,7 @@ class WebSearch {
 		}
 
 		/**
-		 * NOTE: No need to continue if all engines are down
+		 * No need to continue if all engines are down
 		 */
 		if (this.allEnginesDown()) {
 			console.log('No more search engines available')
@@ -299,7 +298,7 @@ class WebSearch {
 		this.resetEngines()
 
 		/**
-		 * NOTE: While we didn't find a result and the class stills have some engines to use
+		 * While we didn't find a result and the class stills have some engines to use
 		 * the function will continue to search
 		 */
 		let codenameList = ""
@@ -311,9 +310,13 @@ class WebSearch {
 				codenameList += this.engines[this.engineUsed].codename
 				break
 			} catch (e) {
+				// if (e.toString().indexOf("net::ERR_ABORTED") > -1) {
+				// 	this.verbose && console.log("net::ERR_ABORTED caught, resuming scraping")
+				// 	continue
+				// }
 				if (typeof this.lockEngine === "string") {
-					console.log("------ Is baseSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].baseSelector))
-					console.log("------ Is noResultsSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].noResultsSelector))
+					this.verbose && console.log("------ Is noResultsSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].noResultsSelector))
+					this.verbose && console.log("------ Is baseSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].baseSelector))
 					await this.tab.screenshot(`error-${this.engines[this.engineUsed].name}-${query}.jpg`)
 					await this.buster.saveText(await this.tab.getContent(), `error-${this.engines[this.engineUsed].name}-${query}.html`)
 				}
@@ -365,7 +368,7 @@ class WebSearch {
 	/**
 	 * @async
 	 * @description Wrapper function used to perform many requests
-	 * NOTE: This method will return an array of JS objects, those objects are like emptyResult
+	 * This method will return an array of JS objects, those objects are like emptyResult
 	 * @param {Array}
 	 * @return {Promise<Array>}
 	 */
@@ -388,12 +391,12 @@ class WebSearch {
 		const engineChecker = Object.keys(newEngine)
 
 		/**
-		 * NOTE: Since JS Object keys order is not guarranty, we checks thats all fields in the JS Object
+		 * Since JS Object keys order is not guarranty, we checks thats all fields in the JS Object
 		 * are equals to the default engine pattern
 		 */
 		const validFields = engineChecker.map(el => defaultEngine.indexOf(el))
 		/**
-		 * NOTE: if returns -1, it means that all fields are correct
+		 * if returns -1, it means that all fields are correct
 		 */
 		if (validFields.indexOf(-1) === -1) {
 			this.engines.push(newEngine)
@@ -422,4 +425,4 @@ class WebSearch {
 	}
 }
 
-module.exports = WebSearch
+module.exports = { WebSearch, defaultEngines: _defaultEngines }
