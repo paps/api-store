@@ -37,7 +37,6 @@ const doScraping = (arg, cb) => {
  * @return {Promise<Object>} All scraped data envetually with scraping errors
  */
 const scrapeOnePage = async (tab, scrapingBundle) => {
-
 	let scrapingRes = { url: scrapingBundle.link, date: (new Date()).toISOString(), elements: [] }
 
 	try {
@@ -58,12 +57,17 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 	}
 
 	for (const one of scrapingBundle.selectors) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
 		try {
 			await tab.waitUntilVisible(one.selector, scrapingBundle.timeToWaitSelector)
 			let value = await tab.evaluate(doScraping, { selector: one.selector, trim: scrapingBundle.trim })
 			scrapingRes.elements.push({ label: one.label, selector: one.selector, value })
 			utils.log(`Selector ${one.selector} scraped on ${scrapingBundle.link}`, "done")
 		} catch (err) {
+			utils.log(`Can't scrape selector ${one.selector} on ${scrapingBundle.link} due to: ${err.message || err}`, "warning")
 			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: err.message || err })
 		}
 	}
@@ -100,7 +104,6 @@ const handleArguments = async argv => {
  */
 const createCsvOutput = json => {
 	const res = []
-
 	for (const el of json) {
 		for (const scrapedElement of el.elements) {
 			let element = { url: el.url, date: el.date, label: scrapedElement.label, selector: scrapedElement.selector }
@@ -116,21 +119,62 @@ const createCsvOutput = json => {
 	return res
 }
 
+const filterArgumentsBySelector = (db, argv) => {
+	const argsToUse = []
+
+	for (const one of argv) {
+		let wasPageScraped = db.find(el => el.url === one.link)
+		if (wasPageScraped) {
+			for (const selector of one.selectors) {
+				let unprocessedSelectors = []
+				if (!one.selectors.find(el => el.label === wasPageScraped.label && el.selector === wasPageScraped.selector)) {
+					unprocessedSelectors.push(selector)
+				}
+				if (unprocessedSelectors.length > 0) {
+					argsToUse.push({ link: one.link, selectors: unprocessedSelectors, timeToWaitSelector: one.timeToWaitSelector, trim: one.trim })
+				}
+			}
+		} else {
+			argsToUse.push(one)
+		}
+	}
+	return argsToUse
+}
+
 ;(async () => {
-	let { urls } = utils.validateArguments()
+	let { pageToScrapePerLaunch, urls } = utils.validateArguments()
 	const tab = await nick.newTab()
+	const scrapedData = []
 	let db = await utils.getDb(DB_NAME)
-
-	urls = await handleArguments(urls)
-
 	let i = 0
+
+	urls = filterArgumentsBySelector(db, await handleArguments(urls))
+
+	if (urls.length < 1) {
+		utils.log("All pages & selectors specified has been scraped.", "warning")
+		nick.exit(0)
+	}
+
+	if (typeof pageToScrapePerLaunch !== "number") {
+		pageToScrapePerLaunch = urls.length
+	}
+
+	urls = urls.slice(0, pageToScrapePerLaunch)
+
 	for (const el of urls) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		buster.progressHint(i / urls.length, `Scraping: ${el.link}`)
-		db.push(await scrapeOnePage(tab, el))
+		scrapedData.push(await scrapeOnePage(tab, el))
 		i++
 	}
 
-	await utils.saveResults(db, createCsvOutput(db), DB_NAME.split(".").shift(), null, false)
+	db = db.concat(createCsvOutput(scrapedData))
+
+	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	nick.exit(0)
 })()
 .catch(err => {

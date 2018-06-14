@@ -12,6 +12,7 @@
 	"defaultArgument": {
 		"urls": [
 			{
+				"pageToScrapePerLaunch": 2,
 				"link": "https://phantombuster.com",
 				"selectors": [
 					{
@@ -29,6 +30,9 @@
 		"alpaca": {
 			"schema": {
 				"properties": {
+					"pageToScrapePerLaunch": {
+						"type": "number"
+					},
 					"urls": {
 						"required": true,
 						"type": "array",
@@ -40,6 +44,10 @@
 			},
 			"options": {
 				"fields": {
+					"pageToScrapePerLaunch": {
+						"label": "Amount of pages to scrape for every API launchs",
+						"helper": "Leave this field empty, if you want all pages scraped"
+					},
 					"urls": {
 						"label": "Elements to scrape",
 						"toolbarSticky": true,
@@ -81,6 +89,10 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"pageToScrapePerLaunch": {
+				"type": "number",
+				"minimun": 1
+			},
 			"urls": {
 				"type": "array",
 				"items": {
