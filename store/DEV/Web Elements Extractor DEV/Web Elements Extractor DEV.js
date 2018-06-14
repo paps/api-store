@@ -45,7 +45,9 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 		if ((httpCode >= 300) || (httpCode < 200)) {
 			const httpOpenErr = `Got HTTP code ${httpCode}, expecting HTTP 200, skipping current URL`
 			utils.log(httpOpenErr, "warning")
-			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: httpOpenErr })
+			for (const one of scrapingBundle.selectors) {
+				scrapingRes.elements.push({ label: one.label, selector: one.selector, error: httpOpenErr })
+			}
 		}
 	} catch (err) {
 		utils.log(`Can't scrape ${scrapingBundle.link}: can't properly open the page`, "warning")
@@ -66,6 +68,29 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 		}
 	}
 	return scrapingRes
+}
+
+/**
+ * @async
+ * @description Function which will inflate all arguments using CSVs / Spreadsheets
+ * @param {Object} argv - API arguments
+ * @return {Promise<Array<Object>>} All formated arguments ready to be used by the API
+ */
+const handleArguments = async argv => {
+	let argsToUse = []
+
+	for (const arg of argv) {
+		try {
+			let urls = await utils.getDataFromCsv(arg.link)
+			urls = urls.map(el => {
+				return { link: el, selectors: arg.selectors, timeToWaitSelector: arg.timeToWaitSelector, trim: arg.trim }
+			})
+			argsToUse = argsToUse.concat(urls)
+		} catch (err) {
+			argsToUse.push(arg)
+		}
+	}
+	return argsToUse
 }
 
 /**
@@ -92,9 +117,11 @@ const createCsvOutput = json => {
 }
 
 ;(async () => {
-	const { urls } = utils.validateArguments()
+	let { urls } = utils.validateArguments()
 	const tab = await nick.newTab()
 	let db = await utils.getDb(DB_NAME)
+
+	urls = await handleArguments(urls)
 
 	let i = 0
 	for (const el of urls) {
