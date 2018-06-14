@@ -9,33 +9,70 @@
 	"defaultArgumentAllowed": false,
 	"hidden": false,
 	"new": false,
-	"defautlArgument": {
-		"spreadsheetUrl": "https://(...)/..._..."
+	"defaultArgument": {
+		"urls": [
+			{
+				"link": "https://phantombuster.com",
+				"selectors": [
+					{
+						"label": "Phantombuster Title",
+						"selector": "h1"
+					}
+				],
+				"trim": true,
+				"timeToWaitSelector": 5000
+			}
+		]
 	},
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
 			"schema": {
 				"properties": {
-					"spreadsheetUrl": {
-						"required": true
+					"urls": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "object"
+						}
 					}
 				}
 			},
 			"options": {
 				"fields": {
-					"spreadsheetUrl": {
-						"label": "CSV/Spreadsheet URL"
-					},
-					"selectors": {
-						"label": "CSS Selectors"
-					},
-					"timeToWaitSelector": {
-						"label": "Time to wait until the given selector will appear in the page",
-						"helper": "time in milliseconds (ms)"
-					},
-					"trim": {
-						"rightLabel": "Trim heading & tailing whitespaces for the extracted text"
+					"urls": {
+						"label": "Elements to scrape",
+						"toolbarSticky": true,
+						"hideToolbarWithChildren": true,
+						"items": {
+							"fields": {
+								"link": {
+									"label": "CSV/Spreadsheet URLs",
+									"helper": "You can use one or more CSV files or directly write all URLs to visit"
+								},
+								"selectors": {
+									"items": {
+										"fields": {
+											"label": {
+												"label": "Field name when saving the value",
+												"helper": "Examples: Price, Article, Title, ..."
+											},
+											"selector": {
+												"label": "CSS selectors to use for the given URL",
+												"helper": "The API will return all text found in the given selectors"
+											}
+										}
+									}
+								},
+								"timeToWaitSelector": {
+									"label": "Time to wait until the given selector will appear in the page",
+									"helper": "time in milliseconds (ms)"
+								},
+								"trim": {
+									"rightLabel": "Trim heading & tailing whitespaces for the extracted text"
+								}
+							}
+						}
 					}
 				}
 			}
@@ -44,24 +81,41 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"spreadsheetUrl": {
-				"type": "string"
-			},
-			"selectors": {
+			"urls": {
 				"type": "array",
 				"items": {
-					"type": "string",
+					"type": "object",
+					"properties": {
+						"link": {
+							"type": "string"
+						},
+						"selectors": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"label": {
+										"type": "string"
+									},
+									"selector": {
+										"type": "string"
+									}
+								},
+								"minLength": 1
+							}
+						},
+						"timeToWaitSelector": {
+							"type": "number",
+							"minimum": 1,
+							"default": 5000
+						},
+						"trim": {
+							"type": "boolean",
+							"default": true
+						}
+					},
 					"minLength": 1
 				}
-			},
-			"timeToWaitSelector": {
-				"type": "number",
-				"minimum": 1,
-				"default": 5000
-			},
-			"trim": {
-				"type": "boolean",
-				"default": true
 			}
 		}
 	}
