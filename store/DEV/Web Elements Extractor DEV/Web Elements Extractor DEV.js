@@ -44,7 +44,7 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 		await tab.open(scrapingBundle.link)
 	} catch (err) {
 		for (const one of scrapingBundle.selectors) {
-			scrapingRes.elements.push({ label: one.label, selector: one, error: err.message || err })
+			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: err.message || err })
 		}
 		return scrapingRes
 	}
