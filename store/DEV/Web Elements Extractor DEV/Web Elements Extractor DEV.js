@@ -41,8 +41,14 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 	let scrapingRes = { url: scrapingBundle.link, date: (new Date()).toISOString(), elements: [] }
 
 	try {
-		await tab.open(scrapingBundle.link)
+		const [httpCode] = await tab.open(scrapingBundle.link)
+		if ((httpCode >= 300) || (httpCode < 200)) {
+			const httpOpenErr = `Got HTTP code ${httpCode}, expecting HTTP 200, skipping current URL`
+			utils.log(httpOpenErr, "warning")
+			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: httpOpenErr })
+		}
 	} catch (err) {
+		utils.log(`Can't scrape ${scrapingBundle.link}: can't properly open the page`, "warning")
 		for (const one of scrapingBundle.selectors) {
 			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: err.message || err })
 		}
