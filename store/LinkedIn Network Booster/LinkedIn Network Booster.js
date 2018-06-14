@@ -103,13 +103,15 @@ const forgeMsg = (msg, scrapedProfile) => {
 	}
 
 	const matches = msg.match(/#[a-zA-Z0-9]+#/gm)
-	for (const one of matches) {
-		let field = one.replace(/#/g, "")
-		if (scrapedProfile[field]) {
-			msg = msg.replace(one, scrapedProfile[field])
-		} else {
-			msg = msg.replace(one, "")
-			utils.log(`Tag ${one} can't be found in the given profile`, "warning")
+	if (Array.isArray(matches)) {
+		for (const one of matches) {
+			let field = one.replace(/#/g, "")
+			if (scrapedProfile[field]) {
+				msg = msg.replace(one, scrapedProfile[field])
+			} else {
+				msg = msg.replace(one, "")
+				utils.log(`Tag ${one} can't be found in the given profile`, "warning")
+			}
 		}
 	}
 	return msg
