@@ -19,17 +19,8 @@
 			"schema": {
 				"properties": {
 					"urls": {
-						"type": "array",
-						"required": true,
-						"items": {
-							"type": "string",
-							"minLength": 1
-						}
-					},
-					"timeToWait": {
-						"type": "number"
+						"required": true
 					}
-				}
 			},
 			"options": {
 				"fields": {
@@ -51,6 +42,13 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"urls": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
 			"timeToWait": {
 				"minimum": 1,
 				"default": 5000
