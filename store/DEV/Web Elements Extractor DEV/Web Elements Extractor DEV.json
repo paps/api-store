@@ -50,6 +50,8 @@
 					},
 					"urls": {
 						"label": "Elements to scrape",
+						"actionbarStyle": "top",
+						"collapsible": true,
 						"toolbarSticky": true,
 						"hideToolbarWithChildren": true,
 						"items": {

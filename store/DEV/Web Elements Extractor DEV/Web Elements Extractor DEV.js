@@ -162,6 +162,7 @@ const filterArgumentsBySelector = (db, argv) => {
 	urls = urls.slice(0, pageToScrapePerLaunch)
 
 	for (const el of urls) {
+		utils.log(`Scraping selectors on page: ${el.link}`, "loading")
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
