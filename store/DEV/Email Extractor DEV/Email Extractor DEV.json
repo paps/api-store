@@ -21,6 +21,7 @@
 					"urls": {
 						"required": true
 					}
+				}
 			},
 			"options": {
 				"fields": {
@@ -34,6 +35,10 @@
 					"timeToWait": {
 						"label": "Time to wait until the page is fully loaded",
 						"helper": "Milliseconds (default value is 5000 ms)"
+					},
+					"pagesPerLaunch": {
+						"label": "Number of URLs to scrape per launch",
+						"helper": "Leaving the field empty will mean to scrape all urls"
 					}
 				}
 			}
@@ -50,10 +55,15 @@
 				}
 			},
 			"timeToWait": {
+				"type": "number",
 				"minimum": 1,
 				"default": 5000
+			},
+			"pagesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 2
 			}
 		}
 	}
 }
-
