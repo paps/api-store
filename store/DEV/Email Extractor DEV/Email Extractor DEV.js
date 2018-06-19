@@ -57,7 +57,7 @@ const getUrlsToScrape = (data, pagesPerLaunch) => {
 	const maxLength = data.length
 	const urls = []
 	if (maxLength === 0) {
-		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
+		utils.log("Input is empty OR all inputs are already scraped", "warning")
 		nick.exit()
 	}
 	while (i < pagesPerLaunch && i < maxLength) {
