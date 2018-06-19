@@ -33,6 +33,8 @@ const inflateArguments = async urls => {
 	for (const url of urls) {
 		try {
 			const tmp = await utils.getDataFromCsv(url, null, false) // Set lib calls quiet
+			utils.log(`Getting data from ${url}...`, "loading")
+			utils.log(`Got ${tmp.length} lines from csv`, "done")
 			ret.push(...tmp)
 		} catch (err) {
 			ret.push(url)
@@ -50,7 +52,7 @@ const filterUrls = (str, db) => {
 	return true
 }
 
-const getUrlsToScrape = data => {
+const getUrlsToScrape = (data, pagesPerLaunch) => {
 	let i = 0
 	const maxLength = data.length
 	const urls = []
@@ -58,7 +60,7 @@ const getUrlsToScrape = data => {
 		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
 		nick.exit()
 	}
-	while (i < maxLength) {
+	while (i < pagesPerLaunch && i < maxLength) {
 		const row = Math.floor(Math.random() * data.length)
 		urls.push(data[row])
 		data.splice(row, 1)
@@ -116,7 +118,7 @@ const createCsvOutput = json => {
 }
 
 ;(async () => {
-	let { urls, timeToWait } = utils.validateArguments()
+	let { urls, timeToWait, pagesPerLaunch } = utils.validateArguments()
 	const tab = await nick.newTab()
 	let db = await utils.getDb(DB_NAME)
 
@@ -131,7 +133,12 @@ const createCsvOutput = json => {
 	}
 
 	urls = await inflateArguments(urls)
-	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)))
+
+	if (!pagesPerLaunch) {
+		pagesPerLaunch = urls.length
+	}
+
+	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)), pagesPerLaunch)
 
 	for (const url of urls) {
 		utils.log(`Scraping ${url}`, "loading")
