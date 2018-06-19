@@ -17,13 +17,6 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
-			"schema": {
-				"properties": {
-					"urls": {
-						"required": true
-					}
-				}
-			},
 			"options": {
 				"fields": {
 					"urls": {
@@ -40,6 +33,10 @@
 					"pagesPerLaunch": {
 						"label": "Number of URLs to scrape per launch",
 						"helper": "Leaving the field empty will mean to scrape all urls"
+					},
+					"queries": {
+						"hidden": true,
+						"disabled": true
 					}
 				}
 			}
@@ -65,6 +62,18 @@
 				"minimum": 1,
 				"default": 2
 			}
-		}
+		},
+		"anyOf": [
+			{
+				"required": [
+					"urls"
+				]
+			},
+			{
+				"required": [
+					"queries"
+				]
+			}
+		]
 	}
 }

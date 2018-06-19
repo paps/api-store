@@ -70,13 +70,19 @@ const getUrlsToScrape = (data, pagesPerLaunch) => {
 }
 
 const extractMails = (arg, cb) => {
-	const MAIL_REGEX = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g
-	const data = document.querySelector("html").innerHTML.match(MAIL_REGEX)
-	cb(null, Array.isArray(data) ? data : [])
+	const MAIL_REGEX = /[A-Z0-9._%+-]{1,50}@[A-Z0-9.-]{1,50}\.[A-Z]{2,10}/gi
+	let data = document.querySelector("html").innerHTML.match(MAIL_REGEX)
+	if (Array.isArray(data)) {
+		data = data.map(el => el.toLowerCase()).filter(el => !el.match(/.(png|bmp|jpeg|jpg|gif|svg)$/gi))
+		data = Array.from(new Set(data)) // Make all emails unique
+	} else {
+		data = []
+	}
+	cb(null, data)
 }
 
-const scrapeMails = async (tab, url, waitSelector) => {
-	let result = { mails: [], date: (new Date()).toISOString(), url }
+const scrapeMails = async (tab, url, waitTime) => {
+	let result = { mails: [], url }
 	try {
 		const [ httpCode ] = await tab.open(url)
 		if ((httpCode >= 300) || (httpCode < 200)) {
@@ -84,7 +90,7 @@ const scrapeMails = async (tab, url, waitSelector) => {
 			result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
 			return result
 		}
-		await tab.wait(waitSelector)
+		await tab.wait(waitTime)
 		let mails = await tab.evaluate(extractMails)
 		result.mails = mails
 	} catch (err) {
@@ -97,7 +103,7 @@ const scrapeMails = async (tab, url, waitSelector) => {
 const createCsvOutput = json => {
 	const csv = []
 	for (const one of json) {
-		let csvElement = { url: one.url, date: one.date }
+		let csvElement = { url: one.url }
 
 		if (one.error) {
 			csvElement.error = one.error
@@ -118,7 +124,7 @@ const createCsvOutput = json => {
 }
 
 ;(async () => {
-	let { urls, timeToWait, pagesPerLaunch } = utils.validateArguments()
+	let { urls, timeToWait, pagesPerLaunch, queries } = utils.validateArguments()
 	const tab = await nick.newTab()
 	let db = await utils.getDb(DB_NAME)
 	let i = 0
@@ -127,6 +133,16 @@ const createCsvOutput = json => {
 
 	if (typeof urls === "string") {
 		urls = [ urls ]
+	}
+
+	if (typeof queries === "string") {
+		if (Array.isArray(urls)) {
+			urls.push(queries)
+		} else {
+			urls = [ queries ]
+		}
+	} else if (Array.isArray(queries)) {
+		(Array.isArray(urls)) ? urls.push(...queries)  : urls = [ ...queries ]
 	}
 
 	if (!timeToWait) {
@@ -157,7 +173,7 @@ const createCsvOutput = json => {
 
 	db = db.concat(createCsvOutput(scrapingRes))
 
-	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
+	await utils.saveResults(scrapingRes, db, DB_NAME.split(".").shift(), null, false)
 	nick.exit(0)
 })()
 .catch(err => {
