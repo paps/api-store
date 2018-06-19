@@ -39,7 +39,7 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 	try {
 		const [httpCode] = await tab.open(scrapingBundle.link)
 		if ((httpCode >= 300) || (httpCode < 200)) {
-			const httpOpenErr = `Got HTTP code ${httpCode}, expecting HTTP 200, skipping current URL`
+			const httpOpenErr = `Got HTTP code ${httpCode}, expecting HTTP code 200, skipping current URL`
 			utils.log(httpOpenErr, "warning")
 			for (const one of scrapingBundle.selectors) {
 				scrapingRes.elements.push({ label: one.label, selector: one.selector, error: httpOpenErr })
@@ -124,14 +124,14 @@ const filterArgumentsBySelector = (db, argv) => {
 	for (const one of argv) {
 		let wasPageScraped = db.find(el => el.url === one.link)
 		if (wasPageScraped) {
+			let unprocessedSelectors = []
 			for (const selector of one.selectors) {
-				let unprocessedSelectors = []
 				if (!one.selectors.find(el => el.label === wasPageScraped.label && el.selector === wasPageScraped.selector)) {
 					unprocessedSelectors.push(selector)
 				}
-				if (unprocessedSelectors.length > 0) {
-					argsToUse.push({ link: one.link, selectors: unprocessedSelectors, timeToWaitSelector: one.timeToWaitSelector, trim: one.trim })
-				}
+			}
+			if (unprocessedSelectors.length > 0) {
+				argsToUse.push({ link: one.link, selectors: unprocessedSelectors, timeToWaitSelector: one.timeToWaitSelector, trim: one.trim })
 			}
 		} else {
 			argsToUse.push(one)
@@ -174,7 +174,7 @@ const filterArgumentsBySelector = (db, argv) => {
 
 	db = db.concat(createCsvOutput(scrapedData))
 
-	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
+	await utils.saveResults(scrapedData, db, DB_NAME.split(".").shift(), null, false)
 	nick.exit(0)
 })()
 .catch(err => {
