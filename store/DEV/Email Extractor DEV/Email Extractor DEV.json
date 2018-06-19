@@ -28,9 +28,9 @@
 				"fields": {
 					"urls": {
 						"label": "CSV/ Spreadsheet URLs or URLs to scrape",
-						"actionBarStyle": "top",
+						"actionbarStyle": "top",
 						"collapsible": true,
-						"toolBarSticky": true,
+						"toolbarSticky": true,
 						"hideToolbarWithChildren": true
 					},
 					"timeToWait": {
