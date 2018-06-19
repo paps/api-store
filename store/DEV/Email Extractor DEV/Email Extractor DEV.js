@@ -95,12 +95,20 @@ const scrapeMails = async (tab, url, waitSelector) => {
 const createCsvOutput = json => {
 	const csv = []
 	for (const one of json) {
+		let csvElement = { url: one.url, date: one.date }
+
+		if (one.error) {
+			csvElement.error = one.error
+		}
+
 		if (one.mails.length < 1) {
-			csv.push({ url: one.url, date: one.date, mail: "no mails found" })
+			csvElement.mail = "no mails found"
+			csv.push(csvElement)
 		} else {
 			for (const mail of one.mails) {
-				let csvElement = { url: one.url, date: one.date, mail }
-				csv.push(csvElement)
+				let tmp = Object.assign({}, csvElement)
+				tmp.mail = mail
+				csv.push(tmp)
 			}
 		}
 	}
