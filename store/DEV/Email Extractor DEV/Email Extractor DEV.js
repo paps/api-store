@@ -80,7 +80,7 @@ const scrapeMails = async (tab, url, waitSelector) => {
 	try {
 		const [ httpCode ] = await tab.open(url)
 		if ((httpCode >= 300) || (httpCode < 200)) {
-			utils.log(`${url} did'nt opened properly got HTTP code ${httpCode}`, "warning")
+			utils.log(`${url} didn't opened properly got HTTP code ${httpCode}`, "warning")
 			result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
 			return result
 		}
@@ -121,6 +121,7 @@ const createCsvOutput = json => {
 	let { urls, timeToWait, pagesPerLaunch } = utils.validateArguments()
 	const tab = await nick.newTab()
 	let db = await utils.getDb(DB_NAME)
+	let i = 0
 
 	let scrapingRes = []
 
@@ -142,9 +143,16 @@ const createCsvOutput = json => {
 
 	for (const url of urls) {
 		utils.log(`Scraping ${url}`, "loading")
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
+		buster.progressHint((i + 1) / urls.length, `Scraping: ${url}`)
 		const foundMails = await scrapeMails(tab, url, timeToWait)
 		scrapingRes = scrapingRes.concat(foundMails)
 		utils.log(`Got ${foundMails.mails.length} mails from ${url}`, "done")
+		i++
 	}
 
 	db = db.concat(createCsvOutput(scrapingRes))
