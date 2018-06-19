@@ -20,7 +20,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
 const DEFAULT_WAIT_TIME = 5000
-const MAIL_REGEX = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g;
 // }
 
 /**
@@ -42,26 +41,70 @@ const inflateArguments = async urls => {
 	return ret
 }
 
+const filterUrls = (str, db) => {
+	for (const line of db) {
+		if (str === line.url) {
+			return false
+		}
+	}
+	return true
+}
+
+const getUrlsToScrape = data => {
+	let i = 0
+	const maxLength = data.length
+	const urls = []
+	if (maxLength === 0) {
+		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
+		nick.exit()
+	}
+	while (i < maxLength) {
+		const row = Math.floor(Math.random() * data.length)
+		urls.push(data[row])
+		data.splice(row, 1)
+		i++
+	}
+	return urls
+}
+
 const extractMails = (arg, cb) => {
-	const mails = document.querySelector("body").innerHTML.match(arg.regexp)
-	cb(null, mails)
+	const MAIL_REGEX = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g
+	const data = document.querySelector("html").innerHTML.match(MAIL_REGEX)
+	cb(null, Array.isArray(data) ? data : [])
 }
 
 const scrapeMails = async (tab, url, waitSelector) => {
+	let result = { mails: [], date: (new Date()).toISOString(), url }
 	try {
 		const [ httpCode ] = await tab.open(url)
-		// No need to procede, if the page can't be opened properly
 		if ((httpCode >= 300) || (httpCode < 200)) {
 			utils.log(`${url} did'nt opened properly got HTTP code ${httpCode}`, "warning")
-			return []
+			result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
+			return result
 		}
-		await tab.waitUntilVisible("body", waitSelector)
-		return await tab.evaluate(extractMails, { regexp: MAIL_REGEX })
+		await tab.wait(waitSelector)
+		let mails = await tab.evaluate(extractMails)
+		result.mails = mails
 	} catch (err) {
 		utils.log(`Can't properly open ${url} due to: ${err.message || err}`, "warning")
-		err.stack && utils.log(err.stack, "warning")
-		return []
+		result.error = err.message || err
 	}
+	return result
+}
+
+const createCsvOutput = json => {
+	const csv = []
+	for (const one of json) {
+		if (one.mails.length < 1) {
+			csv.push({ url: one.url, date: one.date, mail: "no mails found" })
+		} else {
+			for (const mail of one.mails) {
+				let csvElement = { url: one.url, date: one.date, mail }
+				csv.push(csvElement)
+			}
+		}
+	}
+	return csv
 }
 
 ;(async () => {
@@ -80,13 +123,16 @@ const scrapeMails = async (tab, url, waitSelector) => {
 	}
 
 	urls = await inflateArguments(urls)
+	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)))
 
 	for (const url of urls) {
 		utils.log(`Scraping ${url}`, "loading")
-		scrapingRes = scrapingRes.concat(await scrapeMails(tab, url, timeToWait))
+		const foundMails = await scrapeMails(tab, url, timeToWait)
+		scrapingRes = scrapingRes.concat(foundMails)
+		utils.log(`Got ${foundMails.mails.length} mails from ${url}`, "done")
 	}
 
-	console.log("Scraping result: ", JSON.stringify(scrapingRes, null, 4))
+	db = db.concat(createCsvOutput(scrapingRes))
 
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	nick.exit(0)
