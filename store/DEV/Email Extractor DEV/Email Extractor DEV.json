@@ -8,10 +8,11 @@
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
 	"hidden": false,
-	"new": "false",
+	"new": false,
 	"defaultArgument": {
 		"urls": [ "https://www.phantombuter.com/about" ],
-		"timeToWait": 5000
+		"timeToWait": 5000,
+		"pagesPerLaunch": 2
 	},
 	"argumentForm": {
 		"enabled": true,
