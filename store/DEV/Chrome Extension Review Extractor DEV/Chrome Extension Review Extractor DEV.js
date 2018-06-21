@@ -23,12 +23,18 @@ const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
 const SHORT_DB_NAME = DB_NAME.split(".").shift()
 const DEFAULT_URLS_PER_LAUNCH = 2
+const MAX_ERRORS_ALLOWED = 3
 
 const selectors = {
 	rootSelector: "div[role=dialog]",
 	reviewsTabSelector: "div[role=tablist] > div[role=tab]:nth-child(2)",
-	reviewsPanelSelector: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]"
+	reviewsPanelSelector: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
+	nextSelector: "a[ga\\:type=NextLink]",
+	waitSelector: "span[ga\\:type=PaginationMessage]"
 }
+
+let globalErrors = 0
+
 // }
 
 const filterUrls = (str, db) => {
@@ -104,37 +110,11 @@ const forgeUrls = urls => {
 	return toRet
 }
 
-const hasMoreReviews = (arg, cb) => {
-	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
-	let paginationSelector = Array
-									.from(reviewRootElement.lastChild.querySelector("div:nth-child(2)").querySelectorAll("a"))
-									.filter(el => el.attributes["ga:type"] && el.attributes["ga:type"].nodeValue === "NextLink")
-	if (paginationSelector.length === 1) {
-		paginationSelector = paginationSelector.pop()
-	} else {
-		return cb(null, false)
-	}
-	// cb(null, paginationSelector.style.display === "none")
-	cb(null, paginationSelector.style.display !== "none")
-}
-
-const gotoNextPage = (arg, cb) => {
-	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
-	let paginationSelector = Array
-									.from(reviewRootElement.lastChild.querySelector("div:nth-child(2)").querySelectorAll("a"))
-									.filter(el => el.attributes["ga:type"] && el.attributes["ga:type"].nodeValue === "NextLink")
-	if (paginationSelector.length === 1) {
-		paginationSelector = paginationSelector.pop()
-	} else {
-		return cb(null, false)
-	}
-	paginationSelector.click()
-	cb(null)
-}
+const _debug = (arg, cb) => cb(null, document.querySelector("span[ga\\:type=PaginationMessage]").textContent.trim())
 
 const getReviews = (arg, cb) => {
 	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
-	const reviews = Array.from(reviewRootElement.querySelectorAll("div")).filter(el => el.attributes["ga:annotation-index"])
+	const reviews = Array.from(reviewRootElement.querySelectorAll("div[ga\\:annotation-index]"))
 	const toRet = reviews.map(el => {
 		const review = {}
 		review.profileImg = el.querySelector("img") ? el.querySelector("img").src : ""
@@ -153,6 +133,22 @@ const getReviews = (arg, cb) => {
 	cb(null, toRet)
 }
 
+const waitUntilNewReviews = (arg, cb) => {
+	const startTime = Date.now()
+	const waitNewReviews = () => {
+		const data = document.querySelector(arg.selectors.waitSelector).textContent.trim()
+		if ((!data) || (data === arg.lastCount)) {
+			if ((Date.now() - startTime) >= 30000) {
+				cb("New reviews can't be loaded after 30s")
+			}
+			setTimeout(waitNewReviews, 200)
+		} else {
+			cb(null)
+		}
+	}
+	waitNewReviews()
+}
+
 /**
  * @async
  * @description Function used to scrape a single extension review
@@ -168,18 +164,26 @@ const scrapeReview = async (tab, url) => {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
 			return res
 		}
-		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 7500, "and")
-		while (await tab.evaluate(hasMoreReviews, { selectors })) {
-			await tab.waitUntilVisible(selectors.reviewsPanelSelector, 7500)
+		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 15000, "or")
+		while (await tab.isPresent(selectors.nextSelector)) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				break
+			}
+			await tab.waitUntilVisible(selectors.reviewsPanelSelector, 15000)
 			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
 			utils.log(`Got ${res.length} reviews`, "info")
-			await tab.evaluate(gotoNextPage, { selectors })
+			let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
+			await tab.click(selectors.nextSelector)
+			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
 		}
-		return res
 	} catch (err) {
 		utils.log(err.message || err, "warning")
+		globalErrors++
 		return res
 	}
+	globalErrors = 0
+	return res
 }
 
 ;(async () => {
@@ -205,6 +209,10 @@ const scrapeReview = async (tab, url) => {
 	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)), extensionsPerLaunch)
 
 	for (const url of urls) {
+		if (globalErrors >= MAX_ERRORS_ALLOWED) {
+			utils.log(`Got ${globalErrors} errors while scraping reviews, Reviews rate limit reached, aborting execution`, "warning")
+			break
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
