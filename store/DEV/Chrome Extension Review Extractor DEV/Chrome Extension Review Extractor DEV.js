@@ -104,6 +104,34 @@ const forgeUrls = urls => {
 	return toRet
 }
 
+const hasMoreReviews = (arg, cb) => {
+	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
+	let paginationSelector = Array
+									.from(reviewRootElement.lastChild.querySelector("div:nth-child(2)").querySelectorAll("a"))
+									.filter(el => el.attributes["ga:type"] && el.attributes["ga:type"].nodeValue === "NextLink")
+	if (paginationSelector.length === 1) {
+		paginationSelector = paginationSelector.pop()
+	} else {
+		return cb(null, false)
+	}
+	// cb(null, paginationSelector.style.display === "none")
+	cb(null, paginationSelector.style.display !== "none")
+}
+
+const gotoNextPage = (arg, cb) => {
+	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
+	let paginationSelector = Array
+									.from(reviewRootElement.lastChild.querySelector("div:nth-child(2)").querySelectorAll("a"))
+									.filter(el => el.attributes["ga:type"] && el.attributes["ga:type"].nodeValue === "NextLink")
+	if (paginationSelector.length === 1) {
+		paginationSelector = paginationSelector.pop()
+	} else {
+		return cb(null, false)
+	}
+	paginationSelector.click()
+	cb(null)
+}
+
 const getReviews = (arg, cb) => {
 	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
 	const reviews = Array.from(reviewRootElement.querySelectorAll("div")).filter(el => el.attributes["ga:annotation-index"])
@@ -133,17 +161,24 @@ const getReviews = (arg, cb) => {
  * @return {Promise<Array<String>>} Array containing all reviews or an empty array is an error happened
  */
 const scrapeReview = async (tab, url) => {
+	let res = []
 	try {
 		const [httpCode] = await tab.open(forgeUrls(url))
 		if ((httpCode >= 300) || (httpCode < 200)) {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
-			return []
+			return res
 		}
 		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 7500, "and")
-		return await tab.evaluate(getReviews, { selectors, url })
+		while (await tab.evaluate(hasMoreReviews, { selectors })) {
+			await tab.waitUntilVisible(selectors.reviewsPanelSelector, 7500)
+			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
+			utils.log(`Got ${res.length} reviews`, "info")
+			await tab.evaluate(gotoNextPage, { selectors })
+		}
+		return res
 	} catch (err) {
 		utils.log(err.message || err, "warning")
-		return []
+		return res
 	}
 }
 
