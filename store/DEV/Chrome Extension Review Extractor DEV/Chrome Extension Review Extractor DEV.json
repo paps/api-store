@@ -27,9 +27,13 @@
 						"label": "Spreadsheet URL or a Extension review URL",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Extension review URL"
 					},
+					"columnName": {
+						"label": "Column name into the CSV/Spreadsheet used to reviews URLs",
+						"helper": "If this field is empty, the API will fetch the first CSV column"
+					},
 					"extensionsPerLaunch": {
 						"label": "Number of extensions review to scrape per launch",
-						"helper": "If this field is empty, the API will scrape all extensions",
+						"helper": "If this field is empty, the API will scrape only 2 extensions (default behaviour)",
 						"inputType": "number"
 					}
 				}
@@ -41,7 +45,11 @@
 		"properties": {
 			"spreadsheetUrl": {
 				"type": "string",
+				"minLength": 1,
 				"required": true
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"extensionsPerLaunch": {
 				"type": "number",
