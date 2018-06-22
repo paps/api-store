@@ -1,0 +1,82 @@
+{
+	"hidden": false,
+	"new": false,
+	"slug": "quora-topics-influencers",
+	"description": "Choose a Quora topic and get info about its influencers",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/quora_topics_influencers/Quora_topic_influencers.png",
+	"gradientBegin": "#B92B27",
+	"gradientEnd": "#F3F9A7",
+	"argumentDescription": "Insert your <i>Quora topic name</i>, <i>Session cookie ms</i> & <i>Session cookie mb</i>",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"topic": "quora",
+		"ms": "SPgqiXOQy4axmjz3m8LipA\\075\\075",
+		"mb": "RrKk9vyA0DXcQwuuZjwJ-Q\\075\\075"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentFormTest": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"topic": {
+						"type": "text",
+						"placeholder": "Quora topic"
+					},
+					"ms": {
+						"type": "text",
+						"placeholder": "Cookie used by Quora website (name: m-s)"
+					},
+					"mb": {
+						"type": "text",
+						"placeholder": "Cookie used by Quora website (name: m-b)"
+					}
+				}
+			}
+		}
+	},
+	"outputDescription": {
+		"fullname": "Quora writer name",
+		"description": "",
+		"avatarUrl": "URL where the Quora avatar is stored",
+		"job": "Current job of the writer",
+		"studies": "Studies of the writer",
+		"location": "Current location of the writer",
+		"answerViews": "Total count of views for all articles wrote by the writer",
+		"topWriter": "",
+		"publishedWriter": "",
+		"answers": "Count of answers by the writer for all of his topics",
+		"questions": "Count of questions asked",
+		"posts": "Count of post written",
+		"blogs": "Count of blogs for the writer",
+		"followers": "Total count of followers",
+		"following": "Count of people followed by the writer",
+		"topics": "Count of topics, where the writer interacts",
+		"edits": "Count of edits by the writer",
+		"quora": "Quora profile Url",
+		"followerYouKnow": "Name & profile Url of people who follow you and the writer",
+		"facebook": "Facebook Url",
+		"twitter": "Twitter Url",
+		"linkedin": "LinkedIn Url"
+	},
+	"argumentSchemaTest": {
+		"type": "object",
+		"properties": {
+			"topic": {
+				"type": "string",
+				"title": "Topic name (be carefull, the topic is case sensitive)",
+				"required": true
+			},
+			"ms": {
+				"type": "string",
+				"title": "Session cookie ms (Quora cookie named m-s)",
+				"required": true
+			},
+			"mb": {
+				"type": "string",
+				"title": "Session cookie mb (Quora cookie named m-b)",
+				"required": true
+			}
+		}
+	}
+}
