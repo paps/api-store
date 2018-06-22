@@ -46,7 +46,7 @@
 				"fields": {
 					"pageToScrapePerLaunch": {
 						"label": "Amount of pages to scrape for every API launchs",
-						"helper": "Leave this field empty, if you want all pages scraped"
+						"helper": "Leaving this field empty will make the API scrape 2 pages for each launch"
 					},
 					"urls": {
 						"label": "Elements to scrape",

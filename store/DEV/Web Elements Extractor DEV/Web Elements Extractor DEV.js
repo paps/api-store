@@ -155,7 +155,7 @@ const filterArgumentsBySelector = (db, argv) => {
 	}
 
 	if (typeof pageToScrapePerLaunch !== "number") {
-		pageToScrapePerLaunch = urls.length
+		pageToScrapePerLaunch = DEFAULT_ELEMENTS_LAUNCH
 	}
 
 	urls = urls.slice(0, pageToScrapePerLaunch)
