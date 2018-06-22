@@ -20,6 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
 const DEFAULT_WAIT_TIME = 5000
+const DEFAULT_PAGES_PER_LAUNCH = 2
 // }
 
 /**
@@ -92,7 +93,7 @@ const scrapeMails = async (tab, url, waitTime) => {
 		}
 		await tab.wait(waitTime)
 		let mails = await tab.evaluate(extractMails)
-		result.mails = mails
+		result.mails = result.mails.concat(mails)
 	} catch (err) {
 		utils.log(`Can't properly open ${url} due to: ${err.message || err}`, "warning")
 		result.error = err.message || err
@@ -142,7 +143,7 @@ const createCsvOutput = json => {
 			urls = [ queries ]
 		}
 	} else if (Array.isArray(queries)) {
-		(Array.isArray(urls)) ? urls.push(...queries)  : urls = [ ...queries ]
+		(Array.isArray(urls)) ? urls.push(...queries) : urls = [ ...queries ]
 	}
 
 	if (!timeToWait) {
@@ -152,7 +153,7 @@ const createCsvOutput = json => {
 	urls = await inflateArguments(urls)
 
 	if (!pagesPerLaunch) {
-		pagesPerLaunch = urls.length
+		pagesPerLaunch = DEFAULT_PAGES_PER_LAUNCH
 	}
 
 	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)), pagesPerLaunch)

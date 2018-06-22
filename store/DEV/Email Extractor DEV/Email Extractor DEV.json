@@ -31,8 +31,9 @@
 						"helper": "Milliseconds (default value is 5000 ms)"
 					},
 					"pagesPerLaunch": {
+						"inputType": "number",
 						"label": "Number of URLs to scrape per launch",
-						"helper": "Leaving the field empty will mean to scrape all urls"
+						"helper": "If the field is empty, the API will scrape only 2 pages"
 					},
 					"queries": {
 						"hidden": true,
