@@ -24,6 +24,7 @@ const DB_NAME = "result.csv"
 const SHORT_DB_NAME = DB_NAME.split(".").shift()
 const DEFAULT_URLS_PER_LAUNCH = 2
 const MAX_ERRORS_ALLOWED = 3
+const MIN_DEBOUNCE = 2000 // Minimal ms to wait before loading new reviews
 
 const selectors = {
 	rootSelector: "div[role=dialog]",
@@ -34,7 +35,6 @@ const selectors = {
 }
 
 let globalErrors = 0
-
 // }
 
 const filterUrls = (str, db) => {
@@ -133,6 +133,13 @@ const getReviews = (arg, cb) => {
 	cb(null, toRet)
 }
 
+/**
+ * @description Tiny evaluate used to idle until new contents are loaded in the review listing,
+ * the function will check every 200 ms if the current pagination stills the same value before the bot clicked the "next" pagination button
+ * @param {Object} arg - Arguments used: waitSelector & lastCount which are representing the selector to watch and the value found before clicking
+ * @param {Function} cb
+ * @throws after 30s if the watched value didn't changed
+ */
 const waitUntilNewReviews = (arg, cb) => {
 	const startTime = Date.now()
 	const waitNewReviews = () => {
@@ -164,8 +171,8 @@ const scrapeReview = async (tab, url) => {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
 			return res
 		}
-		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 15000, "or")
-		while (await tab.isPresent(selectors.nextSelector)) {
+		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 15000, "and")
+		while (await tab.isVisible(selectors.nextSelector)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
@@ -174,6 +181,8 @@ const scrapeReview = async (tab, url) => {
 			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
 			utils.log(`Got ${res.length} reviews`, "info")
 			let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
+			utils.log(await tab.evaluate(_debug), "loading")
+			await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
 			await tab.click(selectors.nextSelector)
 			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
 		}
