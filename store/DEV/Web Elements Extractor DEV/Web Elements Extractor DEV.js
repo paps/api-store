@@ -118,6 +118,12 @@ const createCsvOutput = json => {
 	return res
 }
 
+/**
+ * @description Function used to filter all arguments already processed
+ * @param {Array} db - Previous executions results
+ * @param {Array<Object>} argv - buster.arguments
+ * @return {Array<Object>} Arguments to scrape
+ */
 const filterArgumentsBySelector = (db, argv) => {
 	const argsToUse = []
 

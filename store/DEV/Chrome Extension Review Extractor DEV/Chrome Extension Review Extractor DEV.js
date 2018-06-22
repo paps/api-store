@@ -110,8 +110,6 @@ const forgeUrls = urls => {
 	return toRet
 }
 
-const _debug = (arg, cb) => cb(null, document.querySelector("span[ga\\:type=PaginationMessage]").textContent.trim())
-
 const getReviews = (arg, cb) => {
 	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
 	const reviews = Array.from(reviewRootElement.querySelectorAll("div[ga\\:annotation-index]"))
@@ -171,7 +169,7 @@ const scrapeReview = async (tab, url) => {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
 			return res
 		}
-		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector ], 15000, "and")
+		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector], 15000, "and")
 		while (await tab.isVisible(selectors.nextSelector)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -181,7 +179,6 @@ const scrapeReview = async (tab, url) => {
 			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
 			utils.log(`Got ${res.length} reviews`, "info")
 			let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
-			utils.log(await tab.evaluate(_debug), "loading")
 			await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
 			await tab.click(selectors.nextSelector)
 			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
