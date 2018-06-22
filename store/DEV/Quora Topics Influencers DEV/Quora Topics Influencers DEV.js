@@ -145,7 +145,6 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	utils.log("|START|", "info")
 	let isUrl = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$/g.test(argv.topic)
 	let topic = ""
 
@@ -179,7 +178,6 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 	await utils.saveResult(profiles, "Quora influencers")
 })()
 .then(() => {
-	utils.log("|END|", "done")
 	nick.exit(0)
 })
 .catch((err) => {
