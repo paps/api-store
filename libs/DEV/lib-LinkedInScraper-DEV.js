@@ -364,6 +364,7 @@ const craftCsvObject = infos => {
 	 */
 	const hasDetails = infos.hasOwnProperty("details")
 	const hasGeneral = infos.hasOwnProperty("general")
+	const hasHunter = infos.hasOwnProperty("hunter")
 
 	return {
 		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
@@ -397,6 +398,10 @@ const craftCsvObject = infos => {
 		schoolDateRange2: school2.dateRange || null,
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
+		scoreFromHunter: (hasHunter) ? (infos.hunter.score || null) : null,
+		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
+		twitterFromHunter: (hasHunter) ? (infos.hunter.twitter || null) : null,
+		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
