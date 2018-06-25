@@ -505,6 +505,7 @@ class LinkedInScraper {
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
 				result.details.mailFromHunter = hunterSearch.email
 				result.details.companyWebsite = companyUrl || ""
+				result.hunter = Object.assign({}, hunterSearch)
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
 				result.details.mailFromHunter = ""
