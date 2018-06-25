@@ -96,7 +96,14 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	for (let i = 1; i <= numberOfPage; i++) {
 		utils.log(`Getting infos from page ${i}...`, "loading")
 		await tab.open(`${searchUrl}&page=${i}`)
-		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
+		let selector
+		try {
+			selector = await tab.waitUntilVisible(selectors, 7500, "or")
+		} catch (err) {
+			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+			utils.log(err.message || err, "warning")
+			return result
+		}
 		if (selector === selectors[0]) {
 			break
 		} else {
