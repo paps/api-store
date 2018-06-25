@@ -29,7 +29,7 @@ const createUrl = (search, circles) => {
 }
 
 const scrapeResults = (arg, callback) => {
-	const results = document.querySelectorAll("ul.results-list > li")
+	const results = document.querySelectorAll("div.search-results ul > li")
 	const infos = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
