@@ -31,7 +31,12 @@ const selectors = {
 	reviewsTabSelector: "div[role=tablist] > div[role=tab]:nth-child(2)",
 	reviewsPanelSelector: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
 	nextSelector: "a[ga\\:type=NextLink]",
-	waitSelector: "span[ga\\:type=PaginationMessage]"
+	waitSelector: "span[ga\\:type=PaginationMessage]",
+	filtersBaseSelector: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) span",
+	dropDownBaseSelector: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1)",
+	languagesDropDownSelector: "span[tabindex]:first-of-type",
+	languagesSelector: "span ~ div > div:nth-child(2)",
+	reviewsFilterSelector: "span[role=button]:last-of-type",
 }
 
 let globalErrors = 0
@@ -156,6 +161,39 @@ const waitUntilNewReviews = (arg, cb) => {
 
 /**
  * @async
+ * @description Function preforming a click by using DevTools protocols Input
+ * Since click doesn't use under the hood Input.dispatchMouseEvent, here a tiny snippet
+ * @param {Object} tab - Nickjs Tab instance
+ * @param {String} selector - CSS selector to click
+ * @throws if the click procedure failed
+ */
+const emulateHumanClick = async (tab, selector) => {
+	const clickStep = (driver, opts, type) => {
+		return new Promise((resolve, reject) => {
+			opts.type = type
+			resolve(driver.dispatchMouseEvent(opts))
+		})
+	}
+
+	const selectorPosition = await tab.evaluate((arg, cb) => {
+		let coords = document.querySelector(arg.selector).getBoundingClientRect()
+		cb(null, { x: coords.x, y: coords.y })
+	}, { selector })
+
+	// Using a tiny offset in order to be sure click in the element, whitout this offset chrome will emulate a click at the first pixel of the element
+	const opts = {
+		x: selectorPosition.x + 10,
+		y: selectorPosition.y + 10,
+		button: "left",
+		clickCount: 1
+	}
+
+	await clickStep(tab.driver.client.Input, opts, "mousePressed")
+	await clickStep(tab.driver.client.Input, opts, "mouseReleased")
+}
+
+/**
+ * @async
  * @description Function used to scrape a single extension review
  * @param {Object} tab - Nickjs Tab instance
  * @param {String} url - Extension review URLs
@@ -170,6 +208,9 @@ const scrapeReview = async (tab, url) => {
 			return res
 		}
 		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector], 15000, "and")
+		await emulateHumanClick(tab, `${selectors.filtersBaseSelector} ${selectors.reviewsFilterSelector}`)
+		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesDropDownSelector}`)
+		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesSelector}`)
 		while (await tab.isVisible(selectors.nextSelector)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
