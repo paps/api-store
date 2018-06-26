@@ -79,8 +79,16 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 			if (i > infos.skills.length) {
 				break
 			}
-			csv[`skill${i+1}`] = infos.skills[i].name
-			csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+			if (infos.skills[i] && infos.skills[i].name) {
+				csv[`skill${i+1}`] = infos.skills[i].name
+			} else {
+				csv[`skill${i+1}`] = null
+			}
+			if (infos.skills[i] && infos.skills[i].endorsements) {
+				csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+			} else {
+				csv[`endorsement${i+1}`] = null
+			}
 		}
 	}
 
