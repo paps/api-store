@@ -176,14 +176,30 @@ const emulateHumanClick = async (tab, selector) => {
 	}
 
 	const selectorPosition = await tab.evaluate((arg, cb) => {
-		let coords = document.querySelector(arg.selector).getBoundingClientRect()
-		cb(null, { x: coords.x, y: coords.y })
+		const tmp = document.querySelector(arg.selector).getBoundingClientRect()
+		let res = {
+			top: tmp.top,
+			right: tmp.right,
+			bottom: tmp.bottom,
+			left: tmp.left,
+			width: tmp.width,
+			height: tmp.height,
+			x: tmp.x,
+			y: tmp.y
+		}
+		cb(null, res)
 	}, { selector })
 
-	// Using a tiny offset in order to be sure click in the element, whitout this offset chrome will emulate a click at the first pixel of the element
+	// Using Nickjs click mechanism to get coordinates in order to click at the center of the element
+	let posX = 0.5
+	let posY = 0.5
+
+	posX = Math.floor(selectorPosition.width * (posX - (posX ^ 0)).toFixed(10)) + (posX ^ 0) + selectorPosition.left
+	posY = Math.floor(selectorPosition.height * (posY - (posY ^ 0)).toFixed(10)) + (posY ^ 0) + selectorPosition.top
+
 	const opts = {
-		x: selectorPosition.x + 10,
-		y: selectorPosition.y + 10,
+		x: posX,
+		y: posY,
 		button: "left",
 		clickCount: 1
 	}
