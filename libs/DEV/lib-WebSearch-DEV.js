@@ -1,5 +1,5 @@
 /**
- *  * This array contains Objects storing CSS selectors in order to scrape data from results
+ * This array contains Objects storing CSS selectors in order to scrape data from results
  *
  * - name: The web engine name
  * - baseUrl: The part of the url to forge with the research
@@ -194,8 +194,6 @@ const _doSearch = async function (query) {
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.log("No results from the engine", engine.name)
 		if (typeof this.lockEngine === "string") {
-			await this.tab.screenshot(`error-${httpCode}-${this.engines[this.engineUsed].name}-${query}.jpg`)
-			await this.buster.saveText(await this.tab.getContent(), `error-${httpCode}-${this.engines[this.engineUsed].name}-${query}.html`)
 		}
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 	}
@@ -232,8 +230,8 @@ const _switchEngine = function () {
 		}
 	}
 	if (this.verbose) {
-		console.log('-- engines down: ' + JSON.stringify(this.enginesDown))
-		console.log('-- available engines: ' + JSON.stringify(availableEngines))
+		console.log("-- engines down: " + JSON.stringify(this.enginesDown))
+		console.log("-- available engines: " + JSON.stringify(availableEngines))
 	}
 	return availableEngines[Math.floor(Math.random() * availableEngines.length)]
 }
@@ -262,6 +260,8 @@ class WebSearch {
 		this.nbRequestsBeforeDeletingCookies = Math.round(50 + Math.random() * 50) // 50 <=> 100
 	}
 
+	static engines () { return _defaultEngines }
+
 	/**
 	 * @async
 	 * @description Method use to get all results from a web engine research
@@ -288,7 +288,7 @@ class WebSearch {
 		 * No need to continue if all engines are down
 		 */
 		if (this.allEnginesDown()) {
-			console.log('No more search engines available')
+			console.log("No more search engines available")
 			results = Object.assign({}, emptyResult)
 			results.engine = this.engines[this.engineUsed].name
 			results.codename = this.engines[this.engineUsed].codename
@@ -310,20 +310,10 @@ class WebSearch {
 				codenameList += this.engines[this.engineUsed].codename
 				break
 			} catch (e) {
-				// if (e.toString().indexOf("net::ERR_ABORTED") > -1) {
-				// 	this.verbose && console.log("net::ERR_ABORTED caught, resuming scraping")
-				// 	continue
-				// }
-				if (typeof this.lockEngine === "string") {
-					this.verbose && console.log("------ Is noResultsSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].noResultsSelector))
-					this.verbose && console.log("------ Is baseSelector present ? =>", await this.tab.isPresent(this.engines[this.engineUsed].baseSelector))
-					await this.tab.screenshot(`error-${this.engines[this.engineUsed].name}-${query}.jpg`)
-					await this.buster.saveText(await this.tab.getContent(), `error-${this.engines[this.engineUsed].name}-${query}.html`)
-				}
 				this.verbose && console.log(`-- Switching to a new engine because exception: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				if (this.allEnginesDown()) {
-					console.log('No more search engines available')
+					console.log("No more search engines available")
 					results = Object.assign({}, emptyResult)
 					results.engine = this.engines[this.engineUsed].name
 					results.codename = this.engines[this.engineUsed].codename
@@ -425,4 +415,4 @@ class WebSearch {
 	}
 }
 
-module.exports = { WebSearch, defaultEngines: _defaultEngines }
+module.exports = WebSearch
