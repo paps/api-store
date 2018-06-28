@@ -264,7 +264,7 @@ const createCsvOutput = json => {
 
 	for (const url of urls) {
 		if (globalErrors >= MAX_ERRORS_ALLOWED) {
-			utils.log(`Got ${globalErrors} errors while scraping reviews, Reviews rate limit reached, aborting execution`, "warning")
+			utils.log(`Got ${globalErrors} errors while scraping reviews, aborting execution`, "warning")
 			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
