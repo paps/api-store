@@ -2,15 +2,14 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-
-const { URL } = require("url")
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	printPageErrors: false,
 	printRessourceErrors: false,
 	printNavigation: false,
@@ -37,6 +36,7 @@ const selectors = {
 	languagesDropDownSelector: "span[tabindex]:first-of-type",
 	languagesSelector: "span ~ div > div:nth-child(2)",
 	reviewsFilterSelector: "span[role=button]:last-of-type",
+	lastReviewInPage: "div[ga\\:type=\"CommentList\"] > div[ga\\:annotation-index]:last-of-type"
 }
 
 let globalErrors = 0
@@ -81,43 +81,10 @@ const handleSpreadsheet = async (url, column) => {
 	return urls
 }
 
-/**
- * @internal
- * @description Function used in forgeUrls
- * @param {String} url - A single URL
- * @return {String}
- */
-const _forge = url => {
-	let tmp
-	try {
-		tmp = new URL(url)
-		if (tmp.pathname.indexOf("/reviews") < 0) {
-			tmp.pathname = tmp.pathname.concat(tmp.pathname.endsWith("/") ? "reviews/" : "/reviews")
-		}
-		return tmp.toString()
-	} catch (err) {
-		return url
-	}
-}
-
-/**
- * @description Simple wrapper used to append if needed "/reviews" on URL pathname
- * @param {Array<String>|String} urls URLs to clean
- * @return {Array<String>|String} URLs
- */
-const forgeUrls = urls => {
-	let toRet = []
-	if (Array.isArray(urls)) {
-		toRet = urls.map(el => _forge(el))
-	} else {
-		toRet = _forge(urls)
-	}
-	return toRet
-}
-
 const getReviews = (arg, cb) => {
-	const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
-	const reviews = Array.from(reviewRootElement.querySelectorAll("div[ga\\:annotation-index]"))
+	// const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
+	// const reviews = Array.from(reviewRootElement.querySelectorAll("div[ga\\:annotation-index]"))
+	const reviews = Array.from(document.querySelectorAll("div[ga\\:annotation-index]"))
 	const toRet = reviews.map(el => {
 		const review = {}
 		review.profileImg = el.querySelector("img") ? el.querySelector("img").src : ""
@@ -133,6 +100,7 @@ const getReviews = (arg, cb) => {
 		review.url = arg.url
 		return review
 	})
+	document.querySelector(arg.selectors.lastReviewInPage).scrollIntoView()
 	cb(null, toRet)
 }
 
@@ -208,6 +176,10 @@ const emulateHumanClick = async (tab, selector) => {
 	await clickStep(tab.driver.client.Input, opts, "mouseReleased")
 }
 
+const scrollToLastVisibleReview	= (arg, cb) => cb(null, document.querySelector(arg.selector).scrollIntoView())
+
+const scrapeExtensionName = (arg, cb) => cb(null, document.querySelector("h1").textContent.trim())
+
 /**
  * @async
  * @description Function used to scrape a single extension review
@@ -218,34 +190,44 @@ const emulateHumanClick = async (tab, selector) => {
 const scrapeReview = async (tab, url) => {
 	let res = []
 	try {
-		const [httpCode] = await tab.open(forgeUrls(url))
+		const [httpCode] = await tab.open(url)
 		if ((httpCode >= 300) || (httpCode < 200)) {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
 			return res
 		}
-		await tab.waitUntilVisible([ selectors.rootSelector, selectors.reviewsPanelSelector], 15000, "and")
+		await tab.waitUntilVisible(selectors.rootSelector, 15000)
+		utils.log(`Scraping reviews for extension ${await tab.evaluate(scrapeExtensionName)} ...`, "loading")
+		await emulateHumanClick(tab, selectors.reviewsTabSelector)
+		await tab.waitUntilVisible(selectors.reviewsPanelSelector, 15000)
 		await emulateHumanClick(tab, `${selectors.filtersBaseSelector} ${selectors.reviewsFilterSelector}`)
 		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesDropDownSelector}`)
 		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesSelector}`)
+		await tab.wait(1000)
 		while (await tab.isVisible(selectors.nextSelector)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
 			}
-			await tab.waitUntilVisible(selectors.reviewsPanelSelector, 15000)
 			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
 			utils.log(`Got ${res.length} reviews`, "info")
-			let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
 			await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
-			await tab.click(selectors.nextSelector)
-			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
+			if (await tab.isVisible(selectors.nextSelector)) {
+				let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
+				await tab.click(selectors.nextSelector)
+				await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
+				await tab.evaluate(scrollToLastVisibleReview, { selector: selectors.lastReviewInPage })
+			} else {
+				break
+			}
 		}
 	} catch (err) {
 		utils.log(err.message || err, "warning")
+		await tab.screenshot(`page-error-${Date.now()}.jpg`)
 		globalErrors++
 		return res
 	}
 	globalErrors = 0
+	await tab.screenshot(`page-${Date.now()}.jpg`)
 	return res
 }
 
@@ -281,7 +263,7 @@ const scrapeReview = async (tab, url) => {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		utils.log(`Scraping ${url}`, "loading")
+		// utils.log(`Scraping ${url}`, "loading")
 		buster.progressHint((i + 1) / urls.length, `${url}`)
 		const reviewRes = await scrapeReview(tab, url)
 		utils.log(`Got ${reviewRes.length} reviews for ${url}`, "done")
