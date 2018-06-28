@@ -8,7 +8,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: true,
+	loadImages: false,
 	printPageErrors: false,
 	printRessourceErrors: false,
 	printNavigation: false,
