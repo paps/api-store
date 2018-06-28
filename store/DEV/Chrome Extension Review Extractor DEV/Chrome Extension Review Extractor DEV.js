@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -82,13 +81,10 @@ const handleSpreadsheet = async (url, column) => {
 }
 
 const getReviews = (arg, cb) => {
-	// const reviewRootElement = Array.from(document.querySelectorAll(arg.selectors.reviewsPanelSelector)).pop()
-	// const reviews = Array.from(reviewRootElement.querySelectorAll("div[ga\\:annotation-index]"))
 	const reviews = Array.from(document.querySelectorAll("div[ga\\:annotation-index]"))
 	const toRet = reviews.map(el => {
 		const review = {}
 		review.profileImg = el.querySelector("img") ? el.querySelector("img").src : ""
-
 		const reviewer = el.querySelector("div a.comment-thread-displayname")
 		if (reviewer) {
 			review.name = reviewer.textContent.trim()
@@ -188,7 +184,8 @@ const scrapeExtensionName = (arg, cb) => cb(null, document.querySelector("h1").t
  * @return {Promise<Array<String>>} Array containing all reviews or an empty array is an error happened
  */
 const scrapeReview = async (tab, url) => {
-	let res = []
+	let res = { name: "", reviews: [] }
+	let extensionName
 	try {
 		const [httpCode] = await tab.open(url)
 		if ((httpCode >= 300) || (httpCode < 200)) {
@@ -196,7 +193,9 @@ const scrapeReview = async (tab, url) => {
 			return res
 		}
 		await tab.waitUntilVisible(selectors.rootSelector, 15000)
-		utils.log(`Scraping reviews for extension ${await tab.evaluate(scrapeExtensionName)} ...`, "loading")
+		extensionName = await tab.evaluate(scrapeExtensionName)
+		res.name = extensionName
+		utils.log(`Scraping reviews for the extension ${extensionName} ...`, "loading")
 		await emulateHumanClick(tab, selectors.reviewsTabSelector)
 		await tab.waitUntilVisible(selectors.reviewsPanelSelector, 15000)
 		await emulateHumanClick(tab, `${selectors.filtersBaseSelector} ${selectors.reviewsFilterSelector}`)
@@ -208,13 +207,17 @@ const scrapeReview = async (tab, url) => {
 			if (!timeLeft.timeLeft) {
 				break
 			}
-			res = res.concat(await tab.evaluate(getReviews, { selectors, url }))
-			utils.log(`Got ${res.length} reviews`, "info")
+			res.reviews = res.reviews.concat(await tab.evaluate(getReviews, { selectors, url }))
+			utils.log(`Got ${res.reviews.length} reviews`, "info")
 			await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
 			if (await tab.isVisible(selectors.nextSelector)) {
 				let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
 				await tab.click(selectors.nextSelector)
-				await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
+				try {
+					await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
+				} catch (err) {
+					utils.log("Google rate limit detected, stopping scraping for this extension", "warning")
+				}
 				await tab.evaluate(scrollToLastVisibleReview, { selector: selectors.lastReviewInPage })
 			} else {
 				break
@@ -222,13 +225,19 @@ const scrapeReview = async (tab, url) => {
 		}
 	} catch (err) {
 		utils.log(err.message || err, "warning")
-		await tab.screenshot(`page-error-${Date.now()}.jpg`)
 		globalErrors++
 		return res
 	}
 	globalErrors = 0
-	await tab.screenshot(`page-${Date.now()}.jpg`)
 	return res
+}
+
+const createCsvOutput = json => {
+	const ret = []
+	for (const extension of Object.keys(json)) {
+		ret.push(...json[extension].reviews)
+	}
+	return ret
 }
 
 ;(async () => {
@@ -263,21 +272,19 @@ const scrapeReview = async (tab, url) => {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		// utils.log(`Scraping ${url}`, "loading")
 		buster.progressHint((i + 1) / urls.length, `${url}`)
 		const reviewRes = await scrapeReview(tab, url)
-		utils.log(`Got ${reviewRes.length} reviews for ${url}`, "done")
-		scrapingRes.push(...reviewRes)
+		utils.log(`Got ${reviewRes.reviews.length} reviews from ${reviewRes.name}`, "done")
+		scrapingRes.push(reviewRes)
 		i++
 	}
 
-	db = db.concat(scrapingRes)
+	db = db.concat(createCsvOutput(scrapingRes))
 
 	await utils.saveResults(scrapingRes, db, SHORT_DB_NAME, null, false)
 	nick.exit()
 })()
 .catch(err => {
 	utils.log(err.message || err, "error")
-	utils.log(err.stack || "", "error")
 	nick.exit(1)
 })
