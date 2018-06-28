@@ -168,7 +168,7 @@ const createCsvOutput = json => {
 		buster.progressHint((i + 1) / urls.length, `Scraping: ${url}`)
 		const foundMails = await scrapeMails(tab, url, timeToWait)
 		scrapingRes = scrapingRes.concat(foundMails)
-		utils.log(`Got ${foundMails.mails.length} mails from ${url}`, "done")
+		utils.log(`Got ${foundMails.mails.length} mail${ foundMails.mails.length === 1 ? "" : "s" } from ${url}`, "done")
 		i++
 	}
 
