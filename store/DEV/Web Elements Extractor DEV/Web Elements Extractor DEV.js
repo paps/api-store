@@ -128,11 +128,12 @@ const filterArgumentsBySelector = (db, argv) => {
 	const argsToUse = []
 
 	for (const one of argv) {
-		let wasPageScraped = db.find(el => el.url === one.link)
-		if (wasPageScraped) {
+		let pageAlreadyScraped = db.find(el => el.url === one.link)
+		if (pageAlreadyScraped) {
 			let unprocessedSelectors = []
 			for (const selector of one.selectors) {
-				if (!one.selectors.find(el => el.label === wasPageScraped.label && el.selector === wasPageScraped.selector)) {
+				// Looking in the db (CSV output generated from a previous execution) to find a selector
+				if (!one.selectors.find(el => el.label === pageAlreadyScraped.label && el.selector === pageAlreadyScraped.selector)) {
 					unprocessedSelectors.push(selector)
 				}
 			}
