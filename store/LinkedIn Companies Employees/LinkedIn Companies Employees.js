@@ -77,11 +77,19 @@ const scrapeResults = (args, callback) => {
 				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
 			}
 			if (url !== window.location.href + "#") {
+				let name
+				if (result.querySelector("figure.search-result__image > img")) {
+					name = result.querySelector("figure.search-result__image > img").alt
+				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
+					name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
+				} else {
+					name = "no name found"
+				}
 				linkedInUrls.push({
 					url: url,
-					name: result.querySelector("figure.search-result__image > img").alt,
-					job: result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim(),
-					location: result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim(),
+					name: name,
+					job: (result.querySelector("div.search-result__info > p.subline-level-1")) ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found",
+					location: (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "no location found",
 					currentJob
 				})
 			}
