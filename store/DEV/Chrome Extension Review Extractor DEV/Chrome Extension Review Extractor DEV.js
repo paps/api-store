@@ -22,7 +22,7 @@ const DB_NAME = "result.csv"
 const SHORT_DB_NAME = DB_NAME.split(".").shift()
 const DEFAULT_URLS_PER_LAUNCH = 2
 const MAX_ERRORS_ALLOWED = 3
-const MIN_DEBOUNCE = 5000 // Minimal ms to wait before loading new reviews
+const MIN_DEBOUNCE = 2500 // Minimal ms to wait before loading new reviews
 
 const selectors = {
 	rootSelector: "div[role=dialog]",
