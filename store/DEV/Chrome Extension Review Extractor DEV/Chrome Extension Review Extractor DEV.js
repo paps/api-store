@@ -176,6 +176,23 @@ const scrollToLastVisibleReview	= (arg, cb) => cb(null, document.querySelector(a
 
 const scrapeExtensionName = (arg, cb) => cb(null, document.querySelector("h1").textContent.trim())
 
+const loadAndScrape = async (tab, url) => {
+	let ret = []
+	ret = await tab.evaluate(getReviews, { selectors, url })
+	await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
+	if (await tab.isVisible(selectors.nextSelector)) {
+		let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
+		await tab.click(selectors.nextSelector)
+		try {
+			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
+		} catch (err) {
+			utils.log("Google rate limit detected, stopping scraping for this extension", "warning")
+		}
+		await tab.evaluate(scrollToLastVisibleReview, { selector: selectors.lastReviewInPage })
+	}
+	return ret
+}
+
 /**
  * @async
  * @description Function used to scrape a single extension review
@@ -202,26 +219,17 @@ const scrapeReview = async (tab, url) => {
 		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesDropDownSelector}`)
 		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesSelector}`)
 		await tab.wait(1000)
+
+		res.reviews = res.reviews.concat(await loadAndScrape(tab, url))
+		utils.log(`Got ${res.reviews.length} reviews`, "info")
+
 		while (await tab.isVisible(selectors.nextSelector)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
 			}
-			res.reviews = res.reviews.concat(await tab.evaluate(getReviews, { selectors, url }))
+			res.reviews = res.reviews.concat(await loadAndScrape(tab, url))
 			utils.log(`Got ${res.reviews.length} reviews`, "info")
-			await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
-			if (await tab.isVisible(selectors.nextSelector)) {
-				let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
-				await tab.click(selectors.nextSelector)
-				try {
-					await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
-				} catch (err) {
-					utils.log("Google rate limit detected, stopping scraping for this extension", "warning")
-				}
-				await tab.evaluate(scrollToLastVisibleReview, { selector: selectors.lastReviewInPage })
-			} else {
-				break
-			}
 		}
 	} catch (err) {
 		utils.log(err.message || err, "warning")

@@ -18,6 +18,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result.csv"
+const DB_SHORT_NAME = DB_NAME.split(".").shift()
 const DEFAULT_ELEMENTS_LAUNCH = 2
 // }
 
@@ -181,11 +182,10 @@ const filterArgumentsBySelector = (db, argv) => {
 
 	db = db.concat(createCsvOutput(scrapedData))
 
-	await utils.saveResults(scrapedData, db, DB_NAME.split(".").shift(), null, false)
+	await utils.saveResults(scrapedData, db, DB_SHORT_NAME, null, false)
 	nick.exit(0)
 })()
 .catch(err => {
 	utils.log(err.message || err, "error")
-	utils.log(err.stack || "", "error")
 	nick.exit(1)
 })
