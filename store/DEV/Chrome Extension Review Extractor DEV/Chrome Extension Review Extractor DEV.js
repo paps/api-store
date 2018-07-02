@@ -22,7 +22,7 @@ const DB_NAME = "result.csv"
 const SHORT_DB_NAME = DB_NAME.split(".").shift()
 const DEFAULT_URLS_PER_LAUNCH = 2
 const MAX_ERRORS_ALLOWED = 3
-const MIN_DEBOUNCE = 2000 // Minimal ms to wait before loading new reviews
+const MIN_DEBOUNCE = 5000 // Minimal ms to wait before loading new reviews
 
 const selectors = {
 	rootSelector: "div[role=dialog]",
@@ -84,15 +84,15 @@ const getReviews = (arg, cb) => {
 	const reviews = Array.from(document.querySelectorAll("div[ga\\:annotation-index]"))
 	const toRet = reviews.map(el => {
 		const review = {}
-		review.profileImg = el.querySelector("img") ? el.querySelector("img").src : ""
-		const reviewer = el.querySelector("div a.comment-thread-displayname")
+		review.profileImg = el.querySelector("img[ga\\:type=ProfileImage]") ? el.querySelector("img[ga\\:type=ProfileImage]").src : ""
+		const reviewer = el.querySelector("div a.comment-thread-displayname[ga\\:type=DisplayName]")
 		if (reviewer) {
 			review.name = reviewer.textContent.trim()
 			review.profileLink = reviewer.href
 		}
-		review.time = el.querySelector("span").textContent
+		review.time = el.querySelector("span[ga\\:type=Timestamp]").textContent.trim()
 		review.mark = el.querySelectorAll("div.rsw-starred").length
-		review.note = el.querySelector("div[dir=auto]").textContent
+		review.note = el.querySelector("div[ga\\:type=Comment]").textContent.trim()
 		review.url = arg.url
 		return review
 	})

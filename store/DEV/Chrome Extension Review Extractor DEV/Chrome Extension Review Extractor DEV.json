@@ -33,7 +33,10 @@
 					},
 					"extensionsPerLaunch": {
 						"label": "Number of extensions review to scrape per launch",
-						"helper": "If this field is empty, the API will scrape only 2 extensions (default behaviour)",
+						"helpers": [
+							"If this field is empty, the API will scrape only 2 extensions (default behaviour)",
+							"<b>Please be gentle</b>. Google can block the scraping, when scraping too many reviews. Scraping 3+ reviews with a huge amount of reviews is not recommended."
+						],
 						"inputType": "number"
 					}
 				}
