@@ -10,7 +10,7 @@
 	"hidden": true,
 	"new": false,
 	"defaultArgument": {
-		"urls": [ "https://www.phantombuter.com/" ],
+		"urls": [ "https://phantombuster.com" ],
 		"timeToWait": 5000,
 		"pagesPerLaunch": 2
 	},
