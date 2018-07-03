@@ -25,20 +25,21 @@ const MAX_ERRORS_ALLOWED = 3
 const MIN_DEBOUNCE = 2500 // Minimal ms to wait before loading new reviews
 
 const selectors = {
-	rootSelector: "div[role=dialog]",
-	reviewsTabSelector: "div[role=tablist] > div[role=tab]:nth-child(2)",
-	reviewsPanelSelector: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
-	nextSelector: "a[ga\\:type=NextLink]",
-	waitSelector: "span[ga\\:type=PaginationMessage]",
-	filtersBaseSelector: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) span",
-	dropDownBaseSelector: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1)",
-	languagesDropDownSelector: "span[tabindex]:first-of-type",
-	languagesSelector: "span ~ div > div:nth-child(2)",
-	reviewsFilterSelector: "span[role=button]:last-of-type",
+	root: "div[role=dialog]",
+	reviewsTab: "div[role=tablist] > div[role=tab]:nth-child(2)",
+	reviewsPanel: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
+	nextPaginationElement: "a[ga\\:type=NextLink]",
+	waitCondition: "span[ga\\:type=PaginationMessage]",
+	filtersBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) span",
+	dropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1)",
+	languagesDropDown: "span[tabindex]:first-of-type",
+	languagesSelection: "span ~ div > div:last-of-type",
+	reviewsFilter: "span[role=button]:last-of-type",
 	lastReviewInPage: "div[ga\\:type=\"CommentList\"] > div[ga\\:annotation-index]:last-of-type"
 }
 
 let globalErrors = 0
+let rateLimit = false
 // }
 
 const filterUrls = (str, db) => {
@@ -103,14 +104,14 @@ const getReviews = (arg, cb) => {
 /**
  * @description Tiny evaluate used to idle until new contents are loaded in the review listing,
  * the function will check every 200 ms if the current pagination stills the same value before the bot clicked the "next" pagination button
- * @param {Object} arg - Arguments used: waitSelector & lastCount which are representing the selector to watch and the value found before clicking
+ * @param {Object} arg - Arguments used: waitCondition & lastCount which are representing the selector to watch and the value found before clicking
  * @param {Function} cb
  * @throws after 30s if the watched value didn't changed
  */
 const waitUntilNewReviews = (arg, cb) => {
 	const startTime = Date.now()
 	const waitNewReviews = () => {
-		const data = document.querySelector(arg.selectors.waitSelector).textContent.trim()
+		const data = document.querySelector(arg.selectors.waitCondition).textContent.trim()
 		if ((!data) || (data === arg.lastCount)) {
 			if ((Date.now() - startTime) >= 30000) {
 				cb("New reviews can't be loaded after 30s")
@@ -132,12 +133,6 @@ const waitUntilNewReviews = (arg, cb) => {
  * @throws if the click procedure failed
  */
 const emulateHumanClick = async (tab, selector) => {
-	const clickStep = (driver, opts, type) => {
-		return new Promise((resolve, reject) => {
-			opts.type = type
-			resolve(driver.dispatchMouseEvent(opts))
-		})
-	}
 
 	const selectorPosition = await tab.evaluate((arg, cb) => {
 		const tmp = document.querySelector(arg.selector).getBoundingClientRect()
@@ -168,8 +163,10 @@ const emulateHumanClick = async (tab, selector) => {
 		clickCount: 1
 	}
 
-	await clickStep(tab.driver.client.Input, opts, "mousePressed")
-	await clickStep(tab.driver.client.Input, opts, "mouseReleased")
+	opts.type = "mousePressed"
+	await tab.driver.client.Input.dispatchMouseEvent(opts)
+	opts.type = "mouseReleased"
+	await tab.driver.client.Input.dispatchMouseEvent(opts)
 }
 
 const scrollToLastVisibleReview	= (arg, cb) => cb(null, document.querySelector(arg.selector).scrollIntoView())
@@ -180,13 +177,14 @@ const loadAndScrape = async (tab, url) => {
 	let ret = []
 	ret = await tab.evaluate(getReviews, { selectors, url })
 	await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
-	if (await tab.isVisible(selectors.nextSelector)) {
-		let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitSelector).textContent.trim()) }, { selectors })
-		await tab.click(selectors.nextSelector)
+	if (await tab.isVisible(selectors.nextPaginationElement)) {
+		let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitCondition).textContent.trim()) }, { selectors })
+		await tab.click(selectors.nextPaginationElement)
 		try {
 			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
 		} catch (err) {
 			utils.log("Google rate limit detected, stopping scraping for this extension", "warning")
+			rateLimit = true
 		}
 		await tab.evaluate(scrollToLastVisibleReview, { selector: selectors.lastReviewInPage })
 	}
@@ -200,7 +198,7 @@ const loadAndScrape = async (tab, url) => {
  * @param {String} url - Extension review URLs
  * @return {Promise<Array<String>>} Array containing all reviews or an empty array is an error happened
  */
-const scrapeReview = async (tab, url) => {
+const scrapeReviews = async (tab, url) => {
 	let res = { name: "", reviews: [] }
 	let extensionName
 	try {
@@ -209,21 +207,21 @@ const scrapeReview = async (tab, url) => {
 			utils.log(`Expecting HTTP code 200, but got ${httpCode} when opening URL: ${url}`, "warning")
 			return res
 		}
-		await tab.waitUntilVisible(selectors.rootSelector, 15000)
+		await tab.waitUntilVisible(selectors.root, 15000)
 		extensionName = await tab.evaluate(scrapeExtensionName)
 		res.name = extensionName
 		utils.log(`Scraping reviews for the extension ${extensionName} ...`, "loading")
-		await emulateHumanClick(tab, selectors.reviewsTabSelector)
-		await tab.waitUntilVisible(selectors.reviewsPanelSelector, 15000)
-		await emulateHumanClick(tab, `${selectors.filtersBaseSelector} ${selectors.reviewsFilterSelector}`)
-		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesDropDownSelector}`)
-		await emulateHumanClick(tab, `${selectors.dropDownBaseSelector} ${selectors.languagesSelector}`)
+		await emulateHumanClick(tab, selectors.reviewsTab)
+		await tab.waitUntilVisible(selectors.reviewsPanel, 15000)
+		await emulateHumanClick(tab, `${selectors.filtersBase} ${selectors.reviewsFilter}`)
+		await emulateHumanClick(tab, `${selectors.dropDownBase} ${selectors.languagesDropDown}`)
+		await emulateHumanClick(tab, `${selectors.dropDownBase} ${selectors.languagesSelection}`)
 		await tab.wait(1000)
 
 		res.reviews = res.reviews.concat(await loadAndScrape(tab, url))
 		utils.log(`Got ${res.reviews.length} reviews`, "info")
 
-		while (await tab.isVisible(selectors.nextSelector)) {
+		while (await tab.isVisible(selectors.nextPaginationElement)) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
@@ -281,7 +279,11 @@ const createCsvOutput = json => {
 			break
 		}
 		buster.progressHint((i + 1) / urls.length, `${url}`)
-		const reviewRes = await scrapeReview(tab, url)
+		if (rateLimit) {
+			await tab.wait(100000) // Wait 1min if the error count has been incremented
+			rateLimit = !rateLimit
+		}
+		const reviewRes = await scrapeReviews(tab, url)
 		utils.log(`Got ${reviewRes.reviews.length} reviews from ${reviewRes.name}`, "done")
 		scrapingRes.push(reviewRes)
 		i++
