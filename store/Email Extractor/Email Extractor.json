@@ -1,0 +1,80 @@
+{
+	"slug": "email-extractor",
+	"description": "",
+	"image": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": false,
+	"defaultArgument": {
+		"urls": [ "https://www.phantombuter.com/" ],
+		"timeToWait": 5000,
+		"pagesPerLaunch": 2
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"urls": {
+						"label": "CSV/ Spreadsheet URLs or URLs to scrape",
+						"actionbarStyle": "top",
+						"collapsible": true,
+						"toolbarSticky": true,
+						"hideToolbarWithChildren": true
+					},
+					"timeToWait": {
+						"label": "Time to wait until the page is fully loaded",
+						"helper": "Milliseconds (default value is 5000 ms)"
+					},
+					"pagesPerLaunch": {
+						"inputType": "number",
+						"label": "Number of URLs to scrape per launch",
+						"helper": "If the field is empty, the API will scrape only 2 pages"
+					},
+					"queries": {
+						"hidden": true,
+						"disabled": true
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"urls": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"timeToWait": {
+				"type": "number",
+				"minimum": 1,
+				"default": 5000
+			},
+			"pagesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 2
+			}
+		},
+		"anyOf": [
+			{
+				"required": [
+					"urls"
+				]
+			},
+			{
+				"required": [
+					"queries"
+				]
+			}
+		]
+	}
+}
