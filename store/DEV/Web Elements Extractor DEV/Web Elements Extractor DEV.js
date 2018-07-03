@@ -24,7 +24,8 @@ const DEFAULT_ELEMENTS_LAUNCH = 2
 
 const doScraping = (arg, cb) => {
 	let data = Array.from(document.querySelectorAll(arg.selector))
-	cb(null, data.map(el => arg.trim ? el.textContent.trim() : el.textContent))
+	// cb(null, data.map(el => (arg.trim) ? el.textContent.trim() : el.textContent))
+	cb(null, data.map(el => el.textContent.trim())
 }
 
 /**
@@ -61,7 +62,7 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 		}
 		try {
 			await tab.waitUntilVisible(one.selector, scrapingBundle.timeToWaitSelector)
-			let value = await tab.evaluate(doScraping, { selector: one.selector, trim: scrapingBundle.trim })
+			let value = await tab.evaluate(doScraping, { selector: one.selector })
 			scrapingRes.elements.push({ label: one.label, selector: one.selector, value })
 			utils.log(`Selector ${one.selector} scraped on ${scrapingBundle.link}`, "done")
 		} catch (err) {
@@ -109,11 +110,16 @@ const createCsvOutput = json => {
 			let element = { url: el.url, date: el.date, label: scrapedElement.label, selector: scrapedElement.selector }
 			if (scrapedElement.error) {
 				element.error = scrapedElement.error
+				res.push(element)
 			}
 			if (scrapedElement.value) {
-				element.value = scrapedElement.value
+				let elements = scrapedElement.value.map(el => {
+					let toRet = Object.assign({}, element)
+					toRet.value = el
+					return toRet
+				})
+				res.push(...elements)
 			}
-			res.push(element)
 		}
 	}
 	return res

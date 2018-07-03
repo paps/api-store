@@ -78,9 +78,6 @@
 								"timeToWaitSelector": {
 									"label": "Time to wait until the given selector will appear in the page",
 									"helper": "time in milliseconds (ms)"
-								},
-								"trim": {
-									"rightLabel": "Trim heading & tailing whitespaces for the extracted text"
 								}
 							}
 						}
@@ -123,10 +120,6 @@
 							"type": "number",
 							"minimum": 1,
 							"default": 5000
-						},
-						"trim": {
-							"type": "boolean",
-							"default": true
 						}
 					},
 					"minLength": 1
