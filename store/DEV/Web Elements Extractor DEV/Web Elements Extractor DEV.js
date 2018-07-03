@@ -25,7 +25,7 @@ const DEFAULT_ELEMENTS_LAUNCH = 2
 const doScraping = (arg, cb) => {
 	let data = Array.from(document.querySelectorAll(arg.selector))
 	// cb(null, data.map(el => (arg.trim) ? el.textContent.trim() : el.textContent))
-	cb(null, data.map(el => el.textContent.trim())
+	cb(null, data.map(el => el.textContent.trim()))
 }
 
 /**
