@@ -76,10 +76,10 @@ class Hunter {
 		const send = (callback) => {
 			request.getJson(fullUrl, (err, res) => {
 				if (err) {
-					if ((typeof res == "object") && Array.isArray(res.errors) && res.errors.length > 0) {
+					if ((typeof res === "object") && Array.isArray(res.errors) && res.errors.length > 0) {
 						let errString = `Hunter.io: ${err}`
 						for (const errInfo of res.errors) {
-							if ((typeof errInfo == "object") && (typeof errInfo.details == "string")) {
+							if ((typeof errInfo === "object") && (typeof errInfo.details === "string")) {
 								errString += ` - ${errInfo.details}`
 							}
 						}

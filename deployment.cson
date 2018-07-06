@@ -9,6 +9,7 @@
 		'lib-PhongoLab-beta.coffee': 'libs/lib-PhongoLab-beta.coffee'
 		'lib-request-beta.coffee': 'libs/lib-request-beta.coffee'
 		'lib-Hunter.js': 'libs/lib-Hunter.js'
+		'lib-Dropcontact.js': 'libs/lib-Dropcontact.js'
 		'lib-chrome-launcher.js': 'libs/lib-chrome-launcher.js'
 		'lib-StoreUtilities.js': 'libs/lib-StoreUtilities.js'
 		'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
