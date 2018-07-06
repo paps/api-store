@@ -21,6 +21,7 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
+const { URL } = require("url")
 
 const DB_NAME = "result"
 const MAX_SKILLS = 6
@@ -65,6 +66,10 @@ const filterRows = (str, db) => {
  */
 const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 
+	if (!csv) {
+		return csv
+	}
+
 	delete csv.skill1
 	delete csv.skill2
 	delete csv.skill3
@@ -74,8 +79,16 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 			if (i > infos.skills.length) {
 				break
 			}
-			csv[`skill${i+1}`] = infos.skills[i].name
-			csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+			if (infos.skills[i] && infos.skills[i].name) {
+				csv[`skill${i+1}`] = infos.skills[i].name
+			} else {
+				csv[`skill${i+1}`] = null
+			}
+			if (infos.skills[i] && infos.skills[i].endorsements) {
+				csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+			} else {
+				csv[`endorsement${i+1}`] = null
+			}
 		}
 	}
 
@@ -85,7 +98,7 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 const getFieldsFromArray = (arr) => {
 	const fields = []
 	for (const line of arr) {
-		if (line && (typeof(line) == 'object')) {
+		if (line && (typeof(line) === "object")) {
 			for (const field of Object.keys(line)) {
 				if (fields.indexOf(field) < 0) {
 					fields.push(field)
@@ -94,6 +107,25 @@ const getFieldsFromArray = (arr) => {
 		}
 	}
 	return fields
+}
+
+/**
+ * @description Removing subdomains if present in the URL, could prevent HTTP code 999 redirection when scraping the URL
+ * @param {String} url - LinkedIn URL
+ * @return {String} Cleaned or initial URL
+ */
+const removeLinkedinSubdomains = url => {
+	try {
+		let _url = new URL(url)
+		if ((_url.hostname === "linkedin.com") || (_url.hostname === "www.linkedin.com")) {
+			return _url.toString()
+		} else {
+			_url.hostname = "linkedin.com"
+			return _url.toString()
+		}
+	} catch (err) {
+		return url
+	}
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -132,7 +164,7 @@ const getFieldsFromArray = (arr) => {
 		}
 		try {
 			utils.log(`Opening page ${url}`, "loading")
-			const infos = await linkedInScraper.scrapeProfile(tab, url)
+			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(url))
 			/**
 			 * NOTE: the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count

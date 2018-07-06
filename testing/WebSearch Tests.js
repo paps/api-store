@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -21,7 +21,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const WebSearch = require("./lib-WebSearch-DEV")
+const WebSearch = require("./lib-WebSearch")
 // }
 
 /**
@@ -39,8 +39,7 @@ const assertResult = async (webSearch, test, loopCount, expectedResult, expected
 		const results = await webSearch.search(test)
 		const links = []
 		for (const searchResult of results.results) {
-			// utils.log(searchResult.link, "info")
-			if (searchResult.link === expectedResult) {
+			if (searchResult.link.indexOf(expectedResult) > -1) {
 				links.push(searchResult.link)
 			}
 		}
@@ -54,20 +53,40 @@ const assertResult = async (webSearch, test, loopCount, expectedResult, expected
 	}
 }
 
-;(async () => {
-	const oneResultTest = "phantombuster site:linkedin.com"
-	// const engineToTest = [ "yahoo" ]
-	const iterations = 50
-	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster, true/*, engineToTest*/)
+const assertEmptyResults = async (webSearch, test, loopCount) => {
+	for (let i = 0; i < loopCount; i++) {
+		const results = await webSearch.search(test)
+		const testRes = `expected 0, got ${results.results.length}`
+		console.log(JSON.stringify(results.results, null, 4))
+		if (results.results.length > 0) {
+			utils.log(`Error: ${testRes}, aborting`, "warning")
+			throw `Iteration ${i + 1} ${testRes}`
+		} else {
+			utils.log(`Iteration ${i + 1} passed: ${testRes}`, "done")
+		}
+	}
+}
 
-	// for (const engine of engineToTest) {
-		// webSearch.lockEngine = engine
+;(async () => {
+	const oneResultTest = "test"
+	// Giant random string used to avoid results for web engines
+	const noResultTest = "\"zjwj7l67fzddk09dgem6lcsi8qlbxdtxorx1bhpc298r93bk36d1m5bupfkzn1pgquur1ved65k6mgrb5xsydqibjjfoinaq1cxqtcqslqxmrj8bcmvh9cwgfrrdjfejz9i3u7xi7gawyu92bok2azr9nghy8gsf8v960ss6hzs215w5vibt14wiqipxqbg22bblvv301twerd8k7xckat9immnlgdveuhkk9r2enzdct0xlbj4juihunv9dmxdvlz0n657g5t37nvxwy9gmodmp81mbm8ushxobkp0wn5cfbuip6io44p03wnendqs9em4nx2tzpo19jjvhjnlc\""
+	const ignoredEngines = [ "yandex" ] // Always getting captcha
+	const iterations = 1
+
+	const tab = await nick.newTab()
+	const enginesToTest = WebSearch.engines().map(el => el.name).filter(el => ignoredEngines.indexOf(el) < 0)
+	const webSearch = new WebSearch(tab, buster, true , enginesToTest[0])
+
+	for (const engine of enginesToTest) {
+		webSearch.lockEngine = engine
 		utils.log(`[${webSearch.lockEngine}] Running test: One result expected`, "info")
-		await assertResult(webSearch, oneResultTest, iterations, "https://www.linkedin.com/company/phantombuster", 1)
-		// utils.log(`[${webSearch.test}] Running test: No result expected`, "info")
-		// await assertResult(webSearch, noResultTest, iterations, null, 0)
-	// }
+		// await assertResult(webSearch, oneResultTest, iterations, "https://www.linkedin.com/company/phantombuster", 1)
+		await assertResult(webSearch, oneResultTest, iterations, "www.speedtest.net", 1)
+
+		utils.log(`[${webSearch.lockEngine}] Running test: No result expected`, "info")
+		await assertEmptyResults(webSearch, noResultTest, iterations)
+	}
 	nick.exit()
 })()
 .catch(err => {

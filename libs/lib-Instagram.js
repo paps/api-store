@@ -160,9 +160,9 @@ class Instagram {
 		const found = await tab.evaluate((arg, cb) => {
 			const urls =
 						Array
-							.from(document.querySelectorAll("nav div[class=\"\"] a"))
+							.from(document.querySelectorAll("nav div > div > a"))
 							.map(el => el.href)
-							.filter(el => el.startsWith("https://www.instagram.com/explore/locations"))
+							.filter(el => el.indexOf("/explore/locations") > 0)
 			cb(null, urls.shift())
 		})
 		return found

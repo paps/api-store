@@ -21,6 +21,7 @@
 		# ---------
 		'AngelList Market Companies Extractor.js': 'store/AngelList Market Companies Extractor/AngelList Market Companies Extractor.js'
 		'Domain Name Finder.js': 'store/Domain Name Finder/Domain Name Finder.js'
+		'Email Extractor.js': 'store/Email Extractor/Email Extractor.js'
 		'Facebook Group Members.js': 'store/Facebook Group Members/Facebook Group Members.js'
 		'Facebook ID Finder.js': 'store/Facebook ID Finder/Facebook ID Finder.js'
 		'Facebook Profile URL Finder.js': 'store/Facebook Profile URL Finder/Facebook Profile URL Finder.js'
@@ -54,6 +55,7 @@
 		'Twitter Network Cleaner.js': 'store/Twitter Network Cleaner/Twitter Network Cleaner.js'
 		'Twitter Profile URL Finder.js': 'store/Twitter Profile URL Finder/Twitter Profile URL Finder.js'
 		'Twitter Auto Liker.js': 'store/Twitter Auto Liker/Twitter Auto Liker.js'
+		'Web Elements Extractor.js': 'store/Web Elements Extractor/Web Elements Extractor.js'
 		'Web Summit Startup Emails.js': 'store/Web Summit Startup Emails/Web Summit Startup Emails.js'
 
 		# scraping-challenges

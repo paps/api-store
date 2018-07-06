@@ -58,6 +58,7 @@
 					"maxPosts": {
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
+						"inputType": "number",
 						"helpers": [
 							"By default, the API will scrape a maximum of 250 posts per hashtag",
 							"You are limited to a maximum of 1000 posts per hashtag"

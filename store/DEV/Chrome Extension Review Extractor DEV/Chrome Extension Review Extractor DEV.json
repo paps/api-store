@@ -1,0 +1,64 @@
+{
+	"slug": "chrome-extension-review-extractor",
+	"description": "Get all reviews for chrome extension marketplace",
+	"argumentDescription": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"hidden": false,
+	"new": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(....)",
+		"extensionsPerLaunch": 2
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or an Extension URL",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or an Extension URL"
+					},
+					"columnName": {
+						"label": "Column name into the CSV/Spreadsheet used to reviews URLs",
+						"helper": "If this field is empty, the API will fetch the first CSV column"
+					},
+					"extensionsPerLaunch": {
+						"label": "Number of extensions to scrape per launch",
+						"helpers": [
+							"If this field is empty, the API will scrape only 2 extensions (default behaviour)",
+							"<b>Please be gentle</b>. Google can block the scraping, when scraping too many reviews. Scraping 3+ extensions with a huge amount of reviews is not recommended."
+						],
+						"inputType": "number"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"minLength": 1,
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"extensionsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 2
+			}
+		}
+	}
+}

@@ -39,7 +39,7 @@ const _downloadCsv = async url => {
 			}
 
 			if (resp.statusCode >= 400) {
-				reject(`${url} is not available, HTTP code: ${resp.statusCode}`)
+				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
 			}
 
 			resolve(resp.body)

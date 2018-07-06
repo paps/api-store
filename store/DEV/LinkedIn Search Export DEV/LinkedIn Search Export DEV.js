@@ -29,7 +29,7 @@ const createUrl = (search, circles) => {
 }
 
 const scrapeResults = (arg, callback) => {
-	const results = document.querySelectorAll("ul.results-list > li")
+	const results = document.querySelectorAll("div.search-results ul > li")
 	const infos = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
@@ -76,6 +76,9 @@ const scrapeResults = (arg, callback) => {
 					if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 						newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
 					}
+				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
+					newInfos.name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
+					newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url\(\"", "").replace("\"\)", "").trim()
 				}
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
@@ -96,7 +99,14 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	for (let i = 1; i <= numberOfPage; i++) {
 		utils.log(`Getting infos from page ${i}...`, "loading")
 		await tab.open(`${searchUrl}&page=${i}`)
-		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
+		let selector
+		try {
+			selector = await tab.waitUntilVisible(selectors, 7500, "or")
+		} catch (err) {
+			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+			utils.log(err.message || err, "warning")
+			return result
+		}
 		if (selector === selectors[0]) {
 			break
 		} else {

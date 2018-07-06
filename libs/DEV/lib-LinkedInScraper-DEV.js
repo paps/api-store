@@ -6,14 +6,10 @@
  * NOTE: Slowly but surely loading all sections of the profile
  */
 const fullScroll = async tab => {
-	await tab.scroll(0, 1000)
-	await tab.wait(2000)
-	await tab.scroll(0, 2000)
-	await tab.wait(2000)
-	await tab.scroll(0, 3000)
-	await tab.wait(2000)
-	await tab.scroll(0, 4000)
-	await tab.wait(2000)
+	for (let i = 1000; i < 4000; i += 1000) {
+		await tab.scroll(0, i)
+		await tab.wait(2000)
+	}
 	await tab.scrollToBottom()
 	await tab.wait(2000)
 }
@@ -29,19 +25,35 @@ const loadProfileSections = async tab => {
 	 * - Details section
 	 */
 	const buttons = [
-		".pv-profile-section button.pv-top-card-section__summary-toggle-button",
-		".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline",
-		".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills",
-		".pv-profile-section__card-action-bar.pv-skills-section__additional-skills", // Issue #40: endorsements dropdown wasn't open, the CSS selector changed
-		"button.contact-see-more-less",
+		{ selector: ".pv-profile-section button.pv-top-card-section__summary-toggle-button", waitCond: ".pv-profile-section button.pv-top-card-section__summary-toggle-button[aria-expanded=false]", noSpinners: true },
+		{ selector: ".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline", waitCond: ".pv-profile-section__actions-inline button.pv-profile-section__see-more-inline", noSpinners: false },
+		{ selector: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills", waitCond: ".pv-profile-section.pv-featured-skills-section button.pv-skills-section__additional-skills", noSpinners: true },
+		{ selector: ".pv-profile-section__card-action-bar.pv-skills-section__additional-skills", waitCond: ".pv-profile-section__card-action-bar.pv-skills-section__additional-skills[aria-expanded=false]", noSpinners: true }, // Issue #40: endorsements dropdown wasn't open, the CSS selector changed
+		{ selector: "button.contact-see-more-less", waitCond: "button.contact-see-more-less", noSpinners: false },
 	]
+	const spinnerSelector = "div.artdeco-spinner"
+	// In order to completly load all sections for a profile, the script click untile a condition is false
+	// waitCond field represent the selector which will stop the complete load of a section
 	for (const button of buttons) {
-		const visible = await tab.isVisible(button)
-		if (visible) {
-			try {
-				await tab.click(button)
-				await tab.wait(2500)
-			} catch (error) { continue }
+		let stop = false
+		while (!stop && await tab.isPresent(button.waitCond)) {
+			const visible = await tab.isVisible(button.selector)
+			if (visible) {
+				try {
+					await tab.click(button.selector)
+					if (!button.noSpinners) {
+						if (await tab.isVisible(spinnerSelector)) {
+							await tab.waitWhileVisible(spinnerSelector)
+						} else {
+							await tab.wait(2500)
+						}
+					}
+				} catch (err) {
+					stop = true
+				}
+			} else {
+				stop = true
+			}
 		}
 	}
 	// Restore the initial position on the page after loading all sections
@@ -247,10 +259,25 @@ const scrapeInfos = (arg, callback) => {
 				])
 			// If the first selector failed, the script will try this selector
 			} else if (_skills.length > 0) {
-				infos.skills = getListInfos(_skills, [
-					{ key: "name", attribute: "textContent", selector: ".pv-skill-category-entity__name span" },
-					{ key: "endorsements", attribute: "textContent", selector: "span.pv-skill-category-entity__endorsement-count" }
-				])
+				// Special handlers for skills
+				// Skills whitout endorsements use a different CSS selector
+				infos.skills = Array.from(_skills).map(el => {
+					let ret = {}
+					if (el.querySelector(".pv-skill-category-entity__name span")) {
+						ret.name = el.querySelector(".pv-skill-category-entity__name span").textContent.trim()
+					} else if (el.querySelector(".pv-skill-category-entity__name")) {
+						ret.name = el.querySelector(".pv-skill-category-entity__name").textContent.trim()
+					} else {
+						ret.name = ""
+					}
+
+					if (el.querySelector("span.pv-skill-category-entity__endorsement-count")) {
+						ret.endorsements = el.querySelector("span.pv-skill-category-entity__endorsement-count").textContent.trim()
+					} else {
+						ret.endorsements = "0"
+					}
+					return ret
+				})
 			} else {
 				infos.skills = []
 			}
@@ -286,7 +313,7 @@ const scrapeInfos = (arg, callback) => {
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils) => {
 	const [httpCode] = await tab.open(url)
-	if (httpCode !== 200) {
+	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {
@@ -364,6 +391,7 @@ const craftCsvObject = infos => {
 	 */
 	const hasDetails = infos.hasOwnProperty("details")
 	const hasGeneral = infos.hasOwnProperty("general")
+	const hasHunter = infos.hasOwnProperty("hunter")
 
 	return {
 		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
@@ -397,6 +425,10 @@ const craftCsvObject = infos => {
 		schoolDateRange2: school2.dateRange || null,
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
+		scoreFromHunter: (hasHunter) ? (infos.hunter.score || null) : null,
+		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
+		twitterFromHunter: (hasHunter) ? (infos.hunter.twitter || null) : null,
+		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
@@ -446,7 +478,7 @@ class LinkedInScraper {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
-		if ((typeof(hunterApiKey) == "string") && (hunterApiKey.trim().length > 0)) {
+		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 		}
@@ -505,6 +537,7 @@ class LinkedInScraper {
 				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
 				result.details.mailFromHunter = hunterSearch.email
 				result.details.companyWebsite = companyUrl || ""
+				result.hunter = Object.assign({}, hunterSearch)
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
 				result.details.mailFromHunter = ""

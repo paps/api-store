@@ -16,6 +16,8 @@
 		# -------------
 		'AngelList Market Companies Extractor DEV.js': 'store/DEV/AngelList Market Companies Extractor DEV/AngelList Market Companies Extractor DEV.js'
 		'Domain Name Finder DEV.js': 'store/DEV/Domain Name Finder DEV/Domain Name Finder DEV.js'
+		'Chrome Extension Review Extractor DEV.js': '/store/DEV/Chrome Extension Review Extractor DEV/Chrome Extension Review Extractor DEV.js'
+		'Email Extractor DEV.js': 'store/DEV/Email Extractor DEV/Email Extractor DEV.js'
 		'Facebook ID Finder DEV.js': 'store/DEV/Facebook ID Finder DEV/Facebook ID Finder DEV.js'
 		'Facebook Profile URL Finder DEV.js': 'store/DEV/Facebook Profile URL Finder DEV/Facebook Profile URL Finder DEV.js'
 		'Instagram Hashtag Collector DEV.js': 'store/DEV/Instagram Hashtag Collector DEV/Instagram Hashtag Collector DEV.js'
@@ -39,12 +41,14 @@
 		'LinkedIn Search Export DEV.js': 'store/DEV/LinkedIn Search Export DEV/LinkedIn Search Export DEV.js'
 		'Medium Post Clappers DEV.js': 'store/DEV/Medium Post Clappers DEV/Medium Post Clappers DEV.js'
 		'Pinterest Profile URL Finder DEV.js': 'store/DEV/Pinterest Profile URL Finder DEV/Pinterest Profile URL Finder DEV.js'
+		'Quora Topics Influencers DEV.js': 'store/DEV/Quora Topics Influencers DEV/Quora Topics Influencers DEV.js'
 		'Twitter Auto Follow DEV.js': 'store/DEV/Twitter Auto Follow DEV/Twitter Auto Follow DEV.js'
 		'Twitter Auto Liker DEV.js': 'store/DEV/Twitter Auto Liker DEV/Twitter Auto Liker DEV.js'
 		'Twitter Follower Collector DEV.js': 'store/DEV/Twitter Follower Collector DEV/Twitter Follower Collector DEV.js'
 		'Twitter Following Collector DEV.js': 'store/DEV/Twitter Following Collector DEV/Twitter Following Collector DEV.js'
 		'Twitter Network Cleaner DEV.js': 'store/DEV/Twitter Network Cleaner DEV/Twitter Network Cleaner DEV.js'
 		'Twitter Profile URL Finder DEV.js': 'store/DEV/Twitter Profile URL Finder DEV/Twitter Profile URL Finder DEV.js'
+		'Web Elements Extractor DEV.js': 'store/DEV/Web Elements Extractor DEV/Web Elements Extractor DEV.js'
 		'Web Summit Startup Emails DEV.js': 'store/DEV/Web Summit Startup Emails DEV/Web Summit Startup Emails DEV.js'
 
 ]

@@ -1,5 +1,4 @@
 /**
- * NOTE:
  * This array contains Objects storing CSS selectors in order to scrape data from results
  *
  * - name: The web engine name
@@ -10,7 +9,7 @@
  * - descriptionSelector: CSS selector representing the description of a result
  * - noResultsSelector: CSS selector used to check if we're facing a failed research
  */
-const _defaultEgines = [
+const _defaultEngines = [
 	{
 		"name": "google.com",
 		"codename": "G(com)",
@@ -134,7 +133,7 @@ const _defaultEgines = [
 ]
 
 /**
- * NOTE: Those two objects are representing:
+ * Those two objects are representing:
  * - How a web engine used in the class WebSearch
  * - How a web research will be formatted bu the class WebSearch
  */
@@ -190,10 +189,12 @@ const _doSearch = async function (query) {
 	result.codename = engine.codename
 
 	/**
-	 * NOTE: Error while opening the url
+	 * Error while opening the url
 	 */
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.log("No results from the engine", engine.name)
+		if (typeof this.lockEngine === "string") {
+		}
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 	}
 
@@ -210,10 +211,18 @@ const _doSearch = async function (query) {
 
 /**
  * @internal
- * @description Function used to choice which engine will be used for a next research
+ * @description Function used to choose which engine will be used for a next research
  * @return {Number}
  */
 const _switchEngine = function () {
+	if (typeof this.lockEngine === "string") {
+		this.verbose && console.log("-- _switchEngine(): using test parameter")
+		const engine = this.engines.findIndex(el => el.name === this.lockEngine)
+		if (engine < 0) {
+			throw `Can't find engine ${this.lockEngine}, use a correct engine when testing`
+		}
+		return engine
+	}
 	let availableEngines = []
 	for (let i = 0; i < this.engines.length; i++) {
 		if (this.enginesDown.indexOf(i) < 0) {
@@ -221,8 +230,8 @@ const _switchEngine = function () {
 		}
 	}
 	if (this.verbose) {
-		console.log('-- engines down: ' + JSON.stringify(this.enginesDown))
-		console.log('-- available engines: ' + JSON.stringify(availableEngines))
+		console.log("-- engines down: " + JSON.stringify(this.enginesDown))
+		console.log("-- available engines: " + JSON.stringify(availableEngines))
 	}
 	return availableEngines[Math.floor(Math.random() * availableEngines.length)]
 }
@@ -238,17 +247,20 @@ class WebSearch {
 	 * @param {Object} tab - nickjs tab object
 	 * @param {Object} buster - Phantombuster api instance
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
-	 * NOTE: If you want to see all debugging messages from all steps in this lib use true for verbose parameter
+	 * If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
-	constructor(tab, buster, verbose = false) {
-		this.engines = _defaultEgines
+	constructor(tab, buster, verbose = false, lockEngine = null) {
+		this.engines = _defaultEngines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
 		this.verbose = verbose
 		this.enginesDown = []
 		this.tab = tab
 		this.buster = buster
+		this.lockEngine = lockEngine
 		this.nbRequestsBeforeDeletingCookies = Math.round(50 + Math.random() * 50) // 50 <=> 100
 	}
+
+	static engines () { return _defaultEngines }
 
 	/**
 	 * @async
@@ -273,10 +285,10 @@ class WebSearch {
 		}
 
 		/**
-		 * NOTE: No need to continue if all engines are down
+		 * No need to continue if all engines are down
 		 */
 		if (this.allEnginesDown()) {
-			console.log('No more search engines available')
+			console.log("No more search engines available")
 			results = Object.assign({}, emptyResult)
 			results.engine = this.engines[this.engineUsed].name
 			results.codename = this.engines[this.engineUsed].codename
@@ -286,7 +298,7 @@ class WebSearch {
 		this.resetEngines()
 
 		/**
-		 * NOTE: While we didn't find a result and the class stills have some engines to use
+		 * While we didn't find a result and the class stills have some engines to use
 		 * the function will continue to search
 		 */
 		let codenameList = ""
@@ -301,7 +313,7 @@ class WebSearch {
 				this.verbose && console.log(`-- Switching to a new engine because exception: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				if (this.allEnginesDown()) {
-					console.log('No more search engines available')
+					console.log("No more search engines available")
 					results = Object.assign({}, emptyResult)
 					results.engine = this.engines[this.engineUsed].name
 					results.codename = this.engines[this.engineUsed].codename
@@ -327,7 +339,12 @@ class WebSearch {
 	 * @description Getter to know if there are some engines available
 	 * @return {Boolean}
 	 */
-	allEnginesDown() { return this.enginesDown.length >= this.engines.length }
+	allEnginesDown() {
+		if (this.lockEngine) {
+			return this.enginesDown.length >= 1
+		}
+		return this.enginesDown.length >= this.engines.length
+	}
 
 	/**
 	 * @description Simple function which wipe all values in engineDown
@@ -341,7 +358,7 @@ class WebSearch {
 	/**
 	 * @async
 	 * @description Wrapper function used to perform many requests
-	 * NOTE: This method will return an array of JS objects, those objects are like emptyResult
+	 * This method will return an array of JS objects, those objects are like emptyResult
 	 * @param {Array}
 	 * @return {Promise<Array>}
 	 */
@@ -364,12 +381,12 @@ class WebSearch {
 		const engineChecker = Object.keys(newEngine)
 
 		/**
-		 * NOTE: Since JS Object keys order is not guarranty, we checks thats all fields in the JS Object
+		 * Since JS Object keys order is not guarranty, we checks thats all fields in the JS Object
 		 * are equals to the default engine pattern
 		 */
 		const validFields = engineChecker.map(el => defaultEngine.indexOf(el))
 		/**
-		 * NOTE: if returns -1, it means that all fields are correct
+		 * if returns -1, it means that all fields are correct
 		 */
 		if (validFields.indexOf(-1) === -1) {
 			this.engines.push(newEngine)
