@@ -133,7 +133,6 @@ const scrapeInfos = (arg, callback) => {
 	}
 	const infos = {}
 	if (document.querySelector(".pv-profile-section.pv-top-card-section")) {
-		const topCard = document.querySelector(".pv-profile-section.pv-top-card-section")
 		// Get primary infos
 		infos.general = getInfos([
 			/**
@@ -227,7 +226,6 @@ const scrapeInfos = (arg, callback) => {
 				])
 			}
 			// Get all profile infos listed
-			const contactInfos = document.querySelectorAll(".pv-profile-section.pv-contact-info div.pv-profile-section__section-info")
 			infos.details = getInfos([
 				{ key: "linkedinProfile", attribute: "href", selector: ".pv-contact-info__contact-type.ci-vanity-url .pv-contact-info__contact-link" },
 				{ key: "websites", attribute: "textContent", selector: "section.pv-contact-info__contact-type.ci-websites.pv-contact-info__list" },
@@ -446,7 +444,7 @@ class LinkedInScraper {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
-		if ((typeof(hunterApiKey) == "string") && (hunterApiKey.trim().length > 0)) {
+		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 		}
