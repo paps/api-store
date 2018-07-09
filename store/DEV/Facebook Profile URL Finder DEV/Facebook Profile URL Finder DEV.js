@@ -77,7 +77,7 @@ const filtersUrls = (str, db) => {
 	db.push(...result)
 
 	await tab.close()
-	await utils.saveResult(db, csvName)
+	await utils.saveResults(result, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
