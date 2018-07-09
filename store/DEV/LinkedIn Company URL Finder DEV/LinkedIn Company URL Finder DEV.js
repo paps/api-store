@@ -8,12 +8,11 @@ const buster = new Buster()
 
 const WebSearch = require("./lib-WebSearch")
 const userAgent = WebSearch.getRandomUa()
-//console.log(`Chosen user agent: ${userAgent}`)
 
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
-	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
+	userAgent,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -27,19 +26,33 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+const DEFAULT_DB_NAME = "result"
+let db
 // }
 
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
-
 	const toReturn = []
+
+	if (!csvName) {
+		csvName = DEFAULT_DB_NAME
+	}
+
+	db = await utils.getDb(`${csvName}.csv`)
 
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else if (typeof(queries) === 'string') {
+	} else if (typeof(queries) === "string") {
 		queries = [queries]
+	}
+
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (queries.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
 	}
 
 	for (const one of queries) {
@@ -67,7 +80,9 @@ const utils = new StoreUtilities(nick, buster)
 	}
 
 	await tab.close()
-	await utils.saveResult(toReturn, csvName)
+
+	db.push(...toReturn)
+	await utils.saveResults(toReturn, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {

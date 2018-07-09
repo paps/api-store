@@ -20,14 +20,24 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
+
+const DB_NAME = "result.csv"
+let db
 // }
 
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const toReturn = []
+
+	db = await utils.getDb(DB_NAME)
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (queries.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
+	}
 
 	for (const one of queries) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -54,8 +64,10 @@ const utils = new StoreUtilities(nick, buster)
 		toReturn.push({ twitterUrl: link, query: one })
 	}
 
+	db.push(...toReturn)
+
 	await tab.close()
-	await utils.saveResult(toReturn, csvName)
+	await utils.saveResults(toReturn, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
