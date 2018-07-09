@@ -3,7 +3,7 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
-const url = require("url")
+const { parse, URL } = require("url")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -92,11 +92,29 @@ const scrapeResults = (arg, callback) => {
 	callback(null, infos)
 }
 
+/**
+ * @description Extract &page= value if present in the URL
+ * @param {String} url - URL to inspect
+ * @return {Number} Page index found in the given url (if not found return 1)
+ */
+const extractPageIndex = url => {
+	let _url
+
+	try {
+		_url = new URL(url)
+		return _url.searchParams.get("page") ? parseInt(_url.searchParams.get("page"), 10) : 1
+	} catch (err) {
+		return 1
+	}
+}
+
 const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	utils.log(`Getting infos${query ? ` for search ${query}` : ""} ...`, "loading")
 	let result = []
 	const selectors = ["div.search-no-results__container", "div.search-results-container"]
-	for (let i = 1; i <= numberOfPage; i++) {
+	let stepCounter = 1
+	let i = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
+	for (; stepCounter <= numberOfPage; i++, stepCounter++) {
 		utils.log(`Getting infos from page ${i}...`, "loading")
 		await tab.open(`${searchUrl}&page=${i}`)
 		let selector
@@ -136,7 +154,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 }
 
 const isLinkedInSearchURL = (targetUrl) => {
-	const urlObject = url.parse(targetUrl)
+	const urlObject = parse(targetUrl)
 
 	if (urlObject && urlObject.hostname) {
 		if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
