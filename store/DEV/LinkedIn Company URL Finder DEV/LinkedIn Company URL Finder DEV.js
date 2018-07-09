@@ -31,15 +31,6 @@ const DEFAULT_DB_NAME = "result"
 let db
 // }
 
-const filterUrls = (str, db) => {
-	for (const line of db) {
-		if (str === line.query) {
-			return false
-		}
-	}
-	return true
-}
-
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
@@ -58,7 +49,11 @@ const filterUrls = (str, db) => {
 		queries = [queries]
 	}
 
-	queries = queries.filter(el => filterUrls(el, db))
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (queries.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
+	}
 
 	for (const one of queries) {
 		const timeLeft = await utils.checkTimeLeft()

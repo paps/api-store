@@ -8,7 +8,6 @@ const buster = new Buster()
 
 const WebSearch = require("./lib-WebSearch")
 const userAgent = WebSearch.getRandomUa()
-//console.log(`Chosen user agent: ${userAgent}`)
 
 const Nick = require("nickjs")
 const nick = new Nick({
@@ -27,20 +26,33 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const DEFAULT_DB_NAME = "result"
+let db
 // }
 
 ;(async () => {
+	const tab = await nick.newTab()
+	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
+	const toReturn = []
+
+	if (!csvName) {
+		csvName = DEFAULT_DB_NAME
+	}
+
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else if (typeof(queries) === 'string') {
+	} else if (typeof(queries) === "string") {
 		queries = [queries]
 	}
 
-	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster)
+	db = await utils.getDb(`${csvName}.csv`)
 
-	const toReturn = []
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (queries.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
+	}
 
 	for (const one of queries) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -49,7 +61,7 @@ const utils = new StoreUtilities(nick, buster)
 			break
 		}
 		utils.log(`Searching for ${one} ...`, "loading")
-		let search = await webSearch.search('linkedin.com ' + one)
+		let search = await webSearch.search("linkedin.com " + one)
 		let link = null
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {
