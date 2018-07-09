@@ -25,15 +25,6 @@ const DB_NAME = "result.csv"
 let db
 // }
 
-const filtersUrls = (str, db) => {
-	for (const line of db) {
-		if (str === line.query) {
-			return false
-		}
-	}
-	return true
-}
-
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
@@ -43,7 +34,8 @@ const filtersUrls = (str, db) => {
 
 	db = await utils.getDb(DB_NAME)
 
-	queries = queries.filter(el => filtersUrls(el, db))
+	// Shorter, but less readable way to sort all processed queries
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
