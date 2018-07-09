@@ -1,0 +1,89 @@
+{
+    "slug": "linkedin-network-booster",
+    "description": "Automatically follow or unfollow a list of LinkedIn profiles",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/lkd_follow_transparent.png",
+    "gradientBegin": "#EFD3A1",
+    "gradientEnd": "#8EDEF1",
+    "argumentDescription": "",
+    "hidden": false,
+    "updated": true,
+    "argumentHelpAnchor": "#section_argument",
+    "defaultArgument": {
+        "sessionCookie": "your_session_cookie",
+        "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
+        "numberOfAddsPerLaunch": 10,
+        "unfollowProfiles": false,
+        "disableScraping": false
+    },
+    "defaultArgumentAllowed": true,
+    "argumentForm": {
+        "enabled": true,
+        "alpaca": {
+            "options": {
+                "fields": {
+                    "sessionCookie": {
+                        "label": "Session cookie <a href=\"/api-store/2818/linkedin-network-booster#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your session cookie here"
+                    },
+                    "spreadsheetUrl": {
+                        "label": "Spreadsheet URL of people to invite <a href=\"/api-store/2818/linkedin-network-booster#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+                        "type": "url",
+                        "helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+                    },
+                    "columnName": {
+                        "label": "Column name from which to get profile URLs",
+                        "placeholder": "LinkedIn Profile Link",
+                        "helper": "By default, we'll use the first column of your spreadsheet (column A)"
+                    },
+                    "numberOfAddsPerLaunch": {
+                        "label": "Number of invites per launch (10 max.) <a href=\"/api-store/2818/linkedin-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+                        "placeholder": 10,
+                        "inputType": "number"
+                    },
+                    "unfollowProfiles": {
+                        "rightLabel": "<b>Unfollow every profile instead of following them</b>"
+                    },
+                    "hunterApiKey": {
+                        "label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+                        "helper": "Leave this field empty if you don't want to use Hunter.io"
+                    },
+                    "disableScraping": {
+                        "rightLabel": "<b>Disable profile scraping</b> (not recommended — can speed up the API but prevents email discovery)"
+                    }
+                }
+            }
+        }
+    },
+    "argumentSchema": {
+        "type": "object",
+        "properties": {
+            "sessionCookie": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+            "spreadsheetUrl": {
+                "type": "string",
+                "required": true
+            },
+            "columnName": {
+                "type": "string"
+            },
+            "numberOfAddsPerLaunch": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 10
+            },
+            "unfollowProfiles": {
+                "type": "boolean"
+            },
+            "hunterApiKey": {
+                "type": "string",
+                "maxLength": 50
+            },
+            "disableScraping": {
+                "type": "boolean"
+            }
+        }
+    }
+}
