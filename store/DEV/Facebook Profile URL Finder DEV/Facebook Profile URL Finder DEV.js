@@ -20,14 +20,34 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
+
+const DB_NAME = "result.csv"
+let db
 // }
+
+const filtersUrls = (str, db) => {
+	for (const line of db) {
+		if (str === line.query) {
+			return false
+		}
+	}
+	return true
+}
 
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, csvName, columnName} = utils.validateArguments()
-	const queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const result = []
+
+	db = await utils.getDb(DB_NAME)
+
+	queries = queries.filter(el => filtersUrls(el, db))
+	if (queries.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
+	}
 
 	for (const one of queries) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -54,8 +74,10 @@ const utils = new StoreUtilities(nick, buster)
 		result.push({ facebookUrl: link, query: one })
 	}
 
+	db.push(...result)
+
 	await tab.close()
-	await utils.saveResult(result, csvName)
+	await utils.saveResult(db, csvName)
 	nick.exit()
 })()
 .catch(err => {
