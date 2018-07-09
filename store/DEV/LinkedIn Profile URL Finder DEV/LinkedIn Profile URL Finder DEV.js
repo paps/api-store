@@ -78,8 +78,10 @@ let db
 		toReturn.push({ linkedinUrl: link, query: one })
 	}
 
+	db.push(...toReturn)
+
 	await tab.close()
-	await utils.saveResult(toReturn, csvName)
+	await utils.saveResults(toReturn, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
