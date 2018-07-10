@@ -98,13 +98,27 @@ const scrapeResults = (arg, callback) => {
  * @return {Number} Page index found in the given url (if not found return 1)
  */
 const extractPageIndex = url => {
-	let _url
-
 	try {
-		_url = new URL(url)
-		return _url.searchParams.get("page") ? parseInt(_url.searchParams.get("page"), 10) : 1
+		let parsedUrl = new URL(url)
+		return parsedUrl.searchParams.get("page") ? parseInt(parsedUrl.searchParams.get("page"), 10) : 1
 	} catch (err) {
 		return 1
+	}
+}
+
+/**
+ * @description Tiny wrapper used to easly change the page index of LinkedIn search results
+ * @param {String} url
+ * @param {Number} index - Page index
+ * @return {String} URL with the new page index
+ */
+const overridePageIndex = (url, index) => {
+	try {
+		let parsedUrl = new URL(url)
+		parsedUrl.searchParams.set("page", index)
+		return parsedUrl.toString()
+	} catch (err) {
+		return url
 	}
 }
 
@@ -116,7 +130,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	let i = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
 	for (; stepCounter <= numberOfPage; i++, stepCounter++) {
 		utils.log(`Getting infos from page ${i}...`, "loading")
-		await tab.open(`${searchUrl}&page=${i}`)
+		await tab.open(overridePageIndex(searchUrl, i))
 		let selector
 		try {
 			selector = await tab.waitUntilVisible(selectors, 7500, "or")
@@ -129,7 +143,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 			break
 		} else {
 			/**
-			 * NOTE: In order to load the entire content of all results section
+			 * In order to load the entire content of all results section
 			 * we need to scroll to each section and wait few ms
 			 * It should be a better & cleaner way to load all sections, we're working on it !
 			 */

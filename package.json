@@ -1,0 +1,22 @@
+{
+  "name": "api-store",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Phantombuster's API store",
+  "scripts": {
+    "check": "eslint libs/** store/**"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phantombuster/api-store.git"
+  },
+  "author": "Phantombuster SAS",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/phantombuster/api-store/issues"
+  },
+  "homepage": "https://phantombuster.com/api-store",
+  "devDependencies": {
+    "eslint": "^5.1.0"
+  }
+}
