@@ -1,9 +1,9 @@
 {
-    "slug": "linkedin-network-booster",
+    "slug": "linkedin-auto-follow",
     "description": "Automatically follow or unfollow a list of LinkedIn profiles",
     "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/lkd_follow_transparent.png",
-    "gradientBegin": "#EFD3A1",
-    "gradientEnd": "#8EDEF1",
+    "gradientBegin": "#544a7d",
+    "gradientEnd": "#ffd452",
     "argumentDescription": "",
     "hidden": true,
     "new": true,
@@ -39,7 +39,7 @@
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "numberOfFollowsPerLaunch": {
-                        "label": "Number of invites per launch (10 max.) <a href=\"/api-store/2818/linkedin-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+                        "label": "Number of follows per launch (10 max.) <a href=\"/api-store/2818/linkedin-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
                         "placeholder": 10,
                         "inputType": "number"
                     },

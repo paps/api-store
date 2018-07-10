@@ -152,7 +152,7 @@ class StoreUtilities {
 	log(message, type) {
 		if (this.test) {
 			this.output += `${type}:>${message}\n`
-			if (type === "error" || type === "warning") {
+			if (type === "error" || (type === "warning" && !this.testRunObject.keepGoingOnWarning)) {
 				console.log(`Test failed, got error of type ${type}: ${message}`)
 				this.nick.exit(1)
 			}
