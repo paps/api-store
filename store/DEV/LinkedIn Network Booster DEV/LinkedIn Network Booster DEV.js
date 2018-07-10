@@ -184,7 +184,9 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 		"button.follow.primary", // only follow button visible (can't connect)
 		".pv-top-card-section__invitation-pending", // invite pending (already added this profile)
 		".pv-dashboard-section", // we cannot connect with ourselves...
-		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // Yet another CSS selector for pending request, this is part of the new LinkedIn UI
+		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // Yet another CSS selector for pending request, this is part of the new LinkedIn UI
+		".pv-s-profile-actions--follow", // only follow button available -> influencer, two-step connect with click on (More...) required
+		".pv-s-profile-actions--unfollow" // only unfollow button available -> influencer, two-step connect with click on (More...) required
 	]
 	let selector
 	try {
@@ -205,7 +207,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 				await connectTo(selector, tab, message)
 				utils.log(`Added ${url}.`, "done")
 			}
-		} else if (selector === selectors[1]) { // 2- Case when you need to use the (...) button before and add them from there
+		} else if (selector === selectors[1] || selector === selectors[8] || selector === selectors[9]) { // 2- Case when you need to use the (...) button before and add them from there
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
 					// Add them into the already added username object
