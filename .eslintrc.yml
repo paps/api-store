@@ -51,7 +51,9 @@ rules:
   no-with:
     - error
   eol-last:
-    - error
+    - warn
     - always
+  no-constant-condition:
+    - off
   no-console: 0
 
