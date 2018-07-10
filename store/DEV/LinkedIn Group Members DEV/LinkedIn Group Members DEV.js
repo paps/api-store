@@ -37,6 +37,34 @@ const scrapeMembers = (args, callback) => {
 	callback(null, members)
 }
 
+const getMemberDetails = (arg, cb) => {
+	try {
+		$.ajax({
+			url: `https://www.linkedin.com/communities-api/v1/profile/${arg.id}`,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			const member = {}
+			let i = 0
+			if (res.data[0].skills) {
+				for (const one of res.data[0].skills) {
+					if (i < 3) {
+						member[`skill${i+1}`] = one.localizedName
+					}
+					i++
+				}
+			}
+			cb(null, member)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
+	}
+}
+
 // Check if the page is a valid group
 const checkGroup = async (tab, groupUrl) => {
 	groupUrl = groupUrl.replace(/\/$/, "")
@@ -95,6 +123,15 @@ const getGroupMembers = async (tab) => {
 				const newMember = {}
 				if (item.mini) {
 					const mini = item.mini
+
+					// Enhancement #94
+					if (mini.links && mini.links.nonIterableMembershipLink) {
+						try {
+							const details = await tab.evaluate(getMemberDetails, { id: mini.links.nonIterableMembershipLink.split("/").pop(), headers: gl.headers })
+							newMember.details = details
+						} catch (err) { }
+					}
+
 					newMember.profileUrl = mini.profileUrl
 					newMember.firstName = mini.firstName
 					newMember.lastName = mini.lastName
