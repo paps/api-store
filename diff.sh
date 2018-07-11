@@ -6,9 +6,7 @@ then
   exit 1
 fi
 
-unamestr=`uname`
-
-if [[ "$unamestr" == 'Darwin' ]]; then
+if [ -x "$(command -v colordiff)" ]; then
   diffcmd='colordiff'
   diffarg=''
 else
