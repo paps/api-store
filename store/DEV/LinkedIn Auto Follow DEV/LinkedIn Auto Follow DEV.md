@@ -6,7 +6,7 @@
 
 Stay in touch with the network without the need to be connected to every profile.
 
-# Our solution: Add into your account a list of LinkedIn profiles
+# Our solution: Add into your account a list of LinkedIn profiles to follow
 Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phantombuster will follow **automatically** all those profiles.
 Also, just a checkbox tick away and you can do just the opposite and unfollow each and everyone of them!
 
@@ -14,10 +14,10 @@ Also, just a checkbox tick away and you can do just the opposite and unfollow ea
 
 # What will you need? ⚙️ 
 
-- **UNFOLLOW every profile instead of following them**: If you want to unfollow the profiles from your list.
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn profile URLs in it.
 - **Number of follows per launch**: How many _(between **1** and **10**)_ profiles to follow per launch
+- **UNFOLLOW every profile**: If you want to unfollow the profiles from your list.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 

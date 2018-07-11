@@ -9,11 +9,11 @@
     "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
-        "unfollowProfiles": false,
         "sessionCookie": "your_session_cookie",
         "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
         "numberOfFollowsPerLaunch": 10,
-        "disableScraping": false
+        "disableScraping": false,
+        "unfollowProfiles": false
     },
     "defaultArgumentAllowed": true,
     "argumentForm": {
@@ -21,15 +21,12 @@
         "alpaca": {
             "options": {
                 "fields": {
-                    "unfollowProfiles": {
-                        "rightLabel": "<b>Unfollow every profile instead of following them</b>"
-                    },
                     "sessionCookie": {
-                        "label": "Session cookie <a href=\"/api-store/2818/linkedin-network-booster#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your session cookie here"
                     },
                     "spreadsheetUrl": {
-                        "label": "Spreadsheet URL of people to invite <a href=\"/api-store/2818/linkedin-network-booster#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+                        "label": "Spreadsheet URL of people to invite <a href=\"/api-store/6874/linkedin-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
                         "type": "url",
                         "helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
                     },
@@ -39,16 +36,19 @@
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "numberOfFollowsPerLaunch": {
-                        "label": "Number of follows per launch (10 max.) <a href=\"/api-store/2818/linkedin-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+                        "label": "Number of follows per launch (10 max.) <a href=\"/api-store/6874/linkedin-auto-follow#section_repetitionsetup\" target=\"_blank\">(?)</a>",
                         "placeholder": 10,
                         "inputType": "number"
                     },
                     "hunterApiKey": {
-                        "label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+                        "label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/6874/linkedin-auto-follow#section_email_discovery\" target=\"_blank\">(?)</a>",
                         "helper": "Leave this field empty if you don't want to use Hunter.io"
                     },
                     "disableScraping": {
                         "rightLabel": "<b>Disable profile scraping</b> (not recommended — can speed up the API but prevents email discovery)"
+                    },
+                    "unfollowProfiles": {
+                        "rightLabel": "<b>Unfollow every profile</b> (if you need to undo what you've done)"
                     }
                 }
             }
@@ -57,9 +57,6 @@
     "argumentSchema": {
         "type": "object",
         "properties": {
-            "unfollowProfiles": {
-                "type": "boolean"
-            },
             "sessionCookie": {
                 "type": "string",
                 "required": true,
@@ -83,6 +80,9 @@
                 "maxLength": 50
             },
             "disableScraping": {
+                "type": "boolean"
+            },
+            "unfollowProfiles": {
                 "type": "boolean"
             }
         }
