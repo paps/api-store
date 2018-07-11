@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 if [ $# -lt 1 ]
 then
@@ -8,21 +8,18 @@ fi
 
 unamestr=`uname`
 
-if [[ "$unamestr" == 'Linux' ]]; then
-  diffcmd='diff'
-  diffarg='--color'
-elif [[ "$unamestr" == 'Darwin' ]]; then
+if [[ "$unamestr" == 'Darwin' ]]; then
   diffcmd='colordiff'
   diffarg=''
 else
-  echo "Could not determine OS / diff binary"
-  exit 1
+  diffcmd='diff'
+  diffarg='--color'
 fi
 
 if [[ "$1" == "lib" ]]; then
 
   cd libs
-  for i in *(.); do
+  for i in *.js; do
     dev=DEV/`echo $i | sed 's/\.js$/-DEV\.js/'`
     $diffcmd $diffarg --context=0 "$i" "$dev"
   done
