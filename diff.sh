@@ -20,6 +20,9 @@ if [[ "$1" == "lib" ]]; then
   for i in *.js; do
     dev=DEV/`echo $i | sed 's/\.js$/-DEV\.js/'`
     $diffcmd $diffarg --context=0 "$i" "$dev"
+    if [ $? -ne 0 ]; then
+      echo -e "\n——————————————————————\n"
+    fi
   done
   cd ..
 
@@ -39,6 +42,9 @@ else
         dev=DEV/`echo $i | sed 's/\/$/ DEV/'`/`echo $i | sed 's/\/$/ DEV.md/'`
       fi
       $diffcmd $diffarg --context=0 "$prod" "$dev"
+      if [ $? -ne 0 ]; then
+        echo -e "\n——————————————————————\n"
+      fi
     fi
   done
   cd ..
