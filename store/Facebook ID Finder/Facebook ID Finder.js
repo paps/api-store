@@ -30,7 +30,7 @@ const getId = async (tab, url) => {
 		await tab.open("https://findmyfbid.com/")
 		await tab.waitUntilVisible(selector)
 		await tab.fill(selector, {url: url}, {submit: false})
-		await tab.click(`input[type="submit"]`)
+		await tab.click("input[type=\"submit\"]")
 		const resultSelector = await tab.waitUntilVisible(["#success-wrap", ".text-danger"], 20000, "or")
 		if (resultSelector === "#success-wrap") {
 			return (await tab.evaluate(scrapeId))
@@ -44,7 +44,7 @@ const getId = async (tab, url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const {spreadsheetUrl, csvName} = utils.validateArguments()
+	const {spreadsheetUrl} = utils.validateArguments()
 	const facebookLinks = await utils.getDataFromCsv(spreadsheetUrl)
 	const result = []
 	for (const link of facebookLinks) {

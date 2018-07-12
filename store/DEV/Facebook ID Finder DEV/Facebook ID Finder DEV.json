@@ -7,8 +7,7 @@
 	"gradientEnd": "#333399",
 	"argumentHelpAnchor": "#section_4googlespreadsheet",
 	"defaultArgument": {
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/13EW6nmHZwwdlngew7G2BoKsHjRKEH_g6U-C9zvaLYII",
-		"csvName": "your_csv_name"
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/13EW6nmHZwwdlngew7G2BoKsHjRKEH_g6U-C9zvaLYII"
 	},
 	"defaultArgumentAllowed": true,
 	"argumentForm": {
@@ -31,10 +30,6 @@
 				"type": "string",
 				"title": "Spreadsheet URL",
 				"required": true
-			},
-			"csvName": {
-				"title": "Output CSV file name",
-				"type": "string"
 			}
 		}
 	}
