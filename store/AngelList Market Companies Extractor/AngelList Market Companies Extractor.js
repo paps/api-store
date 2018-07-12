@@ -45,6 +45,7 @@ const getListLength = (arg, callback) => {
 }
 
 const getCompaniesInfos = (arg, callback) => {
+	/* global $ */
 
 	let results = []
 	if ($(arg.selectors.SCRAPING_ITEM_COMPANY).length) {
@@ -110,7 +111,7 @@ const getCompaniesInfos = (arg, callback) => {
 	const tab = await nick.newTab()
 	const {url, limit} = utils.validateArguments()
 	const clickSelector = "div.more:last-of-type"
-	
+
 	await tab.open(url)
 	await tab.waitUntilVisible([ SELECTORS.RESULT_DIV_MARKETS, SELECTORS.RESULT_DIV_COMPANIES ], "or")
 	let length = await tab.evaluate(getListLength, { selectors: SELECTORS })

@@ -22,6 +22,8 @@ rules:
     - error
   no-new-func:
     - error
+  no-new-wrappers:
+    - error
   no-void:
     - error
   wrap-iife:
