@@ -20,21 +20,11 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global $ */
+
 // }
 const gl = {}
-
-// Get members of the page
-const scrapeMembers = (args, callback) => {
-	const members = []
-	document.querySelectorAll(".member-view .entity-link").forEach((el, i) => {
-		members.push({
-			link: el.href,
-			name: el.querySelector(".entity-name .entity-name-text").textContent,
-			occupation: el.querySelector(".entity-headline").textContent
-		})
-	})
-	callback(null, members)
-}
 
 /**
  * @description Browser context function used to return if possible skills, groups & localization of a group member

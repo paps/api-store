@@ -21,6 +21,9 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 let voyagerHeadersFound = false
+
+/* global $ */
+
 // }
 
 const gl = {}
