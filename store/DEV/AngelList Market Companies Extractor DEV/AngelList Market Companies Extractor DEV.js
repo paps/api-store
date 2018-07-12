@@ -30,10 +30,10 @@ const SELECTORS = {
 	RESULT_DIV_COMPANIES: "div.results",
 	ITEM_MARKET: "div.base.item",
 	ITEM_COMPANY: "div.base.startup",
-	SHOW_COMPANY: 'div[data-_tn="companies/row"]',
-	SHOW_MARKET: 'div[data-_tn="tags/show/results"]',
-	SCRAPING_ITEM_COMPANY: 'div[data-_tn="tags/show/row"',
-	SCRAPING_ITEM_MARKET: 'div[data-_tn="companies/row"'
+	SHOW_COMPANY: "div[data-_tn=\"companies/row\"]",
+	SHOW_MARKET: "div[data-_tn=\"tags/show/results\"]",
+	SCRAPING_ITEM_COMPANY: "div[data-_tn=\"tags/show/row\"",
+	SCRAPING_ITEM_MARKET: "div[data-_tn=\"companies/row\""
 }
 
 const getListLength = (arg, callback) => {
@@ -61,25 +61,25 @@ const getCompaniesInfos = (arg, callback) => {
 				scraped = {
 					name: $(".name", this).text().trim(),
 					blurb: $(".blurb", this).text().trim(),
-					angelListUrl: $(".startup-link", this).attr('href'),
-					logo: $(".angel_image", this).attr('src'),
+					angelListUrl: $(".startup-link", this).attr("href"),
+					logo: $(".angel_image", this).attr("src"),
 					location: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[0],
 					type: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
 					joined: $(".joined > .value", this).text().trim(),
 					followers: parseInt($(".followers > .value", this).text(), 10),
-					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)\-/)[1], 10) + 1,
+					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)-/)[1], 10) + 1,
 				}
 			} else {
 				scraped = {
 					name: $(".name", this).text().trim(),
 					blurb: $(".blurb", this).text().trim(),
-					angelListUrl: $(".startup-link", this).attr('href'),
-					logo: $(".angel_image", this).attr('src'),
+					angelListUrl: $(".startup-link", this).attr("href"),
+					logo: $(".angel_image", this).attr("src"),
 					location: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[0],
 					startups: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
 					investments: parseInt($(".investments > .value", this).text().trim(), 10),
 					followers: parseInt($(".followers > .value", this).text(), 10),
-					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)\-/)[1], 10) + 1,
+					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)-/)[1], 10) + 1,
 				}
 			}
 
@@ -90,17 +90,17 @@ const getCompaniesInfos = (arg, callback) => {
 			return {
 				name: $(".name", this).text().trim(),
 				blurb: $(".pitch", this).text().trim(),
-				angelListUrl: $(".startup-link", this).attr('href'),
-				logo: $(".angel_image", this).attr('src'),
+				angelListUrl: $(".startup-link", this).attr("href"),
+				logo: $(".angel_image", this).attr("src"),
 				location: $(".location > .value", this).text().trim(),
 				market: $(".market > .value > .tag", this).text().trim(),
 				type: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
 				joined: $(".joined > .value", this).text().trim(),
-				website: $(".website > .value a", this).attr('href'),
+				website: $(".website > .value a", this).attr("href"),
 				employees: $(".company_size > .value", this).text().trim(),
 				stage: $(".stage > .value", this).text().trim(),
 				raised: $(".raised > .value", this).text().trim(),
-				signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)\-/)[1]) + 1,
+				signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)-/)[1], 10) + 1,
 			}
 		})
 	}
@@ -125,7 +125,7 @@ const getCompaniesInfos = (arg, callback) => {
 			break
 		}
 
-		await tab.waitWhilePresent('img.loading_image')
+		await tab.waitWhilePresent("img.loading_image")
 		length = await tab.evaluate(getListLength, { selectors: SELECTORS })
 	}
 	utils.log(`Loaded ${length} companies.`, "done")
