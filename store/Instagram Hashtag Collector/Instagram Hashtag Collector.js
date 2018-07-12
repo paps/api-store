@@ -128,64 +128,53 @@ const loadPosts = async (tab, arr, count, hashtag) => {
  */
 const isUrl = target => url.parse(target).hostname !== null
 
-/**
- * @deprecated This function is not used for now
- * @param {Object|Array} posts -- one or a list of scraped posts
- * @return {Object} All hashtags with their occurrence count
- */
-const hashtagsOccurrences = (posts) => {
-	let allHashtags = []
-	let uniqueHashtags
-	let result = {}
+// const hashtagsOccurrences = (posts) => {
+// 	let allHashtags = []
+// 	let uniqueHashtags
+// 	let result = {}
 
-	/**
-	 * collecting all hashtags from input
-	 */
-	if (Array.isArray(posts)) {
-		for (const post of posts) {
-			allHashtags = allHashtags.concat(post.description.match(/#[a-zA-Z0-9]+/g))
-		}
-	} else  {
-		allHashtags = posts.description.match(/#[a-zA-Z0-9]+/g)
-	}
-	/**
-	 * removing duplicated hashtags & order to forging the result object
-	 */
-	uniqueHashtags = Array.from(new Set(allHashtags))
-	for (const hashtag of uniqueHashtags) {
-		result[hashtag] = 0
-	}
+// 	/**
+// 	 * collecting all hashtags from input
+// 	 */
+// 	if (Array.isArray(posts)) {
+// 		for (const post of posts) {
+// 			allHashtags = allHashtags.concat(post.description.match(/#[a-zA-Z0-9]+/g))
+// 		}
+// 	} else  {
+// 		allHashtags = posts.description.match(/#[a-zA-Z0-9]+/g)
+// 	}
+// 	/**
+// 	 * removing duplicated hashtags & order to forging the result object
+// 	 */
+// 	uniqueHashtags = Array.from(new Set(allHashtags))
+// 	for (const hashtag of uniqueHashtags) {
+// 		result[hashtag] = 0
+// 	}
 
-	/**
-	 * Incrementing hashtags if there is an occurence
-	 */
-	for (const one of allHashtags) {
-		result[one] += 1
-	}
+// 	/**
+// 	 * Incrementing hashtags if there is an occurence
+// 	 */
+// 	for (const one of allHashtags) {
+// 		result[one] += 1
+// 	}
 
-	/**
-	 * Filtering the most occured hashtag
-	 */
-	result["mostScrapedHashtag"] = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b)
-	return result
-}
+// 	/**
+// 	 * Filtering the most occured hashtag
+// 	 */
+// 	result["mostScrapedHashtag"] = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b)
+// 	return result
+// }
 
-/**
- * @deprecated This function is not used for now
- * @description Function used to create a JS object representing the CSV output
- * @param {Object} data -- JS object}
- * @return {Object} CSV JS object
- */
-const forgeCsvFromJSON = data => {
-	let csv = []
-	for (const one of data) {
-		let tmp = Object.assign({}, one)
-		tmp.mostScrapedHashtag = tmp.hashtagsOccurrences.mostScrapedHashtag
-		delete tmp.hashtagsOccurrences
-		csv.push(tmp)
-	}
-	return csv
-}
+// const forgeCsvFromJSON = data => {
+// 	let csv = []
+// 	for (const one of data) {
+// 		let tmp = Object.assign({}, one)
+// 		tmp.mostScrapedHashtag = tmp.hashtagsOccurrences.mostScrapedHashtag
+// 		delete tmp.hashtagsOccurrences
+// 		csv.push(tmp)
+// 	}
+// 	return csv
+// }
 
 /**
  * @description Main function
