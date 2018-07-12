@@ -20,7 +20,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const _ = require("underscore")
 // }
 const gl = {}
 
@@ -35,6 +34,65 @@ const scrapeMembers = (args, callback) => {
 		})
 	})
 	callback(null, members)
+}
+
+/**
+ * @description Browser context function used to return if possible skills, groups & localization of a group member
+ * The function only returns 3 groups & skills see #94 for more informations (scraping data which are visible from a mouse hover)
+ * @param {*} arg - Browser context arguments (LinkedIn member ID, and intercepted headers to make the AJAX calls)
+ * @param {*} cb - Callback used to exit the Browser context
+ */
+const getMemberDetails = (arg, cb) => {
+	try {
+		$.ajax({
+			url: `https://www.linkedin.com/communities-api/v1/profile/${arg.id}`,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			const member = {}
+			let i = 0
+			if (Array.isArray(res.data)) {
+				if (res.data[0].skills) {
+					for (const one of res.data[0].skills) {
+						if (i < 3) {
+							member[`skill${i+1}`] = one.localizedName
+						}
+						i++
+					}
+				}
+				if (res.data[0].region) {
+					member.location = res.data[0].region
+				}
+
+				if (res.data[0].industry) {
+					member.industry =res.data[0].industry
+				}
+
+				if (res.data[0].education) {
+					member["school"] = res.data[0].education.localizedSchoolName
+				}
+
+				i = 0
+				if (res.data[0].memberGroups) {
+					for (const group of res.data[0].memberGroups) {
+						if (i < 3) {
+							member[`group${i+1}`] = group.name
+							member[`groupUrl${i+1}`] = `https://www.linkedin.com/groups/${group.id}`
+						}
+						i++
+					}
+				}
+			}
+
+			cb(null, member)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
+	}
 }
 
 // Check if the page is a valid group
@@ -95,10 +153,21 @@ const getGroupMembers = async (tab) => {
 				const newMember = {}
 				if (item.mini) {
 					const mini = item.mini
+
+					// Enhancement #94
+					if (mini.links && mini.links.nonIterableMembershipLink) {
+						try {
+							const details = await tab.evaluate(getMemberDetails, { id: mini.links.nonIterableMembershipLink.split("/").pop(), headers: gl.headers })
+							for (const one of Object.keys(details)) {
+								newMember[one] = details[one]
+							}
+						} catch (err) { /* No error handler needed, this isn't a fatal error */ }
+					}
+
 					newMember.profileUrl = mini.profileUrl
 					newMember.firstName = mini.firstName
 					newMember.lastName = mini.lastName
-					newMember.fullName = mini.firstName + ' ' + mini.lastName
+					newMember.fullName = mini.firstName + " " + mini.lastName
 					newMember.headline = mini.headline
 				}
 				if (item.currentPosition) {

@@ -98,12 +98,8 @@ const scrapeResults = (arg, callback) => {
  * @return {Number} Page index found in the given url (if not found return 1)
  */
 const extractPageIndex = url => {
-	try {
-		let parsedUrl = new URL(url)
-		return parsedUrl.searchParams.get("page") ? parseInt(parsedUrl.searchParams.get("page"), 10) : 1
-	} catch (err) {
-		return 1
-	}
+	let parsedUrl = new URL(url)
+	return parsedUrl.searchParams.get("page") ? parseInt(parsedUrl.searchParams.get("page"), 10) : 1
 }
 
 /**
@@ -127,7 +123,13 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 	let result = []
 	const selectors = ["div.search-no-results__container", "div.search-results-container"]
 	let stepCounter = 1
-	let i = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
+	let i
+	try {
+		i = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
+	} catch (err) {
+		utils.log(`Can't scrape ${searchUrl} due to: ${err.message || err}`, "error")
+		return result
+	}
 	for (; stepCounter <= numberOfPage; i++, stepCounter++) {
 		utils.log(`Getting infos from page ${i}...`, "loading")
 		await tab.open(overridePageIndex(searchUrl, i))
@@ -161,6 +163,11 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 			} else {
 				utils.log(`Got urls for page ${i}`, "done")
 			}
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			return result
 		}
 	}
 	utils.log("All pages with result scrapped.", "done")
@@ -221,6 +228,10 @@ const isLinkedInSearchURL = (targetUrl) => {
 		// const searchUrl = (isLinkedInSearchURL(search)) ? search : createUrl(search, circles)
 		const query = queryColumn ? search : false
 		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query))
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
 	}
 	await linkedIn.saveCookie()
 	utils.saveResult(result)
