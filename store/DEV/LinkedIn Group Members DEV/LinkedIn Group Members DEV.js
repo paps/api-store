@@ -20,21 +20,11 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global $ */
+
 // }
 const gl = {}
-
-// Get members of the page
-const scrapeMembers = (args, callback) => {
-	const members = []
-	document.querySelectorAll(".member-view .entity-link").forEach((el, i) => {
-		members.push({
-			link: el.href,
-			name: el.querySelector(".entity-name .entity-name-text").textContent,
-			occupation: el.querySelector(".entity-headline").textContent
-		})
-	})
-	callback(null, members)
-}
 
 /**
  * @description Browser context function used to return if possible skills, groups & localization of a group member
@@ -52,29 +42,36 @@ const getMemberDetails = (arg, cb) => {
 		.done(res => {
 			const member = {}
 			let i = 0
-			if (res.data[0].skills) {
-				for (const one of res.data[0].skills) {
-					if (i < 3) {
-						member[`skill${i+1}`] = one.localizedName
+			if (Array.isArray(res.data)) {
+				if (res.data[0].skills) {
+					for (const one of res.data[0].skills) {
+						if (i < 3) {
+							member[`skill${i+1}`] = one.localizedName
+						}
+						i++
 					}
-					i++
 				}
-			}
-			if (res.data[0].region) {
-				member.location = res.data[0].region
-			}
+				if (res.data[0].region) {
+					member.location = res.data[0].region
+				}
 
-			if (res.data[0].industry) {
-				member.industry =res.data[0].industry
-			}
+				if (res.data[0].industry) {
+					member.industry =res.data[0].industry
+				}
 
-			i = 0
-			if (res.data[0].memberGroups) {
-				for (const group of res.data[0].memberGroups) {
-					if (i < 3) {
-						member[`group${i+1}`] = group.name
+				if (res.data[0].education) {
+					member["school"] = res.data[0].education.localizedSchoolName
+				}
+
+				i = 0
+				if (res.data[0].memberGroups) {
+					for (const group of res.data[0].memberGroups) {
+						if (i < 3) {
+							member[`group${i+1}`] = group.name
+							member[`groupUrl${i+1}`] = `https://www.linkedin.com/groups/${group.id}`
+						}
+						i++
 					}
-					i++
 				}
 			}
 

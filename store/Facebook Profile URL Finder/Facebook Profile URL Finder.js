@@ -52,7 +52,7 @@ let db
 		let search = await webSearch.search(one + " site:facebook.com")
 		let link = null
 		for (const res of search.results) {
-			if (res.link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}\-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {
+			if (res.link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {
 				link = res.link
 				break
 			}

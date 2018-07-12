@@ -35,15 +35,15 @@ const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim(
 const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
 	utils.log(`Getting followers for ${twitterHandle}`, "loading")
 	// the regex should handle @xxx
-	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
 		// removing non printables characters from the extracted handle
 		twitterHandle = removeNonPrintableChars(twitterHandle)
 	}
 	try {
 		return await twitter.collectFollowers(tab, `https://twitter.com/${twitterHandle}/followers`, followersPerAccount)
 	} catch (err) {
-		utils.log(`Loaded 0 followers.`, "done")
+		utils.log("Loaded 0 followers.", "done")
 		return []
 	}
 }

@@ -33,8 +33,8 @@ const isTwitter = str => url.parse(str).hostname === "twitter.com"
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
 const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount) => {
-	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
 	}
 	twitterHandle = removeNonPrintableChars(twitterHandle)
 	utils.log(`Getting accounts followed by ${twitterHandle}`, "loading")

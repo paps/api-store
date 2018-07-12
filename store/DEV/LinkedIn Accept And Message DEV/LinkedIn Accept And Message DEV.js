@@ -47,7 +47,7 @@ const linkedinConnect = async (tab, cookie) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const {sessionCookie, message, numberOfAddPerLaunch} = await utils.validateArguments()
+	let {sessionCookie} = await utils.validateArguments()
 	await linkedinConnect(tab, sessionCookie)
 	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/")
 	await tab.waitUntilVisible("#mynetwork")

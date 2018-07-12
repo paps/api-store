@@ -27,6 +27,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+/* global psl */
+
 // }
 
 /**

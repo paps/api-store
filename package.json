@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Phantombuster's API store",
   "scripts": {
-    "check": "eslint libs/** store/**"
+    "check": "eslint 'libs/**/*.js' 'store/**/*.js'"
   },
   "repository": {
     "type": "git",

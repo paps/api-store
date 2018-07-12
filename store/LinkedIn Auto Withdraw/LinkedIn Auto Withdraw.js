@@ -20,7 +20,12 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global $ */
+
 // }
+
+const noop = () => {}
 
 /**
  * @description Browser context function used to get how many sent invitations has been sent
@@ -29,13 +34,13 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const getTotalSendInvitations = (arg, cb) => {
 	const raw = document.querySelector(arg.selector) ? document.querySelector(arg.selector).textContent.trim() : "null"
 	/**
-	 * HACK: To retrieve number bigger than 999, we should check if there are in the string:
+	 * To retrieve number bigger than 999, we should check if there are in the string:
 	 * whitespaces, dots or commas
 	 * It will depends on the language used in the current page
 	 */
-	let digits = raw.match(/([\d,\. ]+)/g)
+	let digits = raw.match(/([\d,. ]+)/g)
 	if (Array.isArray(digits)) {
-		digits = digits.map(el => parseInt(el.trim().replace(/ /g, '').replace(/\./g, '').replace(/,/g, ''), 10))
+		digits = digits.map(el => parseInt(el.trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10))
 	}
 	else {
 		return cb("Cannot find the invitations count", null)
@@ -50,9 +55,9 @@ const getTotalSendInvitations = (arg, cb) => {
  */
 const hasReachedOldestInvitations = (arg, cb) => {
 	/**
-	 * NOTE: this case coulf happen if there is only one page
+	 * this case coulf happen if there is only one page
 	 */
-	if ($(".mn-invitation-pagination").length == 0)
+	if ($(".mn-invitation-pagination").length === 0)
 		cb(null, true)
 
 	cb(null, $(".mn-invitation-pagination > li:last > a").hasClass("disabled"))
@@ -62,7 +67,6 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	const tab = await nick.newTab()
 	let {sessionCookie, peopleCountToKeep} = utils.validateArguments()
 	let peopleToRemove = 0
-	let withdrawed = 0
 	let linkedInWithdrawCount = 0
 	let stopLoopPage = false
 
@@ -82,13 +86,13 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		"spinLoading": "span.loader",
 	}
 
-	utils.log(`The script will keep the ${peopleCountToKeep} most recent invitations`, 'info')
+	utils.log(`The script will keep the ${peopleCountToKeep} most recent invitations`, "info")
 
 	/**
-	 * NOTE: This step will get how many invitations we have send
+	 * This step will get how many invitations we have send
 	 */
 	await linkedIn.login(tab, sessionCookie)
-	await tab.open('https://www.linkedin.com/mynetwork/invitation-manager/sent')
+	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/sent")
 	await tab.untilVisible(_selectors.withdrawCount, 10000)
 	linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
 	utils.log(`You have sent ${linkedInWithdrawCount} invitations`, "info")
@@ -96,7 +100,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	peopleToRemove = linkedInWithdrawCount - peopleCountToKeep
 
 	/**
-	 * NOTE: no more actions because the previous substractions result was 0 or a negativ number
+	 * no more actions because the previous substractions result was 0 or a negativ number
 	 * this means the script will remove recents invitations and not the
 	 */
 	if (peopleToRemove <= 0) {
@@ -105,12 +109,12 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	}
 
 	/**
-	 * NOTE: Now this is the fun part of the script
+	 * Now this is the fun part of the script
 	 */
 	const selectors = ["ul.mn-invitation-list", "section.mn-invitation-manager__no-invites"]
-	let selector = await tab.waitUntilVisible(selectors, 5000, "or")
+	await tab.waitUntilVisible(selectors, 5000, "or")
 
-	utils.log(`Please wait while the API goes to the oldest sent invite...`, "info")
+	utils.log("Please wait while the API goes to the oldest sent invite...", "info")
 	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null)))
 	{
 		await tab.scrollToBottom()
@@ -125,15 +129,16 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		await tab.untilVisible(selectors, 5000, "or")
 		await tab.untilVisible(_selectors.pageWaitAnchor)
 		/**
-		 * NOTE: Here we're waiting the end of the end of a loading animation
+		 * Here we're waiting the end of the end of a loading animation
 		 * this animation is a way to wait a bit more to be sure of the end of page loading
 		 */
 		try {
 			await tab.waitUntilPresent(_selectors.spinLoading)
 		} catch (e) {
+			noop()
 		}
 		if (Math.random() > 0.98) {
-			utils.log(`Still working...`, "info")
+			utils.log("Still working...", "info")
 		}
 	}
 
@@ -143,14 +148,14 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	await tab.scrollToBottom()
 
 	/**
-	 * NOTE: withdraw until we get the same value of peopleCountToKeep
+	 * withdraw until we get the same value of peopleCountToKeep
 	 */
 	stopLoopPage = false
 	while (!stopLoopPage)
 	{
 		linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
 		/**
-		 * NOTE: Stop when the count is equal to peopleCountToKeep
+		 * Stop when the count is equal to peopleCountToKeep
 		 */
 		if (linkedInWithdrawCount <= peopleCountToKeep) {
 			stopLoopPage = true

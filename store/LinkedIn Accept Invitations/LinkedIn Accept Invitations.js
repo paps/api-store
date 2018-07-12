@@ -20,6 +20,9 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global jQuery  */
+
 // }
 
 // Accept all profiles visible on the page and returns an Array of added profiles.
@@ -32,7 +35,7 @@ const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 		 * Will only get invitations which have 1 or more mutual connections
 		 */
 		if (arg.hasMutualConn) {
-			invites  = invites.filter(function filterMutual(i) {
+			invites  = invites.filter(function filterMutual() {
 				if (jQuery(this).find(".member-insights").length > 0) {
 					return this
 				}
@@ -43,7 +46,7 @@ const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 		 * Will only get invitations with a message
 		 */
 		if (arg.hasNote) {
-			invites = invites.filter(function filterNote(i) {
+			invites = invites.filter(function filterNote() {
 				if (jQuery(this).find(".invitation-card__custom-message-container").length > 0) {
 					return this
 				}
