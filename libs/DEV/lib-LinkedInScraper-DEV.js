@@ -85,11 +85,11 @@ const getDetails = (arg, callback) => {
 				 * we remove those parts of the result string: url(" & ")
 				 */
 				result[info.key] =
-									selector.querySelector(info.selector)
-										.style[info.style]
-										.trim()
-										.replace("url(\"", "")
-										.replace("\")", "")
+				                   selector.querySelector(info.selector)
+				                           .style[info.style]
+				                           .trim()
+				                           .replace("url(\"", "")
+				                           .replace("\")", "")
 			}
 		}
 		return result
