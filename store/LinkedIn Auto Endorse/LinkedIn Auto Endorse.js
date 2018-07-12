@@ -21,6 +21,9 @@ const utils = new StoreUtilities(nick, buster)
 const Papa = require("papaparse")
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global $ */
+
 // }
 
 const DB_NAME = "database-linkedin-auto-endorse.csv"
@@ -107,35 +110,6 @@ const scrollDown = async (tab) => {
 }
 
 /**
- * @description Function used to remove all already endorsed profiles
- * @param {String} spreadsheetUrl containing all profiles urls
- * @param {Array} db containing all profiles already endorsed
- * @return {Array}
- */
-const sortEndorsedProfiles = async (spreadsheetUrl, db) => {
-	let result = []
-
-	if (spreadsheetUrl.indexOf("linkedin.com") > -1) {
-		result = [spreadsheetUrl]
-	} else if (
-		spreadsheetUrl.indexOf("docs.google.com") > -1 ||
-		spreadsheetUrl.indexOf("https://") > -1 ||
-		spreadsheetUrl.indexOf("http://") > -1
-	) {
-		result = await utils.getDataFromCsv(spreadsheetUrl)
-	} else {
-		result = [spreadsheetUrl]
-	}
-	if (!result.length) {
-		utils.log("Every LinkedIn profiles from the list are already endorsed", "warning")
-		await buster.setResultObject([])
-	} else {
-		utils.log("Resuming endorsing ...", "info")
-	}
-	return result
-}
-
-/**
  * @description Browser context function used to endorse & retrieve all skills endorsed
  * @param {Object} argv
  * @param {Fucntion} cb
@@ -183,7 +157,7 @@ nick.newTab().then(async (tab) => {
 	await linkedIn.login(tab, sessionCookie)
 
 	for (const url of profileUrls) {
-		if (url.indexOf('http://') === -1 && url.indexOf('https://') === -1) {
+		if (url.indexOf("http://") === -1 && url.indexOf("https://") === -1) {
 			utils.log("Skipping entry because it doesn't look valid (\"" + url + "\")", "warning")
 			continue
 		}
