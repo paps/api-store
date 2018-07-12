@@ -72,7 +72,7 @@ const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
 					} else {
 						return cb(null, "")
 					}
-				}, { baseSelector: selectors.baseSelector, scrapingSelector: selector.videoSelector })
+				}, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
 				scrapedData.videoThumbnail.push(thumbnail)
 			} else {
 				carouselElement = await tab.evaluate(_getCarouselElement, { baseSelector: selectors.baseSelector, scrapingSelector: selectors.videoSelector })
