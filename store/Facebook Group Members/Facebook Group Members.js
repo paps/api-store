@@ -17,6 +17,8 @@ const nick = new Nick({
 const Papa = require("papaparse")
 // }
 
+const noop = () => {}
+
 
 // Getting the arguments: sessionCookies + groupUrl
 const groupUrl = buster.arguments.groupUrl
@@ -57,7 +59,7 @@ const loadAllMembers = async (tab) => {
 			await tab.click("a.uiMorePagerPrimary")
 			try {
 				await tab.waitUntilVisible(`div.lists div.profileBrowserGrid.fbProfileBrowserListContainer > *:nth-child(${listLength + 1})`)
-			} catch (error) {}
+			} catch (error) { noop() }
 			listLength = await tab.evaluate(getListLength)
 			console.log(`Loaded ${await tab.evaluate(getMembersNb)} members.`)
 		} catch (error) {
@@ -76,7 +78,7 @@ const scrapeMembers = (arg, callback) => {
 		else {memberInfo.name = null}
 		if (member.querySelector("._17tq")) {memberInfo.info = member.querySelector("._17tq").textContent.trim()}
 		else {memberInfo.info = null}
-	if (member.querySelector("div.fsl.fwb.fcb > a")) {memberInfo.profile = member.querySelector("div.fsl.fwb.fcb > a").href.replace(/[\&\?]fref\=.*/, "")}
+	if (member.querySelector("div.fsl.fwb.fcb > a")) {memberInfo.profile = member.querySelector("div.fsl.fwb.fcb > a").href.replace(/[&?]fref=.*/, "")}
 		else {memberInfo.profile = null}
 		if (memberInfo.name || memberInfo.info || memberInfo.profile) {
 			result.push(memberInfo)
@@ -103,7 +105,7 @@ const facebookConnect = async (tab) => {
 	})
 	await tab.open("facebook.com")
 	try {
-		await tab.waitUntilVisible(`div[role="feed"]`)
+		await tab.waitUntilVisible("div[role=\"feed\"]")
 	} catch (error) {
 		console.log("ERROR: Could not connect to facebook with this cookies.")
 		nick.exit(1)

@@ -91,7 +91,7 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 	result = result.filter(el => {
 		for (const line of db) {
 			el = el.toLowerCase()
-			const regex = new RegExp(`twitter\.com\/${line.handle}$`)
+			const regex = new RegExp(`twitter.com/${line.handle}$`)
 			if (el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex)) {
 				return false
 			}
@@ -188,12 +188,12 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 		}
 		profile = profile.toLowerCase()
 		const newAdd = {}
-		const getUsernameRegex = /twitter\.com\/([A-z0-9\_]+)/
+		const getUsernameRegex = /twitter\.com\/([A-z0-9_]+)/
 		const pmatch = profile.match(getUsernameRegex) // Get twitter user name (handle)
 		if (pmatch) {
 			newAdd.url = profile
 			newAdd.handle = removeNonPrintableChars(pmatch[1])
-		} else if (profile.match(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)) { // Check if profile is a valid URL
+		} else if (profile.match(/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/)) { // Check if profile is a valid URL
 			newAdd.url = profile
 		} else {
 			newAdd.url = `https://twitter.com/${profile}`
