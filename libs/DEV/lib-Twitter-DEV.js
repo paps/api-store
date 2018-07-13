@@ -14,6 +14,7 @@ const _scrapeFollowers = (arg, cb) => {
 		if (follower.querySelector("div.ProfileCard > a")) {newFollower.profileUrl = follower.querySelector("div.ProfileCard > a").href}
 		if (follower.querySelector("a.fullname")) {newFollower.name = follower.querySelector("a.fullname").textContent.trim()}
 		if (follower.querySelector("p.ProfileCard-bio")) {newFollower.bio = follower.querySelector("p.ProfileCard-bio").textContent.trim()}
+		if (follower.querySelector("a.ProfileCard-screennameLink.u-linkComplex")) { newFollower.handle = follower.querySelector("a.ProfileCard-screennameLink.u-linkComplex").textContent.trim() }
 		results.push(newFollower)
 	}
 	cb(null, results)

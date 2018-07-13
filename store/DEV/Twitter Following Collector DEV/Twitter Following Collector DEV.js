@@ -88,7 +88,7 @@ const jsonToCsv = json => {
 			jsonResult.push(newJson)
 		}
 	}
-	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "name", "bio", "isFollowedBy"])
+	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "handle", "name", "bio", "isFollowedBy"])
 	nick.exit()
 })()
 .catch(err => {

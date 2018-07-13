@@ -178,4 +178,3 @@
         utils.log(err, "error")
         nick.exit(1)
     })
-    

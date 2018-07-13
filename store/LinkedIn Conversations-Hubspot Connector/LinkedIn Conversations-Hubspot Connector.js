@@ -17,8 +17,6 @@ const nick = new Nick({
 })
 
 // Requires of npm packages
-const Papa = require("papaparse")
-const fs = require("fs")
 const _ = require("underscore")
 
 // Requires of Phantombuster's modules
@@ -28,6 +26,8 @@ const Hubspot = require("./lib-Hubspot")
 // Getting the arguments: sessionCookie + Hubspot API key
 const sessionCookie = buster.arguments.sessionCookie
 const hubspotApiKey = buster.arguments.hubspotApiKey
+
+const noop = () => {}
 
 // Check arguments
 if ((typeof sessionCookie !== "string") || sessionCookie.length < 10) {
@@ -39,7 +39,7 @@ if ((typeof hubspotApiKey !== "string") || hubspotApiKey.length < 10) {
 	nick.exit(1)
 }
 
-// Function to connect and verify the connection to linkedin 
+// Function to connect and verify the connection to linkedin
 const linkedinConnect = async (tab, sessionCookie) => {
 	await tab.setCookie({
 		name: "li_at",
@@ -72,7 +72,7 @@ const scrollMessageList = (arg, callback) => {
 
 // Get the clicked conversation profile URL
 const getProfileUrl = (arg, callback) => {
-	callback(null, document.querySelector(`a.msg-thread__topcard-btn`).href)
+	callback(null, document.querySelector("a.msg-thread__topcard-btn").href)
 }
 
 // Function to get all profile URLs from the list of conversation
@@ -101,13 +101,13 @@ const getAllProfileUrls = async (tab) => {
 	for (let i = 1; i <= length; i++) {
 		await tab.click(`ul.msg-conversations-container__conversations-list li.msg-conversation-listitem:nth-child(${i}) > a[data-control-name="view_message"]`)
 		try {
-			await tab.waitUntilVisible(`a.msg-thread__topcard-btn`)
+			await tab.waitUntilVisible("a.msg-thread__topcard-btn")
 			const url = await tab.evaluate(getProfileUrl)
 			if (url.indexOf("https://www.linkedin.com/in/") >= 0 && url !== "https://www.linkedin.com/in/UNKNOWN/") {
 				console.log(`Got ${url} for conversation number ${i}.`)
 				urls.push(url)
 			}
-		} catch (error) {}
+		} catch (error) { noop() }
 	}
 	return urls
 }
@@ -119,7 +119,7 @@ const scrapeInfos = (arg, callback) => {
 		hasAccountText: document.querySelector(".pv-member-badge .visually-hidden").textContent,
 		company: document.querySelector(".pv-top-card-section__company").textContent.trim(),
 		job: document.querySelector(".pv-top-card-section__headline").textContent.trim(),
-		url: decodeURIComponent(document.querySelector(`.action-btn a[data-control-name="message"]`).href).replace(/^.*body\=/, "")
+		url: decodeURIComponent(document.querySelector(".action-btn a[data-control-name=\"message\"]").href).replace(/^.*body=/, "")
 	})
 }
 
@@ -180,7 +180,7 @@ const getListId = async (listName, hubspot) => {
 					return list.listId
 				}
 			}
-			throw(`Could not create or find `)
+			throw("Could not create or find ")
 		}
 	}
 }
@@ -207,7 +207,7 @@ const saveAllContacts = async (tab, urls, hubspot) => {
 			if (!_.contains(contacts, url.replace(/\/$/, ""))) {
 				console.log(`Accessing ${url}...`)
 				await tab.open(url)
-				await tab.waitUntilVisible(`div.core-rail[role="main"]`)
+				await tab.waitUntilVisible("div.core-rail[role=\"main\"]")
 				console.log("Scrapping data...")
 				const data = await getInfos(tab)
 				console.log("Saving profile...")

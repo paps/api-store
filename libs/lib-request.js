@@ -81,7 +81,7 @@ if (typeof(phantom) !== "undefined") {
 					xhr.setRequestHeader(headerKey, headers[headerKey])
 				}
 			}
-			if (data != null) {
+			if (data !== null) {
 				if (typeof data === "object" && contentSet) {
 					data = JSON.stringify(data)
 					xhr.setRequestHeader("Content-type", "application/json")

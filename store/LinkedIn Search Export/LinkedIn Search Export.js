@@ -78,7 +78,7 @@ const scrapeResults = (arg, callback) => {
 					}
 				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
 					newInfos.name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
-					newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url\(\"", "").replace("\"\)", "").trim()
+					newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
 				}
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
@@ -135,7 +135,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		await tab.open(overridePageIndex(searchUrl, i))
 		let selector
 		try {
-			selector = await tab.waitUntilVisible(selectors, 7500, "or")
+			selector = await tab.waitUntilVisible(selectors, 15000, "or")
 		} catch (err) {
 			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 			utils.log(err.message || err, "warning")

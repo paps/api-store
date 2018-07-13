@@ -25,6 +25,14 @@ const twitter = new Twitter(nick, buster, utils)
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
+const getTwitterHandle = str => {
+	if (str.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
+		return str.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
+	} else {
+		return str
+	}
+}
+
 const unfollow = async (tab, twitterHandle) => {
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
@@ -92,7 +100,7 @@ const unfollow = async (tab, twitterHandle) => {
 			} else {
 				try {
 					await unfollow(tab, url)
-					peopleUnfollowed.push({url: await tab.getUrl()})
+					peopleUnfollowed.push({url: await tab.getUrl(), handle: getTwitterHandle(url)})
 				} catch (error) {
 					utils.log(`Could not unfollow ${url}: ${error}`, "warning")
 				}

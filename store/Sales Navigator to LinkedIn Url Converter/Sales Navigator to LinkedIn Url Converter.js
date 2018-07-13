@@ -64,7 +64,7 @@ const linkedinConnect = async (tab, cookie) => {
 			} catch (error) {
 				throw "Not a correct Sales Navigator url"
 			}
-			const newUrl = await tab.evaluate((arg, callback) => { callback(null, document.querySelector(`.more-info-tray a[target="_blank"]`).href) })
+			const newUrl = await tab.evaluate((arg, callback) => { callback(null, document.querySelector(".more-info-tray a[target=\"_blank\"]").href) })
 			await tab.open(newUrl)
 			try {
 				await tab.waitUntilVisible("#profile-wrapper")

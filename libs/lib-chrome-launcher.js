@@ -29,7 +29,7 @@ const launchChrome = () => {
 			"--allow-running-insecure-content",
 			"--allow-file-access-from-files",
 			// set window size
-			`--window-size=1280,800`,
+			"--window-size=1280,800",
 			// flags taken from chrome-launcher
 			"--disable-translate", // built-in Google Translate stuff
 			"--disable-extensions",

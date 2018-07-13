@@ -32,7 +32,7 @@ const isTwitter = str => url.parse(str).hostname === "twitter.com"
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
-const getTwitterFollowers = async (tab, twitterHandle,  followersPerAccount) => {
+const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount) => {
 	utils.log(`Getting followers for ${twitterHandle}`, "loading")
 	// the regex should handle @xxx
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
@@ -92,7 +92,7 @@ const jsonToCsv = json => {
 			jsonResult.push(newJson)
 		}
 	}
-	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "name", "bio", "isFollowing"])
+	await utils.saveResults(jsonResult, csvResult, "result", ["profileUrl", "handle", "name", "bio", "isFollowing"])
 	nick.exit()
 })()
 	.catch(err => {
