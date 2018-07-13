@@ -1,5 +1,7 @@
 # Web Elements Extractor
 
+[.]
+
 A simple CSS selector scraper
 
 The API will extract the content of CSS selectors on given pages
