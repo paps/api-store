@@ -73,6 +73,8 @@ If you liked this API, you'd love the following ones:
 
 # Web Elements Extractor
 
+[.]
+
 A simple CSS selector scraper
 
 The API will extract the content of CSS selectors on given pages

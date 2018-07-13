@@ -11,6 +11,7 @@
 		'lib-LinkedInScraper-DEV.js': 'libs/DEV/lib-LinkedInScraper-DEV.js'
 		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
 		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
+		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -18,6 +19,8 @@
 		'Domain Name Finder DEV.js': 'store/DEV/Domain Name Finder DEV/Domain Name Finder DEV.js'
 		'Chrome Extension Review Extractor DEV.js': '/store/DEV/Chrome Extension Review Extractor DEV/Chrome Extension Review Extractor DEV.js'
 		'Email Extractor DEV.js': 'store/DEV/Email Extractor DEV/Email Extractor DEV.js'
+		'Facebook Connect DEV.js': 'store/DEV/Facebook Connect DEV/Facebook Connect DEV.js'
+		'Facebook Group Extractor DEV.js': 'store/DEV/Facebook Group Extractor DEV/Facebook Group Extractor DEV.js'
 		'Facebook ID Finder DEV.js': 'store/DEV/Facebook ID Finder DEV/Facebook ID Finder DEV.js'
 		'Facebook Profile URL Finder DEV.js': 'store/DEV/Facebook Profile URL Finder DEV/Facebook Profile URL Finder DEV.js'
 		'Instagram Hashtag Collector DEV.js': 'store/DEV/Instagram Hashtag Collector DEV/Instagram Hashtag Collector DEV.js'

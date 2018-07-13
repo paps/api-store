@@ -20,19 +20,19 @@
 			"options": {
 				"fields": {
 					"urls": {
-						"label": "CSV/ Spreadsheet URLs or URLs to scrape",
+						"label": "CSV/ Spreadsheet URLs or URLs to scrape <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
 						"actionbarStyle": "top",
-						"collapsible": true,
+						"collapsible": false,
 						"toolbarSticky": true,
 						"hideToolbarWithChildren": true
 					},
 					"timeToWait": {
-						"label": "Time to wait until the page is fully loaded",
+						"label": "Time to wait until the page is fully loaded <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
 						"helper": "Milliseconds (default value is 5000 ms)"
 					},
 					"pagesPerLaunch": {
+						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
-						"label": "Number of URLs to scrape per launch",
 						"helper": "If the field is empty, the API will scrape only 2 pages"
 					},
 					"queries": {
