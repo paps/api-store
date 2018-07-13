@@ -156,11 +156,11 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 	scrapedProfile.baseUrl = url
 	try {
 		/**
-		 * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
+		 * Using lib-linkedInScraper to open & scrape the LinkedIn profile
 		 */
 		if (!disableScraping) {
 			const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
-			scrapedProfile = scrapingResult.csv
+			scrapedProfile = Object.assign(scrapedProfile, scrapingResult.csv)
 			message = forgeMsg(message, Object.assign({}, scrapedProfile))
 		} else {
 			await tab.open(url)
