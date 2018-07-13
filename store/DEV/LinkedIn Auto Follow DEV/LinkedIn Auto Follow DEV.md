@@ -10,6 +10,10 @@ Even if they don't, you'll have access to there publications and will be able to
 
 # Our solution: Make people following you by following them.
 
+<<<<<<< HEAD
+=======
+# Our solution: Add into your account a list of LinkedIn profiles to follow
+>>>>>>> 2d76e13c075dbaf8a3f0518a2552b24f0f6a3833
 Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phantombuster will follow **automatically** all those profiles.
 Also, just a checkbox tick away and you can do just the opposite and unfollow each and everyone of them!
 
@@ -20,7 +24,11 @@ Also, just a checkbox tick away and you can do just the opposite and unfollow ea
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn profile URLs in it.
 - **Number of follows per launch**: How many _(between **1** and **10**)_ profiles to follow per launch
+<<<<<<< HEAD
 - **Unfollow profiles**: If you need to undo what you've done, select this option to unfollow the profiles from your list.
+=======
+- **UNFOLLOW every profile**: If you want to unfollow the profiles from your list.
+>>>>>>> 2d76e13c075dbaf8a3f0518a2552b24f0f6a3833
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 

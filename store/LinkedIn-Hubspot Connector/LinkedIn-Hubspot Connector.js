@@ -17,7 +17,6 @@ const nick = new Nick({
 })
 
 // Requires of npm packages
-const needle = require("needle")
 const Papa = require("papaparse")
 const fs = require("fs")
 const _ = require("underscore")
@@ -53,7 +52,7 @@ const getArguments = async () => {
 			await buster.download(spreadsheetUrl + "/gviz/tq?tqx=out:csv", "urls.csv")
 			const raw = (Papa.parse(fs.readFileSync("urls.csv", "UTF-8"))).data
 			for (const line of raw) {
-				if (line[0].match(/linkedin\.com/)) {
+				if (line[0].match(/linkedin\.com/)) {
 					urls.push(line[0])
 				}
 			}
@@ -75,7 +74,7 @@ const getArguments = async () => {
 	return [sessionCookie, hubspotApiKey, urls]
 }
 
-// Function to connect and verify the connection to linkedin 
+// Function to connect and verify the connection to linkedin
 const linkedinConnect = async (tab, sessionCookie) => {
 	await tab.setCookie({
 		name: "li_at",
@@ -102,7 +101,7 @@ const scrapeInfos = (arg, callback) => {
 		hasAccountText: document.querySelector(".pv-member-badge .visually-hidden").textContent,
 		company: document.querySelector(".pv-top-card-section__company").textContent.trim(),
 		job: document.querySelector(".pv-top-card-section__headline").textContent.trim(),
-		url: decodeURIComponent(document.querySelector(`.action-btn a[data-control-name="message"]`).href).replace(/^.*body\=/, "")
+		url: decodeURIComponent(document.querySelector(".action-btn a[data-control-name=\"message\"]").href).replace(/^.*body=/, "")
 	})
 }
 
@@ -163,7 +162,7 @@ const getListId = async (listName, hubspot) => {
 					return list.listId
 				}
 			}
-			throw(`Could not create or find `)
+			throw("Could not create or find ")
 		}
 	}
 }
@@ -190,7 +189,7 @@ const saveAllContacts = async (tab, urls, hubspot) => {
 			if (!_.contains(contacts, url.replace(/\/$/, ""))) {
 				console.log(`Accessing ${url}...`)
 				await tab.open(url)
-				await tab.waitUntilVisible(`div.core-rail[role="main"]`)
+				await tab.waitUntilVisible("div.core-rail[role=\"main\"]")
 				console.log("Scrapping data...")
 				const data = await getInfos(tab)
 				console.log("Saving profile...")

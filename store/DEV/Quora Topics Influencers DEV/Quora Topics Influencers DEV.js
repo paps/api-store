@@ -21,6 +21,8 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const argv = buster.argument
 
+/* global $ */
+
 // }
 
 
@@ -39,7 +41,7 @@ const getWriterInfo = (argv, cb) => {
 	let safeParseInt = (number) => {
 		if (typeof number === "string" && number.indexOf(",") > 0)
 			number = number.replace(",", "")
-		let t = parseInt(number)
+		let t = parseInt(number, 10)
 		return (isNaN(t)) ? 0 : t;
 	}
 
@@ -136,7 +138,7 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 		value: cookieMb,
 		domain: ".quora.com"
 	})
-	const [httpCode, httpStatus] = await tab.open(url)
+	const [httpCode] = await tab.open(url)
 	if (httpCode === 404)
 		throw new Error("No most viewed writers found !")
 
@@ -145,7 +147,7 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let isUrl = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$/g.test(argv.topic)
+	let isUrl = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)((\/\w+)*\/)([\w\-.]+[^#?\s]+)(.*)?(#[\w-]+)?$/g.test(argv.topic)
 	let topic = ""
 
 	if (isUrl) {

@@ -85,11 +85,11 @@ const getDetails = (arg, callback) => {
 				 * we remove those parts of the result string: url(" & ")
 				 */
 				result[info.key] =
-									selector.querySelector(info.selector)
-										.style[info.style]
-										.trim()
-										.replace("url(\"", "")
-										.replace("\")", "")
+				                   selector.querySelector(info.selector)
+				                           .style[info.style]
+				                           .trim()
+				                           .replace("url(\"", "")
+				                           .replace("\")", "")
 			}
 		}
 		return result
@@ -311,7 +311,7 @@ const scrapeInfos = (arg, callback) => {
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils) => {
 	const [httpCode] = await tab.open(url)
-	if (httpCode !== 200) {
+	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {

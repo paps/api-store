@@ -8,3 +8,7 @@ before_script:
   - ./diff.sh js
   - ./diff.sh json
   - ./diff.sh md
+addons:
+  apt:
+    packages:
+      - colordiff

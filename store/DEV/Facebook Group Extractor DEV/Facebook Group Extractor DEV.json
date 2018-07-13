@@ -1,0 +1,76 @@
+{
+    "slug": "facebook-connect",
+    "description": "Automatically connect to your facebook profile",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/lkd_follow_transparent.png",
+    "gradientBegin": "#000046",
+    "gradientEnd": "#1CB5E0",
+    "argumentDescription": "",
+    "hidden": true,
+    "new": true,
+    "argumentHelpAnchor": "#section_argument",
+    "defaultArgument": {
+        "sessionCookieCUser": "your_c-user_session_cookie",
+        "sessionCookieXs": "your_xs_session_cookie",
+        "groups": "facebook_group_url",
+        "queryColumn": true
+    },
+    "outputDescription": {
+		"membersNumber": "",
+		"adminsNumber": "",
+		"friendsNumber": "",
+		"job": "",
+        "cleanUrl": ""
+	},
+    "defaultArgumentAllowed": true,
+    "argumentForm": {
+        "enabled": true,
+        "alpaca": {
+            "options": {
+                "fields": {
+                    "sessionCookieCUser": {
+                        "label": "Session cookie x_user <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Session cookie xs <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"groups": {
+						"helpers": [
+							"Enter either a facebook group url <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						],
+						"label": "Facebook groups url <a href=\"/api-store/3149/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
+						"placeholder": "https://www.facebook.com/groups/HUMOUR2TOTO"
+                    },
+                    "queryColumn": {
+						"rightLabel": "<b>Write back the group name in the result CSV</b>"
+					}
+                }
+            }
+        }
+    },
+    "argumentSchema": {
+        "type": "object",
+        "properties": {
+            "sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+            "groups": {
+				"type": "string",
+				"required": true
+            },
+            "queryColumn": {
+				"type": "boolean",
+				"required": true
+			}
+        }
+    }
+}

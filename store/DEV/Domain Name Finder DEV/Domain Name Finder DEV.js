@@ -27,6 +27,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+/* global psl */
+
 // }
 
 /**
@@ -72,27 +75,31 @@ const getBestRankedDomain = (array) => {
  * @return {Array} array containing all domain names found from the library webSearch
  */
 const craftDomains = (argv, cb) => {
+	const noop = () => {}	// prevent no-empty rule
 	const blacklist = []
 
 	/**
-	 * NOTE: So far, if the URL constructor throws an error.
+	 * So far, if the URL constructor throws an error.
 	 * There is no purpose to have this element in the blacklist
 	 */
 	for (const one of argv.blacklist) {
 		try {
-			let blackListElement = (new URL(one)).hostname
-			/**
-			 * Issue #51: Support wildcard domains
-			 */
-			if (Array.isArray(decodeURIComponent(blackListElement).match(/\*/g))) {
-				blackListElement = decodeURIComponent(blackListElement).replace(/\*/g, "")
-				blacklist.push(blackListElement)
-			} else {
-				blacklist.push(psl.get(blackListElement))
-			}
-		} catch (err) {
-			console.log(err)
-		}
+			blacklist.push(psl.get((new URL(one)).hostname))
+		} catch (err) { noop() }
+		// try {
+		// 	let blackListElement = (new URL(one)).hostname
+		// 	/**
+		// 	 * Issue #51: Support wildcard domains
+		// 	 */
+		// 	if (Array.isArray(decodeURIComponent(blackListElement).match(/\*/g))) {
+		// 		blackListElement = decodeURIComponent(blackListElement).replace(/\*/g, "")
+		// 		blacklist.push(blackListElement)
+		// 	} else {
+		// 		blacklist.push(psl.get(blackListElement))
+		// 	}
+		// } catch (err) {
+		// 	console.log(err)
+		// }
 	}
 
 	const completeResults = argv.results.map(one => {
@@ -100,15 +107,16 @@ const craftDomains = (argv, cb) => {
 		one.domain = _domain
 
 		/**
-		 * NOTE: Return an empty JS object if the current element is blacklisted,
+		 * Return an empty JS object if the current element is blacklisted,
 		 * otherwise the element
 		 */
-		for (const blacklistElement of blacklist) {
-			if (_domain.match(blacklistElement)) {
-				return {}
-			}
-		}
-		return one
+		return (blacklist.indexOf(_domain) > -1) ? {} : one
+		// for (const blacklistElement of blacklist) {
+		// 	if (_domain.match(blacklistElement)) {
+		// 		return {}
+		// 	}
+		// }
+		// return one
 	})
 	cb(null, completeResults)
 }
@@ -177,7 +185,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	await utils.saveResult(result)
 	nick.exit()
 })()
-	.catch(err => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.catch(err => {
+	utils.log(err, "error")
+	nick.exit(1)
+})

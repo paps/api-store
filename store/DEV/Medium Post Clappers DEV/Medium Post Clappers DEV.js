@@ -75,7 +75,7 @@ const loadAllClappers = async tab => {
 	let load = true
 	utils.log("Loading clappers...", "loading")
 	while (load) {
-		await tab.click(`button[data-action="show-more-recommends"]`)
+		await tab.click("button[data-action=\"show-more-recommends\"]")
 		try {
 			await tab.waitUntilVisible(`ul.list > li:nth-of-type(${length+1})`)
 			length = await tab.evaluate((arg, callback) => { callback(null, document.querySelectorAll("ul.list > li").length) })

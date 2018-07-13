@@ -177,7 +177,7 @@ const getIdFromUrl = async (url, tab) => {
 
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			url = handleSubdomains(url) // Removing the subdomain (if present) from the given URL
-			const [httpCode, httpStatus] = await tab.open(url)
+			const [httpCode] = await tab.open(url)
 			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}

@@ -27,6 +27,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+/* global psl */
+
 // }
 
 /**
@@ -72,26 +75,48 @@ const getBestRankedDomain = (array) => {
  * @return {Array} array containing all domain names found from the library webSearch
  */
 const craftDomains = (argv, cb) => {
+	const noop = () => {}	// prevent no-empty rule
 	const blacklist = []
 
 	/**
-	 * NOTE: So far, if the URL constructor throws an error.
+	 * So far, if the URL constructor throws an error.
 	 * There is no purpose to have this element in the blacklist
 	 */
 	for (const one of argv.blacklist) {
 		try {
 			blacklist.push(psl.get((new URL(one)).hostname))
-		} catch (err) {}
+		} catch (err) { noop() }
+		// try {
+		// 	let blackListElement = (new URL(one)).hostname
+		// 	/**
+		// 	 * Issue #51: Support wildcard domains
+		// 	 */
+		// 	if (Array.isArray(decodeURIComponent(blackListElement).match(/\*/g))) {
+		// 		blackListElement = decodeURIComponent(blackListElement).replace(/\*/g, "")
+		// 		blacklist.push(blackListElement)
+		// 	} else {
+		// 		blacklist.push(psl.get(blackListElement))
+		// 	}
+		// } catch (err) {
+		// 	console.log(err)
+		// }
 	}
 
 	const completeResults = argv.results.map(one => {
 		const _domain = psl.get((new URL(one.link)).hostname)
 		one.domain = _domain
+
 		/**
-		 * NOTE: Return an empty JS object if the current element is blacklisted,
+		 * Return an empty JS object if the current element is blacklisted,
 		 * otherwise the element
 		 */
 		return (blacklist.indexOf(_domain) > -1) ? {} : one
+		// for (const blacklistElement of blacklist) {
+		// 	if (_domain.match(blacklistElement)) {
+		// 		return {}
+		// 	}
+		// }
+		// return one
 	})
 	cb(null, completeResults)
 }
@@ -107,16 +132,16 @@ const craftDomains = (argv, cb) => {
 const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
 	query = query.toLowerCase()
-	const firstResult = names.results[0]
 	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
 	const theDomain = getBestRankedDomain(results)
+	// Issue #56: return an empty line when no domain where found
 	return {
 		query,
-		domain: theDomain.domain,
-		title: theDomain.title,
-		description: theDomain.description,
-		link: theDomain.link,
+		domain: theDomain ? theDomain.domain : "not found",
+		title: theDomain ? theDomain.title : "",
+		description: theDomain ? theDomain.description : "",
+		link: theDomain ? theDomain.link : "",
 		codename: names.codename
 	}
 }
@@ -126,7 +151,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let {spreadsheetUrl, companies, columnName, blacklist} = utils.validateArguments()
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else if (typeof(companies) === 'string') {
+	} else if (typeof(companies) === "string") {
 		companies = [companies]
 	}
 
@@ -138,7 +163,9 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const result = []
 	const webSearch = new WebSearch(tab, buster)
 
+	let i = 0
 	for (const query of companies) {
+		buster.progressHint(i / companies.length, query)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped scraping domain names: ${timeLeft.message}`, "warning")
@@ -153,6 +180,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
 		}
+		i++
 	}
 	await utils.saveResult(result)
 	nick.exit()

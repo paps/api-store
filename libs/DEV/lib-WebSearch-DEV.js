@@ -193,8 +193,6 @@ const _doSearch = async function (query) {
 	 */
 	if ((httpCode >= 400) || (httpCode < 200)) {
 		this.verbose && console.log("No results from the engine", engine.name)
-		if (typeof this.lockEngine === "string") {
-		}
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 	}
 

@@ -44,6 +44,8 @@ const filterUrls = (str, db) => {
 	return true
 }
 
+const getTwitterHandle = str => isTwitterUrl(str) ? url.parse(str).pathname.substr(1) : str
+
 const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 	let i = 0
 	const maxLength = data.length
@@ -71,7 +73,7 @@ const likeTweets = (arg, cb) => {
 	const tweetsLoaded = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
 	const tweetURLs = []
 	/**
-	 * NOTE: If the script loaded more tweets than likesCount, then we remove trailing tweets to get the exact count
+	 * If the script loaded more tweets than likesCount, then we remove trailing tweets to get the exact count
 	 */
 	if (tweetsLoaded.length > arg.likesCount) {
 		tweetsLoaded.splice(arg.likesCount - tweetsLoaded.length)
@@ -97,7 +99,7 @@ const getTweetsCount = (arg, cb) => {
 }
 
 /**
- * NOTE: This function is different from getTweetsCount
+ * This function is different from getTweetsCount
  * getTweetsCount returns the total tweets count from a profile
  * This function returns the amount of tweets loaded in the browser
  * @description
@@ -133,7 +135,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 		return { twitterUrl: url, likeCount: 0, urls: [] }
 	}
 	/**
-	 * NOTE: If the likeCount parameter is bigger than the total tweets count, the script will like every tweets
+	 * If the likeCount parameter is bigger than the total tweets count, the script will like every tweets
 	 */
 	if (likesCount > tweetsCount) {
 		likesCount = tweetsCount
@@ -143,7 +145,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 	let loadedCount = await tab.evaluate(getLoadedTweetsCount)
 
 	/**
-	 * NOTE: We need to exit of the loop if:
+	 * We need to exit of the loop if:
 	 * - We have less tweets than the required like count
 	 * - We loaded all tweets to like
 	 * - We can not load tweets to like
@@ -153,7 +155,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 		buster.progressHint(loadedCount / likesCount, `Tweets loaded: ${loadedCount}/${likesCount}`)
 		await tab.scrollToBottom()
 		/**
-		 * HACK: Since we don't load images with Nick.js to run the script faster,
+		 * Since we don't load images with Nick.js to run the script faster,
 		 * we loose the tweets loading spinner, since we can now how many tweets are loaded at screen at anytime
 		 * wa can just wait that there is more tweets at screen
 		 */
@@ -163,7 +165,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 				const waitForNewTweets = () => {
 					const loadedTweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
 					/**
-					 * HACK: If this dataset is not in the DOM, it means that there are no more tweets to load
+					 * If this dataset is not in the DOM, it means that there are no more tweets to load
 					 */
 					if (!document.querySelector(".stream-container").dataset.minPosition) {
 						cb(null, "DONE")
@@ -180,7 +182,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 			})
 
 			/**
-			 * HACK: Sometimes the visual tweets count on the profile doesn't represent the loaded tweet count,
+			 * Sometimes the visual tweets count on the profile doesn't represent the loaded tweet count,
 			 * so if we reached at the end of the timeline we just break the loop
 			 */
 			if (state === "DONE") {
@@ -194,6 +196,7 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 	utils.log(`Liking ${likesCount}`, "info")
 	const scrapedData = await tab.evaluate(likeTweets, { likesCount })
 	scrapedData.twitterUrl = url
+	scrapedData.handle = getTwitterHandle(await tab.getUrl())
 	return scrapedData
 }
 

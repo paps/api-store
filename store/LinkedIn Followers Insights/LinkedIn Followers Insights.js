@@ -22,6 +22,9 @@ const utils = new StoreUtilities(nick, buster)
 const querystring = require("querystring")
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+/* global $ */
+
 // }
 const gl = {}
 
@@ -138,8 +141,8 @@ const onHttpRequest = (e) => {
 		}
 		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 		const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
-		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total))
-		result.sort((a, b) => (parseInt(b.followers) - parseInt(a.followers)))
+		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
+		result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
 		for (const follower of result) {
 			if (follower.followers === 0) {
 				follower.followers = "Not provided by LinkedIn"

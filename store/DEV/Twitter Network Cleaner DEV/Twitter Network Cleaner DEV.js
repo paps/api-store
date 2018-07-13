@@ -25,15 +25,23 @@ const twitter = new Twitter(nick, buster, utils)
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
+const getTwitterHandle = str => {
+	if (str.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
+		return str.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
+	} else {
+		return str
+	}
+}
+
 const unfollow = async (tab, twitterHandle) => {
-	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)) {
-		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9\_]+)/)[1]
+	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
+		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
 	}
 	twitterHandle = removeNonPrintableChars(twitterHandle)
 
 	utils.log(`Unfollowing ${twitterHandle}...`, "loading")
 
-	const [httpCode, httpStatus] = await tab.open(`https://twitter.com/${twitterHandle}`)
+	const [httpCode] = await tab.open(`https://twitter.com/${twitterHandle}`)
 	/**
 	 * If we can't load the twitter profile, we just notify the user with an error
 	 */
@@ -66,13 +74,13 @@ const unfollow = async (tab, twitterHandle) => {
 
 	let twitterProfiles = [spreadsheetUrl]
 	/* Checking if we have an url from buster.arguments */
-	if (/^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*$/g.test(spreadsheetUrl)) {
+	if (/^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/g.test(spreadsheetUrl)) {
 		/**
 		 * Do we have a Twitter profile url ?
 		 * If not let's try to open the url,
 		 * It'll throw an error if this isn't a CSV
 		 */
-		if (!/(?:http[s]?:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-]*)/.test(spreadsheetUrl)) {
+		if (!/(?:http[s]?:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w-]*\/)*([\w-]*)/.test(spreadsheetUrl)) {
 			twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl)
 		}
 
@@ -92,7 +100,7 @@ const unfollow = async (tab, twitterHandle) => {
 			} else {
 				try {
 					await unfollow(tab, url)
-					peopleUnfollowed.push({url: await tab.getUrl()})
+					peopleUnfollowed.push({url: await tab.getUrl(), handle: getTwitterHandle(url)})
 				} catch (error) {
 					utils.log(`Could not unfollow ${url}: ${error}`, "warning")
 				}

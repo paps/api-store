@@ -150,7 +150,7 @@
     
     // Main function to launch all the others in the good order and handle some errors
     nick.newTab().then(async (tab) => {
-        let { unfollowProfiles, sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
+        let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
         linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
         db = await utils.getDb(DB_NAME)
         const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)

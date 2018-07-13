@@ -3,10 +3,6 @@
 "phantombuster package: 4"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
-const fs   = require("fs")
-const Papa = require("papaparse")
-const _    = require("underscore")
-
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -19,10 +15,13 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 })
+
+/* global jQuery */
+
 // }
 
 const linkedinConnect = async (tab, cookie, url) => {
-	if (typeof url === 'undefined' || url === null)
+	if (typeof url === "undefined" || url === null)
 		url = "https://www.linkedin.com"
 	await tab.setCookie({
 		"name": "li_at",
@@ -33,9 +32,6 @@ const linkedinConnect = async (tab, cookie, url) => {
 	try {
 		await tab.waitUntilVisible("#extended-nav", 10000)
 	} catch (err) {
-		const sc = `error.png`
-		// await tab.screenshot(sc)
-		// await buster.saveFile(sc)
 		throw "Can't connect to LinkedIn with this session cookie."
 	}
 }
@@ -55,7 +51,7 @@ const inviteProfileList = async (tab) => {
 			await tab.untilVisible(sendSelector)
 			await tab.screenshot("s2.jpg") // TODO: Remove when relesed
 			await tab.click(sendSelector)
-			console.log('click')
+			console.log("click")
 			await tab.whileVisible(sendSelector)
 			await tab.screenshot("s3.jpg") // TODO: Remove when relesed
 			break
@@ -69,7 +65,7 @@ const inviteProfileList = async (tab) => {
 			let addedName = null
 
 			if (connectButtons.length !== 0) {
-				currentProfile = connectButtons.filter(function () { return jQuery(this).attr("aria-label").match(/^Connect with /) }).first()
+				let currentProfile = connectButtons.filter(function () { return jQuery(this).attr("aria-label").match(/^Connect with /) }).first()
 				addedName = jQuery("span.name.actor-name", currentProfile.parents()[2]).text()
 				currentProfile.click()
 			}

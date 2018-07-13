@@ -20,10 +20,9 @@ const _downloadCsv = async url => {
 	return new Promise((resolve, reject) => {
 		let hasRedirection = false
 		let httpCodeRedirection = null
-		let urlRediction = null
 		let hasTimeout = false
 
-		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp, body) => {
+		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp) => {
 			if (err) {
 				reject(err)
 			}
@@ -45,13 +44,12 @@ const _downloadCsv = async url => {
 			resolve(resp.body)
 		})
 
-		httpStream.on("redirect", _url => {
+		httpStream.on("redirect", () => {
 			httpCodeRedirection = httpStream.request.res.statusCode
-			urlRediction = _url
 			hasRedirection = true
 		})
 
-		httpStream.on("timeout", data => {
+		httpStream.on("timeout", () => {
 			hasTimeout = true
 		})
 	})
@@ -254,7 +252,7 @@ class StoreUtilities {
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
 		}
-		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\/-]+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
+		const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
 			if (match[3] === "docs.google.com") {
@@ -272,7 +270,8 @@ class StoreUtilities {
 			let data = (Papa.parse(file)).data
 			let column = 0
 			if (columnName) {
-				for (var i = 0; i < data[0].length; i++) {
+				let i = 0;
+				for (; i < data[0].length; i++) {
 					if (data[0][i] === columnName) {
 						column = i
 						break
