@@ -135,7 +135,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query) => {
 		await tab.open(overridePageIndex(searchUrl, i))
 		let selector
 		try {
-			selector = await tab.waitUntilVisible(selectors, 7500, "or")
+			selector = await tab.waitUntilVisible(selectors, 15000, "or")
 		} catch (err) {
 			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 			utils.log(err.message || err, "warning")
