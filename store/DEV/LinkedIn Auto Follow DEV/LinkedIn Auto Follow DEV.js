@@ -79,7 +79,7 @@
              */
             if (!disableScraping) {
                 const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
-                scrapedProfile = scrapingResult.csv
+                scrapedProfile = Object.assign(scrapedProfile, scrapingResult.csv)
             } else {
                 await tab.open(url)
                 await tab.waitUntilVisible("#profile-wrapper", 15000)
@@ -168,7 +168,7 @@
             } catch (error) {
                 utils.log(`Could not ${unfollowProfiles ? "un": ""}follow ${url} because of an error: ${error}`, "warning")
             }
-        }
+		}
         await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
         await linkedIn.saveCookie()
         utils.log("Job is done!", "done")
