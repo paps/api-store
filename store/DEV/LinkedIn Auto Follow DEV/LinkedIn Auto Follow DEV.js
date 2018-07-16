@@ -3,8 +3,6 @@
     "phantombuster package: 5"
     "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
     
-    const Papa = require("papaparse")
-    
     const Buster = require("phantombuster")
     const buster = new Buster()
     
@@ -26,7 +24,8 @@
     let db
     
     const DB_NAME = "database-linkedin-auto-follow.csv"
-    
+    const DB_SHORT_NAME = DB_NAME.split(".").shift()
+
     // Check if a url is already in the csv
     const checkDb = (str, db) => {
         for (const line of db) {
@@ -133,21 +132,7 @@
         // Add them into the already added username object
         db.push(scrapedProfile)
     }
-    
-    const getFieldsFromArray = (arr) => {
-        const fields = []
-        for (const line of arr) {
-            if (line && (typeof(line) === "object")) {
-                for (const field of Object.keys(line)) {
-                    if (fields.indexOf(field) < 0) {
-                        fields.push(field)
-                    }
-                }
-            }
-        }
-        return fields
-    }
-    
+
     // Main function to launch all the others in the good order and handle some errors
     nick.newTab().then(async (tab) => {
         let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
@@ -169,7 +154,7 @@
                 utils.log(`Could not ${unfollowProfiles ? "un": ""}follow ${url} because of an error: ${error}`, "warning")
             }
 		}
-        await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
+        await utils.saveResults(db, db, DB_SHORT_NAME, null, false)
         await linkedIn.saveCookie()
         utils.log("Job is done!", "done")
         nick.exit(0)

@@ -95,20 +95,6 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 	return csv
 }
 
-const getFieldsFromArray = (arr) => {
-	const fields = []
-	for (const line of arr) {
-		if (line && (typeof(line) === "object")) {
-			for (const field of Object.keys(line)) {
-				if (fields.indexOf(field) < 0) {
-					fields.push(field)
-				}
-			}
-		}
-	}
-	return fields
-}
-
 /**
  * @description Removing subdomains if present in the URL, could prevent HTTP code 999 redirection when scraping the URL
  * @param {String} url - LinkedIn URL
@@ -166,7 +152,7 @@ const removeLinkedinSubdomains = url => {
 			utils.log(`Opening page ${url}`, "loading")
 			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(url))
 			/**
-			 * NOTE: the csv output from the lib is no more used in this API,
+			 * the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
 			 * the lib still return the "basic" csv output
 			 */
@@ -190,7 +176,7 @@ const removeLinkedinSubdomains = url => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResults(result, db, DB_NAME, getFieldsFromArray(db), false)
+		await utils.saveResults(result, db, DB_NAME, null, false)
 		nick.exit(0)
 	}
 })()

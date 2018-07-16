@@ -267,7 +267,6 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
-	// await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
 	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
