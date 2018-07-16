@@ -322,6 +322,25 @@ class StoreUtilities {
 		}
 	}
 
+	/**
+	 * @internal
+	 * @param {Array<Object>} arr
+	 * @return {Array<String>} all fields
+	 */
+	_getFieldsFromArray(arr) {
+		const fields = []
+		for (const line of arr) {
+			if (line && (typeof(line) === "object")) {
+				for (const field of Object.keys(line)) {
+					if (fields.indexOf(field) < 0) {
+						fields.push(field)
+					}
+				}
+			}
+		}
+		return fields
+	}
+
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		this.log("Saving data...", "loading")
@@ -335,6 +354,18 @@ class StoreUtilities {
 					} else {
 						newItem[value] = ""
 					}
+				}
+				newResult.push(newItem)
+			}
+			csvResult = newResult
+		// If no schema is supplied, the function will try to create a csv with all gaps filled
+		} else {
+			const newResult = []
+			const fields = this._getFieldsFromArray(csvResult)
+			for (let i = 0, len = csvResult.length; i < len; i++) {
+				const newItem = {}
+				for (const val of fields) {
+					newItem[val] = csvResult[i][val] ? csvResult[i][val] : ""
 				}
 				newResult.push(newItem)
 			}
