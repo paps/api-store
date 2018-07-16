@@ -135,7 +135,7 @@ const removeLinkedinSubdomains = url => {
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
 
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
-	console.log(`URLs to scrape: ${JSON.stringify(urls, undefined, 4)}`)
+	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()

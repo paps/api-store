@@ -16,7 +16,7 @@ const { URL } = require("url")
  * @return {Promise<String>} HTTP body response content
  * @throws if there were an error from needle or the Google spreadsheet is not shared
  */
-const _downloadCsv = async url => {
+const _downloadCsv = url => {
 	return new Promise((resolve, reject) => {
 		let hasRedirection = false
 		let httpCodeRedirection = null
@@ -63,7 +63,7 @@ const _downloadCsv = async url => {
  * @return {Promise<Object>} Http body response
  * @throws if there were an error during the download process
  */
-const _handleGoogle = async (urlObject) => {
+const _handleGoogle = urlObject => {
 	let _url = null
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
 	let docIdPattern
@@ -118,7 +118,7 @@ const _handleGoogle = async (urlObject) => {
 	if (!_url) {
 		throw `Cannot find a way to download given URL: ${urlObject.toString()}`
 	}
-	return await _downloadCsv(_url)
+	return _downloadCsv(_url)
 }
 
 /**
@@ -129,7 +129,7 @@ const _handleGoogle = async (urlObject) => {
  * @param {Object} urlRepresentation - nodejs URL object
  * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
  */
-const _handleDefault = async (urlObject) => await _downloadCsv(urlObject.toString())
+const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
 class StoreUtilities {
 	constructor(nick, buster) {
@@ -349,7 +349,7 @@ class StoreUtilities {
 			for (let i = 0; i < csvResult.length; i++) {
 				const newItem = {}
 				for (const value of schema) {
-					if (csvResult[i][value] !== null && csvResult[i][value] !== undefined) {
+					if (csvResult[i][value] !== null && typeof csvResult[i][value] !== "undefined") {
 						newItem[value] = csvResult[i][value]
 					} else {
 						newItem[value] = ""
@@ -365,7 +365,7 @@ class StoreUtilities {
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
-					newItem[val] = csvResult[i][val] !== null && csvResult[i][val] !== undefined ? csvResult[i][val] : ""
+					newItem[val] = csvResult[i][val] !== null && csvResult[i][val] !== "undefined" ? csvResult[i][val] : ""
 				}
 				newResult.push(newItem)
 			}
