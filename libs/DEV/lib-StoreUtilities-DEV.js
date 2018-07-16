@@ -349,7 +349,7 @@ class StoreUtilities {
 			for (let i = 0; i < csvResult.length; i++) {
 				const newItem = {}
 				for (const value of schema) {
-					if (csvResult[i][value]) {
+					if (csvResult[i][value] !== null && csvResult[i][value] !== undefined) {
 						newItem[value] = csvResult[i][value]
 					} else {
 						newItem[value] = ""
@@ -365,7 +365,7 @@ class StoreUtilities {
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
-					newItem[val] = csvResult[i][val] ? csvResult[i][val] : ""
+					newItem[val] = csvResult[i][val] !== null && csvResult[i][val] !== undefined ? csvResult[i][val] : ""
 				}
 				newResult.push(newItem)
 			}
