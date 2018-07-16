@@ -1,14 +1,14 @@
 {
 	"slug": "email-extractor",
-	"description": "",
-	"image": "",
-	"gradientBegin": "#35C2DB",
-	"gradientEnd": "#35C2BF",
+	"description": "Find email addresses on web pages at a glance",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Email-Extractor/Email+Extractor+-+Logo.png",
+	"gradientBegin": "#D9786F",
+	"gradientEnd": "#FFD15C",
 	"argumentDescription": "",
-	"argumentHelpAnchor": "",
-	"defaultArgumentAllowed": false,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgumentAllowed": true,
 	"hidden": true,
-	"new": false,
+	"new": true,
 	"defaultArgument": {
 		"urls": [ "https://phantombuster.com" ],
 		"timeToWait": 5000,
@@ -20,18 +20,18 @@
 			"options": {
 				"fields": {
 					"urls": {
-						"label": "CSV/ Spreadsheet URLs or URLs to scrape <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
+						"label": "CSV/Spreadsheet URLs or URLs to scrape <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"actionbarStyle": "top",
 						"collapsible": false,
 						"toolbarSticky": true,
 						"hideToolbarWithChildren": true
 					},
 					"timeToWait": {
-						"label": "Time to wait until the page is fully loaded <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
+						"label": "Time to wait until the page is fully loaded <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"helper": "Milliseconds (default value is 5000 ms)"
 					},
 					"pagesPerLaunch": {
-						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_whatyoullneedtosettomakeitwork\" target=\"_blank\">(?)</a>",
+						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
 						"helper": "If the field is empty, the API will scrape only 2 pages"
 					},
