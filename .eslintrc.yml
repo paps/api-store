@@ -57,6 +57,29 @@ rules:
     - always
   no-constant-condition:
     - off
-  no-console: 0
+  no-console:
+    - off
   no-mixed-spaces-and-tabs:
     - off
+  no-multi-spaces:
+    - warn
+  no-return-await:
+    - error
+  no-sequences:
+    - error
+  no-useless-call:
+    - error
+  no-useless-concat:
+    - error
+  no-undefined:
+    - error
+  no-undef-init:
+    - error
+  brace-style:
+    - warn
+    - 1tbs
+    - allowSingleLine: true
+  require-await:
+    - error
+  block-spacing:
+    - warn
