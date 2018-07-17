@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-profile-scraper",
-	"description": "Collects valuable information you need from LinkedIn profiles, including emails",
+	"description": "Collect valuable information you need from LinkedIn profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
 	"hidden": false,
 	"updated": true,
