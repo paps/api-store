@@ -99,7 +99,7 @@ const getClappers = async (url, tab) => {
 	await tab.click("button.js-multirecommendCountButton")
 	await tab.waitUntilVisible("div.overlay-content")
 	await loadAllClappers(tab)
-	return (await tab.evaluate(scrapeClappers))
+	return tab.evaluate(scrapeClappers)
 }
 
 const jsonToCsv = json => {
@@ -129,7 +129,7 @@ const jsonToCsv = json => {
 			break
 		}
 		utils.log(`Scrapping article ${article}...`, "loading")
-		result.push({url: article, clappers: await getClappers(article, tab)})
+		result.push({ url: article, clappers: await getClappers(article, tab) })
 		utils.log(`${article} scrapped.`, "done")
 	}
 	const csvResult = jsonToCsv(result)

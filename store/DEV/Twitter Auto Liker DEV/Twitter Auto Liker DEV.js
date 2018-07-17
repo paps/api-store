@@ -275,7 +275,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 		utils.log(`Could not save result object: ${e.message || e}`, "warning")
 	}
 	if (!noDatabase) {
-		await utils.saveResults(db, db, DB_NAME.split(".").shift(), undefined, false)
+		await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	}
 
 	nick.exit()

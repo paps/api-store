@@ -106,7 +106,8 @@ const getCompanyInfo = async (tab, link) => {
 	if (await tab.isPresent("section.org-similar-orgs")) {
 		await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
 	}
-	return (await tab.evaluate(scrapeCompanyInfo, {link}))
+	return tab.evaluate(scrapeCompanyInfo, { link })
+	// return (await tab.evaluate(scrapeCompanyInfo, {link}))
 }
 
 const isLinkedUrl = target => {

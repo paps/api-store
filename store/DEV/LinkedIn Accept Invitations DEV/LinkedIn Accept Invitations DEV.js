@@ -25,9 +25,13 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 // }
 
-// Accept all profiles visible on the page and returns an Array of added profiles.
-const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
-	return await tab.evaluate(function (arg, done) {
+/**
+ *
+ * @async
+ * @description Accept all profiles visible on the page and returns an Array of added profiles.
+ */
+const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
+	return tab.evaluate(function (arg, done) {
 		jQuery.noConflict()
 		let invites = jQuery("ul.mn-invitation-list > li")
 
@@ -35,7 +39,7 @@ const acceptInvites = async (tab, nbProfiles, hasNote, hasMutualConn) => {
 		 * Will only get invitations which have 1 or more mutual connections
 		 */
 		if (arg.hasMutualConn) {
-			invites  = invites.filter(function filterMutual() {
+			invites = invites.filter(function filterMutual() {
 				if (jQuery(this).find(".member-insights").length > 0) {
 					return this
 				}

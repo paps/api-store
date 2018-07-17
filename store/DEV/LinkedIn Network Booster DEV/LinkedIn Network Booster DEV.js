@@ -3,7 +3,7 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
-const Papa = require("papaparse")
+// const Papa = require("papaparse")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -239,20 +239,6 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 	db.push(scrapedProfile)
 }
 
-const getFieldsFromArray = (arr) => {
-	const fields = []
-	for (const line of arr) {
-		if (line && (typeof(line) === "object")) {
-			for (const field of Object.keys(line)) {
-				if (fields.indexOf(field) < 0) {
-					fields.push(field)
-				}
-			}
-		}
-	}
-	return fields
-}
-
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
@@ -280,7 +266,7 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
 		}
 	}
-	await buster.saveText(Papa.unparse({fields: getFieldsFromArray(db), data: db}), DB_NAME)
+	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
