@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-search-export",
-	"description": "Collects LinkedIn search results",
+	"description": "Collect LinkedIn search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
 	"hidden": false,
 	"gradientBegin": "#057212",
