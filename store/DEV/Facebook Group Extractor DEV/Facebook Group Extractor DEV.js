@@ -24,8 +24,13 @@ const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 
 const isFacebookGroupURL = (targetUrl) => {
-	const urlObject = parse(targetUrl)
-
+	let urlObject = parse(targetUrl)
+    if (urlObject.pathname.startsWith("facebook")) {
+        urlObject = parse("https://www." + targetUrl)
+    }
+    if (urlObject.pathname.startsWith("www.facebook")) {
+        urlObject = parse("https://" + targetUrl)
+    }
 	if (urlObject && urlObject.hostname) {
 		if (urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
 			return 0
@@ -33,6 +38,24 @@ const isFacebookGroupURL = (targetUrl) => {
 		return -1
 	}
 	return 1
+}
+
+const cleanFacebookUrl = (url) => {
+    let urlObject = parse(url.toLowerCase())
+    if (urlObject.pathname.startsWith("facebook")) {
+        urlObject = parse("https://www." + url)
+    }
+    if (urlObject.pathname.startsWith("www.facebook")) {
+        urlObject = parse("https://" + url)
+    }
+    return urlObject.href
+}
+
+const cleanGroupUrl = (url) => {
+    const urlObject = parse(url)
+    let cleanUrl = urlObject.pathname.slice(8)
+    cleanUrl = cleanUrl.slice(0,cleanUrl.indexOf("/"))
+    return "www.facebook.com/groups/" + cleanUrl + "/"
 }
 
 const removeDuplicates = (arr, key) => {
@@ -62,21 +85,21 @@ const firstScrape = (arg, callback) => {
     const groupName = document.querySelector("#seo_h1_tag a").textContent
     const membersNumber = document.querySelector("#groupsMemberBrowser div div div span").textContent
 
-	const infos = {groupName, membersNumber}
+	const data = {groupName, membersNumber}
 	
-	callback(null, infos)
+	callback(null, data)
 }
 
 const scrape = (arg, callback) => {
     const groupName = document.querySelector("#seo_h1_tag a").textContent
-    const results =   document.querySelectorAll(".uiList.clearfix > div")
-	const infos = []
+    const results = document.querySelectorAll(".uiList.clearfix > div")
+	const data = []
 	for (const result of results) {
         const url = result.querySelector("a").href
         
-        // a few profiles don't have a name and are just www.facebook.com/profile.php?id=ID_NUMBER&fref..
-        let profileURL = (url.indexOf("profile.php?") > -1) ? url.slice(0,url.indexOf("&")) : url.slice(0, url.indexOf("?"))
-        let newInfos = { profileURL }
+        // a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
+        let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0,url.indexOf("&")) : url.slice(0, url.indexOf("?"))
+        let newInfos = { profileUrl }
         newInfos.imageURL = result.querySelector("img").src
         newInfos.name = result.querySelector("img").getAttribute("aria-label")
         if (arg.path === "admins") {
@@ -87,7 +110,7 @@ const scrape = (arg, callback) => {
             }
         }
 
-        if (arg.path === "local_members"){
+        if (arg.path === "local_members") {
             newInfos.localMember = document.querySelector("#groupsMemberBrowserContent span").textContent
         }
 
@@ -104,12 +127,11 @@ const scrape = (arg, callback) => {
             newInfos.inCommon = result.querySelector(".uiProfileBlockContent div div:last-child div:last-child a").textContent
         }
 
-        if (arg.queryColumn) {
-            newInfos.groupName = groupName
-        }
-        infos.push(newInfos)
+        newInfos.groupName = groupName
+        
+        data.push(newInfos)
     } 
-	callback(null, infos)
+	callback(null, data)
 }
 
 const getFirstResult = async (tab, url) => {
@@ -125,8 +147,8 @@ const getFirstResult = async (tab, url) => {
 	return result
 }
 
-const getGroupResult = async (tab, url, path, queryColumn) => {
-    utils.log(`Getting infos from ${url + path}...`, "loading")
+const getGroupResult = async (tab, url, path) => {
+    utils.log(`Getting data from ${url + path}...`, "loading")
 	let result = []
 	const selectors = ["#groupsMemberBrowserContent"]
     await tab.open(url + path)
@@ -137,7 +159,7 @@ const getGroupResult = async (tab, url, path, queryColumn) => {
         return result
     }
     let moreToLoad
-    let profileLoaded = 15
+    let profilesLoaded = 15
     do{
         try {
             await tab.scrollToBottom()
@@ -145,8 +167,8 @@ const getGroupResult = async (tab, url, path, queryColumn) => {
             moreToLoad = await tab.evaluate((arg, callback) => {
                 callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
             })
-            if (profileLoaded % 450 === 0) { utils.log(`Loading about ${profileLoaded} profiles...`, "loading") }
-            profileLoaded+=15
+            if (profilesLoaded % 300 === 0) { utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading") }
+            profilesLoaded+=15
             const timeLeft = await utils.checkTimeLeft()
             if (!timeLeft.timeLeft) {
                 utils.log(timeLeft.message, "warning")
@@ -156,45 +178,48 @@ const getGroupResult = async (tab, url, path, queryColumn) => {
            utils.log("Error scrolling down the page", "error") 
         }
     } while (moreToLoad)
-    result = result.concat(await tab.evaluate(scrape, {queryColumn, path}))
+    result = result.concat(await tab.evaluate(scrape, {path}))
 	return result
 }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-    let { sessionCookieCUser, sessionCookieXs, groups, columnName, checkInCommon, checkLocal, csvName, queryColumn } = utils.validateArguments()
-    let isAFacebookGroupURL = isFacebookGroupURL(groups)
-    if (isAFacebookGroupURL === 0) {  // Facebook Group URL
+    let { sessionCookieCUser, sessionCookieXs, groups, columnName, checkInCommon, checkLocal, csvName } = utils.validateArguments()
+    let isAFacebookGroupUrl = isFacebookGroupURL(groups)
+    if (isAFacebookGroupUrl === 0) { // Facebook Group URL
 		groups = [ groups ]
 	} else if((groups.toLowerCase().indexOf("http://") === 0) || (groups.toLowerCase().indexOf("https://") === 0)) {  
 		// Link not from Facebook, trying to get CSV
 		try {
             groups = await utils.getDataFromCsv(groups, columnName)
 		} catch (err) {
-			utils.log(err, "error")
+            utils.log(err, "error")
+            nick.exit(1)
 		}
     }
     await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
     let result = []
 	for (let url of groups) {
 		if (url){
-            const isgroupURL = isFacebookGroupURL(url)
+            url = cleanFacebookUrl(url)
+            const isGroupUrl = isFacebookGroupURL(url)
 
-            if (isgroupURL === 0) {  // Facebook Group URL
-                url = parse(url)
-                url = url.hostname + url.pathname
-                if (url.slice(-1) !== "/") { url += "/" } // Add a trailing slash if none
-                utils.log(`Getting infos from ${url}...`, "loading")
+            if (isGroupUrl === 0) { // Facebook Group URL
+                url = cleanGroupUrl(url)
+                utils.log(`Getting data from ${url}...`, "loading")
                 try{
                     const firstResults = await getFirstResult(tab, url)
                     if (firstResults){
                         let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10)/25)
                         const timeMin = Math.floor(timeSec/60)
-                        timeSec = timeSec%60
+                        timeSec = timeSec % 60
                         if (timeMin && timeSec <= 9) { 
                             timeSec = "0" + timeSec 
                         }
                         utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersNumber} members, it could take up to ${timeMin ? timeMin + "m" + timeSec : timeSec}s.`, "loading")
+                    } else {
+                        utils.log(`Could not get data from ${url}, it may be a closed group you're not part of.`, "error")
+                        continue
                     }
                 } catch (err) {
                     utils.log(`Could not connect to ${url}`, "error")
@@ -204,7 +229,7 @@ nick.newTab().then(async (tab) => {
                 if (checkLocal) { browseArray.push("local_members") }
                 for (const path of browseArray){
                     try{
-                        result = result.concat(await getGroupResult(tab, url, path, queryColumn))
+                        result = result.concat(await getGroupResult(tab, url, path))
                     } catch (err) {
                         utils.log(`Could not connect to ${url + path}`, "error")
                     }
@@ -217,7 +242,7 @@ nick.newTab().then(async (tab) => {
         }
     }
 
-    const finalResult = removeDuplicates(result, "profileURL")
+    const finalResult = removeDuplicates(result, "profileUrl")
 
     await utils.saveResults(finalResult, finalResult, csvName)
 

@@ -1,12 +1,12 @@
 {
-    "slug": "facebook-connect",
-    "description": "Automatically connect to your facebook profile",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/lkd_follow_transparent.png",
+    "slug": "facebook-group-extractor",
+	"description": "Scrape Facebook profiles, names & information from members of a Facebook group",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Group_Extractor/fge_transparent.png",
     "gradientBegin": "#000046",
     "gradientEnd": "#1CB5E0",
     "argumentDescription": "",
     "hidden": true,
-    "new": true,
+    "new": false,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",
@@ -14,19 +14,18 @@
         "groups": "facebook_group_url",
         "checkInCommon": true,
         "checkLocal": true,
-        "csvName": "result",
-        "queryColumn": true
+        "csvName": "result"
     },
     "outputDescription": {
-		"profileURL": "",
-		"imageURL": "",
-		"name": "",
-		"firstLine": "",
-		"secondLine": "",
-		"category": "",
-        "inCommon": "",
-        "localMember": "",
-        "groupName": ""
+		"profileURL": "Facebook profile URL",
+		"imageURL": "Profile picture URL",
+		"name": "Full name",
+		"firstLine": "First line of profile info, such as job or joined date",
+		"secondLine": "Second line of profile info, such as location or friends in common",
+		"category": "Friend, Admin, or both",
+        "inCommon": "Groups or friends in common - Optional",
+        "localMember": "If the member is from your location - Optional",
+        "groupName": "Name of the Facebook Group"
 	},
     "defaultArgumentAllowed": true,
     "argumentForm": {
@@ -35,24 +34,24 @@
             "options": {
                 "fields": {
                     "sessionCookieCUser": {
-                        "label": "Session cookie x_user <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie c_user <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your c_user session cookie here"
                     },
                     "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie xs <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your xs session cookie here"
                     },
 					"groups": {
 						"helpers": [
-							"Enter either a facebook group url <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"Enter either a Facebook Group URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Facebook groups url <a href=\"/api-store/3149/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
+						"label": "Facebook Group URL / Spreadsheet <a href=\"/api-store/6987/facebook-group-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
 						"placeholder": "https://www.facebook.com/groups/HUMOUR2TOTO"
                     },
                     "columnName": {
-                        "label": "Column name from which to get profile URLs",
-                        "placeholder": "LinkedIn Profile Link",
+                        "label": "Column name from which to get groups URLs",
+                        "placeholder": "Facebook Group Column",
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "checkInCommon": {
@@ -62,11 +61,8 @@
                         "rightLabel": "<b>Scrape additional data about Members from your location</b> (takes longer)"
                     },
 					"csvName": {
-                        "label": "Name of resulting CSV file <a href=\"/api-store/2852/linkedin-group-members#section_csv\" target=\"_blank\">(?)</a>",
+                        "label": "Name of resulting CSV file",
                         "placeholder": "result"
-					},
-                    "queryColumn": {
-						"rightLabel": "<b>Write back the group name in the result CSV</b>"
 					}
                 }
             }
@@ -103,10 +99,6 @@
             "csvName": {
 				"type": "string",
 				"required": false
-			},
-            "queryColumn": {
-				"type": "boolean",
-				"required": true
 			}
         }
     }
