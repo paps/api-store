@@ -1,6 +1,6 @@
 {
 	"slug": "chrome-extension-review-extractor",
-	"description": "Get all reviews for chrome extension marketplace",
+	"description": "Get all reviews from the Chrome Web Store",
 	"argumentDescription": "",
 	"gradientBegin": "#35C2DB",
 	"gradientEnd": "#35C2BF",
@@ -10,7 +10,16 @@
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(....)",
 		"extensionsPerLaunch": 2
 	},
-	"defaultArgumentAllowed": true,
+	"outputDescription": {
+		"profileImg": "",
+		"name": "",
+		"profileLink": "The Google+ link of the review author",
+		"date": "Time when the review was written/modified",
+		"mark": "",
+		"review": "The review content",
+		"url": "The Chrome Extension URL"
+	},
+	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -24,7 +33,7 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or an Extension URL",
+						"label": "Spreadsheet URL or an Extension URL <a href=\"api-store/6817/chrome-extension-review-extractor#section_4addagooglespreadsheet\" target=\"_blank\">(?)<a/>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or an Extension URL"
 					},
 					"columnName": {
