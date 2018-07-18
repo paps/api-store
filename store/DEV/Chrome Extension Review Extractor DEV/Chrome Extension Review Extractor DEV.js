@@ -91,9 +91,9 @@ const getReviews = (arg, cb) => {
 			review.name = reviewer.textContent.trim()
 			review.profileLink = reviewer.href
 		}
-		review.time = el.querySelector("span[ga\\:type=Timestamp]").textContent.trim()
+		review.date = el.querySelector("span[ga\\:type=Timestamp]").textContent.trim()
 		review.mark = el.querySelectorAll("div.rsw-starred").length
-		review.note = el.querySelector("div[ga\\:type=Comment]").textContent.trim()
+		review.review = el.querySelector("div[ga\\:type=Comment]").textContent.trim()
 		review.url = arg.url
 		return review
 	})

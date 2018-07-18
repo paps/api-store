@@ -5,7 +5,7 @@ const {promisify} = require("util")
 const jsonexport = promisify(require("jsonexport"))
 const validator = require("is-my-json-valid")
 const needle = require("needle")
-const { URL } = require("url")
+const { URL, parse } = require("url")
 // }
 
 /**
@@ -540,6 +540,18 @@ class StoreUtilities {
 		return finalArgs
 	}
 
+	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
+	adjustUrl(url, domain){
+		let urlObject = parse(url.toLowerCase())
+		if (urlObject.pathname.startsWith(domain)) {
+			urlObject = parse("https://www." + url)
+		}
+		if (urlObject.pathname.startsWith("www." + domain)) {
+			urlObject = parse("https://" + url)
+		}
+		return urlObject.href
+	}
+	
 }
 
 module.exports = StoreUtilities
