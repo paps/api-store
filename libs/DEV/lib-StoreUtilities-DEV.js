@@ -541,7 +541,7 @@ class StoreUtilities {
 	}
 
 	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
-	adjustUrl(url, domain){
+	adjustUrl(url, domain) {
 		let urlObject = parse(url.toLowerCase())
 		if (urlObject.pathname.startsWith(domain)) {
 			urlObject = parse("https://www." + url)
@@ -551,7 +551,7 @@ class StoreUtilities {
 		}
 		return urlObject.href
 	}
-	
+
 }
 
 module.exports = StoreUtilities
