@@ -1,6 +1,7 @@
 // Phantombuster configuration {
 "phantombuster dependencies: lib-Hunter.js"
 // }
+const { parse } = require ("url")
 
 /**
  * NOTE: Slowly but surely loading all sections of the profile
@@ -582,6 +583,40 @@ class LinkedInScraper {
 		}
 		this.utils.log("Profile visited", "done")
 	}
+
+
+	// converts a Sales Navigator profile to a classic LinkedIn profile
+	async salesNavigatorUrlConverter(url) {
+		let urlObject = parse(url)
+		if (!urlObject.pathname.startsWith("/sales")) { // Not a Sales Navigator link
+			return url
+		}
+		try {
+			const tab = await this.nick.newTab()
+			await tab.open(url)
+			const selectors = ["code"]
+			await tab.waitUntilPresent(selectors, 7500, "or")
+			await tab.wait(2000)
+			const codeTags = await tab.evaluate((arg, callback) => {
+				const codes = Array.prototype.slice.call(document.querySelectorAll("code"))
+				for (const code of codes) {
+					if (code.textContent.includes("flagship")) { callback(null, code.textContent) }
+				}
+				callback(null, null)
+			})
+			if (codeTags) {
+				const convertedUrl = JSON.parse(codeTags).flagshipProfileUrl
+				this.utils.log(`Converting ${url} to ${convertedUrl}`, "info")
+				return convertedUrl
+			} else {
+				return url
+			}
+		} catch (err) {
+			this.utils.log(`Could not open ${url}, ${err}`, "error")
+		}
+		return url
+	}
+
 }
 
 module.exports = LinkedInScraper
