@@ -1,9 +1,9 @@
 {
     "slug": "facebook-group-extractor",
 	"description": "Scrape Facebook profiles, names & information from members of a Facebook group",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Group_Extractor/fge_transparent.png",
-    "gradientBegin": "#000046",
-    "gradientEnd": "#1CB5E0",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/facebook_group_extractor/Facebook+Group+Extractor.png",
+    "gradientBegin": "#4267B2",
+    "gradientEnd": "#19A3D1",
     "argumentDescription": "",
     "hidden": true,
     "new": false,
