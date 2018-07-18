@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js"
 
 const { parse } = require("url")
 
@@ -17,14 +17,14 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 
-const isFacebookGroupURL = (targetUrl) => {
-	let urlObject = parse(targetUrl)
+const isFacebookGroupUrl = (targetUrl) => {
+    let urlObject = parse(targetUrl.toLowerCase())
     if (urlObject.pathname.startsWith("facebook")) {
         urlObject = parse("https://www." + targetUrl)
     }
@@ -38,17 +38,6 @@ const isFacebookGroupURL = (targetUrl) => {
 		return -1
 	}
 	return 1
-}
-
-const cleanFacebookUrl = (url) => {
-    let urlObject = parse(url.toLowerCase())
-    if (urlObject.pathname.startsWith("facebook")) {
-        urlObject = parse("https://www." + url)
-    }
-    if (urlObject.pathname.startsWith("www.facebook")) {
-        urlObject = parse("https://" + url)
-    }
-    return urlObject.href
 }
 
 const cleanGroupUrl = (url) => {
@@ -100,7 +89,7 @@ const scrape = (arg, callback) => {
         // a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
         let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0,url.indexOf("&")) : url.slice(0, url.indexOf("?"))
         let newInfos = { profileUrl }
-        newInfos.imageURL = result.querySelector("img").src
+        newInfos.imageUrl = result.querySelector("img").src
         newInfos.name = result.querySelector("img").getAttribute("aria-label")
         if (arg.path === "admins") {
             newInfos.category = result.querySelector(".friendButton") ? "Friend - Admin" : "Admin"
@@ -185,7 +174,7 @@ const getGroupResult = async (tab, url, path) => {
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
     let { sessionCookieCUser, sessionCookieXs, groups, columnName, checkInCommon, checkLocal, csvName } = utils.validateArguments()
-    let isAFacebookGroupUrl = isFacebookGroupURL(groups)
+    let isAFacebookGroupUrl = isFacebookGroupUrl(groups)
     if (isAFacebookGroupUrl === 0) { // Facebook Group URL
 		groups = [ groups ]
 	} else if((groups.toLowerCase().indexOf("http://") === 0) || (groups.toLowerCase().indexOf("https://") === 0)) {  
@@ -201,8 +190,8 @@ nick.newTab().then(async (tab) => {
     let result = []
 	for (let url of groups) {
 		if (url){
-            url = cleanFacebookUrl(url)
-            const isGroupUrl = isFacebookGroupURL(url)
+            url = utils.adjustUrl(url, "facebook")
+            const isGroupUrl = isFacebookGroupUrl(url)
 
             if (isGroupUrl === 0) { // Facebook Group URL
                 url = cleanGroupUrl(url)

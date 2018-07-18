@@ -24,7 +24,7 @@ const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 
 const isFacebookGroupUrl = (targetUrl) => {
-    let urlObject = parse(targetUrl)
+    let urlObject = parse(targetUrl.toLowerCase())
     if (urlObject.pathname.startsWith("facebook")) {
         urlObject = parse("https://www." + targetUrl)
     }
@@ -38,17 +38,6 @@ const isFacebookGroupUrl = (targetUrl) => {
         return -1
     }
     return 1
-}
-
-const cleanFacebookUrl = (url) => {
-    let urlObject = parse(url.toLowerCase())
-    if (urlObject.pathname.startsWith("facebook")) {
-        urlObject = parse("https://www." + url)
-    }
-    if (urlObject.pathname.startsWith("www.facebook")) {
-        urlObject = parse("https://" + url)
-    }
-    return urlObject.href
 }
 
 const cleanGroupUrl = (url) => {
@@ -201,7 +190,7 @@ nick.newTab().then(async (tab) => {
     let result = []
     for (let url of groups) {
         if (url){
-            url = cleanFacebookUrl(url)
+            url = utils.adjustUrl(url, "facebook")
             const isGroupUrl = isFacebookGroupUrl(url)
 
             if (isGroupUrl === 0) { // Facebook Group URL
