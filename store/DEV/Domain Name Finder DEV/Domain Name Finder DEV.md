@@ -55,18 +55,6 @@ Once the script has finished its work, download the CSV by clicking on "**Link (
 
 <center>![](https://phantombuster.imgix.net/api-store/Linkedin_Post_commenters/download.png)</center>
 
-# ⚙️️Repetition setup ⚙️
-
-Now that your API is ready, you just have to customize it to make it work repetitively.
-
-Every time the API is launched, it will find as much as websites URLs and stop. (You can adjust the execution time limit in the API settings.)
-
-To do so, simply hit the "Settings" button to define when your API is launched, and how many time it will run.
-
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/repetitive.gif)</center>
-
-Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
-
 <center>---</center>
 
 # ⚙️ For developers 🤓

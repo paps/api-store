@@ -28,6 +28,8 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
+const DB_NAME = "result.csv"
+const DB_SHORT_NAME = DB_NAME.split(".").shift()
 /* global psl */
 
 // }
@@ -149,10 +151,22 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 // Main function to launch everything and handle errors
 ;(async () => {
 	let {spreadsheetUrl, companies, columnName, blacklist} = utils.validateArguments()
+	let db = await utils.getDb(DB_NAME)
+
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(companies) === "string") {
 		companies = [companies]
+	}
+
+	/**
+	 * We need to lowercase all inputs to check if there were already scraped,
+	 * since getDomainName return the query in lowercase
+	 */
+	companies = companies.filter(el => db.findIndex(line => line.query === el.toLowerCase()) < 0)
+	if (companies.length < 1) {
+		utils.log("Input is empty OR all queries are already scraped", "warning")
+		nick.exit(0)
 	}
 
 	blacklist = blacklist || []
@@ -182,7 +196,8 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		}
 		i++
 	}
-	await utils.saveResult(result)
+	db.push(...result)
+	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
 	nick.exit()
 })()
 .catch(err => {

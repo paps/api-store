@@ -46,22 +46,6 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-# ⚙️️Repetition setup ⚙️
-
-Now that your API is ready, you just have to customize it to make it work repetitively.
-
-Every time the API is launched, it will scrape 2 extensions and stop. (you can change this value in your API configuration)
-
-To do so, simply hit the “Settings” button to define when your API is launched:
-
-<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
-
-Then, select a frequency:
-
-<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
-
-Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page.
-
 For example, 2 extensions scraped per launch, 8 launches per day: you'll have 16 extensions scraped per day.
 
 # Limits

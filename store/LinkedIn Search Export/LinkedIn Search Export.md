@@ -74,6 +74,7 @@ You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) cont
 **More advanced search queries are also possible** using keywords allowed by LinkedIn: `OR` & `AND` (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even `school:`, `company:`... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>).
 
 **Even more advanced:** You can also paste into the _search_ field a LinkedIn search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field.
+You can also append in the search page URL `&page=x` _(x represents a page number)_ to let know the API where it should start to scrape data in the LinkedIn result.
 
 ## 6. Which circles 💫?
 
