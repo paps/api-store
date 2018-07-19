@@ -10,12 +10,12 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-    loadImages: false,
-    printPageErrors: false,
-    printResourceErrors: false,
-    printNavigation: false,
-    printAborts: false,
-    debug: false,
+	loadImages: false,
+	printPageErrors: false,
+	printResourceErrors: false,
+	printNavigation: false,
+	printAborts: false,
+	debug: false,
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -25,7 +25,7 @@ const facebook = new Facebook(nick, buster, utils)
 
 const isFacebookGroupUrl = (targetUrl) => {
     let urlObject = parse(targetUrl.toLowerCase())
-    if (urlObject.pathname.startsWith("facebook")) {
+	if (urlObject.pathname.startsWith("facebook")) {
         urlObject = parse("https://www." + targetUrl)
     }
     if (urlObject.pathname.startsWith("www.facebook")) {
@@ -80,7 +80,7 @@ const firstScrape = (arg, callback) => {
 }
 
 const scrape = (arg, callback) => {
-    const groupName = document.querySelector("#seo_h1_tag a").textContent
+	const groupName = document.querySelector("#seo_h1_tag a").textContent
     const results = document.querySelectorAll(".uiList.clearfix > div")
     const data = []
     for (const result of results) {
@@ -148,23 +148,33 @@ const getGroupResult = async (tab, url, path) => {
         return result
     }
     let moreToLoad
-    let profilesLoaded = 15
+    let profilesLoaded = 0, moreProfilesLoaded = 0
+    let showMessage = 1
     do{
         try {
             await tab.scrollToBottom()
-            await tab.wait(600)
+            await tab.wait(200)
+            moreProfilesLoaded = await tab.evaluate((arg, callback) => {
+                callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
+            })
             moreToLoad = await tab.evaluate((arg, callback) => {
                 callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
             })
-            if (profilesLoaded % 300 === 0) { utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading") }
-            profilesLoaded+=15
+            if (showMessage % 15 === 0) {
+                utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading")
+                showMessage++
+            }
+            if (moreProfilesLoaded > profilesLoaded) {
+                showMessage++
+                profilesLoaded = moreProfilesLoaded
+            }
             const timeLeft = await utils.checkTimeLeft()
             if (!timeLeft.timeLeft) {
                 utils.log(timeLeft.message, "warning")
                 break
             }
         } catch (err) {
-            utils.log("Error scrolling down the page", "error") 
+           utils.log("Error scrolling down the page", "error") 
         }
     } while (moreToLoad)
     result = result.concat(await tab.evaluate(scrape, {path}))
@@ -188,9 +198,9 @@ nick.newTab().then(async (tab) => {
     }
     await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
     let result = []
-    for (let url of groups) {
-        if (url){
-            url = utils.adjustUrl(url, "facebook")
+	for (let url of groups) {
+		if (url) {
+			url = utils.adjustUrl(url, "facebook")
             const isGroupUrl = isFacebookGroupUrl(url)
 
             if (isGroupUrl === 0) { // Facebook Group URL
@@ -198,9 +208,9 @@ nick.newTab().then(async (tab) => {
                 utils.log(`Getting data from ${url}...`, "loading")
                 try{
                     const firstResults = await getFirstResult(tab, url)
-                    if (firstResults){
-                        let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10)/25)
-                        const timeMin = Math.floor(timeSec/60)
+                    if (firstResults) {
+                        let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10) / 25)
+                        const timeMin = Math.floor(timeSec / 60)
                         timeSec = timeSec % 60
                         if (timeMin && timeSec <= 9) { 
                             timeSec = "0" + timeSec 

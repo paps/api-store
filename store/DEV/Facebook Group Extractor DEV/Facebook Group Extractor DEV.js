@@ -25,19 +25,19 @@ const facebook = new Facebook(nick, buster, utils)
 
 const isFacebookGroupUrl = (targetUrl) => {
     let urlObject = parse(targetUrl.toLowerCase())
-    if (urlObject.pathname.startsWith("facebook")) {
+	if (urlObject.pathname.startsWith("facebook")) {
         urlObject = parse("https://www." + targetUrl)
     }
     if (urlObject.pathname.startsWith("www.facebook")) {
         urlObject = parse("https://" + targetUrl)
     }
-	if (urlObject && urlObject.hostname) {
-		if (urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
-			return 0
-		}
-		return -1
-	}
-	return 1
+    if (urlObject && urlObject.hostname) {
+        if (urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
+            return 0
+        }
+        return -1
+    }
+    return 1
 }
 
 const cleanGroupUrl = (url) => {
@@ -74,16 +74,16 @@ const firstScrape = (arg, callback) => {
     const groupName = document.querySelector("#seo_h1_tag a").textContent
     const membersNumber = document.querySelector("#groupsMemberBrowser div div div span").textContent
 
-	const data = {groupName, membersNumber}
-	
-	callback(null, data)
+    const data = {groupName, membersNumber}
+    
+    callback(null, data)
 }
 
 const scrape = (arg, callback) => {
-    const groupName = document.querySelector("#seo_h1_tag a").textContent
+	const groupName = document.querySelector("#seo_h1_tag a").textContent
     const results = document.querySelectorAll(".uiList.clearfix > div")
-	const data = []
-	for (const result of results) {
+    const data = []
+    for (const result of results) {
         const url = result.querySelector("a").href
         
         // a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
@@ -120,11 +120,11 @@ const scrape = (arg, callback) => {
         
         data.push(newInfos)
     } 
-	callback(null, data)
+    callback(null, data)
 }
 
 const getFirstResult = async (tab, url) => {
-	const selectors = ["#groupsMemberBrowser"]
+    const selectors = ["#groupsMemberBrowser"]
     await tab.open(url + "members")
     try {
         await tab.waitUntilVisible(selectors, 7500, "or")
@@ -133,13 +133,13 @@ const getFirstResult = async (tab, url) => {
         return null
     }
     const result = await tab.evaluate(firstScrape)
-	return result
+    return result
 }
 
 const getGroupResult = async (tab, url, path) => {
     utils.log(`Getting data from ${url + path}...`, "loading")
-	let result = []
-	const selectors = ["#groupsMemberBrowserContent"]
+    let result = []
+    const selectors = ["#groupsMemberBrowserContent"]
     await tab.open(url + path)
     try {
         await tab.waitUntilVisible(selectors, 7500, "or")
@@ -148,16 +148,26 @@ const getGroupResult = async (tab, url, path) => {
         return result
     }
     let moreToLoad
-    let profilesLoaded = 15
+    let profilesLoaded = 0, moreProfilesLoaded = 0
+    let showMessage = 1
     do{
         try {
             await tab.scrollToBottom()
-            await tab.wait(600)
+            await tab.wait(200)
+            moreProfilesLoaded = await tab.evaluate((arg, callback) => {
+                callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
+            })
             moreToLoad = await tab.evaluate((arg, callback) => {
                 callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
             })
-            if (profilesLoaded % 300 === 0) { utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading") }
-            profilesLoaded+=15
+            if (showMessage % 15 === 0) {
+                utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading")
+                showMessage++
+            }
+            if (moreProfilesLoaded > profilesLoaded) {
+                showMessage++
+                profilesLoaded = moreProfilesLoaded
+            }
             const timeLeft = await utils.checkTimeLeft()
             if (!timeLeft.timeLeft) {
                 utils.log(timeLeft.message, "warning")
@@ -168,7 +178,7 @@ const getGroupResult = async (tab, url, path) => {
         }
     } while (moreToLoad)
     result = result.concat(await tab.evaluate(scrape, {path}))
-	return result
+    return result
 }
 
 // Main function to launch all the others in the good order and handle some errors
@@ -176,21 +186,21 @@ nick.newTab().then(async (tab) => {
     let { sessionCookieCUser, sessionCookieXs, groups, columnName, checkInCommon, checkLocal, csvName } = utils.validateArguments()
     let isAFacebookGroupUrl = isFacebookGroupUrl(groups)
     if (isAFacebookGroupUrl === 0) { // Facebook Group URL
-		groups = [ groups ]
-	} else if((groups.toLowerCase().indexOf("http://") === 0) || (groups.toLowerCase().indexOf("https://") === 0)) {  
-		// Link not from Facebook, trying to get CSV
-		try {
+        groups = [ groups ]
+    } else if((groups.toLowerCase().indexOf("http://") === 0) || (groups.toLowerCase().indexOf("https://") === 0)) {  
+        // Link not from Facebook, trying to get CSV
+        try {
             groups = await utils.getDataFromCsv(groups, columnName)
-		} catch (err) {
+        } catch (err) {
             utils.log(err, "error")
             nick.exit(1)
-		}
+        }
     }
     await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
     let result = []
 	for (let url of groups) {
-		if (url){
-            url = utils.adjustUrl(url, "facebook")
+		if (url) {
+			url = utils.adjustUrl(url, "facebook")
             const isGroupUrl = isFacebookGroupUrl(url)
 
             if (isGroupUrl === 0) { // Facebook Group URL
@@ -198,9 +208,9 @@ nick.newTab().then(async (tab) => {
                 utils.log(`Getting data from ${url}...`, "loading")
                 try{
                     const firstResults = await getFirstResult(tab, url)
-                    if (firstResults){
-                        let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10)/25)
-                        const timeMin = Math.floor(timeSec/60)
+                    if (firstResults) {
+                        let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10) / 25)
+                        const timeMin = Math.floor(timeSec / 60)
                         timeSec = timeSec % 60
                         if (timeMin && timeSec <= 9) { 
                             timeSec = "0" + timeSec 
