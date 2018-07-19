@@ -244,7 +244,7 @@ nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
-		{ name: "message", type: "string", default: "", maxLength: 280 },
+		{ name: "message", type: "string", default: "", maxLength: 300 },
 		{ name: "onlySecondCircle", type: "boolean", default: false },
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
 		{ name: "columnName", type: "string", default: "" },

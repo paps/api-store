@@ -86,7 +86,7 @@ You can also specify the name of the column that contains the profile links. Sim
 ## 6. Add a private personalized message 🆕 💬
 Below the column name you'll find the **message** configuration. This step isn’t mandatory but highly recommended.
 
-In the message textbox you can write a private note (**Total: 280 characters MAX**) which will be sent to the profile included in your Google spreadsheet list in addition to the invitation to join your network.
+In the message textbox you can write a private note (**Total: 300 characters MAX**) which will be sent to the profile included in your Google spreadsheet list in addition to the invitation to join your network.
 
 \#firstName\# will be replaced in your message by the first name of the person you’re adding
 

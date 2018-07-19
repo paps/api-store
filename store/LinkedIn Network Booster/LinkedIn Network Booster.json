@@ -49,7 +49,7 @@
 						"type": "textarea",
 						"helpers": [
 							"Use #firstName# to insert the first name of the person you are adding in your message",
-							"You are limited by LinkedIn to 280 characters",
+							"You are limited by LinkedIn to 300 characters",
 							"Leave empty to send invites without message (not recommended)"
 						]
 					},
@@ -89,7 +89,7 @@
 			},
 			"message": {
 				"type": "string",
-				"maxLength": 280
+				"maxLength": 300
 			},
 			"hunterApiKey": {
 				"type": "string",
