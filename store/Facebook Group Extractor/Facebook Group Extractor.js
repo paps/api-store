@@ -10,12 +10,12 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
-	printPageErrors: false,
-	printResourceErrors: false,
-	printNavigation: false,
-	printAborts: false,
-	debug: false,
+    loadImages: false,
+    printPageErrors: false,
+    printResourceErrors: false,
+    printNavigation: false,
+    printAborts: false,
+    debug: false,
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -23,13 +23,26 @@ const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 
-const isFacebookGroupUrl = (targetUrl) => {
-    let urlObject = parse(targetUrl.toLowerCase())
-	if (urlObject.pathname.startsWith("facebook")) {
-        urlObject = parse("https://www." + targetUrl)
+let result
+
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+    for (const line of db) {
+        if (cleanGroupUrl(str) === line.groupUrl) {
+            return false
+        }
+    }   
+    return true
+}
+
+// Checks if a url is a facebook group url
+const isFacebookGroupUrl = (url) => {
+    let urlObject = parse(url.toLowerCase())
+    if (urlObject.pathname.startsWith("facebook")) {
+        urlObject = parse("https://www." + url)
     }
     if (urlObject.pathname.startsWith("www.facebook")) {
-        urlObject = parse("https://" + targetUrl)
+        urlObject = parse("https://" + url)
     }
     if (urlObject && urlObject.hostname) {
         if (urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
@@ -40,13 +53,15 @@ const isFacebookGroupUrl = (targetUrl) => {
     return 1
 }
 
+// Forces the url to the group homepage
 const cleanGroupUrl = (url) => {
     const urlObject = parse(url)
-    let cleanUrl = urlObject.pathname.slice(8)
-    cleanUrl = cleanUrl.slice(0,cleanUrl.indexOf("/"))
-    return "www.facebook.com/groups/" + cleanUrl + "/"
+    let cleanName = urlObject.pathname.slice(8)
+    if (cleanName.includes("/")) { cleanName = cleanName.slice(0,cleanName.indexOf("/")) }
+    return "www.facebook.com/groups/" + cleanName + "/"
 }
 
+// Removes any duplicate member while keeping the most information
 const removeDuplicates = (arr, key) => {
     let resultArray = []
     for (let i = 0; i < arr.length ; i++) {
@@ -70,17 +85,18 @@ const removeDuplicates = (arr, key) => {
     return resultArray
 }
 
+// Getting the group name and member count
 const firstScrape = (arg, callback) => {
     const groupName = document.querySelector("#seo_h1_tag a").textContent
-    const membersNumber = document.querySelector("#groupsMemberBrowser div div div span").textContent
+    const membersCount = document.querySelector("#groupsMemberBrowser div div div span").textContent
 
-    const data = {groupName, membersNumber}
+    const data = {groupName, membersCount}
     
     callback(null, data)
 }
 
 const scrape = (arg, callback) => {
-	const groupName = document.querySelector("#seo_h1_tag a").textContent
+    const groupName = document.querySelector("#seo_h1_tag a").textContent
     const results = document.querySelectorAll(".uiList.clearfix > div")
     const data = []
     for (const result of results) {
@@ -117,6 +133,7 @@ const scrape = (arg, callback) => {
         }
 
         newInfos.groupName = groupName
+        newInfos.groupUrl = arg.url
         
         data.push(newInfos)
     } 
@@ -136,54 +153,64 @@ const getFirstResult = async (tab, url) => {
     return result
 }
 
-const getGroupResult = async (tab, url, path) => {
+const getGroupResult = async (tab, url, path, totalCount) => {
     utils.log(`Getting data from ${url + path}...`, "loading")
     let result = []
-    const selectors = ["#groupsMemberBrowserContent"]
     await tab.open(url + path)
     try {
-        await tab.waitUntilVisible(selectors, 7500, "or")
+        await tab.waitUntilVisible("#groupsMemberBrowserContent", 7500)
     } catch (err) {
         // No need to go any further, if the API can't determine if there are (or not) results in the opened page
         return result
     }
     let moreToLoad
-    let profilesLoaded = 0, moreProfilesLoaded = 0
-    let showMessage = 1
+    let profilesCount = 0 
+    let showMessage = 0
+    let lastScrollDate = new Date()
     do{
         try {
-            await tab.scrollToBottom()
-            await tab.wait(200)
-            moreProfilesLoaded = await tab.evaluate((arg, callback) => {
+
+            const checkProfilesCount = await tab.evaluate((arg, callback) => {
                 callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
             })
             moreToLoad = await tab.evaluate((arg, callback) => {
                 callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
             })
-            if (showMessage % 15 === 0) {
-                utils.log(`Loaded about ${profilesLoaded} profiles...`, "loading")
+
+            if (checkProfilesCount > profilesCount) {
                 showMessage++
+                profilesCount = checkProfilesCount
+                if (showMessage % 20 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
+                buster.progressHint(profilesCount / totalCount, `${profilesCount} profiles loaded`)
+                await tab.scrollToBottom()
+                lastScrollDate = new Date()
+            } else {
+                await tab.wait(200)
             }
-            if (moreProfilesLoaded > profilesLoaded) {
-                showMessage++
-                profilesLoaded = moreProfilesLoaded
-            }
+
             const timeLeft = await utils.checkTimeLeft()
             if (!timeLeft.timeLeft) {
                 utils.log(timeLeft.message, "warning")
                 break
             }
+
+            if (new Date() - lastScrollDate > 15000) {
+                utils.log("Scrolling took too long", "warning")
+                break
+            }  
         } catch (err) {
-           utils.log("Error scrolling down the page", "error") 
+            utils.log("Error scrolling down the page", "error") 
         }
     } while (moreToLoad)
-    result = result.concat(await tab.evaluate(scrape, {path}))
+    buster.progressHint(1, `${profilesCount} profiles loaded`)
+    result = result.concat(await tab.evaluate(scrape, {url, path}))
     return result
 }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
     let { sessionCookieCUser, sessionCookieXs, groups, columnName, checkInCommon, checkLocal, csvName } = utils.validateArguments()
+    if (!csvName) { csvName = "result" }
     let isAFacebookGroupUrl = isFacebookGroupUrl(groups)
     if (isAFacebookGroupUrl === 0) { // Facebook Group URL
         groups = [ groups ]
@@ -191,31 +218,31 @@ nick.newTab().then(async (tab) => {
         // Link not from Facebook, trying to get CSV
         try {
             groups = await utils.getDataFromCsv(groups, columnName)
+            groups = groups.filter(url => utils.adjustUrl(url, "facebook")) // removing empty lines
+            result = await utils.getDb(csvName + ".csv")
+            const lastUrl = groups[groups.length - 1]
+            groups = groups.filter(str => checkDb(str, result))
+            if (groups.length < 1) { groups = [lastUrl] } // if every group's already been scraped, we're scrapping the last one
+            utils.log(`Groups to scrape: ${JSON.stringify(groups, null, 2)}`, "done")
         } catch (err) {
             utils.log(err, "error")
             nick.exit(1)
         }
     }
     await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
-    let result = []
-	for (let url of groups) {
-		if (url) {
-			url = utils.adjustUrl(url, "facebook")
+    for (let url of groups) {
+        if (url) {
+            url = utils.adjustUrl(url, "facebook")
             const isGroupUrl = isFacebookGroupUrl(url)
 
             if (isGroupUrl === 0) { // Facebook Group URL
                 url = cleanGroupUrl(url)
                 utils.log(`Getting data from ${url}...`, "loading")
+                let firstResults
                 try{
-                    const firstResults = await getFirstResult(tab, url)
+                    firstResults = await getFirstResult(tab, url)
                     if (firstResults) {
-                        let timeSec = 9 + Math.floor((1 + 1 * checkInCommon + 0.2 * checkLocal) * parseInt(firstResults.membersNumber.replace(/\s+/g, ""), 10) / 25)
-                        const timeMin = Math.floor(timeSec / 60)
-                        timeSec = timeSec % 60
-                        if (timeMin && timeSec <= 9) { 
-                            timeSec = "0" + timeSec 
-                        }
-                        utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersNumber} members, it could take up to ${timeMin ? timeMin + "m" + timeSec : timeSec}s.`, "loading")
+                        utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
                     } else {
                         utils.log(`Could not get data from ${url}, it may be a closed group you're not part of.`, "error")
                         continue
@@ -228,7 +255,7 @@ nick.newTab().then(async (tab) => {
                 if (checkLocal) { browseArray.push("local_members") }
                 for (const path of browseArray){
                     try{
-                        result = result.concat(await getGroupResult(tab, url, path))
+                        result = result.concat(await getGroupResult(tab, url, path, parseInt(firstResults.membersCount.replace(/\s+/g, ""), 10)))
                     } catch (err) {
                         utils.log(`Could not connect to ${url + path}`, "error")
                     }
