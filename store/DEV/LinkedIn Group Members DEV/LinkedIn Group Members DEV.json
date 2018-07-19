@@ -12,9 +12,26 @@
 		"groupName": ""
 	},
 	"outputDescription": {
-		"name": "",
-		"info": "Current job/position",
-		"profileLink": "LinkedIn profile URL"
+		"profileUrl": "LinkedIn profile URL",
+		"firstName": "",
+		"lastName": "",
+		"fullName": "",
+		"headline": "LinkedIn profile description",
+		"company": "Current company name",
+		"title": "Current job/position",
+		"companyUrl": "LinkedIn company URL",
+		"location": "",
+		"industry": "Industry sector",
+		"school": "",
+		"skill1": "",
+		"skill2": "",
+		"skill3": "",
+		"group1": "",
+		"group2": "",
+		"group3": "",
+		"groupUrl1": "",
+		"groupUrl2": "",
+		"groupUrl3": ""
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
