@@ -156,8 +156,7 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 		if (topic.indexOf("writers") >= 0) {
 			topic = tmp.pop()
 		}
-	}
-	else {
+	} else {
 		topic = argv.topic
 	}
 	await logToQuora(tab, `https://www.quora.com/topic/${topic}/writers`, argv.ms, argv.mb)

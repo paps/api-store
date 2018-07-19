@@ -36,7 +36,7 @@ const linkedinObjectToResult = response => {
 			if (element.recommendedEntity && element.recommendedEntity["com.linkedin.voyager.feed.packageRecommendations.RecommendedMember"]) {
 				if (element.recommendedEntity["com.linkedin.voyager.feed.packageRecommendations.RecommendedMember"].miniProfile) {
 					const miniProfile = element.recommendedEntity["com.linkedin.voyager.feed.packageRecommendations.RecommendedMember"].miniProfile
-					newFollower.profileLink =  `https://linkedin.com/in/${miniProfile.publicIdentifier}`
+					newFollower.profileLink = `https://linkedin.com/in/${miniProfile.publicIdentifier}`
 					newFollower.firstName = miniProfile.firstName
 					newFollower.lastName = miniProfile.lastName
 					newFollower.occupation = miniProfile.occupation

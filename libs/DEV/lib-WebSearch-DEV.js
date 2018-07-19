@@ -331,7 +331,7 @@ class WebSearch {
 	/**
 	 * @description This method toggles the current verbose level
 	 */
-	toggleVerbose() {this.verbose = !this.verbose}
+	toggleVerbose() { this.verbose = !this.verbose }
 
 	/**
 	 * @description Getter to know if there are some engines available
@@ -363,7 +363,7 @@ class WebSearch {
 	async searchBatch(queries) {
 		let results = []
 
-		for (const one of queries)  {
+		for (const one of queries) {
 			results.push(await this.search(one))
 		}
 		return results
