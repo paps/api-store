@@ -17,8 +17,11 @@
 		]
 	},
 	"outputDescription": {
-		"companyName": "Provided company name",
-		"companyDomain": "Corresponding company domain link"
+		"query": "Provided company name",
+		"domain": "Corresponding company domain link",
+		"title": "Result title found from the web engine",
+		"description": "Result description found from the web engine",
+		"link": "Result URL found from the web engine"
 	},
 	"defaultArgumentAllowed": true,
 	"argumentForm": {
