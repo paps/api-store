@@ -258,9 +258,10 @@ nick.newTab().then(async (tab) => {
 	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
-	for (const url of urls) {
+	for (let url of urls) {
 		try {
 			utils.log(`Adding ${url}...`, "loading")
+			url = await linkedInScraper.salesNavigatorUrlConverter(url)
 			await addLinkedinFriend(url, tab, message, onlySecondCircle, disableScraping)
 		} catch (error) {
 			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")

@@ -142,13 +142,14 @@ const removeLinkedinSubdomains = url => {
 	await linkedIn.login(tab, sessionCookie)
 
 	const result = []
-	for (const url of urls) {
+	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 		try {
+			url = await linkedInScraper.salesNavigatorUrlConverter(url)
 			utils.log(`Opening page ${url}`, "loading")
 			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(url))
 			/**
