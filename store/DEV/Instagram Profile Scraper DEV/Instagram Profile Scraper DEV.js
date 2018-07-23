@@ -32,11 +32,8 @@ const getUrlsToScrape = (data, numberOfPagesPerLaunch) => {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-
 	while (i < numberOfPagesPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
+		urls.push(data.shift().trim())
 		i++
 	}
 
@@ -50,7 +47,7 @@ const checkDb = (str, db) => {
 			return false
 		}
 	}   
-    return true
+	return true
 }
 
 const cleanInstagramUrl = (url) => {
@@ -70,10 +67,10 @@ const scrapePage = (arg, callback) => {
 	let postsCount = 0
 	let followersCount = 0
 	let followingCount = 0
-	data.username = document.querySelector("header > section > div > h1").textContent
+	data.profileName = document.querySelector("header > section > div > h1").textContent
 	data.imageUrl = document.querySelector("header > div img").src
 	if (document.querySelector("main header section div:nth-of-type(2) h1")) {
-		data.name = document.querySelector("main header section div:nth-of-type(2) h1").textContent
+		data.fullName = document.querySelector("main header section div:nth-of-type(2) h1").textContent
 	}
 	if (document.querySelector(".coreSpriteVerifiedBadge")) {
 		data.verified = "Verified"
@@ -102,6 +99,21 @@ const scrapePage = (arg, callback) => {
 	} else {
 		followingCount = document.querySelector("main ul li:nth-child(3) span").textContent
 	}
+	if (document.querySelector("main header section div:nth-of-type(2) span:nth-of-type(2)")) {
+		data.inCommon = document.querySelector("main header section div:nth-of-type(2) span:nth-of-type(2)").textContent
+	}
+	if (document.querySelector("article h2")) {
+		data.private = "Private"
+	}
+	if (document.querySelector("button")) {
+		if (document.querySelector("button").textContent.includes("Unblock")) {
+			data.status = "Blocked"
+		}
+		if (document.querySelector("button").textContent.includes("Following")) {
+			data.status = "Following"
+		}
+	}
+	document.querySelector("button")
 	postsCount = parseInt(postsCount.replace(/,/g, ""), 10)
 	followersCount = parseInt(followersCount.replace(/,/g, ""), 10)
 	followingCount = parseInt(followingCount.replace(/,/g, ""), 10)
@@ -113,37 +125,35 @@ const scrapePage = (arg, callback) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, numberOfPagesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfPagesPerLaunch , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let urls = profileUrls
-	if (spreadsheetUrl) {
+	let urls, result
+	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
+		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
+		if (urls) {	
+			urls = [ urls ]
+		} else {
+			utils.log("The given url is not a valid instagram profile url.", "error")
+		}
+		result = []
+	} else { // CSV
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")
 			urls[i] = cleanInstagramUrl(urls[i])
 		}
 		urls = urls.filter(str => str) // removing empty lines
-	} else {
-		if (typeof profileUrls === "string") {
-			urls = [ profileUrls ]
-		}
+		if (!numberOfPagesPerLaunch) {
+			numberOfPagesPerLaunch = urls.length
+		} 	
+		result = await utils.getDb(csvName + ".csv")
+		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberOfPagesPerLaunch)
 	}
 
-	if (!numberOfPagesPerLaunch) {
-		numberOfPagesPerLaunch = urls.length
-	} else if (numberOfPagesPerLaunch > urls.length) {
-		numberOfPagesPerLaunch = urls.length
-	}
-
-	const db = await utils.getDb(csvName + ".csv")
-
-	urls = getUrlsToScrape(urls.filter(el => checkDb(el, db)), numberOfPagesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
-
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 
-	let result = db
 	let pageCount = 0
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
