@@ -21,7 +21,7 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
-const MSG_MAX_LENGTH = 300
+const MSG_MAX_LENGTH = 1000
 /* global jQuery  */
 
 // }
@@ -57,7 +57,6 @@ const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
 				}
 			})
 		}
-
 
 		invites = invites.map(function accept(i) {
 			if (i < arg.nbProfiles) {
@@ -106,46 +105,35 @@ const loadProfilesUsingScrollDown = async (tab) => {
  * @param {Object} invite - Profile infos scraped
  * @return {Promise<Boolean>} true if success, otherwise false
  */
-const sendMessage = async (url, message, invite) => {
-	const tab = await nick.newTab()
-
-	const matches = message.match(/#[a-zA-Z0-9]#/gm)
+const sendMessage = async (tab, url, message, invite) => {
+	const matches = message.match(/#[a-zA-Z0-9]+#/gm)
+	const inMailMessageSelector = "textarea.msg-form__textarea"
 	if (Array.isArray(matches)) {
 		for (const one of matches) {
 			let field = one.replace(/#/g, "")
 			if (invite[field]) {
-				message.replace(one, invite[field])
+				message = message.replace(one, invite[field])
 			} else {
 				message = message.replace(one, "")
 				utils.log(`Tag ${one} can't be found in the given profile`,"warning")
 			}
 		}
 	}
-	try {
-		const [httpCode] = await tab.open(url)
-		if ((httpCode >= 300) || (httpCode < 200)) {
-			utils.log(`Excepting HTTP code 200, but got ${httpCode} when opening ${url}`, "warning")
-			return false
-		}
-		await tab.waitUntilVisible("textarea.msg-form__textarea", 10000)
-		await tab.sendKeys("textarea.msg-form__textarea", message, { reset: true, keepFocus: false })
-		await tab.wait(2500)
-		await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
-		await tab.wait(2500)
-	} catch (err) {
-		utils.log(`Error while sending the message: ${err.message || err}`, "warning")
-		return false
-	}
-	await tab.close()
-	return true
+	await tab.open(url)
+	await tab.waitUntilVisible(inMailMessageSelector, 10000)
+	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.inMailMessageSelector).value = arg.message), { message, inMailMessageSelector })
+	await tab.sendKeys(inMailMessageSelector, " ", { reset: false, keepFocus: true })
+	await tab.wait(2500)
+	await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
+	await tab.wait(2500)
 }
 
 nick.newTab().then(async (tab) => {
 	let { sessionCookie, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections, message } = utils.validateArguments()
 
 	if (message && message.length > MSG_MAX_LENGTH) {
-		utils.log(`Message is longer than ${MSG_MAX_LENGTH}, the API will not send any message for this launch`, "warning")
-		message = null
+		utils.log(`Message is longer than ${MSG_MAX_LENGTH}, the API will not send any message for this launch`, "error")
+		nick.exit(1)
 	}
 
 	if (typeof hasNoteSent !== "boolean") {
@@ -169,11 +157,12 @@ nick.newTab().then(async (tab) => {
 	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
 
 	if (invites.length > 0) {
-
 		if (message) {
+			const inMailTab = await nick.newTab()
 			for (const invite of invites) {
-				await sendMessage(invite.messageLink, message)
+				await sendMessage(inMailTab, invite.messageLink, message, invite)
 			}
+			await inMailTab.close()
 		}
 
 		await tab.click("button[data-control-name=\"accept_all\"]")
