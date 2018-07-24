@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -21,6 +21,9 @@ const utils = new StoreUtilities(nick, buster)
 const Papa = require("papaparse")
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+
+const LinkedInScraper = require("./lib-LinkedInScraper")
+const linkedInScraper = new LinkedInScraper(utils, null, nick)
 
 /* global $ */
 
@@ -115,11 +118,15 @@ const scrollDown = async (tab) => {
  * @param {Fucntion} cb
  */
 const endorseProfile = (argv, cb) => {
+	const MAX_ENDORSES = 3
 	let data = []
 
 	$(argv.selectors.endorseItem).each((index, element) => {
-		$(argv.selectors.endorseBtn).click()
-		data[index] = $(element).find($(argv.selectors.skillText)).text()
+		// Prevent to endorse more than 3 skills, if there are more 3 skills at screen
+		if (index < MAX_ENDORSES) {
+			$(argv.selectors.endorseBtn).click()
+			data[index] = $(element).find($(argv.selectors.skillText)).text()
+		}
 	})
 	cb(null, data)
 }
@@ -140,12 +147,14 @@ const scrollToSpinners = (argv, cb) => {
  * @description Main function that launch everything
  */
 nick.newTab().then(async (tab) => {
-	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName ] = utils.checkArguments([
+	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName, disableScraping ] = utils.checkArguments([
 		{name: "sessionCookie", type: "string", length: 10},
 		{name: "spreadsheetUrl", type: "string", length: 10},
 		{name: "numberOfEndorsePerLaunch", type: "number", default: 10},
-		{name: "columnName", type: "string", default: ""}
+		{name: "columnName", type: "string", default: ""},
+		{ name: "disableScraping", type: "boolean", default: true }
 	])
+
 	const db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
@@ -163,18 +172,25 @@ nick.newTab().then(async (tab) => {
 		}
 		utils.log("Opening LinkedIn profile (" + url + ")", "loading")
 		try {
-			await profileOpen(tab, url)
-			await tab.inject("../injectables/jquery-3.0.0.min.js")
-			await scrollDown(tab)
-			/**
-			 * In order to load the entire content of all sections
-			 * we need to scroll to each section and wait that the loading spinner dismiss
-			 * It should be a better & cleaner way to get rid of those spinners, we're working on it !
-			 */
-			if (await tab.isPresent(SPINNER_SELECTOR)) {
-				await tab.evaluate(scrollToSpinners, { spinner: SPINNER_SELECTOR })
-				await tab.waitWhileVisible(SPINNER_SELECTOR, 15000)
+			let res = {}
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
+			if (!disableScraping) {
+				const tmp = await linkedInScraper.scrapeProfile(tab, scrapingUrl)
+				res = Object.assign({}, tmp.csv)
+			} else {
+				await profileOpen(tab, scrapingUrl)
+				await scrollDown(tab)
+				/**
+				 * In order to load the entire content of all sections
+				 * we need to scroll to each section and wait that the loading spinner dismiss
+				 * It should be a better & cleaner way to get rid of those spinners, we're working on it !
+				 */
+				if (await tab.isPresent(SPINNER_SELECTOR)) {
+					await tab.evaluate(scrollToSpinners, { spinner: SPINNER_SELECTOR })
+					await tab.waitWhileVisible(SPINNER_SELECTOR, 15000)
+				}
 			}
+			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			try {
 				selectorFound = await tab.waitUntilVisible([SELECTORS_1.endorseItem, SELECTORS_2.endorseItem], 15000, "or")
 			} catch (e) {
@@ -190,7 +206,8 @@ nick.newTab().then(async (tab) => {
 			}
 
 			utils.log("Endorsed " + skills.join(", "), "info")
-			result.push({ skills, url })
+			res = Object.assign(res, { skills, url })
+			result.push(res)
 			db.push({ url })
 		} catch (e) {
 			utils.log(`Could not endorse profile "${url}": ${e.toString()}`, "warning")
