@@ -8,7 +8,7 @@ const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: true,
+	loadImages: false,
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -62,6 +62,17 @@ const cleanInstagramUrl = (url) => {
 	return null
 }
 
+// Removes any duplicate member 
+const removeDuplicates = (arr) => {
+	let resultArray = []
+	for (let i = 0; i < arr.length ; i++) {
+		if (!resultArray.find(el => el.profileName === arr[i].profileName && el.followersOf === arr[i].followersOf)) {
+			resultArray.push(arr[i])
+		}
+	}
+	return resultArray
+}
+
 const scrape = (arg, callback) => {
 	const results = document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li")
 
@@ -79,6 +90,7 @@ const scrape = (arg, callback) => {
 			if (result.querySelector("div > div > div > div:last-child")) {
 				newInfos.fullName = result.querySelector("div > div > div > div:last-child").textContent
 			}
+			newInfos.followersOf = arg.url
 			data.push(newInfos)
 			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
 		}
@@ -152,7 +164,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	} while (checkProfilesCount < numberMaxOfFollowers)
 	buster.progressHint(1, `${profilesCount} profiles loaded`)
 	await tab.wait(2000)
-    result = result.concat(await tab.evaluate(scrape, { numberMaxOfFollowers }))
+    result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
     return result
 }
 
@@ -160,7 +172,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowers , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let urls, result
+	let urls, result = []
 	if (!numberMaxOfFollowers) { numberMaxOfFollowers = 100 }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
@@ -169,20 +181,24 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
-		result = []
 	} else { // CSV
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
-			urls[i] = utils.adjustUrl(urls[i], "instagram")
-			urls[i] = cleanInstagramUrl(urls[i])
+			if (urls[i].startsWith("@")) {
+				urls[i] = "https://www.instagram.com/" + urls[i].slice(1)
+			} else {
+				urls[i] = utils.adjustUrl(urls[i], "instagram")
+				urls[i] = cleanInstagramUrl(urls[i])
+			}
 		}
 		urls = urls.filter(str => str) // removing empty lines
 		if (!numberMaxOfFollowers) {
 			numberMaxOfFollowers = urls.length
 		} 	
-		result = await utils.getDb(csvName + ".csv")
-		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberMaxOfFollowers)
 	}
+	result = await utils.getDb(csvName + ".csv")
+	urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberMaxOfFollowers)
+	
 
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
@@ -200,9 +216,12 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			pageCount++
 			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
-			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container"], 15000, "or")
+			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 15000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
+				continue
+			} else if (selected === "article h2") {
+				utils.log("Private account, cannot access follower list", "warning")
 				continue
 			}
 			// result = result.concat(await tab.evaluate(scrapePage, { url }))
@@ -213,7 +232,9 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			continue
 		}
 	}
-
+	
+	result = removeDuplicates(result)
+	
 	await utils.saveResults(result, result, csvName, null, false)
 	nick.exit(0)
 	
