@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
@@ -29,7 +29,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const DB_NAME = "database-linkedin-auto-endorse.csv"
 
 /**
- * NOTE: CSS selectors used during the auto endorse process
+ * CSS selectors used during the auto endorse process
  */
 const SELECTORS_2 = {
 	"endorseItem": ".pv-skill-category-entity",
@@ -90,7 +90,7 @@ const profileOpen = async (tab, url) => {
 
 /**
  * @async
- * NOTE: This function doesn't guarranty that the content of all profile sections
+ * This function doesn't guarranty that the content of all profile sections
  * are totally loaded, for now use a custom handler to wait that data of a section is loaded
  * @description Function used to scroll to the bottom of a profile
  * @param {Object} tab - nickjs tab object
@@ -125,7 +125,7 @@ const endorseProfile = (argv, cb) => {
 }
 
 /**
- * NOTE: This function is used to wait a bit more the loading of a section
+ * This function is used to wait a bit more the loading of a section
  * @description Browser context function used to jump to each spinner in order to force the loading
  * @param {String} argv.spinner - LinkedIn loading spinner selector
  * @param {Function} cb - Function to exit browser context
@@ -167,13 +167,13 @@ nick.newTab().then(async (tab) => {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			await scrollDown(tab)
 			/**
-			 * NOTE: In order to load the entire content of all sections
+			 * In order to load the entire content of all sections
 			 * we need to scroll to each section and wait that the loading spinner dismiss
 			 * It should be a better & cleaner way to get rid of those spinners, we're working on it !
 			 */
 			if (await tab.isPresent(SPINNER_SELECTOR)) {
 				await tab.evaluate(scrollToSpinners, { spinner: SPINNER_SELECTOR })
-				await tab.waitWhilePresent(SPINNER_SELECTOR, 15000)
+				await tab.waitWhileVisible(SPINNER_SELECTOR, 15000)
 			}
 			try {
 				selectorFound = await tab.waitUntilVisible([SELECTORS_1.endorseItem, SELECTORS_2.endorseItem], 15000, "or")
@@ -198,7 +198,7 @@ nick.newTab().then(async (tab) => {
 	}
 
 	/**
-	 * NOTE: If the script is running in test mode,
+	 * If the script is running in test mode,
 	 * there is no need to save the data
 	 */
 	if (!utils.test) {
