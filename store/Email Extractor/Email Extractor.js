@@ -44,32 +44,6 @@ const inflateArguments = async urls => {
 	return ret
 }
 
-const filterUrls = (str, db) => {
-	for (const line of db) {
-		if (str === line.url) {
-			return false
-		}
-	}
-	return true
-}
-
-const getUrlsToScrape = (data, pagesPerLaunch) => {
-	let i = 0
-	const maxLength = data.length
-	const urls = []
-	if (maxLength === 0) {
-		utils.log("Input is empty OR all inputs are already scraped", "warning")
-		nick.exit()
-	}
-	while (i < pagesPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row])
-		data.splice(row, 1)
-		i++
-	}
-	return urls
-}
-
 const extractMails = (arg, cb) => {
 	const MAIL_REGEX = /[A-Z0-9._%+-]{1,50}@[A-Z0-9.-]{1,50}\.[A-Z]{2,10}/gi
 	let data = document.querySelector("html").innerHTML.match(MAIL_REGEX)
@@ -156,7 +130,11 @@ const createCsvOutput = json => {
 		pagesPerLaunch = DEFAULT_PAGES_PER_LAUNCH
 	}
 
-	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)), pagesPerLaunch)
+	urls = urls.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, pagesPerLaunch)
+	if (urls.length < 1) {
+		utils.log("Input is empty OR all inputs are already scraped", "warning")
+		nick.exit()
+	}
 
 	for (const url of urls) {
 		utils.log(`Scraping ${url}`, "loading")

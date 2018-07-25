@@ -26,33 +26,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const DB_NAME = "result.csv"
 // }
 
-const filterUrls = (url, db) => {
-	for (const one of db) {
-		if (url === one.companyUrl) {
-			return false
-		}
-	}
-	return true
-}
-
-const getUrlsToAdd = (data, numberOfCompanyPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
-	let i = 0
-	const maxLength = data.length
-	const urls = []
-	if (maxLength === 0) {
-		utils.log("Spreadsheet is empty or all companies from this sheet are already scraped.", "warning")
-		nick.exit()
-	}
-	while (i < numberOfCompanyPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
-		i++
-	}
-	return urls
-}
-
 const jsonToCsv = json => {
 	const csv = []
 	for (const company of json) {
@@ -224,7 +197,12 @@ const getIdFromUrl = async (url, tab) => {
 		numberOfCompanyPerLaunch = urls.length
 	}
 
-	urls = getUrlsToAdd(urls.filter(str => filterUrls(str, db)), numberOfCompanyPerLaunch)
+	urls = urls.filter(el => db.findIndex(line => el === line.companyUrl) < 0).slice(0, numberOfCompanyPerLaunch)
+	if (urls.length < 1) {
+		utils.log("Spreadsheet is empty or all companies from this sheet are already scraped.", "warning")
+		nick.exit()
+	}
+	// urls = getUrlsToAdd(urls.filter(str => filterUrls(str, db)), numberOfCompanyPerLaunch)
 
 	await linkedIn.login(tab, sessionCookie)
 	let result = []
