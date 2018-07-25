@@ -27,34 +27,6 @@ const DEFAULT_VISIT_COUNT = 1
 let db
 // }
 
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.profileLink || line.profileLink.startsWith(str)) {
-			return false
-		}
-	}
-	return true
-}
-
-const getUrlsToScrape = (data, numberOfVisitsPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
-	let i = 0
-	const urls = []
-	const maxLength = data.length
-	if (maxLength === 0) {
-		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
-		nick.exit()
-	}
-
-	while (i < numberOfVisitsPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
-		i++
-	}
-	return urls
-}
-
 ;(async () => {
 	db = await utils.getDb(DB_NAME)
 	const tab = await nick.newTab()
@@ -76,7 +48,12 @@ const getUrlsToScrape = (data, numberOfVisitsPerLaunch) => {
 		numberOfVisitsPerLaunch = DEFAULT_VISIT_COUNT
 	}
 
-	urls = getUrlsToScrape(urls.filter(str => checkDb(str, db)), numberOfVisitsPerLaunch)
+	urls = urls.filter(el => db.findIndex(line => el === line.profileLink || line.profileLink.startsWith(el)) < 0).slice(0, numberOfVisitsPerLaunch)
+	if (urls.length < 1) {
+		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		nick.exit()
+	}
+
 	await linkedIn.login(tab, sessionCookie)
 	for (const url of urls) {
 		utils.log(`Visiting ${url} ...`, "loading")
