@@ -23,7 +23,7 @@ const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
 const LinkedInScraper = require("./lib-LinkedInScraper")
-const linkedInScraper = new LinkedInScraper(utils, null, nick)
+let linkedInScraper
 
 /* global $ */
 
@@ -147,18 +147,19 @@ const scrollToSpinners = (argv, cb) => {
  * @description Main function that launch everything
  */
 nick.newTab().then(async (tab) => {
-	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName, disableScraping ] = utils.checkArguments([
+	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName, hunterApiKey, disableScraping ] = utils.checkArguments([
 		{name: "sessionCookie", type: "string", length: 10},
 		{name: "spreadsheetUrl", type: "string", length: 10},
 		{name: "numberOfEndorsePerLaunch", type: "number", default: 10},
 		{name: "columnName", type: "string", default: ""},
+		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: true }
 	])
 
 	const db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
-
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let selectorFound
 	let skills
 	const result = []
