@@ -2,27 +2,30 @@
 
 <hr />
 
-# Follow a lot of LinkedIn profiles without wasting any time
+# Send notifications to people.
 
-Stay in touch with the network without the need to be connected to every profile.
+When you follow someone on LinkedIn, a notification is sent to him/her. This is a chance for you to make them visit your profile or, even better, make them follow you back!
 
-# Our solution: Add into your account a list of LinkedIn profiles to follow
+Even if they don't, you'll have access to there publications and will be able to extract the list of people who commented and/or liked them.
+
+# Our solution: Make people following you by following them.
+
 Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phantombuster will follow **automatically** all those profiles.
 Also, just a checkbox tick away and you can do just the opposite and unfollow each and everyone of them!
 
 <center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
 
-# What will you need? ⚙️ 
+# What you'll need to set to make it work? ⚙️
 
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn profile URLs in it.
 - **Number of follows per launch**: How many _(between **1** and **10**)_ profiles to follow per launch
-- **Unfollow every profile**: If you want to unfollow the profiles from your list instead of following them.
+- **Unfollow profiles**: If you need to undo what you've done, select this option to unfollow the profiles from your list.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
 
-# What you need to do.
+# If it's your first time, follow the full setup process.
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
@@ -81,13 +84,13 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn connection requests.
+This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn follow requests.
 
 # ⚙️️Repetition setup ⚙️
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the API is launched, it will send 10 connection requests and stop. (You can lower this value in the API's configuration.)
+Every time the API is launched, it will send 10 follow requests and stop. (You can lower this value in the API's configuration.)
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 
@@ -119,14 +122,18 @@ Hunter gives you 100 free email guesses per month. After that, you'll have to bu
 
 **Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your visits to **40 profiles per day**.
 
-
-
 # Limits
 
 Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf. Like *Uncle Ben* once said, *"With great power comes great responsibility."*
 
-We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 4 launches per day of 20 scraped profiles for this reason.
+We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 8 launches per day of 10 scraped profiles for this reason.
 
 **Note:** When [email discovery](#section_email_discovery) is enabled, we recommend you divide this limit by 2 (that is, **40 profiles per day**).
 
 Having a LinkedIn Premium subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
+
+# Related Phantombuster APIs
+- [Linkedin Post Likers](https://phantombuster.com/api-store/2880/linkedin-post-likers)
+- [LinkedIn Post Commenters](https://phantombuster.com/api-store/2823/linkedin-post-commenters)
+- [LinkedIn Network Booster](https://phantombuster.com/api-store/2818/linkedin-network-booster)
+- [Twitter Auto Follow](https://phantombuster.com/api-store/4127/twitter-auto-follow)
