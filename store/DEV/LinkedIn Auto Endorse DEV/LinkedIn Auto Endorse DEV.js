@@ -48,33 +48,6 @@ const SELECTORS_1 = {
 
 const SPINNER_SELECTOR = "li-icon > .artdeco-spinner"
 
-const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos)
-	let i = 0
-	const maxLength = data.length
-	const urls = []
-	if (maxLength === 0) {
-		utils.log("Spreadsheet is empty or everyone is already endorsed from this sheet.", "warning")
-		nick.exit()
-	}
-	while (i < numberOfAddsPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
-		i++
-	}
-	return urls
-}
-
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.url || linkedIn.getUsername(str) === linkedIn.getUsername(line.url)) {
-			return false
-		}
-	}
-	return true
-}
-
 /**
  * @async
  * @description Function used to open a LinkedIn profile in the given Nickjs tab
@@ -158,7 +131,13 @@ nick.newTab().then(async (tab) => {
 
 	const db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfEndorsePerLaunch)
+	let profileUrls = data.filter(el => db.findIndex(line => el === line.url || linkedIn.getUsername(el) === linkedIn.getUsername(line.url)) < 0).slice(0, numberOfEndorsePerLaunch)
+
+	if (profileUrls.length < 1) {
+		utils.log("Spreadsheet is empty or everyone is already endorsed from this sheet.", "warning")
+		nick.exit()
+	}
+
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let selectorFound
 	let skills

@@ -42,34 +42,6 @@ let globalErrors = 0
 let rateLimit = false
 // }
 
-const filterUrls = (str, db) => {
-	for (const line of db) {
-		if (str === line.url) {
-			return false
-		}
-	}
-	return true
-}
-
-const getUrlsToScrape = (data, urlsPerLaunch) => {
-	let i = 0
-	const maxLength = data.length
-	const urls = []
-
-	if (maxLength === 0) {
-		utils.log("Input is empty OR all urls are already scraped", "warning")
-		nick.exit(0)
-	}
-
-	while (i < urlsPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row])
-		data.splice(row, 1)
-		i++
-	}
-	return urls
-}
-
 const handleSpreadsheet = async (url, column) => {
 	const urls = []
 	try {
@@ -266,7 +238,12 @@ const createCsvOutput = json => {
 		nick.exit(1)
 	}
 
-	urls = getUrlsToScrape(urls.filter(el => filterUrls(el, db)), extensionsPerLaunch)
+	urls = urls.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, extensionsPerLaunch)
+
+	if (urls.length < 1) {
+		utils.log("Input is empty OR all urls are already scraped", "warning")
+		nick.exit(0)
+	}
 
 	for (const url of urls) {
 		if (globalErrors >= MAX_ERRORS_ALLOWED) {
