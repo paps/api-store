@@ -47,7 +47,7 @@ const checkDb = (str, db) => {
 			return false
 		}
 	}   
-    return true
+	return true
 }
 
 const cleanInstagramUrl = (url) => {
@@ -94,7 +94,7 @@ const scrape = (arg, callback) => {
 			data.push(newInfos)
 			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
 		}
-    } 
+	} 
 	callback(null, data)
 }
 
@@ -104,31 +104,31 @@ const scrape = (arg, callback) => {
 // }
 
 const getFollowers = async (tab, url, numberMaxOfFollowers) => {
-    let result = []
-    try {
+	let result = []
+	try {
 		await tab.click("main ul li:nth-child(2) a")
-        await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
-    } catch (err) {
+		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
+	} catch (err) {
 		// Hitting Instagram rate limit
 		utils.log("Couldn't load followers list, Instagram rate limit probably reached.", "error")
-        return result
+		return result
 	}
 	await tab.wait(200)
-    let profilesCount = 0 
-    let showMessage = 0
+	let profilesCount = 0 
+	let showMessage = 0
 	let lastScrollDate = new Date()
 	let checkProfilesCount
-    do{
-        try {
-            checkProfilesCount = await tab.evaluate((arg, callback) => {
-                callback(null, document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li").length)
-            })
+	do{
+		try {
+			checkProfilesCount = await tab.evaluate((arg, callback) => {
+				callback(null, document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li").length)
+			})
 
-            if (checkProfilesCount > profilesCount) {
+			if (checkProfilesCount > profilesCount) {
 				await tab.wait(800)
-                showMessage++
-                profilesCount = checkProfilesCount
-                if (showMessage % 15 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
+				showMessage++
+				profilesCount = checkProfilesCount
+				if (showMessage % 15 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
 				buster.progressHint(profilesCount / numberMaxOfFollowers, `${profilesCount} profiles loaded`)
 
 				try {
@@ -140,38 +140,38 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 					utils.log(`Couldn't fully load the followers list, only got ${profilesCount} profiles.`, "warning")
 					break
 				}
-                lastScrollDate = new Date()
-            } else {
-                await tab.wait(100)
-            }
+				lastScrollDate = new Date()
+			} else {
+				await tab.wait(100)
+			}
 
-            const timeLeft = await utils.checkTimeLeft()
-            if (!timeLeft.timeLeft) {
-                utils.log(timeLeft.message, "warning")
-                break
-            }
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
 
-            if (new Date() - lastScrollDate > 7000) {
+			if (new Date() - lastScrollDate > 7000) {
 				try {
 					await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a")
 					utils.log(`Loaded all ${profilesCount} profiles.`, "done")
 				} catch (err) {
 					utils.log(`Scrolling took too long, only got ${profilesCount} profiles.`, "done")
 				}
-                break
-            }  
-        } catch (err) {
+				break
+			}  
+		} catch (err) {
 			utils.log("Error scrolling down the page", "error") 
 			console.log(err)
-        }
+		}
 	} while (checkProfilesCount < numberMaxOfFollowers)
 	if (checkProfilesCount >= numberMaxOfFollowers) {
 		utils.log(`Got the last ${numberMaxOfFollowers} profiles`, "done")
 	}
 	buster.progressHint(1, `${profilesCount} profiles loaded`)
 	await tab.wait(2000)
-    result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
-    return result
+	result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
+	return result
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
