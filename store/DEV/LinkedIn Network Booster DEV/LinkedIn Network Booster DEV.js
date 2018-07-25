@@ -43,20 +43,21 @@ const checkDb = (str, db) => {
 // Get only a certain number of urls to add
 const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos) // Remove duplicates
-	let i = 0
+	// let i = 0
 	const maxLength = data.length
-	const urls = []
+	// const urls = []
 	if (maxLength === 0) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
 	}
-	while (i < numberOfAddsPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
-		i++
-	}
-	return urls
+	// while (i < numberOfAddsPerLaunch && i < maxLength) {
+	// 	const row = Math.floor(Math.random() * data.length)
+	// 	urls.push(data[row].trim())
+	// 	data.splice(row, 1)
+	// 	i++
+	// }
+	// return urls
+	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
 }
 
 // Get the first name of someone from their linkedIn profile

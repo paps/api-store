@@ -40,20 +40,12 @@ const checkDb = (str, db) => {
 // Get only a certain number of urls to add
 const getUrlsToAdd = (data, numberOfFollowsPerLaunch) => {
     data = data.filter((item, pos) => data.indexOf(item) === pos) // Remove duplicates
-    let i = 0
     const maxLength = data.length
-    const urls = []
     if (maxLength === 0) {
         utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
         nick.exit()
     }
-    while (i < numberOfFollowsPerLaunch && i < maxLength) {
-        const row = Math.floor(Math.random() * data.length)
-        urls.push(data[row].trim())
-        data.splice(row, 1)
-        i++
-    }
-    return urls
+    return data.slice(0, Math.min(numberOfFollowsPerLaunch, maxLength)) // return the first elements
 }
 
 // Function to follow someone
@@ -138,7 +130,8 @@ nick.newTab().then(async (tab) => {
     let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
     linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
     db = await utils.getDb(DB_NAME)
-    const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+    let data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+    data = data.filter(str => str) // removing empty lines
     const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
     await linkedIn.login(tab, sessionCookie)
     utils.log(`Urls to ${unfollowProfiles ? "un": ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")

@@ -47,20 +47,13 @@ const filterUrls = (str, db) => {
 const getTwitterHandle = str => isTwitterUrl(str) ? url.parse(str).pathname.substr(1) : str
 
 const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
-	let i = 0
 	const maxLength = data.length
-	const urls = []
 	if (maxLength === 0) {
 		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
 		nick.exit()
 	}
-	while (i < numberOfProfilesPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row])
-		data.splice(row, 1)
-		i++
-	}
-	return urls
+
+	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
 /**
