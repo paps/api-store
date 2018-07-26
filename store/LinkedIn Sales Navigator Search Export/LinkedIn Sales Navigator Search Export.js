@@ -23,9 +23,32 @@ const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
+
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.query) {
+			return false
+		}
+	}   
+	return true
+}
+
+
 const createUrl = (search, circles) => {
 	const circlesOpt = `facet=N${circles.first ? "&facet.N=F" : ""}${circles.second ? "&facet.N=S" : ""}${circles.third ? "&facet.N=O" : ""}`
 	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}&count=100&${circlesOpt}`) 
+}
+
+// forces the search to display up to 100 profiles per page
+const forceCount = (url) => {
+	try {
+		let parsedUrl = new URL(url)
+		parsedUrl.searchParams.set("count", "100")
+		return parsedUrl.toString()
+	} catch (err) {
+		return url
+	}
 }
 
 const scrapeResults = (arg, callback) => {
@@ -54,6 +77,11 @@ const scrapeResults = (arg, callback) => {
 	callback(null, infos)
 }
 
+const totalResults = (arg, callback) => {
+	const total = document.querySelector(".spotlight-result-count").textContent
+	callback(null, total)
+}
+
 /**
  * @description Tiny wrapper used to easly change the page index of LinkedIn search results
  * @param {String} url
@@ -71,14 +99,29 @@ const overridePageIndex = (url, page) => {
 }
 
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
-	utils.log(`Getting infos${query ? ` for search ${query}` : ""} ...`, "loading")
-	const numberOfPages = Math.ceil(numberOfProfiles/100) // 100 results per page
+	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
+	const pageCount = Math.ceil(numberOfProfiles / 100) // 100 results per page
 	let result = []
 	const selectors = ["section.search-results-container", ".spotlight-result-label"]
-	let numberOfProfilesFound = 0
-	for (let i = 1; i <= numberOfPages; i++) {
-		utils.log(`Getting results from page ${i}...`, "loading")
+	let profilesFoundCount = 0
+	let maxResults = Math.min(1000, numberOfProfiles)
+
+	for (let i = 1; i <= pageCount; i++) {
 		await tab.open(overridePageIndex(searchUrl, i))
+		if (i === 1){
+			try {
+				await tab.waitUntilVisible(".spotlight-result-count", 7500)
+				const resultsCount = await tab.evaluate(totalResults)
+				utils.log(`Getting ${resultsCount} results`, "done")
+				let multiplicator = 1
+				if (resultsCount.includes("K")) { multiplicator = 1000 }
+				if (resultsCount.includes("M")) { multiplicator = 1000000 }
+				maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
+			} catch (err) {
+				utils.log(`Could not get total results count. ${err}`, "warning")
+			}
+		}
+		utils.log(`Getting results from page ${i}...`, "loading")
 		try {
 			await tab.waitUntilVisible(selectors, 7500, "and")
 		} catch (err) {
@@ -89,70 +132,98 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		await tab.scrollToBottom()
 		await tab.wait(1500)
 		const numberOnThisPage = Math.min(numberOfProfiles - 100 * (i - 1), 100)
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
-		if (result.length > numberOfProfilesFound) {
-			numberOfProfilesFound = result.length
-			utils.log(`Got profiles for page ${i}`, "done")
+		if (result.length > profilesFoundCount) {
+			profilesFoundCount = result.length
+			buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
 		} else {
 			utils.log("No more profiles found on this page", "warning")
 			break
 		}
 	}
+	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
 	utils.log("All pages with result scrapped.", "done")
 	return result
 }
 
-const isLinkedInSearchURL = (targetUrl) => {
-	const urlObject = parse(targetUrl)
-
+const isLinkedInSearchURL = (url) => {
+	let urlObject = parse(url.toLowerCase())
 	if (urlObject && urlObject.hostname) {
-		if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/sales/search")) {
-			return 0
-		} else if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
-			return -1
+		if (url.includes("linkedin.com/")) {
+			if (urlObject.pathname.startsWith("linkedin")) {
+				urlObject = parse("https://www." + url)
+			}
+			if (urlObject.pathname.startsWith("www.linkedin")) {
+				urlObject = parse("https://" + url)
+			}
+			if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/sales/search")) {
+				return 0 // LinkedIn Sales Navigator search
+			} else if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
+				return -1 // Default LinkedIn search
+			}
 		}
-		return -2
+		return -2 // URL not from LinkedIn	
 	}
-	return 1
+	return 1 // not a URL
 }
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, circles, numberOfProfiles, queryColumn } = utils.validateArguments()
+	let { sessionCookie, searches, circles, numberOfProfiles, csvName } = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let result = []
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
 	if (isLinkedInSearchSalesURL === 0) { // LinkedIn Sales Navigator Search
 		searches = [ searches ]
-	} else if (isLinkedInSearchSalesURL === -1) { // Regular LinkedIn Search
-		throw "Not a valid Sales Navigator Search Link"  
-	} else if((searches.toLowerCase().indexOf("http://") === 0) || (searches.toLowerCase().indexOf("https://") === 0)) {  
-		// Link not from LinkedIn, trying to get CSV
-		try {
+	} else {
+		if (isLinkedInSearchSalesURL === -1) { // Regular LinkedIn Search
+			throw "Not a valid Sales Navigator Search Link"  
+		} 
+		try { 		// Link not from LinkedIn, trying to get CSV
 			searches = await utils.getDataFromCsv(searches)
+			searches = searches.filter(str => str) // removing empty lines
+			result = await utils.getDb(csvName + ".csv")
+			const lastUrl = searches[searches.length - 1]
+			searches = searches.filter(str => checkDb(str, result))
+			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
-			utils.log(err, "error")
+			if (searches.startsWith("http")) {
+				utils.log("Couln't open CSV, make sure it's public", "error")
+				nick.exit(1)
+			}
+			searches = [ searches ] 
 		}
-	} else { // Simple one field search
-		searches = [ searches ]
 	}
+	utils.log(`Search : ${JSON.stringify(searches, null, 2)}`, "done")
 	await linkedIn.login(tab, sessionCookie)
-	let result = []
 	for (const search of searches) {
-		let searchUrl = ""
-		const isSearchURL = isLinkedInSearchURL(search)
+		if (search) {
+			let searchUrl = ""
+			const isSearchURL = isLinkedInSearchURL(search)
 
-		if (isSearchURL === 0) { // LinkedIn Sales Navigator Search
-			searchUrl = search
-		} else if (isSearchURL === 1) { // Not a URL -> Simple search
-			searchUrl = createUrl(search, circles)
-		} else {  
-			utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
-			continue
+			if (isSearchURL === 0) { // LinkedIn Sales Navigator Search
+				searchUrl = forceCount(search)
+			} else if (isSearchURL === 1) { // Not a URL -> Simple search
+				searchUrl = createUrl(search, circles)
+			} else {  
+				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
+				continue
+			}
+			result = result.concat(await getSearchResults(tab, searchUrl, numberOfProfiles, search))
+		} else {
+			utils.log("Empty line... skipping entry", "warning")
 		}
-		const query = queryColumn ? search : false
-		result = result.concat(await getSearchResults(tab, searchUrl, numberOfProfiles, query))
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 	}
-	// await linkedIn.saveCookie()
-	
 	utils.saveResult(result)
 })()
 	.catch(err => {

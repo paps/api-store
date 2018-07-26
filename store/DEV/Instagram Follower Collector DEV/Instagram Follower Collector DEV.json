@@ -1,10 +1,11 @@
 {
-	"slug": "instagram-profile-scraper",
-	"description": "Collect valuable information you need from Instagram profiles",
+	"slug": "instagram-follower-collector",
+	"description": "Extract a list of all the profiles that follow any Instagram account",
 	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
 	"hidden": true,
+	"new": true,
 	"gradientBegin": "#fcb045",
-	"gradientEnd": "#833ab4",
+	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
@@ -16,15 +17,7 @@
 		"imageUrl": "Profile picture URL",
 		"profileName ": "Instagram username",
 		"fullName": "Full name of the person",
-		"postsCount": "How many publications they made",
-		"followersCount": "How many followers they have",
-		"followingCount": "How many accounts they follow",
-		"bio": "",
-		"website": "",
-		"verified": "If Instagram has confirmed it's an authentic account",
-		"inCommon": "If some of your Instagram friends follow that account",
-		"private": "If the account is private",
-		"status": "If you follow or have blocked that account"
+		"followedByUser": "If you follow that account"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -33,7 +26,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie <a href=\"/api-store/7175/instagram-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie <a href=\"/api-store/7175/instagram-follower-collector#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here (sessionid)"
 					},
 					"spreadsheetUrl": {
@@ -42,7 +35,7 @@
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 							"<b>Please be gentle.</b> This API will manipulate Instagram on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
 						],
-						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7175/instagram-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7175/instagram-follower-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
@@ -55,7 +48,7 @@
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {
-						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7175/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},

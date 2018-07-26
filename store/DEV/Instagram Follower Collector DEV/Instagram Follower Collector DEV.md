@@ -22,16 +22,7 @@ _(**You already have all that?**  Click straight away on **"Use this API"**)_
 1. Instagram profile link
 1. Instagram username
 1. Full name
-<img src="https://phantombuster.imgix.net/api-store/Linkedin_profile_scrapper/keyword_short.png" style="float:right; border:none;box-shadow:none;">
-
-1. Bio description
-1. N° of posts
-1. N° of followers
-1. N° of accounts followed
-1. Website (if available)
 1. Profile image URL
-1. Status (if you follow or have blocked that account)
-
 
 
 # Which steps to follow?
@@ -95,8 +86,6 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-This will launch the bot and, if you didn't already change the spreadsheet URL, will collect the information of the Phantombuster team.
-
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to scrape per launch, or leave that field blank to scrape every profile from your list.
@@ -113,3 +102,10 @@ Then, select a frequency:
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
 For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API.
+
+
+# Limits
+
+Please be aware that this API will manipulate your Instagram account on your behalf.
+
+Instagram has set rate limits of 200 requests an hour per token. We have noticed that after a few thousands followers collected, you'll need to wait a few minutes before scraping again. We recommend spacing launches consequently.

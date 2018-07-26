@@ -16,17 +16,19 @@
 			"second": true,
 			"third": true
 		},
-		"numberOfProfiles": 25,
-		"queryColumn": true
+		"numberOfProfiles": 25
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
-		"url": "LinkedIn profile URL",
+		"url": "LinkedIn Sales Navigator profile URL",
 		"currentJob": "",
-		"name": "",
-		"job": "",
+		"name": "Full name of the person",
+		"companyName": "",
+		"title": "Title of the job",
+		"duration": "",
 		"location": "",
-		"query": "Corresponding search query that lead to this result (if enabled in config)"
+		"degree": "Your degree of Connection with that profile",
+		"query": "Corresponding search query that lead to this result"
 	},
 	"argumentForm": {
 		"enabled": true,
@@ -34,7 +36,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "LinkedIn session cookie <a href=\"/api-store/3149/linkedin-sales-navigator-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "LinkedIn session cookie <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"searches": {
@@ -43,7 +45,7 @@
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available",
 							"<b>OR</b> make an advanced search on LinkedIn and paste the URL you're sent to here"
 						],
-						"label": "LinkedIn search terms <a href=\"/api-store/3149/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
+						"label": "LinkedIn search terms <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
 						"placeholder": "iOS developer"
 					},
 					"circles": {
@@ -60,13 +62,14 @@
 						}
 					},
 					"numberOfProfiles": {
-						"label": "Number of profiles to scrape <a href=\"/api-store/3149/linkedin-sales-navigator-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to scrape <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
 						"placeholder": 25,
 						"inputType": "number",
-						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+						"helper": "<b>LinkedIn limits search results to the first 1 000 profiles."
 					},
-					"queryColumn": {
-						"rightLabel": "<b>Write back your search query in the result CSV</b>"
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					}
 				}
 			}
@@ -103,11 +106,12 @@
 			"numberOfProfiles": {
 				"type": "number",
 				"minimum": 1,
+				"maximum": 1000,
 				"required": true
 			},
-			"queryColumn": {
-				"type": "boolean",
-				"required": true
+            "csvName": {
+				"type": "string",
+				"required": false
 			}
 		}
 	}

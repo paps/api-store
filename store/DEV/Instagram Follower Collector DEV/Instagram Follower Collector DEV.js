@@ -22,6 +22,7 @@ const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const { parse } = require("url")
 // }
+let rateLimitReached = 0
 
 const getUrlsToScrape = (data, numberofProfilesperLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -39,8 +40,8 @@ const checkDb = (str, db) => {
 		if (str === line.followersOf) {
 			return false
 		}
-	}   
-    return true
+	}
+	return true
 }
 
 const cleanInstagramUrl = (url) => {
@@ -55,7 +56,7 @@ const cleanInstagramUrl = (url) => {
 	return null
 }
 
-// Removes any duplicate member 
+// Removes any duplicate profile 
 const removeDuplicates = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -64,6 +65,19 @@ const removeDuplicates = (arr) => {
 		}
 	}
 	return resultArray
+}
+
+const scrapeFollowerCount = (arg, callback) => {
+	let followersCount = 0
+	if (document.querySelector("main ul li:nth-child(2) span").getAttribute("title")) { // lots of followers
+		followersCount = document.querySelector("main ul li:nth-child(2) span").getAttribute("title")
+	} else if (document.querySelector("main ul li:nth-child(2) span > span")) { // private account
+		followersCount = document.querySelector("main ul li:nth-child(2) span > span").textContent
+	} else if (document.querySelector("main ul li:nth-child(2) span")) { // default case
+		followersCount = document.querySelector("main ul li:nth-child(2) span").textContent
+	}
+	followersCount = parseInt(followersCount.replace(/,/g, ""), 10)
+	callback(null, followersCount)
 }
 
 const scrape = (arg, callback) => {
@@ -84,44 +98,43 @@ const scrape = (arg, callback) => {
 				newInfos.fullName = result.querySelector("div > div > div > div:last-child").textContent
 			}
 			newInfos.followersOf = arg.url
+			const button = result.querySelector("button").textContent
+			if (button === "Following") { newInfos.followedByUser = "Followed By User" }
 			data.push(newInfos)
 			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
 		}
-    } 
+	}
 	callback(null, data)
 }
 
-// const forceScroll = (arg, callback) => {
-// 	document.querySelector("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child > div > div > div > div:last-child").scrollIntoView()
-// 	callback(null, null)
-// }
-
 const getFollowers = async (tab, url, numberMaxOfFollowers) => {
-    let result = []
-    try {
+	let result = []
+	try {
 		await tab.click("main ul li:nth-child(2) a")
-        await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
-    } catch (err) {
+		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
+	} catch (err) {
 		// Hitting Instagram rate limit
-		utils.log("Couldn't load followers list, Instagram rate limit probably reached.", "error")
-        return result
+		utils.log("Couldn't load followers list, Instagram rate limit probably reached.", "warning")
+		rateLimitReached++
+		return result
 	}
 	await tab.wait(200)
-    let profilesCount = 0 
-    let showMessage = 0
+	const followersCount = await tab.evaluate(scrapeFollowerCount)
+	let profilesCount = 0 
+	let showMessage = 0
 	let lastScrollDate = new Date()
 	let checkProfilesCount
-    do{
-        try {
-            checkProfilesCount = await tab.evaluate((arg, callback) => {
-                callback(null, document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li").length)
-            })
+	do{
+		try {
+			checkProfilesCount = await tab.evaluate((arg, callback) => {
+				callback(null, document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li").length)
+			})
 
-            if (checkProfilesCount > profilesCount) {
+			if (checkProfilesCount > profilesCount) {
 				await tab.wait(800)
-                showMessage++
-                profilesCount = checkProfilesCount
-                if (showMessage % 15 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
+				showMessage++
+				profilesCount = checkProfilesCount
+				if (showMessage % 15 === 0) { utils.log(`Loaded ${profilesCount} followers...`, "loading") }
 				buster.progressHint(profilesCount / numberMaxOfFollowers, `${profilesCount} profiles loaded`)
 
 				try {
@@ -133,38 +146,37 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 					utils.log(`Couldn't fully load the followers list, only got ${profilesCount} profiles.`, "warning")
 					break
 				}
-                lastScrollDate = new Date()
-            } else {
-                await tab.wait(100)
-            }
+				lastScrollDate = new Date()
+			} else {
+				await tab.wait(100)
+			}
 
-            const timeLeft = await utils.checkTimeLeft()
-            if (!timeLeft.timeLeft) {
-                utils.log(timeLeft.message, "warning")
-                break
-            }
-
-            if (new Date() - lastScrollDate > 7000) {
-				try {
-					await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a")
-					utils.log(`Loaded all ${profilesCount} profiles.`, "done")
-				} catch (err) {
-					utils.log(`Scrolling took too long, only got ${profilesCount} profiles.`, "done")
-				}
-                break
-            }  
-        } catch (err) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			if (profilesCount >= followersCount) {
+				utils.log(`Loaded all ${profilesCount} followers.`, "done")
+				break
+			}
+			if (new Date() - lastScrollDate > 7000) {
+				utils.log(`Scrolling took too long, only got ${profilesCount} followers.`, "done")
+				break
+			}  
+			
+		} catch (err) {
 			utils.log("Error scrolling down the page", "error") 
 			console.log(err)
-        }
+		}
 	} while (checkProfilesCount < numberMaxOfFollowers)
 	if (checkProfilesCount >= numberMaxOfFollowers) {
-		utils.log(`Got the last ${numberMaxOfFollowers} profiles`, "done")
+		utils.log(`Got the last ${numberMaxOfFollowers} followers ouf of ${followersCount}.`, "done")
 	}
 	buster.progressHint(1, `${profilesCount} profiles loaded`)
 	await tab.wait(2000)
-    result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
-    return result
+	result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
+	return result
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -216,12 +228,12 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			pageCount++
 			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
-			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 15000, "or")
+			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
 				continue
 			} else if (selected === "article h2") {
-				utils.log("Private account, cannot access follower list", "warning")
+				utils.log("Private account, cannot access follower list.", "warning")
 				continue
 			}
 			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers))
@@ -229,6 +241,10 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
+		}
+		if (rateLimitReached >= 3) {
+			utils.log("Rate limit reached, stopping the agent.", "warning")
+			break
 		}
 	}
 	
