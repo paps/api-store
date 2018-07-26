@@ -1,0 +1,92 @@
+{
+	"slug": "instagram-following-collector",
+	"description": "Extract a list of all the profiles followed by any Instagram account",
+	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#833ab4",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberofProfilesperLaunch": 10
+	},
+	"outputDescription": {
+		"profileUrl": "Instagram profile URL",
+		"imageUrl": "Profile picture URL",
+		"profileName ": "Instagram username",
+		"fullName": "Full name of the person",
+		"followedByUser": "If you follow that account"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/7195/instagram-following-collector#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here (sessionid)"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+							"<b>Please be gentle.</b> This API will manipulate Instagram on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
+						],
+						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7195/instagram-following-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "Instagram Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberMaxOfFollowing": {
+						"label": "Number of followers to collect per profile - if none will try to scrape all of them",
+						"placeholder": 100,
+						"inputType": "number"
+					},
+					"numberofProfilesperLaunch": {
+						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberMaxOfFollowing": {
+				"type": "number",
+				"minimum": 1
+			},
+			"numberofProfilesperLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
