@@ -179,6 +179,10 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 
 	let i = 0
 	for (const query of companies) {
+		if (!query || query.trim().length < 1) { 
+			utils.log("Empty line, skipping entry", "warning")
+			continue
+		}
 		buster.progressHint(i / companies.length, query)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
