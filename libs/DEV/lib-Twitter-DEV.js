@@ -57,6 +57,23 @@ class Twitter {
 
 	/**
 	 * @async
+	 * @description
+	 * @param {Object} tab - Nickjs Tab instance (with a twitter page opened)
+	 * @return {Promise<Boolean>} true if logged otherwise false
+	 */
+	async isLogged(tab, printErrors = false) {
+		try {
+			// The selector represents the top right dropdown button used, it has a with an href /settings which require to logged on
+			await tab.waitUntilVisible("ul > li.me.dropdown.session.js-session > a.settings", 15000)
+			return true
+		} catch (err) {
+			printErrors && this.utils.log(err.message || err, "warning")
+			return false
+		}
+	}
+
+	/**
+	 * @async
 	 * @description Method used to be log as a valid Twitter user
 	 * @param {Object} tab - Nickjs Tab instance
 	 * @param {String} cookie - Twitter auth_token cookie
