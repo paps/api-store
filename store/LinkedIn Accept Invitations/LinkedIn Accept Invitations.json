@@ -32,6 +32,15 @@
 					"hasMutualConnections": {
 						"rightLabel": "<b>Only</b> accept invitations with at least one mutual connection",
 						"type": "checkbox"
+					},
+					"message": {
+						"label": "Message",
+						"type": "textarea",
+						"helpers": [
+							"Use #fullName# to insert the fullname of the person who sent you an invite",
+							"You are limited by LinkedIn to 1000 characters",
+							"Leave empty to accept invitations without sending a message"
+						]
 					}
 				}
 			}
@@ -57,6 +66,10 @@
 			"hasMutualConnections": {
 				"type": "boolean",
 				"default": false
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 1000
 			}
 		}
 	}

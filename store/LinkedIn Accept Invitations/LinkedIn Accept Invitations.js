@@ -21,6 +21,7 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
+const MSG_MAX_LENGTH = 1000
 /* global jQuery  */
 
 // }
@@ -57,11 +58,15 @@ const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
 			})
 		}
 
-
 		invites = invites.map(function accept(i) {
 			if (i < arg.nbProfiles) {
+				const toRet = {}
+				toRet.url = this.querySelector("a[data-control-name=\"profile\"]").href
+				toRet.fullName = this.querySelector("span.invitation-card__name").textContent.trim()
+				toRet.job = this.querySelector("span.invitation-card__occupation").textContent.trim()
+				toRet.messageLink = this.querySelector("a[data-control-name=\"personalized_message\"]").href
 				jQuery(this).find("input[type=\"checkbox\"]").click()
-				return this.querySelector("a[data-control-name=\"profile\"]").href
+				return toRet
 			}
 		})
 		done(null, jQuery.makeArray(invites)) // Success
@@ -92,8 +97,44 @@ const loadProfilesUsingScrollDown = async (tab) => {
 	await tab.wait(1000)
 }
 
+/**
+ * @async
+ * @description Function used to send a customized message to a LinkedIn user
+ * @param {String} url - URL to edit the message
+ * @param {String} message - Message to forge (if needed)
+ * @param {Object} invite - Profile infos scraped
+ * @return {Promise<Boolean>} true if success, otherwise false
+ */
+const sendMessage = async (tab, url, message, invite) => {
+	const matches = message.match(/#[a-zA-Z0-9]+#/gm)
+	const inMailMessageSelector = "textarea.msg-form__textarea"
+	if (Array.isArray(matches)) {
+		for (const one of matches) {
+			let field = one.replace(/#/g, "")
+			if (invite[field]) {
+				message = message.replace(one, invite[field])
+			} else {
+				message = message.replace(one, "")
+				utils.log(`Tag ${one} can't be found in the given profile`,"warning")
+			}
+		}
+	}
+	await tab.open(url)
+	await tab.waitUntilVisible(inMailMessageSelector, 10000)
+	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.inMailMessageSelector).value = arg.message), { message, inMailMessageSelector })
+	await tab.sendKeys(inMailMessageSelector, " ", { reset: false, keepFocus: true })
+	await tab.wait(2500)
+	await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
+	await tab.wait(2500)
+}
+
 nick.newTab().then(async (tab) => {
-	let {sessionCookie, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections } = utils.validateArguments()
+	let { sessionCookie, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections, message } = utils.validateArguments()
+
+	if (message && message.length > MSG_MAX_LENGTH) {
+		utils.log(`Message is longer than ${MSG_MAX_LENGTH}, the API will not send any message for this launch`, "error")
+		nick.exit(1)
+	}
 
 	if (typeof hasNoteSent !== "boolean") {
 		hasNoteSent = false
@@ -116,14 +157,21 @@ nick.newTab().then(async (tab) => {
 	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
 
 	if (invites.length > 0) {
-		await tab.click("button[data-control-name=\"accept_all\"]")
+		if (message) {
+			const inMailTab = await nick.newTab()
+			for (const invite of invites) {
+				await sendMessage(inMailTab, invite.messageLink, message, invite)
+			}
+			await inMailTab.close()
+		}
 
+		await tab.click("button[data-control-name=\"accept_all\"]")
 		await tab.wait(2000)
 
 		// Verbose
 		utils.log(`A total of ${invites.length} profile${invites.length !== 1 ? "s have" : " has"} been added`, "done")
 		for (const invite of invites)
-			console.log(`\t${invite}`)
+			console.log(`\t${invite.url}`)
 	} else {
 		utils.log("No invites found with given criterias", "done")
 	}
