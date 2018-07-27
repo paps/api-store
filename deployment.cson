@@ -27,7 +27,6 @@
 		'Chrome Extension Review Extractor.js': '/store/Chrome Extension Review Extractor/Chrome Extension Review Extractor.js'
 		'Email Extractor.js': 'store/Email Extractor/Email Extractor.js'
 		'Facebook Group Extractor.js': 'store/Facebook Group Extractor/Facebook Group Extractor.js'
-		'Facebook Group Members.js': 'store/Facebook Group Members/Facebook Group Members.js'
 		'Facebook ID Finder.js': 'store/Facebook ID Finder/Facebook ID Finder.js'
 		'Facebook Profile URL Finder.js': 'store/Facebook Profile URL Finder/Facebook Profile URL Finder.js'
 		'Instagram Follower Collector.js': 'store/Instagram Follower Collector/Instagram Follower Collector.js'
@@ -43,7 +42,6 @@
 		'LinkedIn Companies Employees.js': 'store/LinkedIn Companies Employees/LinkedIn Companies Employees.js'
 		'LinkedIn Companies Info.js': 'store/LinkedIn Companies Info/LinkedIn Companies Info.js'
 		'LinkedIn Company URL Finder.js': 'store/LinkedIn Company URL Finder/LinkedIn Company URL Finder.js'
-		'LinkedIn Conversations-Hubspot Connector.js': 'store/LinkedIn Conversations-Hubspot Connector/LinkedIn Conversations-Hubspot Connector.js'
 		'LinkedIn Followers Insights.js': 'store/LinkedIn Followers Insights/LinkedIn Followers Insights.js'
 		'LinkedIn Group Members.js': 'store/LinkedIn Group Members/LinkedIn Group Members.js'
 		'LinkedIn Network Booster.js': 'store/LinkedIn Network Booster/LinkedIn Network Booster.js'
@@ -54,11 +52,9 @@
 		'LinkedIn Sales Navigator Search Export.js': 'store/LinkedIn Sales Navigator Search Export/LinkedIn Sales Navigator Search Export.js'
 		'LinkedIn Search and Invite.js': 'store/LinkedIn Search and Invite/LinkedIn Search and Invite.js'
 		'LinkedIn Search Export.js': 'store/LinkedIn Search Export/LinkedIn Search Export.js'
-		'LinkedIn-Hubspot Connector.js': 'store/LinkedIn-Hubspot Connector/LinkedIn-Hubspot Connector.js'
 		'Medium Post Clappers.js': 'store/Medium Post Clappers/Medium Post Clappers.js'
 		'Pinterest Profile URL Finder.js': 'store/Pinterest Profile URL Finder/Pinterest Profile URL Finder.js'
 		'Quora Topics Influencers.js': 'store/Quora Topics Influencers/Quora Topics Influencers.js'
-		'Sales Navigator to LinkedIn Url Converter.js': 'store/Sales Navigator to LinkedIn Url Converter/Sales Navigator to LinkedIn Url Converter.js'
 		'Twitter Auto Follow.js': 'store/Twitter Auto Follow/Twitter Auto Follow.js'
 		'Twitter Follower Collector.js': 'store/Twitter Follower Collector/Twitter Follower Collector.js'
 		'Twitter Following Collector.js': 'store/Twitter Following Collector/Twitter Following Collector.js'
@@ -66,7 +62,6 @@
 		'Twitter Profile URL Finder.js': 'store/Twitter Profile URL Finder/Twitter Profile URL Finder.js'
 		'Twitter Auto Liker.js': 'store/Twitter Auto Liker/Twitter Auto Liker.js'
 		'Web Elements Extractor.js': 'store/Web Elements Extractor/Web Elements Extractor.js'
-		'Web Summit Startup Emails.js': 'store/Web Summit Startup Emails/Web Summit Startup Emails.js'
 
 		# scraping-challenges
 		# -------------------
