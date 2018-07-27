@@ -9,7 +9,8 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
-		"numberOfEndorsePerLaunch": "10"
+		"numberOfEndorsePerLaunch": "10",
+		"disableScraping": true
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -35,6 +36,13 @@
 						"label": "Number of endorsed profiles per launch (10 max.) <a href=\"/api-store/3611/linkedin-auto-endorse#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
+					},
+					"disableScraping": {
+						"rightLabel": "<b>Disable profile scraping</b> (not recommended but can speed up the API)"
 					}
 				}
 			}
@@ -59,6 +67,13 @@
 				"type": "number",
 				"minimum": 1,
 				"maximum": 10
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"disableScraping": {
+				"type": "boolean"
 			}
 		}
 	}
