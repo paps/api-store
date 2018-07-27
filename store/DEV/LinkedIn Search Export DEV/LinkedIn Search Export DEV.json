@@ -15,6 +15,7 @@
 			"second": true,
 			"third": true
 		},
+		"category": "People",
 		"numberOfPage": 5,
 		"queryColumn": true
 	},
@@ -58,6 +59,12 @@
 							}
 						}
 					},
+					"category": {
+						"label": "Search Category",
+						"helper": "In case of a single search, which LinkedIn category to search in",
+						"removeDefaultNone": true,
+						"sort": false
+					},
 					"numberOfPage": {
 						"label": "Number of pages to go through in the search results <a href=\"/api-store/3149/linkedin-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
 						"placeholder": 5,
@@ -98,6 +105,9 @@
 						"required": true
 					}
 				}
+			},
+			"category": {
+				"enum": ["People", "Jobs", "Companies", "Groups", "Schools"]
 			},
 			"numberOfPage": {
 				"type": "number",
