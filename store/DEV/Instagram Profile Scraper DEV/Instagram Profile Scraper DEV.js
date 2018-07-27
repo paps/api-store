@@ -25,19 +25,12 @@ const { parse } = require("url")
 
 const getUrlsToScrape = (data, numberOfPagesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
-	let i = 0
 	const maxLength = data.length
-	const urls = []
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-	while (i < numberOfPagesPerLaunch && i < maxLength) {
-		urls.push(data.shift().trim())
-		i++
-	}
-
-	return urls
+	return data.slice(0, Math.min(numberOfPagesPerLaunch, maxLength)) // return the first elements
 }
 
 // Checks if a url is already in the csv
@@ -113,10 +106,9 @@ const scrapePage = (arg, callback) => {
 			data.status = "Following"
 		}
 	}
-	document.querySelector("button")
-	postsCount = parseInt(postsCount.replace(/,/g, ""), 10)
-	followersCount = parseInt(followersCount.replace(/,/g, ""), 10)
-	followingCount = parseInt(followingCount.replace(/,/g, ""), 10)
+	postsCount = parseInt(postsCount.replace(/[^\d]/g, ""), 10)
+	followersCount = parseInt(followersCount.replace(/[^\d]/g, ""), 10)
+	followingCount = parseInt(followingCount.replace(/[^\d]/g, ""), 10)
 	data.postsCount = postsCount
 	data.followersCount = followersCount
 	data.followingCount = followingCount
