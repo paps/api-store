@@ -93,3 +93,17 @@ Now that this is set, click 💾 <span style="color:blue">Save</span> at the bot
 
 There you go, you only have to wait for endorsement to be made for you!
 
+# Email discovery (optional) { email_discovery }
+
+**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+
+To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+
+<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
+
+Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
+
+Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
+
+**Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your visits to **40 profiles per day**.
+
