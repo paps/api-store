@@ -29,22 +29,12 @@ const MAX_SKILLS = 6
 
 const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
-	let i = 0
 	const maxLength = data.length
-	const urls = []
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-
-	while (i < numberOfAddsPerLaunch && i < maxLength) {
-		const row = Math.floor(Math.random() * data.length)
-		urls.push(data[row].trim())
-		data.splice(row, 1)
-		i++
-	}
-
-	return urls
+	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
 }
 
 const filterRows = (str, db) => {

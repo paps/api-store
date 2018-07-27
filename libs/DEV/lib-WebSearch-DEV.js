@@ -1,3 +1,5 @@
+const { URL } = require("url")
+
 /**
  * This array contains Objects storing CSS selectors in order to scrape data from results
  *
@@ -118,7 +120,26 @@ const _defaultEngines = [
 		"titleSelector": "h3.title",
 		"linkSelector": "a.ac-algo",
 		"descriptionSelector": "div.compText.aAbs",
-		"noResultsSelector": "div.dd.zrp"
+		"noResultsSelector": "div.dd.zrp",
+		"processUrl": url => {
+			let pathnamePattern = "RU="
+			try {
+				let parsedUrl = new URL(url)
+				if (parsedUrl.hostname === "r.search.yahoo.com") {
+					let redirectionUrl = parsedUrl.pathname.split("/").find(el => el.startsWith(pathnamePattern))
+					if (redirectionUrl) {
+						redirectionUrl = decodeURIComponent(redirectionUrl.substr(pathnamePattern.length, redirectionUrl.length))
+						return redirectionUrl
+					} else {
+						return url
+					}
+				} else {
+					return url
+				}
+			} catch (err) {
+				return url
+			}
+		}
 	},
 	{
 		"name": "yandex",
@@ -204,6 +225,12 @@ const _doSearch = async function (query) {
 	}
 
 	result.results = await this.tab.evaluate(_scrapeResults, { engine })
+	if (engine.processUrl) {
+		for (let i = 0, len = result.results.length; i < len; i++) {
+			result.results[i].link = engine.processUrl(result.results[i].link)
+
+		}
+	}
 	return result
 }
 
