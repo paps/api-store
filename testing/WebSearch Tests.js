@@ -40,7 +40,9 @@ const assertResult = async (webSearch, test, loopCount, expectedResult, expected
 		const links = []
 		for (const searchResult of results.results) {
 			if (searchResult.link.indexOf(expectedResult) > -1) {
-				links.push(searchResult.link)
+				if (searchResult.link === expectedResult) {
+					links.push(searchResult.link)
+				}
 			}
 		}
 		const testRes = `expected ${expectedCount}, got ${links.length}`
@@ -68,7 +70,7 @@ const assertEmptyResults = async (webSearch, test, loopCount) => {
 }
 
 ;(async () => {
-	const oneResultTest = "test"
+	const oneResultTest = "testmy"
 	// Giant random string used to avoid results for web engines
 	const noResultTest = "\"zjwj7l67fzddk09dgem6lcsi8qlbxdtxorx1bhpc298r93bk36d1m5bupfkzn1pgquur1ved65k6mgrb5xsydqibjjfoinaq1cxqtcqslqxmrj8bcmvh9cwgfrrdjfejz9i3u7xi7gawyu92bok2azr9nghy8gsf8v960ss6hzs215w5vibt14wiqipxqbg22bblvv301twerd8k7xckat9immnlgdveuhkk9r2enzdct0xlbj4juihunv9dmxdvlz0n657g5t37nvxwy9gmodmp81mbm8ushxobkp0wn5cfbuip6io44p03wnendqs9em4nx2tzpo19jjvhjnlc\""
 	const ignoredEngines = [ "yandex" ] // Always getting captcha
@@ -81,8 +83,7 @@ const assertEmptyResults = async (webSearch, test, loopCount) => {
 	for (const engine of enginesToTest) {
 		webSearch.lockEngine = engine
 		utils.log(`[${webSearch.lockEngine}] Running test: One result expected`, "info")
-		// await assertResult(webSearch, oneResultTest, iterations, "https://www.linkedin.com/company/phantombuster", 1)
-		await assertResult(webSearch, oneResultTest, iterations, "www.speedtest.net", 1)
+		await assertResult(webSearch, oneResultTest, iterations, "https://testmy.net/", 1)
 
 		utils.log(`[${webSearch.lockEngine}] Running test: No result expected`, "info")
 		await assertEmptyResults(webSearch, noResultTest, iterations)
