@@ -1,0 +1,65 @@
+{
+	"slug": "twitter-media-extractor",
+	"description": "",
+	"image": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": false,
+	"defaultArgument": {
+		"sessionCookie": "",
+		"spreadsheetUrl": "https://twitter.com/phbuster"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter session cookie",
+						"helper": "Twitter auth_token cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter profile URL",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name from which Twitter profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
+						"placeholder": "Twitter Profile"
+					},
+					"accountsPerLaunch": {
+						"label": "Number of profiles to process per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will open 2 profile per launch",
+						"inputType": "number",
+						"placeholder": 2
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"accountsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			}
+		}
+	}
+}
