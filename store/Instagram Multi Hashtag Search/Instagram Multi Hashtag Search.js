@@ -23,6 +23,7 @@ const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 
 const SELECTORS = {
+	BEST_PUB: "article header ~ div h2 ~ div",
 	LAST_PUB: "article header ~ h2 ~ div:not([class])",
 	LOADING_ERR: "body > div > div > div > a",
 	TOP_HEADER: "article div ~ h2",
@@ -45,7 +46,8 @@ const isUrl = target => url.parse(target).hostname !== null
  * @return {Promise<Array>} Scraped posts
  */
 const scrapePublications = (arg, cb) => {
-	let divs = document.querySelector(arg.rootSelector).querySelectorAll("div > div > div > div")
+	// if arg.bestPub exists in the evaluate argument it means that the selector to use 
+	let divs = document.querySelector(arg.rootSelector).querySelectorAll(!arg.bestPub ? "div > div > div > div" : "div > div > div > div > div[class]")
 	let res = Array.from(divs).map(el => {
 		let postlink = el.querySelector("a") ? el.querySelector("a").href : null
 		if (postlink) {
@@ -145,6 +147,16 @@ const loadPosts = async (tab, arr, count, term) => {
 	let scrapeCount = 0
 
 	/**
+	 * Issue #104: specific handler used if it's not possible to get the recent publications
+	 * mostly due to masked posts
+	 */
+	 if (!await tab.isPresent(SELECTORS.LAST_PUB)) {
+		 let limitedRes = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.BEST_PUB, bestPub: true })
+		 arr.push(...limitedRes)
+		 return true
+	 }
+
+	 /**
 	 * Moving at the beginning of the list
 	 */
 	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.scroller).scrollIntoView()), { scroller: SELECTORS.LAST_PUB })
