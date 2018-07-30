@@ -42,25 +42,44 @@ const getId = async (tab, url) => {
 	}
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.originalUrl) {
+			return false
+		}
+	}
+	return true
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
 	const {spreadsheetUrl} = utils.validateArguments()
-	const facebookLinks = await utils.getDataFromCsv(spreadsheetUrl)
-	const result = []
+	let facebookLinks = await utils.getDataFromCsv(spreadsheetUrl)
+	let result = await utils.getDb("result.csv")
+	facebookLinks = facebookLinks.filter(el => checkDb(el, result))
+	if (facebookLinks.length < 1) {
+		utils.log("Spreadsheet is empty or every URLs from this sheet has already been treated.", "warning")
+		nick.exit()
+	}	
 	for (const link of facebookLinks) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting IDs: ${timeLeft.message}`, "warning")
 			break
 		}
-		utils.log(`Getting the ID for url:${link}...`, "loading")
-		const id = await getId(tab, link)
-		if (id === false) {
-			utils.log(`Could not get the id for ${link}, profile might be protected.`, "warning")
-			result.push({error: "Could not find the ID: profile protected.", originalUrl: link})
+		if (link) {
+			utils.log(`Getting the ID for url:${link}...`, "loading")
+			const id = await getId(tab, link)
+			if (id === false) {
+				utils.log(`Could not get the id for ${link}, profile might be protected.`, "warning")
+				result.push({error: "Could not find the ID: profile protected.", originalUrl: link})
+			} else {
+				utils.log(`Got ID: ${id} for ${link}`, "done")
+				result.push({url: "https://www.facebook.com/" + id, id, originalUrl: link})
+			}
 		} else {
-			utils.log(`Got ID: ${id} for ${link}`, "done")
-			result.push({url: "https://www.facebook.com/" + id, id, originalUrl: link})
+			utils.log("Empty line... skipping entry", "warning")
 		}
 	}
 	await utils.saveResult(result)
