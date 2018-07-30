@@ -205,7 +205,7 @@ const isUrl = target => url.parse(target).hostname !== null
  * @param { String } target
  * @return { Boolean } true if target represents an Twitter URL otherwise false
  */
-const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
+const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || url.parse(target).hostname === "mobile.twitter.com"
 
 /**
  * @description Main function to launch everything
@@ -219,7 +219,11 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com"
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			if (isTwitterUrl(spreadsheetUrl)) {
+				queries = [ spreadsheetUrl ]
+			} else {
+				queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			}
 		} else {
 			queries = spreadsheetUrl
 		}
