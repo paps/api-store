@@ -40,7 +40,7 @@ const getTotalSendInvitations = (arg, cb) => {
 	 */
 	let digits = raw.match(/([\d,. ]+)/g)
 	if (Array.isArray(digits)) {
-		digits = digits.map(el => parseInt(el.trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10))
+		digits = digits.map(el => parseInt(el.trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10)).filter(el => !isNaN(el))
 	}
 	else {
 		return cb("Cannot find the invitations count", null)
