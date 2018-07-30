@@ -83,3 +83,32 @@ rules:
     - error
   block-spacing:
     - warn
+  space-in-parens:
+    - warn
+  space-before-function-paren:
+    - warn
+    - anonymous: never
+      named: never
+      asyncArrow: always
+  keyword-spacing:
+    - warn
+  space-infix-ops:
+    - warn
+  no-new-object:
+    - error
+  no-nested-ternary:
+    - error
+  no-multi-assign:
+    - warn
+  no-lonely-if:
+    - warn
+  new-parens:
+    - error
+  new-cap:
+    - error
+  max-statements-per-line:
+    - warn
+    - max: 2
+  max-nested-callbacks:
+    - warn
+    - max: 3

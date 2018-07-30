@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Phantombuster's API store",
   "scripts": {
-    "check": "eslint --max-warnings 100 'libs/**/*.js' 'store/**/*.js'"
+    "check": "eslint --max-warnings 139 'libs/**/*.js' 'store/**/*.js'"
   },
   "repository": {
     "type": "git",
