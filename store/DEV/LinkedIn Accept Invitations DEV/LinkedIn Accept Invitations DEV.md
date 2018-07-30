@@ -55,9 +55,26 @@ or
 _// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
 ## 5. How many connections per iteration?
-The 2nd and last parameter you'll need to set is the **number of connections to accept** which means: how many connections do you want the API to add everytime it runs?
+The 2nd parameter you'll need to set is the **number of connections to accept** which means: how many connections do you want the API to add everytime it runs?
 
 Enter a number between 1 and 50 (by default it's **5**). 
+
+## 6. Filter your invitations
+The 3rd & 4th parameters (2 checkboxes) will help you to filter out which one you want to accept:
+
+The first checkbox is used to select people <b>who sent you a message</b>
+The second one is used to select people <b>who have at least one mutual connection</b> with you
+
+## 7. Add a private personalized message 🆕 💬
+You'll find the **message** configuration (<b>the last parameter<b/>).
+This step isn’t mandatory but highly recommended.
+
+In the message textbox you can write a private note (**Total: 1000 characters MAX**) which will be sent when you accept an invitation.
+
+\#firstName\# will be replaced in your message by the first name of the person who invited you
+\#fullName\# will be replaced in your message by the first & last name of the person who invited you
+
+Click on 💾 <span style="color:blue">Save</span>
 
 ## Receive email notifications
 To receive summaries of your agent work, go in your API settings and expand **"email notifications"** field.

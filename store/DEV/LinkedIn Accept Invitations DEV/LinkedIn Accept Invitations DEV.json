@@ -38,6 +38,7 @@
 						"type": "textarea",
 						"helpers": [
 							"Use #fullName# to insert the fullname of the person who sent you an invite",
+							"Use #firstName# to insert the firstname of the person who sent you an invite",
 							"You are limited by LinkedIn to 1000 characters",
 							"Leave empty to accept invitations without sending a message"
 						]
