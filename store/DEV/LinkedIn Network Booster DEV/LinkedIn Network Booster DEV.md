@@ -88,7 +88,9 @@ Below the column name you'll find the **message** configuration. This step isn�
 
 In the message textbox you can write a private note (**Total: 300 characters MAX**) which will be sent to the profile included in your Google spreadsheet list in addition to the invitation to join your network.
 
-\#firstName\# will be replaced in your message by the first name of the person you’re adding
+**\#firstName\#** will be replaced in your message by the first name of the person you’re adding.
+
+Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
 Click on 💾 <span style="color:blue">Save</span>
 
