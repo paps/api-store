@@ -3,6 +3,8 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
+const { URL } = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -29,6 +31,24 @@ const utils = new StoreUtilities(nick, buster)
 const DEFAULT_DB_NAME = "result"
 let db
 // }
+
+/**
+ * @description Function used to remove all GET params and subdomains in a LinkedIn URL
+ * @param {String} url - URL to normalize
+ * @return {String} Normalized URL, if an error occured, returns the original URL
+ */
+const normalizeLinkedInURL = url => {
+	try {
+		let parsedUrl = new URL(url)
+		parsedUrl.searchParams.forEach((value, name, params) => parsedUrl.searchParams.delete(name))
+		if (!(parsedUrl.hostname === "linkedin.com") || !(parsedUrl.hostname === "www.linkedin.com")) {
+			parsedUrl.hostname = "www.linkedin.com"
+		}
+		return parsedUrl.toString()
+	} catch (err) {
+		return url
+	}
+}
 
 ;(async () => {
 	const tab = await nick.newTab()
@@ -65,7 +85,7 @@ let db
 		let link = null
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {
-				link = res.link
+				link = normalizeLinkedInURL(res.link)
 				break
 			}
 		}
