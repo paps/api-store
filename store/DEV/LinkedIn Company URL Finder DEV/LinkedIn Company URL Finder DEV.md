@@ -47,3 +47,19 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>More bots like this one will be added to Phantombuster,</center>
 <center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
+
+# ⚙️️ Repetition setup ⚙️
+
+If your input spreadsheet has a lot of rows, your Phantombuster account might not have enough execution time to find all the company URLs in a single day. No worries though! You can set up **an automatic launch per day** to continue finding company URLs over weeks or months if necessary.
+
+To do so, first go to your API's settings:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select `Once per day` (or another frequency if you prefer):
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup-once-per-day.png)</center>
+
+Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page. That's it! Your API will now add more and more rows to your result CSV file every day, automatically.
+
+Note: You can also [buy more hours per day](https://phantombuster.com/upgrade) to speed up the process!
