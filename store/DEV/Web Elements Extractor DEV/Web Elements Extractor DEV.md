@@ -66,31 +66,6 @@ This API was not built with an intention to spam people so use it carefully and 
 
 # Related Phantombuster APIs
 If you liked this API, you'd love the following ones:
-- [Email Extractor]()
+- [Email Extractor](https://phantombuster.com/api-store/6774/email-extractor)
 
 # You're good to go!
-
-
-# Web Elements Extractor
-
-[.]
-
-A simple CSS selector scraper
-
-The API will extract the content of CSS selectors on given pages
-
-The API needs CSS selectors for every pages used as input
-
-The scraping results will take this format:
-```
-{
-	"url": http://..."
-	"date": "xxx",
-	"label": "xxx",
-	"selector": "sel",
-	"value": "awesome value from scraping process",
-	"error": "Error from the scraping"
-}
-````
-
-The error field is not always present
