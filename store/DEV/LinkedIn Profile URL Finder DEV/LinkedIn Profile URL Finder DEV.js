@@ -40,7 +40,7 @@ let db
 const normalizeLinkedInURL = url => {
 	try {
 		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.forEach((value, name, params) => parsedUrl.searchParams.delete(name))
+		parsedUrl.searchParams.forEach((value, name) => parsedUrl.searchParams.delete(name))
 		if (!(parsedUrl.hostname === "linkedin.com") || !(parsedUrl.hostname === "www.linkedin.com")) {
 			parsedUrl.hostname = "www.linkedin.com"
 		}
