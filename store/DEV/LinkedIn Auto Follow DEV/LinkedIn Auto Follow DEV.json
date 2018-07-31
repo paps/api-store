@@ -1,9 +1,9 @@
 {
     "slug": "linkedin-auto-follow",
     "description": "Automatically follow or unfollow a list of LinkedIn profiles",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/lkd_follow_transparent.png",
-    "gradientBegin": "#544a7d",
-    "gradientEnd": "#ffd452",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/linkedin_auto_follow.png",
+    "gradientBegin": "#59C173",
+    "gradientEnd": "#5D26C1",
     "argumentDescription": "",
     "hidden": true,
     "new": true,
@@ -15,7 +15,7 @@
         "disableScraping": false,
         "unfollowProfiles": false
     },
-    "defaultArgumentAllowed": true,
+    "defaultArgumentAllowed": false,
     "argumentForm": {
         "enabled": true,
         "alpaca": {
