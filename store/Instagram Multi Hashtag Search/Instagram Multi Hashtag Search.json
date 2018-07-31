@@ -3,7 +3,7 @@
 	"description": "Find posts that match multiple hashtags or locations on Instagram",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Multi_Hashtag_Search/instagram_multi_hashtag_search.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentDescription": "",
