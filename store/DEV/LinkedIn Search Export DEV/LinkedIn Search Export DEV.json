@@ -3,6 +3,7 @@
 	"description": "Collect LinkedIn search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
 	"hidden": false,
+	"updated": true,
 	"gradientBegin": "#057212",
 	"gradientEnd": "#0099F7",
 	"argumentHelpAnchor": "#section_argument",
@@ -49,13 +50,13 @@
 					"circles": {
 						"fields": {
 							"first": {
-								"rightLabel": "<b>Search in your 1st degree connections</b>"
+								"rightLabel": "<b>Search in your 1st degree connections</b> (People only)"
 							},
 							"second": {
-								"rightLabel": "<b>Search in your 2nd degree connections</b>"
+								"rightLabel": "<b>Search in your 2nd degree connections</b> (People only)"
 							},
 							"third": {
-								"rightLabel": "<b>Search in your 3rd+ degree connections</b>"
+								"rightLabel": "<b>Search in your 3rd+ degree connections</b> (People only)"
 							}
 						}
 					},
@@ -88,7 +89,7 @@
 			},
 			"search": {
 				"type": "string",
-				"required": true
+				"required": false
 			},
 			"circles": {
 				"properties": {
@@ -107,7 +108,8 @@
 				}
 			},
 			"category": {
-				"enum": ["People", "Jobs", "Companies", "Groups", "Schools"]
+				"enum": ["People", "Jobs", "Companies", "Groups", "Schools"],
+				"default": "People"
 			},
 			"numberOfPage": {
 				"type": "number",
