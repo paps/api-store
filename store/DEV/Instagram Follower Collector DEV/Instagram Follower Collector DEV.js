@@ -190,7 +190,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 
 	let profileCount = 0
 	const profilesArray = []
-	do {
+	// do {
 		
 		let instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
 		instagramJson = JSON.parse(instagramJson.body)
@@ -226,7 +226,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			profileCount += nodes.length
 			buster.progressHint(profileCount / numberMaxOfFollowers, "Charging profiles...")
 		}
-	} while (profileCount < numberMaxOfFollowers)
+	// } while (profileCount < numberMaxOfFollowers)
 	
 	result = result.concat(profilesArray)
 
