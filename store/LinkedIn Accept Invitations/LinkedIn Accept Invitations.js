@@ -139,7 +139,7 @@ const sendMessage = async (tab, url, message, invite) => {
 			}, { message, inMailMessageSelector: inMailSelectorFound })
 		await tab.sendKeys(inMailSelectorFound, " ", { reset: false, keepFocus: true })
 	} else {
-		message = message.replace(/\n+/g, "\r\n")
+		message = message.replace(/\n/g, "\r\n")
 		await tab.sendKeys(inMailSelectorFound, message, { reset: false, keepFocus: false })
 	}
 
