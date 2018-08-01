@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster flags: save-folder" // Save all files at the end of the script
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -9,6 +10,7 @@ const buster = new Buster()
 const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: false,
+	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
@@ -21,8 +23,34 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const { parse } = require("url")
+// const needle = require("needle")
+// const https = require("https");
+
 // }
+const gl = {}
+let graphqlUrl
+let requestSingleId
+
 let rateLimitReached = 0
+let requestIdArray = []
+
+const getMemberDetails = (arg, cb) => {
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			cb(null, res)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
+	}
+}
 
 const getUrlsToScrape = (data, numberofProfilesperLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -48,7 +76,8 @@ const cleanInstagramUrl = (url) => {
 	if (url && url.includes("instagram.")) {
 		let path = parse(url).pathname
 		path = path.slice(1)
-		const id = path.slice(0, path.indexOf("/"))
+		let id = path
+		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
 		if (id !== "p") { /// not a picture url
 			return "https://www.instagram.com/" + id 
 		}
@@ -56,16 +85,26 @@ const cleanInstagramUrl = (url) => {
 	return null
 }
 
-// Removes any duplicate profile 
-const removeDuplicates = (arr) => {
-	let resultArray = []
-	for (let i = 0; i < arr.length ; i++) {
-		if (!resultArray.find(el => el.profileName === arr[i].profileName && el.followersOf === arr[i].followersOf)) {
-			resultArray.push(arr[i])
-		}
-	}
-	return resultArray
-}
+// // Removes any duplicate profile 
+// const removeDuplicates = (arr) => {
+// 	let resultArray = []
+// 	for (let i = 0; i < arr.length ; i++) {
+// 		if (!resultArray.find(el => el.profileName === arr[i].profileName && el.followersOf === arr[i].followersOf)) {
+// 			resultArray.push(arr[i])
+// 		}
+// 	}
+// 	return resultArray
+// }
+// // Removes any duplicate profile 
+// const removeDuplicates2 = (arr) => {
+// 	let resultArray = []
+// 	for (let i = 0; i < arr.length ; i++) {
+// 		if (!resultArray.find(el => el.username === arr[i].username && el.query === arr[i].query)) {
+// 			resultArray.push(arr[i])
+// 		}
+// 	}
+// 	return resultArray
+// }
 
 const scrapeFollowerCount = (arg, callback) => {
 	let followersCount = 0
@@ -80,35 +119,61 @@ const scrapeFollowerCount = (arg, callback) => {
 	callback(null, followersCount)
 }
 
-const scrape = (arg, callback) => {
-	const results = document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li")
+// const scrape = (arg, callback) => {
+// 	const results = document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li")
 
-	const data = []
-	let profilesScraped = 0
-	for (const result of results) {
-		if (result.querySelector("div > div")) {
-			const pictureUrl = result.querySelector("div > div a img").src
+// 	const data = []
+// 	let profilesScraped = 0
+// 	for (const result of results) {
+// 		if (result.querySelector("div > div")) {
+// 			const pictureUrl = result.querySelector("div > div a img").src
 			
-			let newInfos = { pictureUrl }
-			if (result.querySelector("div > div > div > div")) {
-				newInfos.profileUrl = result.querySelector("div > div > div > div > a").href
-				newInfos.profileName = result.querySelector("div > div > div > div").textContent
-			}
-			if (result.querySelector("div > div > div > div:last-child")) {
-				newInfos.fullName = result.querySelector("div > div > div > div:last-child").textContent
-			}
-			newInfos.followersOf = arg.url
-			const button = result.querySelector("button").textContent
-			if (button === "Following") { newInfos.followedByUser = "Followed By User" }
-			data.push(newInfos)
-			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
-		}
+// 			let newInfos = { pictureUrl }
+// 			if (result.querySelector("div > div > div > div")) {
+// 				newInfos.profileUrl = result.querySelector("div > div > div > div > a").href
+// 				newInfos.profileName = result.querySelector("div > div > div > div").textContent
+// 			}
+// 			if (result.querySelector("div > div > div > div:last-child")) {
+// 				newInfos.fullName = result.querySelector("div > div > div > div:last-child").textContent
+// 			}
+// 			newInfos.followersOf = arg.url
+// 			const button = result.querySelector("button").textContent
+// 			if (button === "Following") { newInfos.followedByUser = "Followed By User" }
+// 			data.push(newInfos)
+// 			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
+// 		}
+// 	}
+// 	callback(null, data)
+// }
+
+const interceptInstagramApiCalls = e => {
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200) {
+		requestIdArray.push(e.requestId)
+		requestSingleId = e.requestId
+		graphqlUrl = e.response.url
 	}
-	callback(null, data)
 }
+
+const onHttpRequest = (e) => {
+	gl.headers = e.request.headers
+}
+
+const forgeNewUrl = (endCursor) => {
+	const newUrl = graphqlUrl.slice(0, graphqlUrl.indexOf("first")) + encodeURIComponent("first\":49,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+	return newUrl
+}
+
+
+// const getResp = async (url) => {
+// 	const rep = await needle("get", url)
+// 	return rep
+// }
 
 const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	let result = []
+	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
+
+	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	try {
 		await tab.click("main ul li:nth-child(2) a")
 		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
@@ -118,66 +183,72 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 		rateLimitReached++
 		return result
 	}
-	await tab.wait(200)
-	const followersCount = await tab.evaluate(scrapeFollowerCount)
-	let profilesCount = 0 
-	let showMessage = 0
-	let lastScrollDate = new Date()
-	let checkProfilesCount
-	do{
-		try {
-			checkProfilesCount = await tab.evaluate((arg, callback) => {
-				callback(null, document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li").length)
-			})
-
-			if (checkProfilesCount > profilesCount) {
-				await tab.wait(800)
-				showMessage++
-				profilesCount = checkProfilesCount
-				if (showMessage % 15 === 0) { utils.log(`Loaded ${profilesCount} followers...`, "loading") }
-				buster.progressHint(profilesCount / numberMaxOfFollowers, `${profilesCount} profiles loaded`)
-
-				try {
-					await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a", 8000) // if last li element is a profile and not a spinner
-					await tab.evaluate((arg, callback) => { // scrollToBottom function
-						callback(null, document.querySelector("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a").scrollIntoView())
-					})
-				} catch (err) {
-					utils.log(`Couldn't fully load the followers list, only got ${profilesCount} profiles.`, "warning")
-					break
-				}
-				lastScrollDate = new Date()
-			} else {
-				await tab.wait(100)
-			}
-
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
-			if (profilesCount >= followersCount) {
-				utils.log(`Loaded all ${profilesCount} followers.`, "done")
-				break
-			}
-			if (new Date() - lastScrollDate > 7000) {
-				utils.log(`Scrolling took too long, only got ${profilesCount} followers.`, "done")
-				break
-			}  
-			
-		} catch (err) {
-			utils.log("Error scrolling down the page", "error") 
-			console.log(err)
-		}
-	} while (checkProfilesCount < numberMaxOfFollowers)
-	if (checkProfilesCount >= numberMaxOfFollowers) {
-		utils.log(`Got the last ${numberMaxOfFollowers} followers ouf of ${followersCount}.`, "done")
-	}
-	buster.progressHint(1, `${profilesCount} profiles loaded`)
 	await tab.wait(2000)
-	result = result.concat(await tab.evaluate(scrape, { url, numberMaxOfFollowers }))
+	if (!numberMaxOfFollowers) {
+		numberMaxOfFollowers = await tab.evaluate(scrapeFollowerCount)
+	}
+
+	let profileCount = 0
+	const profilesArray = []
+	do {
+		
+		let instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
+		instagramJson = JSON.parse(instagramJson.body)
+		console.log("status", instagramJson.status)
+		console.log("data", instagramJson.data)
+		if (instagramJson.status === "fail" && instagramJson.message === "rate limited") {
+			utils.log("Rate limit reached, exiting...", "warning")
+			break
+		}
+		if (instagramJson.data.user.edge_followed_by) {
+			let endCursor = instagramJson.data.user.edge_followed_by.page_info.end_cursor
+			console.log("End Cursor", endCursor)
+			let nodes = instagramJson.data.user.edge_followed_by.edges
+		
+			for (const profile of nodes) {
+				const data = {}
+				data.id = profile.node.id
+				data.username = profile.node.username
+				data.profileUrl = "https:///www.instagram.com/" + data.username
+				data.fullName = profile.node.full_name
+				data.imgUrl = profile.node.profile_pic_url
+				data.isPrivate = profile.node.is_private ? "Private" : null
+				data.isVerified = profile.node.is_verified ? "Verified" : null
+				data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
+				data.query = url
+				profilesArray.push(data)
+			}
+			console.log("url", graphqlUrl)
+			const nextUrl = forgeNewUrl(endCursor)
+			await tab.open(nextUrl)
+
+			console.log("newUrl", graphqlUrl)
+			profileCount += nodes.length
+			buster.progressHint(profileCount / numberMaxOfFollowers, "Charging profiles...")
+		}
+	} while (profileCount < numberMaxOfFollowers)
+	
+	result = result.concat(profilesArray)
+
+	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
+	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	return result
 }
+
+// const callInst = (arg, callback) => {
+// 	$.ajax({
+// 		url: arg.url,
+// 		type: "GET",
+// 	}).done(data => {
+// 		callback(null, data)
+// 	}).fail(err => {
+// 		callback(err)
+// 	})
+// }
+
+
+
+
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
@@ -185,7 +256,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
 	result = await utils.getDb(csvName + ".csv")
-	if (!numberMaxOfFollowers) { numberMaxOfFollowers = 100 }
+	if (!numberMaxOfFollowers) { numberMaxOfFollowers = false }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
 		if (urls) {	
@@ -208,9 +279,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			numberofProfilesperLaunch = urls.length
 		}
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
-	}
-	result = await utils.getDb(csvName + ".csv")
-	
+	}	
 
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
@@ -237,7 +306,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 				continue
 			}
 			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers))
-
+			await tab.screenshot(`${Date.now()}.png`)
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
@@ -248,7 +317,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 		}
 	}
 	
-	result = removeDuplicates(result)
+	// result = removeDuplicates(result)
 	
 	await utils.saveResults(result, result, csvName, null, false)
 	nick.exit(0)
