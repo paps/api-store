@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-// "phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -124,15 +123,14 @@ const scrapeResultsAll = (arg, callback) => {
 					if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 					if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
 				}
+			} else if (result.querySelector("figure.search-result__image > img")) {
+					newInfos.name = result.querySelector("figure.search-result__image > img").alt
 			}
 			if (arg.searchCat === "companies") {
-				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
-				if (result.querySelector("figure.search-result__image > img")) {
-					newInfos.name = result.querySelector("figure.search-result__image > img").alt
-					// .ghost-company class it means that the profile doesnt't contain a logo
-					if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-company") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
-						newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
-					}
+				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "") 
+				// .ghost-company class it means that the profile doesnt't contain a logo
+				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-company") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
+					newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
 				}
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
 					newInfos.description = result.querySelector("p.subline-level-1").textContent.trim()
@@ -140,25 +138,16 @@ const scrapeResultsAll = (arg, callback) => {
 			}
 			if (arg.searchCat === "groups") {
 				newInfos.groupId = new URL(url).pathname.replace(/[^\d]/g, "")
-				if (result.querySelector(".search-result__result-link > h3") && result.querySelector(".search-result__result-link > h3").textContent) {
-					newInfos.name = result.querySelector(".search-result__result-link > h3").textContent.trim()
-				} 
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
 					newInfos.memberCount = parseInt(result.querySelector("p.subline-level-1").textContent.replace(/[^\d]/g, ""), 10)
 				}
 			}
 			if (arg.searchCat === "schools") {
-				if (result.querySelector("figure.search-result__image > img")) {
-					newInfos.name = result.querySelector("figure.search-result__image > img").alt
-					// .ghost-school class it means that the profile doesnt't contain a logo
-					if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-school") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
-						newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
-					}
+				// .ghost-school class it means that the profile doesnt't contain a logo
+				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-school") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
+					newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
 				}
 				newInfos.schoolId = new URL(url).pathname.replace(/[^\d]/g, "")
-				if (result.querySelector(".search-result__result-link > h3") && result.querySelector(".search-result__result-link > h3").textContent) {
-					newInfos.name = result.querySelector(".search-result__result-link > h3").textContent.trim()
-				} 
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
 					newInfos.location = result.querySelector("p.subline-level-1").textContent.trim()
 				}
@@ -168,6 +157,7 @@ const scrapeResultsAll = (arg, callback) => {
 			}
 		}
 		if (arg.query) { newInfos.query = arg.query	}
+		newInfos.category = arg.searchCat.charAt(0).toUpperCase() + arg.searchCat.substr(1)
 		data.push(newInfos)
 	}
 	callback(null, data)
@@ -233,27 +223,20 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			utils.log("No result on that page.", "done")
 			break
 		} else {
-			if (searchCat === "jobs") { // scroll one by one to correctly load images
-				const resultCount = await tab.evaluate((arg, callback) => {
-					callback(null, document.querySelectorAll("ul.jobs-search-results__list > li").length)
-				})
-				for (let i = 1; i <= resultCount; i++) {
-					await tab.evaluate((arg, callback) => {
-						callback(null, document.querySelector(`ul.jobs-search-results__list > li:nth-child(${arg.i})`).scrollIntoView())
-					}, { i })
-				}
+			let selectorList
+			if (searchCat === "jobs") { 
+				selectorList = "ul.jobs-search-results__list > li"
 			} else {
-				/**
-				 * In order to load the entire content of all results section
-				 * we need to scroll to each section and wait few ms
-				 * It should be a better & cleaner way to load all sections, we're working on it !
-				 */
-				for (let j = 0, k = 500; j < 10; j++, k += 500) {
-					await tab.wait(200)
-					await tab.scroll(0, k)
-				}
-				await tab.scrollToBottom()
-				await tab.wait(1500)
+				selectorList = "div.search-results ul > li"
+			}
+			const resultCount = await tab.evaluate((arg, callback) => { 
+				callback(null, document.querySelectorAll(arg.selectorList).length)
+			}, { selectorList })
+			for (let i = 1; i <= resultCount; i++) {
+				await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+					callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+				}, { i, selectorList })
+				await tab.wait(100)
 			}
 			result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
@@ -261,7 +244,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 				utils.log(hasReachedLimit, "warning")
 				break
 			} else {
-				utils.log(`Got urls for page ${i}`, "done")
+				utils.log(`Got URLs for page ${i}.`, "done")
 			}
 		}
 		const timeLeft = await utils.checkTimeLeft()
@@ -293,8 +276,15 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, sessionCookie, circles, category, numberOfPage, queryColumn } = utils.validateArguments()
-	let searches
+	let { search, searches, sessionCookie, circles, category, numberOfPage, queryColumn } = utils.validateArguments()
+	// old version compatibility //
+	if (searches) { search = searches } 
+	if (!search) {
+		utils.log("Empty search field.", "error")
+		nick.exit(1)
+	}
+	if (!category) { category = "People" }
+	// 							//
 	if (typeof search === "string") {
 		if (typeof isLinkedInSearchURL(search) === "string") {
 			searches = [ search ]
@@ -310,14 +300,14 @@ const isLinkedInSearchURL = (targetUrl) => {
 		let searchUrl = ""
 		const isSearchURL = isLinkedInSearchURL(search)
 		if (isSearchURL === 0) {
-			if (search) {
+			if (search && search.trim()) {
 				searchUrl = createUrl(search, circles, category)
 			} else {
-				utils.log("Empty line... skipping entry", "warning")
+				utils.log("Empty line... skipping entry.", "warning")
 				continue
 			}
 		} else if (isSearchURL === -1) {
-			utils.log(`${search} doesn't represent a LinkedIn search URL or a LinkedIn search keyword ... skipping entry`, "warning")
+			utils.log(`${search} doesn't represent a LinkedIn search URL or a LinkedIn search keyword ... skipping entry.`, "warning")
 			continue
 		} else {
 			searchUrl = search
@@ -326,6 +316,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query, isSearchURL, category))
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
 			break
 		}
 	}
