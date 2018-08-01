@@ -26,11 +26,6 @@ let requestIdVideos = []
 // }
 
 /**
- * @description Silly wrapper used to emulate noop statement
- */
-const noop = () => { }
-
-/**
  * @param {String} url - url to inspect
  * @return {Boolean} true if is twitter media otherwise false
  */
@@ -38,6 +33,19 @@ const isTwitterMediaURL = url => {
 	try {
 		const parsedUrl = new URL(url)
 		return parsedUrl.pathname.indexOf("/media") > -1
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * @param {String} url - URL to inspect
+ * @return {Boolean} true if twitter URL otherwise false
+ */
+const isTwitterUrl = url => {
+	try {
+		const parsedUrl = new URL(url)
+		return parsedUrl.hostname === "twitter.com"
 	} catch (err) {
 		return false
 	}
@@ -84,7 +92,7 @@ const scrapeMediasMetadata = (arg, cb) => {
 		res.twitterPostUrl = "https://twitter.com" + el.dataset.permalinkPath
 		if (el.querySelector("div.js-adaptive-photo img")) {
 			res.pubImage = el.querySelector("div.js-adaptive-photo img").src
-			res.tweetContent = el.querySelector("div.js-tweet-text-container p").textContent.trim()
+			res.tweetContent = el.querySelector("div.js-tweet-text-container p") ? el.querySelector("div.js-tweet-text-container p").textContent.trim() : "no content found"
 		} else if (el.querySelector("div.js-tweet-text-container p") && !el.querySelector("div.js-macaw-cards-iframe-container")) {
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p").textContent.trim()
 		} else {
@@ -97,12 +105,22 @@ const scrapeMediasMetadata = (arg, cb) => {
 
 const getAllIframeUrls = (arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet .js-macaw-cards-iframe-container")).map(el => "https://twitter.com" + el.dataset.src))
 
+/**
+ * @description Nickjs hook for Twitter API calls, will add all successfull request ids into requestIdVideos
+ * @param {Object} e - CDP Response object
+ */
 const interceptTwitterApiCalls = e => {
 	if (e.response.url.indexOf("https://api.twitter.com/1.1/videos/tweet/config/") > -1 && e.response.status === 200) {
 		requestIdVideos.push(e.requestId)
 	}
 }
 
+/**
+ * @async
+ * @param {Object} tab - Nickjs Tab object
+ * @param {String} url - URL to scrape
+ * @return {Promise<Object>} Medias found from url parameter
+ */
 const scrapeMedias = async (tab, url) => {
 	tab.driver.client.on("Network.responseReceived", interceptTwitterApiCalls)
 	const [httpCode] = await tab.open(url)
@@ -151,7 +169,7 @@ const scrapeMedias = async (tab, url) => {
 				const metadata = await iframeTab.evaluate((arg, cb) => {
 					const json = JSON.parse(document.querySelector("script[type=\"text/twitter-cards-serialization\"]").textContent)
 					cb(null, {
-						mediaUrl: json.card ? json.card.card_uri : "no medial url found",
+						mediaUrl: json.card ? json.card.card_uri : "no media url found",
 						pubImage: document.querySelector("img") ? document.querySelector("img").src : "no external media image found",
 						mediaDescription: document.querySelector("div.SummaryCard-content:first-of-type") ? document.querySelector("div.SummaryCard-content:first-of-type").textContent.trim() : "no media description found"
 					})
@@ -159,7 +177,6 @@ const scrapeMedias = async (tab, url) => {
 				data.push(metadata)
 			} catch (err) {
 				utils.log(`${err.message || err}`, "warning")
-				noop()
 			}
 		}
 		await iframeTab.close()
@@ -183,6 +200,10 @@ const scrapeMedias = async (tab, url) => {
 	}
 }
 
+/**
+ * @param {Array<Object>} json - JSON output representation
+ * @return {Array<Object>} CSV output representation
+ */
 const createCsvOutput = json => {
 	const csv = []
 	for (const el of json) {
@@ -195,7 +216,7 @@ const createCsvOutput = json => {
 	return csv
 }
 
-(async () => {
+;(async () => {
 	const tab = await nick.newTab()
 	let db = await utils.getDb(DB_NAME)
 	let { sessionCookie, spreadsheetUrl, columnName, accountsPerLaunch, queries } = utils.validateArguments()
@@ -214,7 +235,14 @@ const createCsvOutput = json => {
 		queries = [ queries ]
 	}
 
-	queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	if (spreadsheetUrl) {
+		if (!isTwitterUrl(spreadsheetUrl)) {
+			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		} else if (typeof spreadsheetUrl === "string") {
+			queries = [ spreadsheetUrl ]
+		}
+	}
+
 	queries = queries.map(el => el = isTwitterMediaURL(el) ? el : addMediaPathname(el))
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, accountsPerLaunch)
 	if (queries.length < 1) {
