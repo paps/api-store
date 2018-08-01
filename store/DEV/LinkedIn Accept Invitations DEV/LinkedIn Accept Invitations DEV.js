@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -132,13 +131,7 @@ const sendMessage = async (tab, url, message, invite) => {
 		}
 	}
 	await tab.open(url)
-	try {
-		inMailSelectorFound = await tab.waitUntilVisible(inMailMessageSelectors, 15000, "or")
-	} catch (err) {
-		await tab.screenshot(`${Date.now()}.jpg`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
-		throw err
-	}
+	inMailSelectorFound = await tab.waitUntilVisible(inMailMessageSelectors, 15000, "or")
 
 	if (inMailSelectorFound === inMailMessageSelectors[0]) {
 		await tab.evaluate((arg, cb) => {
