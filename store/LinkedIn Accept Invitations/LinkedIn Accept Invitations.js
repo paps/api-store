@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
@@ -117,7 +117,8 @@ const sendMessage = async (tab, url, message, invite) => {
 	}
 
 	const matches = message.match(/#[a-zA-Z0-9]+#/gm)
-	const inMailMessageSelector = "textarea.msg-form__textarea"
+	const inMailMessageSelectors = [ "textarea.msg-form__textarea", "div[contenteditable=true]" ]
+	let inMailSelectorFound
 	if (Array.isArray(matches)) {
 		for (const one of matches) {
 			let field = one.replace(/#/g, "")
@@ -130,9 +131,18 @@ const sendMessage = async (tab, url, message, invite) => {
 		}
 	}
 	await tab.open(url)
-	await tab.waitUntilVisible(inMailMessageSelector, 10000)
-	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.inMailMessageSelector).value = arg.message), { message, inMailMessageSelector })
-	await tab.sendKeys(inMailMessageSelector, " ", { reset: false, keepFocus: true })
+	inMailSelectorFound = await tab.waitUntilVisible(inMailMessageSelectors, 15000, "or")
+
+	if (inMailSelectorFound === inMailMessageSelectors[0]) {
+		await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector(arg.inMailMessageSelector).value = arg.message)
+			}, { message, inMailMessageSelector: inMailSelectorFound })
+		await tab.sendKeys(inMailSelectorFound, " ", { reset: false, keepFocus: true })
+	} else {
+		message = message.replace(/\n+/g, "\r\n")
+		await tab.sendKeys(inMailSelectorFound, message, { reset: false, keepFocus: false })
+	}
+
 	await tab.wait(2500)
 	await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
 	await tab.wait(2500)
