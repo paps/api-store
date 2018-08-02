@@ -3,8 +3,6 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
-// const Papa = require("papaparse")
-
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -196,20 +194,32 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 			if (await tab.isPresent(selectors[7])) {
 				utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 			} else {
-				await connectTo(selector, tab, message)
+				try {
+					await connectTo(selector, tab, message)
+				} catch (err) {
+					scrapedProfile.error = err.message || err
+					db.push(scrapedProfile)
+					utils.log(`Could not add ${url} because of an error: ${err}`, "warning")
+					return
+				}
 				utils.log(`Added ${url}.`, "done")
 			}
 		} else if (selector === selectors[1] || selector === selectors[8] || selector === selectors[9]) { // 2- Case when you need to use the (...) button before and add them from there
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
 					// Add them into the already added username object
+					scrapedProfile.error = "Email needed to add this person."
 					db.push(scrapedProfile)
 					throw("Email needed to add this person.")
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
 					const selector = await tab.waitUntilVisible(["li.connect", ".pv-s-profile-actions--connect"], 5000, "or")
-					await connectTo(selector, tab, message)
-					utils.log(`Added ${url}.`, "done")
+					if (selector === ".pv-s-profile-actions--connect" && await tab.isPresent(`${selector} > li-icon[type=success-pebble-icon]`)) {
+						utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
+					} else {
+						await connectTo(selector, tab, message)
+						utils.log(`Added ${url}.`, "done")
+					}
 				}
 			} else {
 				throw "Is in third circle and the onlySecondCircle option is set to true"
@@ -247,7 +257,6 @@ nick.newTab().then(async (tab) => {
 	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
-	//urls = urls.filter(one => /https?:\/\/(www\.)?linkedin\.com.\in\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g.test(one))
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (let url of urls) {
