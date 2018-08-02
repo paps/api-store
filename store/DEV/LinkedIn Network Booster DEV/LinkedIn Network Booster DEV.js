@@ -197,6 +197,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 				try {
 					await connectTo(selector, tab, message)
 				} catch (err) {
+					scrapedProfile.error = err.message || err
 					db.push(scrapedProfile)
 					utils.log(`Could not add ${url} because of an error: ${err}`, "warning")
 					return
