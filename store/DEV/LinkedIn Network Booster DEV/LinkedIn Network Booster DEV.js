@@ -207,6 +207,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 			if (!onlySecondCircle) {
 				if (await tab.isVisible("button.connect.secondary")) {
 					// Add them into the already added username object
+					scrapedProfile.error = "Email needed to add this person."
 					db.push(scrapedProfile)
 					throw("Email needed to add this person.")
 				} else {
