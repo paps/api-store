@@ -29,9 +29,20 @@ const scrapeCompanyLink = (arg, callback) => {
 	callback(null, document.querySelector("li.search-result a.search-result__result-link").href)
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.query) {
+			return false
+		}
+	}   
+	return true
+}
+
 const scrapeCompanyInfo = (arg, callback) => {
 	const result = {}
 	result.link = arg.link
+	result.query = arg.query
 	if (document.querySelector("h1.org-top-card-module__name")) { result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim() }
 	if (document.querySelector("span.company-industries")) { result.industry = document.querySelector("span.company-industries").textContent.trim() }
 	if (document.querySelector("span.org-top-card-module__location")) { result.location = document.querySelector("span.org-top-card-module__location").textContent.trim() }
@@ -41,8 +52,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 	if (document.querySelector("img.org-top-card-module__logo")) { result.logo = document.querySelector("img.org-top-card-module__logo").src }
 	if (document.querySelector("p.org-about-company-module__specialities")) { result.specialities = document.querySelector("p.org-about-company-module__specialities").textContent.trim() }
 	if (document.querySelector("p.org-about-company-module__founded")) { result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim() }
-	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link"))
-	{
+	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link")) {
 		/**
 		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
 		 * In order to get all LinkedIn profiles we need to split and remove
@@ -100,14 +110,23 @@ const scrapeCompanyInfo = (arg, callback) => {
 	callback(null, result)
 }
 
-const getCompanyInfo = async (tab, link) => {
+
+const getCompanyInfo = async (tab, link, query) => {
 	await tab.open(link)
-	await tab.waitUntilVisible("div.organization-outlet")
-	if (await tab.isPresent("section.org-similar-orgs")) {
-		await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
+	try {
+		await tab.waitUntilVisible("div.organization-outlet")
+		if (await tab.isPresent("section.org-similar-orgs")) {
+			await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
+		}
+		return tab.evaluate(scrapeCompanyInfo, { link, query })
+	} catch (err) {
+		if (await linkedIn.isStillLogged(tab)) {
+			utils.log("Invalid company URL.", "warning")
+			return { link, query, invalidResults: "Couldn't access company profile" }
+		} else {
+			return "invalid"
+		}
 	}
-	return tab.evaluate(scrapeCompanyInfo, { link })
-	// return (await tab.evaluate(scrapeCompanyInfo, {link}))
 }
 
 const isLinkedUrl = target => {
@@ -132,19 +151,25 @@ const isLinkedUrl = target => {
 	if (typeof companies === "string") {
 		companies = await utils.getDataFromCsv(companies)
 	}
+	companies = companies.filter(str => str) // removing empty lines
+	let result = await utils.getDb("result.csv")
+	companies = companies.filter(el => checkDb(el, result))
+	if (companies.length < 1) {
+		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
+		nick.exit(0)
+	}
 	await linkedIn.login(tab, sessionCookie)
-	const result = []
 	for (const company of companies) {
 		if (company.length > 0) {
 			fullUrl = isLinkedUrl(company)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
-				utils.log(`Stopped getting companies infos: ${timeLeft.message}`, "warning")
+				utils.log(`Stopped getting companies data: ${timeLeft.message}`, "warning")
 				break
 			}
 			try {
 				let link = ""
-				utils.log(`Getting infos for ${company}`, "loading")
+				utils.log(`Getting data for ${company}`, "loading")
 				if (!fullUrl) {
 					/**
 					 * HACK: If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
@@ -165,8 +190,16 @@ const isLinkedUrl = target => {
 						link = link.replace(/\/sales\/company/, "/company")
 					}
 				}
-				result.push(await getCompanyInfo(tab, link))
-				utils.log(`Got linkedin infos for ${company}`, "done")
+				const newResult = await getCompanyInfo(tab, link, company)
+				if (newResult === "invalid") {
+					utils.log("Cookie session invalidated, exiting...", "error")
+					break
+				} else {
+					result.push(newResult)
+					if (!newResult.invalidResults) {
+						utils.log(`Got linkedin data for ${company}`, "done")
+					}
+				}
 			} catch (error) {
 				utils.log(`Could not get ${company} linkedIn profile because ${error}`, "warning")
 			}

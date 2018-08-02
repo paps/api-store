@@ -149,6 +149,16 @@ class LinkedIn {
 		}
 		return errorToRet
 	}
+
+	async isStillLogged(tab) {
+		try {
+			await tab.open("https://www.linkedin.com")
+			await tab.waitUntilVisible("#extended-nav", 5000)
+			return true
+		} catch (err) {
+			return false
+		}
+	}
 }
 
 module.exports = LinkedIn
