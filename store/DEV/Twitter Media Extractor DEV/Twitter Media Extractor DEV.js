@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const Nick = require("nickjs")
@@ -64,24 +65,6 @@ const addMediaPathname = url => {
 	}
 }
 
-const loadAllMedias = (arg, cb) => {
-	const scrollTimestamp = Date.now()
-	const waitForNewMedias = () => {
-		const loadedContentCount = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
-		if (!document.querySelector(".stream-container").dataset.minPosition) {
-			cb(null, "DONE")
-		} else if (loadedContentCount <= arg.previousCount) {
-			if (Date.now() - scrollTimestamp >= 30000) {
-				cb(null, "Content can't be loaded after waiting 30s, OR the timeline is fully loaded")
-			}
-			setTimeout(waitForNewMedias, 100)
-		} else {
-			cb(null)
-		}
-	}
-	waitForNewMedias()
-}
-
 const getLoadedMediaCount = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
 }
@@ -115,6 +98,10 @@ const interceptTwitterApiCalls = e => {
 	}
 }
 
+const lazyScroll = (arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-stream-tweet")).map(el => el.scrollIntoView()))
+
+const isTimelineLoaded = (arg, cb) => cb(null, !document.querySelector(".stream-container").dataset.minPosition)
+
 /**
  * @async
  * @param {Object} tab - Nickjs Tab object
@@ -138,22 +125,22 @@ const scrapeMedias = async (tab, url) => {
 		}
 
 		let contentCount = 0
-		while (true) {
+		let lastCount = contentCount
+		while (!await tab.evaluate(isTimelineLoaded)) {
 			try {
+				lastCount = contentCount
 				contentCount = await tab.evaluate(getLoadedMediaCount)
-				utils.log(`${contentCount} medias loaded`, "info")
-				await tab.scrollToBottom()
-				const res = await tab.evaluate(loadAllMedias, { previousCount: contentCount })
-				if (res === "DONE") {
-					contentCount = await tab.evaluate(getLoadedMediaCount)
-					utils.log(`All medias are loaded (${contentCount})`, "done")
-					break
+				if (lastCount !== contentCount) {
+					utils.log(`${contentCount} medias loaded`, "info")
 				}
+				await tab.evaluate(lazyScroll)
 			} catch (err) {
 				utils.log(`Error while loading medias: ${err.message || err}`, "warning")
+				await tab.screenshot(`loading-err-${Date.now()}.jpg`)
 				break
 			}
 		}
+		utils.log(`All medias are loaded (${contentCount})`, "done")
 		const data = await tab.evaluate(scrapeMediasMetadata)
 		const iframes = await tab.evaluate(getAllIframeUrls)
 		const iframeTab = await nick.newTab()
