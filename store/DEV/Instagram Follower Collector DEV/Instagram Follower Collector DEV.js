@@ -23,34 +23,33 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const { parse } = require("url")
-// const needle = require("needle")
-// const https = require("https");
+/* global $ */
 
 // }
 const gl = {}
+const rc = {}
 let graphqlUrl
 let requestSingleId
-
+let agentObject
 let rateLimitReached = 0
-let requestIdArray = []
 
-// const getMemberDetails = (arg, cb) => {
-// 	try {
-// 		$.ajax({
-// 			url: arg.url,
-// 			type: "GET",
-// 			headers: arg.headers
-// 		})
-// 		.done(res => {
-// 			cb(null, res)
-// 		})
-// 		.fail(err => {
-// 			cb(err.toString())
-// 		})
-// 	} catch (err) {
-// 		cb(err)
-// 	}
-// }
+const ajaxCall = (arg, cb) => {
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			cb(null, res)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
+	}
+}
 
 const getUrlsToScrape = (data, numberofProfilesperLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -85,26 +84,16 @@ const cleanInstagramUrl = (url) => {
 	return null
 }
 
-// // Removes any duplicate profile 
-// const removeDuplicates = (arr) => {
-// 	let resultArray = []
-// 	for (let i = 0; i < arr.length ; i++) {
-// 		if (!resultArray.find(el => el.profileName === arr[i].profileName && el.followersOf === arr[i].followersOf)) {
-// 			resultArray.push(arr[i])
-// 		}
-// 	}
-// 	return resultArray
-// }
-// // Removes any duplicate profile 
-// const removeDuplicates2 = (arr) => {
-// 	let resultArray = []
-// 	for (let i = 0; i < arr.length ; i++) {
-// 		if (!resultArray.find(el => el.username === arr[i].username && el.query === arr[i].query)) {
-// 			resultArray.push(arr[i])
-// 		}
-// 	}
-// 	return resultArray
-// }
+// Removes any duplicate profile 
+const removeDuplicates = (arr) => {
+	let resultArray = []
+	for (let i = 0; i < arr.length ; i++) {
+		if (!resultArray.find(el => el.profileUrl === arr[i].profileUrl && el.query === arr[i].query)) {
+			resultArray.push(arr[i])
+		}
+	}
+	return resultArray
+}
 
 const scrapeFollowerCount = (arg, callback) => {
 	let followersCount = 0
@@ -119,43 +108,18 @@ const scrapeFollowerCount = (arg, callback) => {
 	callback(null, followersCount)
 }
 
-// const scrape = (arg, callback) => {
-// 	const results = document.querySelectorAll("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li")
-
-// 	const data = []
-// 	let profilesScraped = 0
-// 	for (const result of results) {
-// 		if (result.querySelector("div > div")) {
-// 			const pictureUrl = result.querySelector("div > div a img").src
-			
-// 			let newInfos = { pictureUrl }
-// 			if (result.querySelector("div > div > div > div")) {
-// 				newInfos.profileUrl = result.querySelector("div > div > div > div > a").href
-// 				newInfos.profileName = result.querySelector("div > div > div > div").textContent
-// 			}
-// 			if (result.querySelector("div > div > div > div:last-child")) {
-// 				newInfos.fullName = result.querySelector("div > div > div > div:last-child").textContent
-// 			}
-// 			newInfos.followersOf = arg.url
-// 			const button = result.querySelector("button").textContent
-// 			if (button === "Following") { newInfos.followedByUser = "Followed By User" }
-// 			data.push(newInfos)
-// 			if (++profilesScraped >= arg.numberMaxOfFollowers) { break }
-// 		}
-// 	}
-// 	callback(null, data)
-// }
-
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
-		requestIdArray.push(e.requestId)
 		requestSingleId = e.requestId
 		graphqlUrl = e.response.url
+		rc.headers = e.response.headers
 	}
 }
 
 const onHttpRequest = (e) => {
-	gl.headers = e.request.headers
+	if (e.request.url.indexOf("graphql/query/?query_hash") > -1 && e.request.url.includes("2id")) {
+		gl.headers = e.request.headers
+	}
 }
 
 const forgeNewUrl = (endCursor) => {
@@ -164,16 +128,8 @@ const forgeNewUrl = (endCursor) => {
 }
 
 
-// const getResp = async (url) => {
-// 	const rep = await needle("get", url)
-// 	return rep
-// }
-
-const getFollowers = async (tab, url, numberMaxOfFollowers) => {
+const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	let result = []
-	// tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
-
-	// tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	try {
 		await tab.click("main ul li:nth-child(2) a")
 		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li > div > div > div > div:last-child", 7500)
@@ -189,29 +145,30 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	}
 
 	let profileCount = 0
+	if (resuming) {
+		profileCount = agentObject.alreadyScraped
+	}
 	const profilesArray = []
 	let lastDate = new Date()
 	await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a", 8000) // if last li element is a profile and not a spinner
 	await tab.evaluate((arg, callback) => { // scrollToBottom function
 		callback(null, document.querySelector("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a").scrollIntoView())
 	})
+
 	let rateLimited = false
 	let allCollected = false
 	do {
 		
 		let instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
 		instagramJson = JSON.parse(instagramJson.body)
-		// console.log("status", instagramJson.status)
-		// console.log("data", instagramJson.data)
-		// if (instagramJson.status === "fail" && instagramJson.message === "rate limited") {
 
 		if (instagramJson.data.user.edge_followed_by) {
 			if (instagramJson.data.user.edge_followed_by.page_info.end_cursor){
 				let endCursor = instagramJson.data.user.edge_followed_by.page_info.end_cursor
-				// console.log("End Cursor", endCursor)
 				let nodes = instagramJson.data.user.edge_followed_by.edges
-			
-				for (const profile of nodes) {
+				let nextUrl
+				if (!resuming) {
+					for (const profile of nodes) {
 					const data = {}
 					data.id = profile.node.id
 					data.username = profile.node.username
@@ -225,20 +182,21 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 					profilesArray.push(data)
 				}
 				profileCount += nodes.length
-				buster.progressHint(profileCount / numberMaxOfFollowers, `Charging profiles...${profileCount}/${numberMaxOfFollowers}`)
-				// console.log("url", graphqlUrl)
-				// console.log(`url is ${url} and status is ${instagramJson.status}`)
-				const nextUrl = forgeNewUrl(endCursor)
-				const [ httpCode ] = await tab.open(nextUrl)
-				if (httpCode === 429) {
+				buster.progressHint(profileCount / numberMaxOfFollowers, `Charging profiles... ${profileCount}/${numberMaxOfFollowers}`)
+				nextUrl = forgeNewUrl(endCursor)
+				} else {
+					nextUrl = agentObject.nextUrl
+					resuming = false 
+				}
+				try { 
+					await tab.inject("../injectables/jquery-3.0.0.min.js")
+					await tab.evaluate(ajaxCall, { url: nextUrl, headers: gl.headers })
+				} catch (err) {
 					utils.log(`Rate limit reached, got ${profileCount} profiles, exiting...`, "warning")
 					rateLimited = true
-					await buster.setGlobalObject({ nextUrl, url })
+					await buster.setAgentObject({ nextUrl, url, alreadyScraped: profileCount })
 					break
 				}
-
-				// console.log("newUrl", graphqlUrl)
-
 				lastDate = new Date()
 			} else {
 				allCollected = true
@@ -246,37 +204,21 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			}
 		}
 		if (new Date() - lastDate > 7500) {
-			utils.log("Took too long", "warning")
+			utils.log("Request took too long", "warning")
 			await tab.screenshot(`Tok${Date.now()}.png`)
 			break
 		}
 	} while (profileCount < numberMaxOfFollowers)
-	if (allCollected || profileCount === numberMaxOfFollowers) { utils.log(`Got all ${profileCount} profiles for ${url}`, "done") }
+	if (allCollected || profileCount >= numberMaxOfFollowers) { utils.log(`Got ${allCollected ? "all " : ""}${profileCount} profiles for ${url}`, "done") }
 	if (!rateLimited) {
-		for (const data of profilesArray) {
-			data.finishedScraping = true
-		}
+		// for (const data of profilesArray) {
+		// 	data.finishedScraping = true
+		// }
+		profilesArray[profilesArray.length - 1].finishedScraping = true
 	}
 	result = result.concat(profilesArray)
-
-	// tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
-	// tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	return result
 }
-
-// const callInst = (arg, callback) => {
-// 	$.ajax({
-// 		url: arg.url,
-// 		type: "GET",
-// 	}).done(data => {
-// 		callback(null, data)
-// 	}).fail(err => {
-// 		callback(err)
-// 	})
-// }
-
-
-
 
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -284,16 +226,16 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowers, numberofProfilesperLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
+	let lastScrape, hadFinishedScraping
 	result = await utils.getDb(csvName + ".csv")
 	if (result.length) {
-		let globalObject
 		try {
-			globalObject = await buster.getGlobalObject()
-			console.log("The object is", globalObject)
-			console.log("last line is", result[result.length - 1])
-			console.log("finished scraping", result[result.length - 1].finishedScraping)
+			agentObject = await buster.getAgentObject()
+			console.log("The object is", agentObject)
+			lastScrape = result[result.length - 1]
+			hadFinishedScraping = result[result.length - 1].finishedScraping
 		} catch (err) {
-			console.log("Could not get the global object:", err)
+			utils.log("Could not access agent Object.", "warning")
 		}
 	}
 	if (!numberMaxOfFollowers) { numberMaxOfFollowers = false }
@@ -323,11 +265,10 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
-
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	await instagram.login(tab, sessionCookie)
 
-	let pageCount = 0
+	let urlCount = 0
 
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -336,9 +277,15 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 			break
 		}
 		try {
-			utils.log(`Scraping followers from ${url}`, "loading")
-			pageCount++
-			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
+			let resuming = false
+			if (agentObject && url === agentObject.url && url === lastScrape.query && !hadFinishedScraping) {
+				utils.log(`Resuming scraping for ${url}, already ${agentObject.alreadyScraped} profiles scraped.`, "info")
+				resuming = true
+			} else {
+				utils.log(`Scraping followers from ${url}`, "loading")
+			}
+			urlCount++
+			buster.progressHint(urlCount / urls.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
 			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
@@ -348,24 +295,21 @@ const getFollowers = async (tab, url, numberMaxOfFollowers) => {
 				utils.log("Private account, cannot access follower list.", "warning")
 				continue
 			}
-			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers))
-			// await tab.screenshot(`${Date.now()}.png`)
+			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers, resuming))
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
-		if (rateLimitReached >= 3) {
+		if (rateLimitReached >= 2) {
 			utils.log("Rate limit reached, stopping the agent.", "warning")
 			break
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	// result = removeDuplicates(result)
-	
+	result = removeDuplicates(result)
 	await utils.saveResults(result, result, csvName, null, false)
 	nick.exit(0)
-	
 })()
 .catch(err => {
 	utils.log(err, "error")
