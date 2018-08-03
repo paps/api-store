@@ -4,6 +4,7 @@
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const url = require("url")
+const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -22,15 +23,13 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 
-const SELECTORS = {
-	BEST_PUB: "article header ~ div h2 ~ div",
-	LAST_PUB: "article header ~ h2 ~ div:not([class])",
-	LOADING_ERR: "body > div > div > div > a",
-	TOP_HEADER: "article div ~ h2",
-	SPINNER: "article > div:last-of-type > div",
-	POSTS: "article > div:not([class]) > div > div"
-}
+let graphql = null
+let hashWasFound = false
+
+/* global $ */
 // }
+
+const ajaxCall = (arg, cb) => $.get({ type: "GET", url: arg.url, headers: arg.headers }).done(data => cb(null, data)).fail(err => cb(err.message || err))
 
 /**
  * @description Tiny function used to check if a given string represents an URL
@@ -38,184 +37,6 @@ const SELECTORS = {
  * @return { Boolean } true if target represents an URL otherwise false
  */
 const isUrl = target => url.parse(target).hostname !== null
-
-/**
- * @description Browser context function used to scrape all data from posts loaded in the DOM
- * @param {Object} arg - Script context parameters
- * @param {Function} cb - Callback function used to return to script context
- * @return {Promise<Array>} Scraped posts
- */
-const scrapePublications = (arg, cb) => {
-	// if arg.bestPub exists in the evaluate argument it means that the selector to use 
-	let divs = document.querySelector(arg.rootSelector).querySelectorAll(!arg.bestPub ? "div > div > div > div" : "div > div > div > div > div[class]")
-	let res = Array.from(divs).map(el => {
-		let postlink = el.querySelector("a") ? el.querySelector("a").href : null
-		if (postlink) {
-			let tmp = new URL(postlink)
-			postlink = `${tmp.protocol}//${tmp.hostname}${tmp.pathname}`
-		} else {
-			postlink = ""
-		}
-		return {
-			postUrl: postlink,
-			postImage: el.querySelector("img") ? el.querySelector("img").src : "",
-			postVideo: el.querySelector("video") ? el.querySelector("video").src : "",
-			description: el.querySelector("img") ? el.querySelector("img").alt : ""
-		}
-	})
-	cb(null, res)
-}
-
-const removeDuplicate = (el, arr) => {
-	for (const one of arr) {
-		if (one.postUrl === el.postUrl || one.postUrl.startsWith(el.postUrl)) {
-			return false
-		}
-	}
-	return true
-}
-
-/**
- * @description Browser context function which checks if the loading error element is into the DOM
- * @param {Object} arg - Script context parameters
- * @param {Function} cb - Callback function used to return to script context
- * @return {Promise<Boolean>} true if the selector is into the DOM otherwise false
- */
-const retryLoading = (arg, cb) => {
-	/**
-	 * Emulating a page scrolling
-	 * If the limit is reached, it will create a snackbar error
-	 */
-	document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
-	document.querySelector(arg.selectors.SPINNER).scrollIntoView()
-	// Since we faking a scrolling event, we're waiting 5 seconds to let the selector been injected into the DOM tree
-	setTimeout(() => {
-		cb(null, document.querySelector(arg.selectors.LOADING_ERR) ? false : true)
-	}, 5000)
-}
-
-/**
- * @description Browser context function which perform a wait until new posts are loaded at screen
- * @param {Object} arg - Scription context parameters
- * @param {Fucntion} cb - Callback function used to return to script
- */
-const waitUntilNewDivs = (arg, cb) => {
-	const startTime = Date.now()
-	const idle = () => {
-		/**
-		 * We need to see if the rate limit snackbar is in the DOM
-		 */
-		if (document.querySelector(arg.selectors.LOADING_ERR)) {
-			cb("Rate limit")
-		}
-		if (document.querySelectorAll(arg.selectors.POSTS).length === arg.previousCount) {
-			if (Date.now() - startTime >= 30000) {
-				cb("No new posts loaded after 30s")
-			}
-			/**
-			 * if the amount is still equal, we need to scroll one more time
-			 * to be sure that there were divs loaded but not present in the DOM
-			 */
-			document.querySelector(arg.selectors.TOP_HEADER).scrollIntoView()
-			document.querySelector(arg.selectors.SPINNER).scrollIntoView()
-			setTimeout(idle, 100)
-		} else {
-			cb(null)
-		}
-	}
-	idle()
-}
-
-/**
- * @description Browser context function used to simply get the amount of posts loaded into the DOM
- * @param {Object} arg - Scription context parameters
- * @param {Fucntion} cb - Callback function used to return to script
- * @return {Promise<Number>} Count of posts elements into the DOM
- */
-const getPostsDivCount = (arg, cb) => cb(null, document.querySelectorAll(arg.selector).length)
-
-/**
- * @async
- * @description Function which scrape publications from the result page
- * @param {Object} tab - Nickjs tab
- * @param {Array} arr - Array to fill
- * @param {Number} count - Amount of publications to scrape
- * @param {String} hashtag - Hashtag name
- * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
- */
-const loadPosts = async (tab, arr, count, term) => {
-	let scrapeCount = 0
-
-	/**
-	 * Issue #104: specific handler used if it's not possible to get the recent publications
-	 * mostly due to masked posts
-	 */
-	 if (!await tab.isPresent(SELECTORS.LAST_PUB)) {
-		 let limitedRes = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.BEST_PUB, bestPub: true })
-		 arr.push(...limitedRes)
-		 return true
-	 }
-
-	 /**
-	 * Moving at the beginning of the list
-	 */
-	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.scroller).scrollIntoView()), { scroller: SELECTORS.LAST_PUB })
-
-	while (scrapeCount < count) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			return false
-		}
-
-		buster.progressHint(scrapeCount / count, term)
-
-		let res = await tab.evaluate(scrapePublications, { rootSelector: SELECTORS.LAST_PUB })
-
-		res = res.filter(el => removeDuplicate(el, arr))
-		arr.push(...res)
-		scrapeCount += res.length
-
-		try {
-			let _divCount = await tab.evaluate(getPostsDivCount, { selector: SELECTORS.POSTS })
-
-			await tab.scrollToBottom()
-			await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.selector).scrollIntoView()), { selector: SELECTORS.SPINNER })
-			await tab.evaluate(waitUntilNewDivs, { previousCount: _divCount, selectors: SELECTORS })
-		} catch (err) {
-			if (err.message.indexOf("Rate limit") > -1) {
-				utils.log("Instragram scraping limit reached, slowing down the API ...", "warning")
-				const startSlowDownTimestamp = Date.now()
-				while (!await tab.evaluate(retryLoading, { selectors: SELECTORS })) {
-					const timeLeft = await utils.checkTimeLeft()
-					if (!timeLeft.timeLeft) {
-						return false
-					}
-					/**
-					 * Yes, the slow down limit is hardcoded,
-					 * but the rate limit seems to be removed after 5 / 10 mins most of the time
-					 */
-					if (Date.now() - startSlowDownTimestamp >= 900000) {
-						utils.log("The limit still reached after 15 mins, resuming scraping process", "warning")
-						return true
-					}
-					utils.log("Still slowing down the API process ...", "loading")
-					await tab.wait(30000) // Doing nothing for 30 seconds
-				}
-				utils.log("Scraping process resumed", "info")
-			} else {
-				console.log(err.message || err)
-				break
-			}
-		}
-	}
-
-	if (arr.length > count) {
-		arr.splice(count, arr.length)
-	}
-	buster.progressHint(1, term) // Not really usefull, but it might be a good feedback to let know the user that the current scraping is over
-	return true
-}
 
 /**
  * @param {Array} firstTab
@@ -279,6 +100,74 @@ const craftCsvObject = results => {
 	return csvRes
 }
 
+const interceptGraphQLHash = e => {
+	if (e.request.url.indexOf("graphql/query/?query_hash") > -1 && e.request.url.includes("after") && !hashWasFound) {
+		graphql = {}
+		graphql.headers = e.request.headers
+		const parsedUrl = new URL(e.request.url)
+		graphql.hash = parsedUrl.searchParams.get("query_hash")
+		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
+		hashWasFound = !hashWasFound
+	}
+}
+
+const forgeAjaxURL = () => {
+	const url = new URL("https://www.instagram.com/graphql/query/?query_hash&variables")
+	url.searchParams.set("query_hash", graphql.hash)
+	url.searchParams.set("variables", JSON.stringify(graphql.variables))
+	return url.toString()
+}
+
+const waitWhileHash = async tab => {
+	tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
+	while (!hashWasFound) await tab.scrollToBottom()
+	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
+}
+
+/**
+ * @async
+ * @description
+ * @param {Object} tab - Nickjs Tab instance
+ * @param {Array<Object>} arr - Array holding scraping results
+ * @param {Number} maxPosts - Max posts to scrape
+ * @param {String} term - Scraped term
+ * @return {Promise<Boolean>} false is abort or rate limit
+ */
+const scrapePosts = async (tab, arr, maxPosts, term) => {
+	let i = 0
+	graphql.variables.first = 50
+	await tab.inject("../injectables/jquery-3.0.0.min.js")
+	while (i < maxPosts) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			return false
+		}
+		buster.progressHint(i / maxPosts, term)
+		let ajaxRes
+		try {
+			ajaxRes = await tab.evaluate(ajaxCall, { url: forgeAjaxURL(), headers: graphql.headers })
+		} catch (err) {
+			utils.log(err, "warning")
+			return false
+		}
+		const cursor = term.startsWith("#") ? ajaxRes.data.hashtag.edge_hashtag_to_media.page_info : ajaxRes.data.location.edge_location_to_media.page_info
+		const hashtags = term.startsWith("#") ? ajaxRes.data.hashtag.edge_hashtag_to_media.edges : ajaxRes.data.location.edge_location_to_media.edges
+		if (!cursor.has_next_page && !cursor.end_cursor) {
+			break
+		} else {
+			graphql.variables.after = cursor.end_cursor
+			const toPush = hashtags.map(el => { return { postUrl: `https://www.instagram.com/p/${el.node.shortcode}`, term } })
+			i += hashtags.length
+			arr.push(...toPush)
+			utils.log(`Got ${i} posts `, "info")
+		}
+	}
+	arr = arr.slice(0, maxPosts)
+	buster.progressHint(1, term)
+	return true
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
@@ -329,9 +218,11 @@ const craftCsvObject = results => {
 			continue
 		}
 		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
-		const hasTimeLeft = await loadPosts(tab, scrapedResult, maxPosts, term)
+		await waitWhileHash(tab)
+		const hasTimeLeft = await scrapePosts(tab, scrapedResult, maxPosts, term)
 		results[term] = [ ...scrapedResult ]
 		scrapedResult.length = 0
+		hashWasFound = false
 		if (!hasTimeLeft) {
 			break
 		}

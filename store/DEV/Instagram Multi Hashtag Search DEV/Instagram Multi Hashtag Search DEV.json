@@ -88,7 +88,7 @@
 			"maxPosts": {
 				"type": "number",
 				"default": 1000,
-				"maximum": 3000,
+				"maximum": 5000,
 				"minimum": 1
 			}
 		}
