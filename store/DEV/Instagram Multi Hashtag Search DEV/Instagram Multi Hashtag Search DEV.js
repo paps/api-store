@@ -47,17 +47,13 @@ const isUrl = target => url.parse(target).hostname !== null
  * @return {Array} Array containing only posts which matches with one or more search terms
  */
 const filterResults = (results, terms, leastTerm) => {
-	console.log("filtrons, ", terms, "least", leastTerm)
-	console.log(results)
 	let filterResult = []
+	console.log("restults", results)
 	for (const term of terms) {
 		if (term !== leastTerm) {
 			for (const result of results) {
 				const regex = /#[a-zA-Z\u00C0-\u024F]+/gu
 				if (result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
-					console.log("desc", result.description)
-					console.log("least", leastTerm)
-					console.log("term", term)
 					filterResult.push(result) 
 				}
 			}
@@ -68,12 +64,40 @@ const filterResults = (results, terms, leastTerm) => {
 
 // get the post count from a given hashtag. If there's only few of them (<40), return 40
 const getPostCount = (arg, callback) => {
-	let postCount = 40
+	let postCount = 0
 	if (document.querySelector("header > div:last-of-type > span")) {
 		postCount = document.querySelector("header > div:last-of-type > span").textContent
 		postCount = parseInt(postCount.replace(/,/g, ""), 10)
+	} else {
+		if (document.querySelector("article header ~ div h2 ~ div")) {
+			postCount += document.querySelector("article header ~ div h2 ~ div").querySelectorAll("div > div > div > div > div[class]").length
+		}
+		if (document.querySelector("article header ~ h2 ~ div:not([class])")) {
+			postCount += document.querySelector("article header ~ h2 ~ div:not([class])").querySelectorAll("div > div > div > div").length
+		}
 	}
 	callback(null, postCount)
+}
+
+const scrapeData = (arg, cb) => {
+	const data = []
+	if (document.querySelector(arg.rootSelector)) {
+		const results = document.querySelector(arg.rootSelector).querySelectorAll(arg.divSelector)
+		for (const result of results) {
+			let postlink = result.querySelector("a") ? result.querySelector("a").href : null
+			if (postlink) {
+				let tmp = new URL(postlink)
+				postlink = `${tmp.protocol}//${tmp.hostname}${tmp.pathname}`
+			} else {
+				postlink = ""
+			}
+			data.push({
+				postUrl: postlink,
+				description: result.querySelector("img") ? result.querySelector("img").alt : ""
+			})
+		}
+	} 
+	cb(null, data)
 }
 
 
@@ -109,10 +133,28 @@ const forgeAjaxURL = () => {
 	return url.toString()
 }
 
-const waitWhileHash = async tab => {
+// Removes any duplicate profile 
+const removeDuplicates = (arr) => {
+	let resultArray = []
+	for (let i = 0; i < arr.length ; i++) {
+		if (!resultArray.find(el => el.profileUrl === arr[i].profileUrl)) {
+			resultArray.push(arr[i])
+		}
+	}
+	return resultArray
+}
+
+const scrapeFirstPage = async tab => {
+	const time = new Date()
 	tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
-	while (!hashWasFound) await tab.scrollToBottom()
+	while (!hashWasFound) {
+		await tab.scrollToBottom()
+		if (new Date() - time > 5000) { break }
+	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
+	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div h2 ~ div", divSelector: "div > div > div > div > div[class]" })
+	data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
+	return data	
 }
 
 /**
@@ -188,7 +230,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		terms[i] = terms[i].toLowerCase();
 	}
 	terms = Array.from(new Set(terms)) // removing duplicates
-	console.log(terms)
 
 	if (terms.length < 2) {
 		utils.log("Need at least two different hashtags.", "error")
@@ -244,7 +285,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	const scrapedData = []
 
 	do {
-		console.log("sortArray", sortArray)
 		let minValue = sortArray[0].resultCount
 		let minPos = 0
 		for (let i = 1; i < sortArray.length; i++) {
@@ -253,7 +293,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				minPos = i
 			}
 		}
-		console.log("pos ", minPos)
 		leastTerm = sortArray[minPos].term
 		utils.log(`The least popular term is ${leastTerm} with ${minValue} posts`, "done")
 
@@ -268,7 +307,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			utils.log(`No search result page found for ${term}`, "error")
 			nick.exit(1)
 		}
-		console.log("target", targetUrl)
 		const [httpCode] = await tab.open(targetUrl)
 		if (httpCode === 404) {
 			utils.log(`No results found for ${term}`, "error")
@@ -282,12 +320,14 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			nick.exit(1)
 		}
 		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
-		await waitWhileHash(tab)
-		await scrapePosts(tab, scrapedResult, maxPosts, term)
+		scrapedResult = await scrapeFirstPage(tab)
+		if (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount) {
+			await scrapePosts(tab, scrapedResult, maxPosts, term)
+		}
 
-		
-		const filteredResults = filterResults(scrapedResult, terms, leastTerm)
-
+		scrapedResult = scrapedResult.slice(0, maxPosts)
+		let filteredResults = filterResults(scrapedResult, terms, leastTerm)
+		filteredResults = removeDuplicates(filteredResults)
 		for (const post of filteredResults) {
 			try {
 				utils.log(`Scraping matching post ${post.postUrl}`, "info")
