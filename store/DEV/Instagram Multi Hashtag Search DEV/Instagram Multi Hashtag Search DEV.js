@@ -48,12 +48,11 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 const filterResults = (results, terms, leastTerm) => {
 	let filterResult = []
-	console.log("restults", results)
+	const regex = /#[a-zA-Z\u00C0-\u024F]+/gu
 	for (const term of terms) {
 		if (term !== leastTerm) {
 			for (const result of results) {
-				const regex = /#[a-zA-Z\u00C0-\u024F]+/gu
-				if (result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
+				if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
 					filterResult.push(result) 
 				}
 			}
@@ -122,7 +121,7 @@ const interceptGraphQLHash = e => {
 		const parsedUrl = new URL(e.request.url)
 		graphql.hash = parsedUrl.searchParams.get("query_hash")
 		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
-		hashWasFound = !hashWasFound
+		hashWasFound = true
 	}
 }
 
@@ -133,11 +132,11 @@ const forgeAjaxURL = () => {
 	return url.toString()
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate post 
 const removeDuplicates = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
-		if (!resultArray.find(el => el.profileUrl === arr[i].profileUrl)) {
+		if (!resultArray.find(el => el.postUrl === arr[i].postUrl)) {
 			resultArray.push(arr[i])
 		}
 	}
@@ -152,6 +151,7 @@ const scrapeFirstPage = async tab => {
 		if (new Date() - time > 5000) { break }
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
+	hashWasFound = false
 	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div h2 ~ div", divSelector: "div > div > div > div > div[class]" })
 	data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
 	return data	
@@ -192,12 +192,12 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			graphql.variables.after = cursor.end_cursor
 			let toPush
 			try {
-				toPush = hashtags.map(el =>{ return { postUrl: `https://www.instagram.com/p/${el.node.shortcode}`, description: el.node.edge_media_to_caption.edges[0].node.text } })
+				toPush = hashtags.map(el =>{ return { postUrl: `https://www.instagram.com/p/${el.node.shortcode}`, description: el.node.edge_media_to_caption.edges[0] ? el.node.edge_media_to_caption.edges[0].node.text : null } })
 				i += hashtags.length
 				arr.push(...toPush)
 				utils.log(`Got ${i} posts `, "info")
 			} catch (err) {
-				// 
+				//
 			}
 		}
 	}
@@ -241,34 +241,29 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let leastTerm
 	let removeTerm = []
 	let sortArray = []
+	let resultCount
 	for (const term of terms) {
-		let targetUrl = ""
-		let inputType = term.startsWith("#") ? "tags" : "locations"
-		targetUrl =
-				term.startsWith("#")
-					? `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
-					: await instagram.searchLocation(tab, term)
-		if (!targetUrl) {
-			utils.log(`No search result page found for ${term}`, "error")
-			removeTerm.push(term)
-			continue
-		}
-		const [httpCode] = await tab.open(targetUrl)
-		if (httpCode === 404) {
-			utils.log(`No results found for ${term}`, "error")
-			removeTerm.push(term)
-			continue
-		}
+		if (term.startsWith("#")) {
+			const targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
+			const [httpCode] = await tab.open(targetUrl)
+			if (httpCode === 404) {
+				utils.log(`No results found for ${term}`, "error")
+				removeTerm.push(term)
+				continue
+			}
 
-		try {
-			await tab.waitUntilVisible("main", 15000)
-		} catch (err) {
-			utils.log(`Page is not opened: ${err.message || err}`, "error")
-			removeTerm.push(term)
-			continue
+			try {
+				await tab.waitUntilVisible("main", 15000)
+			} catch (err) {
+				utils.log(`Page is not opened: ${err.message || err}`, "error")
+				removeTerm.push(term)
+				continue
+			}
+			resultCount = await tab.evaluate(getPostCount)
+			utils.log(`Getting ${resultCount} posts for "hashtag" ${term}...`, "loading")
+		} else {
+			resultCount = 1
 		}
-		const resultCount = await tab.evaluate(getPostCount)
-		utils.log(`Getting ${resultCount} posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term}...`, "loading")
 		sortArray.push({ term, resultCount })
 	}
 
@@ -321,17 +316,16 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		}
 		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
 		scrapedResult = await scrapeFirstPage(tab)
-		if (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount) {
+		if (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount)) {
 			await scrapePosts(tab, scrapedResult, maxPosts, term)
 		}
 
 		scrapedResult = scrapedResult.slice(0, maxPosts)
-		let filteredResults = filterResults(scrapedResult, terms, leastTerm)
-		filteredResults = removeDuplicates(filteredResults)
-		for (const post of filteredResults) {
+		const filteredRes = removeDuplicates(filterResults(scrapedResult, terms, leastTerm))
+		for (const post of filteredRes) {
 			try {
 				utils.log(`Scraping matching post ${post.postUrl}`, "info")
-				buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
+				buster.progressHint(scrapedData.length / filteredRes.length, "Scraping matching posts")
 				await tab.open(post.postUrl)
 				let scrapingRes = await instagram.scrapePost(tab)
 				scrapingRes.postUrl = post.postUrl
