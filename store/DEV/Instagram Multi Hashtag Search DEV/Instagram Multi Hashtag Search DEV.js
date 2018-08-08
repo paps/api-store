@@ -210,13 +210,9 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	let terms = []
 
-	if (!maxPosts) {
-		maxPosts = 1000
-	}
+	if (!maxPosts) { maxPosts = 1000 }
 
-	if (!csvName) {
-		csvName = "result"
-	}
+	if (!csvName) { csvName = "result" }
 
 	for (const el of search) {
 		if (isUrl(el)) {
@@ -247,7 +243,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			const targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
 			const [httpCode] = await tab.open(targetUrl)
 			if (httpCode === 404) {
-				utils.log(`No results found for ${term}`, "error")
+				utils.log(`No results found for ${term}`, "warning")
 				removeTerm.push(term)
 				continue
 			}
@@ -260,14 +256,14 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				continue
 			}
 			resultCount = await tab.evaluate(getPostCount)
-			utils.log(`Getting ${resultCount} posts for "hashtag" ${term}...`, "loading")
+			utils.log(`There's ${resultCount} posts for ${term}...`, "loading")
 		} else {
 			resultCount = 1
 		}
 		sortArray.push({ term, resultCount })
 	}
 
-	if (removeTerm.length) {
+	if (removeTerm.length) { // we remove every term that gave no results
 		for (const term of removeTerm) {
 			terms.splice(terms.indexOf(term), 1)
 		}
@@ -276,56 +272,70 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			nick.exit(1)
 		}
 	}
-
 	const scrapedData = []
-
 	do {
 		let minValue = sortArray[0].resultCount
 		let minPos = 0
-		for (let i = 1; i < sortArray.length; i++) {
+		for (let i = 1; i < sortArray.length; i++) { // finding the least popular term
 			if (sortArray[i].resultCount < minValue) {
 				minValue = sortArray[i].resultCount
 				minPos = i
 			}
 		}
 		leastTerm = sortArray[minPos].term
-		utils.log(`The least popular term is ${leastTerm} with ${minValue} posts`, "done")
-
 		const term = leastTerm
 		let targetUrl = ""
 		let inputType = term.startsWith("#") ? "tags" : "locations"
-		targetUrl =
-				term.startsWith("#")
-					? `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
-					: await instagram.searchLocation(tab, term)
+		if (term.startsWith("#")) {
+			targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
+		} else {
+			await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
+			try {		
+				await tab.waitUntilVisible("nav input", 5000)
+			} catch (err) { // if the previous page had no result, there's no input field
+				await tab.open("https://www.instagram.com")
+				await tab.waitUntilVisible("nav input", 5000)
+			}
+			if (await tab.isVisible("nav input")) { 
+				targetUrl = await instagram.searchLocation(tab, term)
+			}
+		}
 		if (!targetUrl) {
-			utils.log(`No search result page found for ${term}`, "error")
-			nick.exit(1)
+			utils.log(`No search result page found for ${term}.`, "error")
+			terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
+			continue
 		}
 		const [httpCode] = await tab.open(targetUrl)
 		if (httpCode === 404) {
 			utils.log(`No results found for ${term}`, "error")
-			nick.exit(1)
+			terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
+			continue
 		}
 
 		try {
 			await tab.waitUntilVisible("main", 15000)
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
-			nick.exit(1)
+			terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
+			continue
 		}
-		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term} ...`, "loading")
+		utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term}...`, "loading")
+
+		//scraping the first page the usual way
 		scrapedResult = await scrapeFirstPage(tab)
+
+		// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
 		if (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount)) {
 			await scrapePosts(tab, scrapedResult, maxPosts, term)
 		}
 
-		scrapedResult = scrapedResult.slice(0, maxPosts)
-		const filteredRes = removeDuplicates(filterResults(scrapedResult, terms, leastTerm))
-		for (const post of filteredRes) {
+		scrapedResult = scrapedResult.slice(0, maxPosts) // only getting maxPosts results
+		const filteredResults = removeDuplicates(filterResults(scrapedResult, terms, leastTerm))
+		utils.log(`Got ${filteredResults.length} matching posts.`, "done")
+		for (const post of filteredResults) {
 			try {
 				utils.log(`Scraping matching post ${post.postUrl}`, "info")
-				buster.progressHint(scrapedData.length / filteredRes.length, "Scraping matching posts")
+				buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
 				await tab.open(post.postUrl)
 				let scrapingRes = await instagram.scrapePost(tab)
 				scrapingRes.postUrl = post.postUrl
@@ -335,11 +345,11 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				utils.log(`Could not scrape ${post.postUrl}`, "warning")
 			}
 		}
-		terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term),1) // removing least popular result from sortArray and terms
+		terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
 	} while (sortArray.length >= 2)
-	utils.log(`${scrapedData.length} posts scraped`, "done")
+	utils.log(`${scrapedData.length} posts scraped.`, "done")
 	await utils.saveResults(scrapedData, craftCsvObject(scrapedData), csvName)
-	nick.exit()
+	nick.exit(0)
 })()
 	.catch(err => {
 		utils.log(err, "error")
