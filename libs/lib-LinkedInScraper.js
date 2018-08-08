@@ -426,6 +426,7 @@ const craftCsvObject = infos => {
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
 		scoreFromHunter: (hasHunter) ? (infos.hunter.score || null) : null,
 		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
+		companyFromHunter : (hasHunter) ? (infos.hunter.company || null) : null,
 		twitterFromHunter: (hasHunter) ? (infos.hunter.twitter || null) : null,
 		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
