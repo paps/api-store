@@ -2,17 +2,17 @@
 
 This API will search for multiple hashtags and/or location on Instagram at the same time, then **return the posts that match at least two of them**.
 
-For example, using `#vegan` and `Paris, France` as input, you'll know who's talking about vegetables in the most beautiful city in the world!
+For example, using `#vegan` and `Paris France` as input, you'll know who's talking about vegetables in the most beautiful city in the world!
 
 To get your imagination going, here are some other examples:
 - `#sponsored + #healthy`: Healthy posts being sponsored on IG right now
 - `#beach + #makeup`: Makeup products that are beach-ready
-- `#ootd + San Francisco, California`: Who's wearing what in SF today?
+- `#ootd + San Francisco California`: Who's wearing what in SF today?
 
 You get the idea! There is no limit to the number of hashtags you can use, so if you're feeling like a power user, put more than 2 :)
 
 # What will you need? ⚙️ 
-- **List of hashtags and/or locations**: Provide a list of hashtags beginning with # (like `#phantombuster`) or a locations (like `New York, New York`) and the API will find the IG posts that match at least two of them
+- **List of hashtags and/or locations**: Provide a list of hashtags beginning with # (like `#phantombuster`) or a locations (like `New York`) and the API will find the IG posts that match at least two of them
 - **Session cookie (sessionid)**: Your Instagram `sessionid` session cookie (more info below)
 
 # Which steps to follow?
@@ -32,7 +32,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 ## 4. Enter at least two hashtags/locations
 In the 1st configuration field, you have to add at least 2 hashtags or locations so that the API can search for those terms in Instagram.
 
-Hashtags and locations are differentiated by the presence of a # in front of the word. Successively enter either a hashtag beginning with # (example: `#phantombuster`) or a location (example: `New York, New York`).
+Hashtags and locations are differentiated by the presence of a # in front of the word. Successively enter either a hashtag beginning with # (example: `#phantombuster`) or a location (example: `New York`).
 
 You can also enter a Google spreadsheet URL or a CSV with each line containing multiple hashtags or locations in a single cell, separated by commas (ex: 'New York, #selfie'). Each line will be treated as a single multi-hashtag search.
 
@@ -70,4 +70,4 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 # Limits
 
-Instagram limits the number of requests you can do **per hour, per account**. We've found that in general, after doing a search for 2 hashtags/locations of 1500 posts each, **Phantombuster the API will have to slow down**. This is done automatically for you.
+Instagram limits the number of requests you can do **per hour, per account**. We've found that in general, after doing a search for 5000 posts, the API will need to pause for at least 15min.

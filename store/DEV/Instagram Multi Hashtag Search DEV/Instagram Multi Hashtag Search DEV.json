@@ -22,7 +22,7 @@
 		"likes": "Number of likes the post received",
 		"views": "Number of views, if the post contains a video",
 		"location": "Where the photo was taken, if specified",
-		"matches": "Which hashtags or locations lead to this post",
+		"matches": "Which hashtags or location lead to this post",
 		"postVideo": "Link to raw video file, can contains more than one link if the data is available",
 		"videoThumbnail": "Link to raw video thumbnail, if available"
 	},

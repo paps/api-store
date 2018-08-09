@@ -197,7 +197,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	const scrapedData = []
 
 	if (!maxPosts) { maxPosts = 1000 }
-
 	if (!csvName) { csvName = "result" }
 	let hasSpreadsheet = false
 	let csvData = []
