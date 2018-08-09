@@ -44,12 +44,10 @@
 					},
 					"numberMaxOfFollowing": {
 						"label": "Number of followers to collect per profile - if none will try to scrape all of them",
-						"placeholder": 100,
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {
 						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
 						"inputType": "number"
 					},
 					"csvName": {

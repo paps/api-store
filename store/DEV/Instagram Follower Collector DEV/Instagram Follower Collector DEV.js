@@ -64,7 +64,7 @@ const getUrlsToScrape = (data, numberofProfilesperLaunch) => {
 // Checks if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
-		if (str === line.query && line.finishedScraping) {
+		if (str === line.query && (line.finishedScraping || line.error)) {
 			return false
 		}
 	}
@@ -77,7 +77,7 @@ const cleanInstagramUrl = (url) => {
 		path = path.slice(1)
 		let id = path
 		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
-		if (id !== "p") { /// not a picture url
+		if (id !== "p") { // not a picture url
 			return "https://www.instagram.com/" + id 
 		}
 	}
@@ -172,7 +172,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 					const data = {}
 					data.id = profile.node.id
 					data.username = profile.node.username
-					data.profileUrl = "https:///www.instagram.com/" + data.username
+					data.profileUrl = "https://www.instagram.com/" + data.username
 					data.fullName = profile.node.full_name
 					data.imgUrl = profile.node.profile_pic_url
 					data.isPrivate = profile.node.is_private ? "Private" : null
@@ -293,6 +293,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				continue
 			} else if (selected === "article h2") {
 				utils.log("Private account, cannot access follower list.", "warning")
+				result.push({ query: url, error: "Can't access private account list" })
 				continue
 			}
 			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers, resuming))
@@ -301,7 +302,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			continue
 		}
 		if (rateLimitReached >= 2) {
-			utils.log("Rate limit reached, stopping the agent.", "warning")
+			utils.log("Rate limit reached, stopping the agent. You should retry in 15min.", "warning")
 			break
 		}
 	}
