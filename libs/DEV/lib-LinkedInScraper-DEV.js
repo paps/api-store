@@ -584,35 +584,45 @@ class LinkedInScraper {
 		this.utils.log("Profile visited", "done")
 	}
 
-
 	// converts a Sales Navigator profile to a classic LinkedIn profile
 	async salesNavigatorUrlConverter(url) {
 		let urlObject = parse(url)
-		if (!urlObject.pathname.startsWith("/sales")) { // Not a Sales Navigator link
-			return url
-		}
-		try {
-			const tab = await this.nick.newTab()
-			await tab.open(url)
-			const selectors = ["code"]
-			await tab.waitUntilPresent(selectors, 7500, "or")
-			await tab.wait(2000)
-			const codeTags = await tab.evaluate((arg, callback) => {
-				const codes = Array.prototype.slice.call(document.querySelectorAll("code"))
-				for (const code of codes) {
-					if (code.textContent.includes("flagship")) { callback(null, code.textContent) }
+		if (urlObject.pathname.startsWith("/sales")) { // Sales Navigator link
+			if (urlObject.pathname.startsWith("/sales/profile/")) { url = urlObject.hostname + "/sales/people" + urlObject.pathname.slice(14) } // converting '/sales/profile' to '/sales/people
+			try {
+				const tab = await this.nick.newTab()
+				await tab.open(url)
+				await tab.waitUntilPresent("code", 15000)
+				await tab.wait(3000)
+				try {
+					const location = await tab.evaluate((arg, cb) => cb(null, document.location.href)) // if no Sales Navigator account, it automatically redirects to the classic profile
+					const locationObject = parse(location)
+					if (locationObject.pathname.startsWith("/in/")) { return location }
+				} catch (err) {
+					this.utils.log("Error accessing current location", "warning")
 				}
-				callback(null, null)
-			})
-			if (codeTags) {
-				const convertedUrl = JSON.parse(codeTags).flagshipProfileUrl
-				this.utils.log(`Converting ${url} to ${convertedUrl}`, "info")
-				return convertedUrl
-			} else {
-				return url
+				const codeTag = await tab.evaluate((arg, callback) => {
+					const codes = Array.prototype.slice.call(document.querySelectorAll("code"))
+					for (const code of codes) {
+						if (code.textContent.includes("flagship")) { return callback(null, code.textContent) }
+					}
+					callback(null, null)
+				})
+				await tab.close()
+				if (codeTag) {
+					const convertedUrl = JSON.parse(codeTag).flagshipProfileUrl
+					this.utils.log(`Converting ${url} to ${convertedUrl}`, "info")
+					if (convertedUrl && convertedUrl.indexOf("linkedin.com") > -1) {
+						return convertedUrl
+					} else {
+						throw "Profile doesn't contain a LinkedIn Profile Url"
+					}
+				} else {
+					throw "Could not find a LinkedIn Profile Url in Sales Navigator Profile"
+				}
+			} catch (err) {
+				this.utils.log(`Could not open ${url}, ${err}`, "error")
 			}
-		} catch (err) {
-			this.utils.log(`Could not open ${url}, ${err}`, "error")
 		}
 		return url
 	}
