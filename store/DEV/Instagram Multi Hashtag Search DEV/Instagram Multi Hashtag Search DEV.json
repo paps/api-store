@@ -33,7 +33,7 @@
 				"fields": {
 					"search": {
 						"label": "Hashtags / locations list <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_4enteratleasttwohashtagslocations\" target=\"_blank\">(?)</a>",
-						"helper": "You can also enter a public Google Spreadsheet URL or public CSV URL"
+						"helper": "You can also enter a public Google Spreadsheet URL or public CSV URL (each line containing multiple hashtags or locations in a single cell, separated by commas)"
 					},
 					"sessionCookie": {
 						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",

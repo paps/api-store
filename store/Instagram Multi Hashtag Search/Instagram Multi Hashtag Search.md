@@ -34,7 +34,7 @@ In the 1st configuration field, you have to add at least 2 hashtags or locations
 
 Hashtags and locations are differentiated by the presence of a # in front of the word. Successively enter either a hashtag beginning with # (example: `#phantombuster`) or a location (example: `New York, New York`).
 
-You can also enter a Google spreadsheet URL or a CSV containing multiple hashtags or locations as first search term.
+You can also enter a Google spreadsheet URL or a CSV with each line containing multiple hashtags or locations in a single cell, separated by commas (ex: 'New York, #selfie'). Each line will be treated as a single multi-hashtag search.
 
 ## 5. Get your Instagram session cookie 
 The session cookie you'll need to make this API work is called "`sessionid`",
