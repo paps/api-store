@@ -113,7 +113,7 @@ const connectTo = async (selector, tab, message) => {
 	await tab.click(selector)
 	await tab.waitUntilVisible(".send-invite__actions > button:nth-child(1)")
 	if (await tab.isVisible("input#email")) {
-		throw("Email needed.")
+		throw "Email needed."
 	}
 	if (message.length > 0) {
 		// utils.log(`Message to send: ${message.replace("#firstName#", firstName.replace(EMOJI_PATTERN, "").trim())}`, "info")
@@ -141,9 +141,9 @@ const connectTo = async (selector, tab, message) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScraping) => {
+const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping) => {
 	let scrapedProfile = {}
-	scrapedProfile.baseUrl = url
+	scrapedProfile.baseUrl = baseUrl
 	try {
 		/**
 		 * Using lib-linkedInScraper to open & scrape the LinkedIn profile
@@ -161,9 +161,9 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 		if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
 			scrapedProfile.profileId = "unavailable"
 			db.push(scrapedProfile)
-			throw(`${url} is not a valid LinkedIn URL.`)
+			throw `${url} is not a valid LinkedIn URL.`
 		} else {
-			throw(`Error while loading ${url}:\n${error}`)
+			throw `Error while loading ${url}:\n${error}`
 		}
 	}
 	// Handle different cases: button connect, send inmail, accept, message, follow or invitation pending
@@ -182,7 +182,7 @@ const addLinkedinFriend = async (url, tab, message, onlySecondCircle, disableScr
 	try {
 		selector = await tab.waitUntilVisible(selectors, 15000, "or")
 	} catch (error) {
-		throw(`${url} didn't load correctly`)
+		throw `${url} didn't load correctly`
 	}
 	const currentUrl = await tab.getUrl()
 	scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
@@ -259,13 +259,13 @@ nick.newTab().then(async (tab) => {
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
-	for (let url of urls) {
+	for (const baseUrl of urls) {
 		try {
-			utils.log(`Adding ${url}...`, "loading")
-			url = await linkedInScraper.salesNavigatorUrlConverter(url)
-			await addLinkedinFriend(url, tab, message, onlySecondCircle, disableScraping)
+			utils.log(`Adding ${baseUrl}...`, "loading")
+			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(baseUrl)
+			await addLinkedinFriend(baseUrl, newUrl, tab, message, onlySecondCircle, disableScraping)
 		} catch (error) {
-			utils.log(`Could not add ${url} because of an error: ${error}`, "warning")
+			utils.log(`Could not add ${baseUrl} because of an error: ${error}`, "warning")
 		}
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
