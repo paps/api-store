@@ -232,13 +232,24 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			const resultCount = await tab.evaluate((arg, callback) => { 
 				callback(null, document.querySelectorAll(arg.selectorList).length)
 			}, { selectorList })
+			let canScroll = true
 			for (let i = 1; i <= resultCount; i++) {
-				await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
-					callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
-				}, { i, selectorList })
-				await tab.wait(100)
+				try {
+					await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+						callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+					}, { i, selectorList })
+					await tab.wait(100)
+				} catch (err) {
+					utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
+					canScroll = false
+					break
+				}
 			}
-			result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
+			if (canScroll) { 
+				result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
+			} else {
+				break
+			}
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
 				utils.log(hasReachedLimit, "warning")
