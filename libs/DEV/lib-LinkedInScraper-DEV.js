@@ -214,7 +214,7 @@ const scrapeInfos = (arg, callback) => {
 		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
-			const jobs = document.querySelectorAll("section.pv-profile-section.experience-section ul > li")
+			const jobs = document.querySelectorAll("section.pv-profile-section.experience-section ul li")
 			if (jobs) {
 				infos.jobs = getListInfos(jobs, [
 					{ key: "companyName", attribute: "textContent", selector: ".pv-entity__secondary-title" },
