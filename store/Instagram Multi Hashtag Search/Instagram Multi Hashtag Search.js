@@ -65,8 +65,8 @@ const filterResults = (results, terms, leastTerm) => {
 // get the post count from a given hashtag. If there's only few of them (<40), return 40
 const getPostCount = (arg, callback) => {
 	let postCount = 0
-	if (document.querySelector("header > div:last-of-type > span")) {
-		postCount = document.querySelector("header > div:last-of-type > span").textContent
+	if (document.querySelector("header > div:last-of-type span")) {
+		postCount = document.querySelector("header > div:last-of-type span").textContent
 		postCount = parseInt(postCount.replace(/,/g, ""), 10)
 	} else {
 		if (document.querySelector("article header ~ div h2 ~ div")) {
@@ -133,7 +133,11 @@ const scrapeFirstPage = async tab => {
 	const time = new Date()
 	tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
 	while (!hashWasFound) {
-		await tab.scrollToBottom()
+		try {
+			await tab.scrollToBottom()
+		} catch (err) {
+			//
+		}
 		if (new Date() - time > 5000) { break }
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
@@ -294,12 +298,13 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
 				continue
 			}
-			const [httpCode] = await tab.open(targetUrl)
-			if (httpCode === 404) {
-				utils.log(`No results found for ${term}`, "error")
-				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
-				continue
-			}
+			// const [httpCode] = await tab.open(targetUrl)
+			// if (httpCode === 404) {
+			// 	utils.log(`No results found for ${term}`, "error")
+			// 	terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
+			// 	continue
+			// }
+			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl }) 
 
 			try {
 				await tab.waitUntilVisible("main", 15000)
