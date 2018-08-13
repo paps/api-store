@@ -2,7 +2,6 @@
 
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster flags: save-folder"
 "phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
@@ -28,7 +27,7 @@ const argv = buster.argument
 
 const getWritersOfTopics = (argv, cb) => {
 	let results = []
-	$("div.Leaderboard > div.LeaderboardListItem").each((index, elem) => {
+	$("div.Leaderboard > div:first > div.LeaderboardListItem").each((index, elem) => {
 		results.push({
 			name: $("a.user", elem).text(),
 			link: "https://www.quora.com" + $(elem).find("a").attr("href")
@@ -47,7 +46,7 @@ const getWriterInfo = (argv, cb) => {
 
 	let person = {
 		fullname: $("div.profile_wrapper").find("span.user").text(),
-		description: $(".ExpandedUserDescription").find(".qtext_para").text(),
+		description: $(".UserDescriptionExpandable").text(),
 		avatarUrl: $("div.ProfilePhoto").find("img.profile_photo_img").attr("src"),
 		job: $("div.profile_wrapper").find("span.UserCredential").text(),
 		studies: $("div.AboutSection").find(".SchoolCredentialListItem span.UserCredential").text(),
@@ -77,7 +76,7 @@ const getWriterInfo = (argv, cb) => {
 	let links = []
 	$("ul.menu_list_items.unified_menu").children().each((index, elem) => { links.push($(elem).html()); })
 	links = links.slice(1).slice(-3)
-	for(let one of links) {
+	for (let one of links) {
 		let name = $(one).find("a > span").text().toLowerCase().replace("view on ", "")
 		if (name !== "" && name !== "block") {
 			let realLink = $(one).find("a").attr("href")
@@ -101,29 +100,34 @@ const loopThroughtProfiles = async (tab, urls) => {
 	let waitAlternative = false
 	let res = []
 
-	for(let one of urls) {
-		await buster.progressHint(urls.indexOf(one) / urls.length, `${one.name}`)
+	for (let one of urls) {
+		await buster.progressHint((urls.indexOf(one) + 1) / urls.length, `${one.name}`)
 		await tab.open(one.link)
 		await tab.waitUntilPresent("body")
 		try {
-			await tab.click("div.TruncatedUserDescription > a.more_link")
-		} catch(e) {
+			await tab.click("div.UserDescriptionExpandable a.ui_qtext_more_link")
+		} catch (e) {
 			waitAlternative = true
 		}
 
-		if(waitAlternative)
+		if (waitAlternative)
 			await tab.waitUntilPresent("div.header_content")
 		else
-			await tab.waitUntilPresent("div.ExpandedUserDescription")
+			await tab.waitWhileVisible("div.UserDescriptionExpandable a.ui_qtext_more_link")
 
 		await tab.inject("http://code.jquery.com/jquery-3.2.1.min.js")
 		await expandLinks(tab)
 		let tmp = await tab.evaluate(getWriterInfo, { quoraUrl: one.link })
+		utils.log(`${one.name} profile scraped`, "done")
 		res.push(tmp)
 		waitAlternative = false
 	}
 
 	return res
+}
+
+const scrapeUserName = (arg, cb) => {
+	cb(null, document.querySelector("div.SiteHeader img.profile_photo_img").alt)
 }
 
 const logToQuora = async (tab, url, cookieMs, cookieMb) => {
@@ -142,7 +146,15 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 	if (httpCode === 404)
 		throw new Error("No most viewed writers found !")
 
+	try {
+		const name = await tab.evaluate(scrapeUserName)
+		utils.log(`Connected as ${name}`, "done")
+	} catch (err) {
+		utils.log("You're not connected in Quora, please check your session cookies", "warning")
+		return false
+	}
 	utils.log("Topic found", "info")
+	return true
 }
 
 ;(async () => {
@@ -159,9 +171,8 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 	} else {
 		topic = argv.topic
 	}
-	await logToQuora(tab, `https://www.quora.com/topic/${topic}/writers`, argv.ms, argv.mb)
-	utils.log("Connected to Quora !", "info")
 
+	await logToQuora(tab, `https://www.quora.com/topic/${topic}/writers`, argv.ms, argv.mb)
 	try {
 		await tab.untilVisible("div.LeaderboardMain")
 	} catch (e) {
@@ -173,8 +184,7 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 	await tab.inject("http://code.jquery.com/jquery-3.2.1.min.js")
 
 	const urls = await tab.evaluate(getWritersOfTopics, null)
-	utils.log("Bot found some urls to scrap", "info")
-	utils.log(`Now scrapping data for topic ${topic}...`, "loading")
+	utils.log(`Scraping Top 10 ${topic} topic writers`, "loading")
 	const profiles = await loopThroughtProfiles(tab, urls)
 	await utils.saveResult(profiles, "Quora influencers")
 })()
