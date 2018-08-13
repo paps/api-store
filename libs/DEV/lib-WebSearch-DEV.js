@@ -228,7 +228,6 @@ const _doSearch = async function (query) {
 	if (engine.processUrl) {
 		for (let i = 0, len = result.results.length; i < len; i++) {
 			result.results[i].link = engine.processUrl(result.results[i].link)
-
 		}
 	}
 	return result

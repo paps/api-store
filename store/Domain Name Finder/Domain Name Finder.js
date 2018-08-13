@@ -8,7 +8,6 @@ const buster = new Buster()
 
 const WebSearch = require("./lib-WebSearch")
 const userAgent = WebSearch.getRandomUa()
-//console.log(`Chosen user agent: ${userAgent}`)
 
 const Nick = require("nickjs")
 const nick = new Nick({
@@ -179,7 +178,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 
 	let i = 0
 	for (const query of companies) {
-		if (!query || query.trim().length < 1) { 
+		if (!query || query.trim().length < 1) {
 			utils.log("Empty line, skipping entry", "warning")
 			continue
 		}
