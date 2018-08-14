@@ -192,7 +192,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 		// 1- Case when you can add directly
 		if (selector === selectors[0]) {
 			if (await tab.isPresent(selectors[7])) {
-				utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
+				utils.log(`${url} seems to be invited already and in pending status.`, "warning")
 			} else {
 				try {
 					await connectTo(selector, tab, message)
@@ -222,6 +222,8 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					}
 				}
 			} else {
+				scrapedProfile.error = "Is in third circle and the onlySecondCircle option is set to true"
+				db.push(scrapedProfile)
 				throw "Is in third circle and the onlySecondCircle option is set to true"
 			}
 		} else if (selector === selectors[2]) { // 3- Case when this people already invited you (auto accept)
