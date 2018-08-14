@@ -44,7 +44,6 @@
 					},
 					"numberMaxOfFollowing": {
 						"label": "Number of followers to collect per profile - if none will try to scrape all of them",
-						"placeholder": 100,
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {

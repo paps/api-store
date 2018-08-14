@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
-"phantombuster flags: save-folder" // Save all files at the end of the script
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -31,7 +30,11 @@ const rc = {}
 let graphqlUrl
 let requestSingleId
 let agentObject
-let rateLimitReached = 0
+let interrupted
+let rateLimited
+let lastQuery
+let nextUrl
+let alreadyScraped
 
 const ajaxCall = (arg, cb) => {
 	try {
@@ -61,10 +64,10 @@ const getUrlsToScrape = (data, numberofProfilesperLaunch) => {
 	return data.slice(0, Math.min(numberofProfilesperLaunch, maxLength)) // return the first elements
 }
 
-// Checks if a url has already been treated
+// Checks if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
-		if (str === line.query && (line.finishedScraping || line.error)) {
+		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {
 			return false
 		}
 	}
@@ -106,6 +109,7 @@ const scrapeFollowingCount = (arg, callback) => {
 	callback(null, followingCount)
 }
 
+
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
 		requestSingleId = e.requestId
@@ -134,17 +138,13 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	} catch (err) {
 		// Hitting Instagram rate limit
 		utils.log("Couldn't load following list, Instagram rate limit probably reached.", "warning")
-		rateLimitReached++
+		rateLimited = true
 		return result
 	}
 	await tab.wait(2000)
-	if (!numberMaxOfFollowing) {
-		numberMaxOfFollowing = await tab.evaluate(scrapeFollowingCount)
-	}
-
 	let profileCount = 0
 	if (resuming) {
-		profileCount = agentObject.alreadyScraped
+		profileCount = alreadyScraped
 	}
 	const profilesArray = []
 	let lastDate = new Date()
@@ -152,36 +152,49 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	await tab.evaluate((arg, callback) => { // scrollToBottom function
 		callback(null, document.querySelector("body > div:last-child > div > div:last-of-type > div > div:last-child > ul li:last-child a").scrollIntoView())
 	})
-
-	let rateLimited = false
+	let restartAfterError
+	let instagramJson
+	let savedinstagramJson
 	let allCollected = false
 	do {
-		
-		let instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
-		instagramJson = JSON.parse(instagramJson.body)
-		// console.log("ins", instagramJson.data.user)
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			interrupted = true
+			lastQuery = url
+			break
+		}
+
+		if (restartAfterError) {
+			instagramJson + savedinstagramJson
+			restartAfterError = false
+		} else {
+			instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
+			instagramJson = JSON.parse(instagramJson.body)
+			savedinstagramJson = instagramJson
+		}
+
 		if (instagramJson.data.user.edge_follow) {
 			if (instagramJson.data.user.edge_follow.page_info.end_cursor){
 				let endCursor = instagramJson.data.user.edge_follow.page_info.end_cursor
 				let nodes = instagramJson.data.user.edge_follow.edges
-				let nextUrl
+				nextUrl = forgeNewUrl(endCursor)
 				if (!resuming) {
 					for (const profile of nodes) {
-					const data = {}
-					data.id = profile.node.id
-					data.username = profile.node.username
-					data.profileUrl = "https://www.instagram.com/" + data.username
-					data.fullName = profile.node.full_name
-					data.imgUrl = profile.node.profile_pic_url
-					data.isPrivate = profile.node.is_private ? "Private" : null
-					data.isVerified = profile.node.is_verified ? "Verified" : null
-					data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
-					data.query = url
-					profilesArray.push(data)
-				}
-				profileCount += nodes.length
-				buster.progressHint(profileCount / numberMaxOfFollowing, `Charging profiles... ${profileCount}/${numberMaxOfFollowing}`)
-				nextUrl = forgeNewUrl(endCursor)
+						const data = {}
+						data.id = profile.node.id
+						data.username = profile.node.username
+						data.profileUrl = "https://www.instagram.com/" + data.username
+						data.fullName = profile.node.full_name
+						data.imgUrl = profile.node.profile_pic_url
+						data.isPrivate = profile.node.is_private ? "Private" : null
+						data.isVerified = profile.node.is_verified ? "Verified" : null
+						data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
+						data.query = url
+						profilesArray.push(data)
+					}
+					profileCount += nodes.length
+					buster.progressHint(profileCount / numberMaxOfFollowing, `Charging following list... ${profileCount}/${numberMaxOfFollowing}`)
 				} else {
 					nextUrl = agentObject.nextUrl
 					resuming = false 
@@ -190,9 +203,24 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 					await tab.inject("../injectables/jquery-3.0.0.min.js")
 					await tab.evaluate(ajaxCall, { url: nextUrl, headers: gl.headers })
 				} catch (err) {
+					try {
+						await tab.open(nextUrl)
+						let instagramJsonCode = await tab.getContent()
+						instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
+						if (instagramJsonCode && instagramJsonCode.status === "fail" && !instagramJsonCode.message.includes("rate limited")) {
+							utils.log(`Error getting following list :${instagramJsonCode.message}`, "error")
+							utils.log("Restarting follower scraping", "loading")
+							restartAfterError = true
+							continue
+						}
+					} catch (err) {
+						//
+					}
+
 					utils.log(`Rate limit reached, got ${profileCount} profiles, exiting...`, "warning")
 					rateLimited = true
-					await buster.setAgentObject({ nextUrl, url, alreadyScraped: profileCount })
+					interrupted = true
+					lastQuery = url
 					break
 				}
 				lastDate = new Date()
@@ -204,16 +232,12 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
 			await tab.screenshot(`Tok${Date.now()}.png`)
+			interrupted = true
 			break
 		}
 	} while (profileCount < numberMaxOfFollowing)
 	if (allCollected || profileCount >= numberMaxOfFollowing) { utils.log(`Got ${allCollected ? "all " : ""}${profileCount} profiles for ${url}`, "done") }
-	if (!rateLimited) {
-		// for (const data of profilesArray) {
-		// 	data.finishedScraping = true
-		// }
-		profilesArray[profilesArray.length - 1].finishedScraping = true
-	}
+
 	result = result.concat(profilesArray)
 	return result
 }
@@ -224,14 +248,12 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowing, numberofProfilesperLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
-	let lastScrape, hadFinishedScraping
 	result = await utils.getDb(csvName + ".csv")
+	const initialResultLength = result.length
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
-			console.log("The object is", agentObject)
-			lastScrape = result[result.length - 1]
-			hadFinishedScraping = result[result.length - 1].finishedScraping
+			alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
 		} catch (err) {
 			utils.log("Could not access agent Object.", "warning")
 		}
@@ -269,40 +291,57 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	let urlCount = 0
 
 	for (let url of urls) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-			break
-		}
 		try {
 			let resuming = false
-			if (agentObject && url === agentObject.url && url === lastScrape.query && !hadFinishedScraping) {
-				utils.log(`Resuming scraping for ${url}, already ${agentObject.alreadyScraped} profiles scraped.`, "info")
+			if (agentObject && url === agentObject.lastQuery) {
+				utils.log(`Resuming scraping for ${url}...`, "info")
 				resuming = true
 			} else {
-				utils.log(`Scraping following from ${url}`, "loading")
+				utils.log(`Scraping following list from ${url}`, "loading")
 			}
 			urlCount++
 			buster.progressHint(urlCount / urls.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
-			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 10000, "or")
+			await tab.waitUntilVisible(["main ul li:nth-child(3)", ".error-container", "article h2"], 10000, "or")
+			let followingCount
+			try {
+				followingCount = await tab.evaluate(scrapeFollowingCount)
+				if (followingCount === 0) {
+					utils.log("Profile follows no one.", "warning")
+					result.push({ query: url, error: "Profile follows no one" })
+					continue
+				}
+			} catch (err) {
+				//
+			}
+			const selected = await tab.waitUntilVisible(["main ul li:nth-child(3) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
+				result.push({ query: url, error: "Broken link or page has been removed" })
 				continue
 			} else if (selected === "article h2") {
-				utils.log("Private account, cannot access following list.", "warning")
+				utils.log("Private account, cannot access follower list.", "warning")
 				result.push({ query: url, error: "Can't access private account list" })
 				continue
 			}
+			if (!numberMaxOfFollowing) {
+				numberMaxOfFollowing = followingCount
+			}
 			result = result.concat(await getFollowing(tab, url, numberMaxOfFollowing, resuming))
+			if (interrupted) { break }
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
-		if (rateLimitReached >= 2) {
-			utils.log("Rate limit reached, stopping the agent. You should retry in 15min.", "warning")
-			break
-		}
+		if (rateLimited) { break }
+	}
+	if (rateLimited) {
+		utils.log("Stopping the agent. You should retry in 15min.", "warning")
+	}
+	if (interrupted) { 
+		await buster.setAgentObject({ nextUrl, lastQuery })
+	} else if (result.length !== initialResultLength) {
+		await buster.setAgentObject({})
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
