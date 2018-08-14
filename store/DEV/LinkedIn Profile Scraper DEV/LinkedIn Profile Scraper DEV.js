@@ -139,9 +139,9 @@ const removeLinkedinSubdomains = url => {
 			break
 		}
 		try {
-			url = await linkedInScraper.salesNavigatorUrlConverter(url)
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
 			utils.log(`Opening page ${url}`, "loading")
-			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(url))
+			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl))
 			/**
 			 * the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
@@ -153,6 +153,12 @@ const removeLinkedinSubdomains = url => {
 			db.push(finalCsv)
 			result.push(infos.json)
 		} catch (err) {
+			/**
+			 * Issue #119
+			 * We should have more precise errors coming from lib-LinkedInScraper
+			 * to let know a fatal error occured
+			 */
+			db.push({ baseUrl: url })
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
