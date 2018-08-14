@@ -1,19 +1,17 @@
-# Now launch a LinkedIn search from your Sales Navigator Account !
+# Launch a LinkedIn search from your Sales Navigator Account
 
-You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results..? 
+You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results...? 
 
-Now you can use this API on your Sales Navigator account to retrieve search results automatically with little effort.
+Now you can use this API with your Sales Navigator account to retrieve highly relevant search results automatically with little effort.
 
 This API can easily be combined with our other LinkedIn APIs, most notably <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a>.
+
+Of course, it only works if you have an active Sales Navigator account.
 
 # Our Solution
 
 Launch **LinkedIn Sales Navigator Search Export** that will export in CSV the _URL profile link_ of every person appearing in the search results.
 You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch the search.
-
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/Linkedin+Export+Search.gif)</center>
-<center>⬆️ _This is an example of what the bot will do, all by itself & just for you_ 💖</center>
-
 
 # What will you need? ⚙️ 
 
@@ -81,19 +79,10 @@ The three checkboxes allow you to target specific degrees of connections. If you
 
 ## 7. How many profiles?
 
-Define here the number of profiles you want to bot to scrape.
+Define here the number of profiles you want the bot to scrape.
 
 
 # Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" to try your script!
+It’s done! All that is left to do is to click on "launch" and watch your API do the work for you!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-Once changing your arguments, this will launch the bot and create your CSV.
-
-
-<center>---</center>
-
-
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>

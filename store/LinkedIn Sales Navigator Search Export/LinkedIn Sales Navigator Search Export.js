@@ -77,8 +77,30 @@ const scrapeResults = (arg, callback) => {
 	callback(null, infos)
 }
 
+const scrapeResultsLeads = (arg, callback) => {
+	const results = document.querySelectorAll("ol.search-results__result-list li .search-results__result-container")
+	const infos = []
+	let profilesScraped = 0
+	for (const result of results) {
+		if (result.querySelector(".result-lockup__name")) {
+			const url = result.querySelector(".result-lockup__name a").href
+			let newInfos = { url }
+			newInfos.name = result.querySelector(".result-lockup__name").textContent.trim()
+			if (result.querySelector(".result-lockup__highlight-keyword")) {
+				newInfos.title = result.querySelector(".result-lockup__highlight-keyword").innerText
+				newInfos.companyName = result.querySelector(".result-lockup__position-company").innerText
+			}
+			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newInfos.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
+			if (arg.query) { newInfos.query = arg.query }
+			infos.push(newInfos)
+		}
+		if (++profilesScraped >= arg.numberOnThisPage) { break }
+	}
+	callback(null, infos)
+}
+
 const totalResults = (arg, callback) => {
-	const total = document.querySelector(".spotlight-result-count").textContent
+	const total = document.querySelector(arg.selector).textContent
 	callback(null, total)
 }
 
@@ -98,53 +120,91 @@ const overridePageIndex = (url, page) => {
 	}
 }
 
+const overridePageIndexLead = (url, page) => {
+	try {
+		let parsedUrl = new URL(url)
+		parsedUrl.searchParams.set("page", page)
+		return parsedUrl.toString()
+	} catch (err) {
+		return url
+	}
+}
+
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
-	const pageCount = Math.ceil(numberOfProfiles / 100) // 100 results per page
+	let pageCount
 	let result = []
-	const selectors = ["section.search-results-container", ".spotlight-result-label"]
+	const selectors = ["section.search-results-container", "section.search-results__container"]
 	let profilesFoundCount = 0
 	let maxResults = Math.min(1000, numberOfProfiles)
-
-	for (let i = 1; i <= pageCount; i++) {
-		await tab.open(overridePageIndex(searchUrl, i))
-		if (i === 1){
-			try {
-				await tab.waitUntilVisible(".spotlight-result-count", 7500)
-				const resultsCount = await tab.evaluate(totalResults)
-				utils.log(`Getting ${resultsCount} results`, "done")
-				let multiplicator = 1
-				if (resultsCount.includes("K")) { multiplicator = 1000 }
-				if (resultsCount.includes("M")) { multiplicator = 1000000 }
-				maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
-			} catch (err) {
-				utils.log(`Could not get total results count. ${err}`, "warning")
-			}
-		}
-		utils.log(`Getting results from page ${i}...`, "loading")
-		try {
-			await tab.waitUntilVisible(selectors, 7500, "and")
-		} catch (err) {
-			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
-			utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
-			return result
-		}
-		await tab.scrollToBottom()
-		await tab.wait(1500)
-		const numberOnThisPage = Math.min(numberOfProfiles - 100 * (i - 1), 100)
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			break
-		}
-		result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
-		if (result.length > profilesFoundCount) {
-			profilesFoundCount = result.length
-			buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
+	let isLeadSearch
+	let numberPerPage
+	await tab.open(searchUrl)
+	try {
+		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 7500, "or")
+		const resultsCount = await tab.evaluate(totalResults, { selector })
+		if (selector === ".artdeco-tab-primary-text") { 
+			isLeadSearch = true
+			numberPerPage = 25
 		} else {
-			utils.log("No more profiles found on this page", "warning")
-			break
+			isLeadSearch = false
+			numberPerPage = 100
 		}
+		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
+
+		utils.log(`Getting ${resultsCount} results`, "done")
+		let multiplicator = 1
+		if (resultsCount.includes("K")) { multiplicator = 1000 }
+		if (resultsCount.includes("M")) { multiplicator = 1000000 }
+		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
+	} catch (err) {
+		utils.log(`Could not get total results count. ${err}`, "warning")
+	}
+	for (let i = 1; i <= pageCount; i++) {
+		try {
+			if (isLeadSearch) {
+				await tab.open(overridePageIndexLead(searchUrl, i))
+			} else {
+				await tab.open(overridePageIndex(searchUrl, i))
+			}
+			utils.log(`Getting results from page ${i}...`, "loading")
+			let containerSelector
+			try {
+				containerSelector = await tab.waitUntilVisible(selectors, 7500, "or")
+			} catch (err) {
+				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
+				return result
+			}
+			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 7500, "or")
+			await tab.scrollToBottom()
+			await tab.wait(1500)
+			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			if (containerSelector === "section.search-results__container") { // Lead Search
+				try {
+					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))		
+				} catch (err) {
+					//
+				}
+			} else {
+				result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
+			}
+			if (result.length > profilesFoundCount) {
+				profilesFoundCount = result.length
+				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
+			} else {
+				utils.log("No more profiles found on this page", "warning")
+				break
+			}
+		} catch (err) {
+			utils.log(`Error scraping this page: ${err}`, "error")
+		}
+		
 	}
 	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
 	utils.log("All pages with result scrapped.", "done")
