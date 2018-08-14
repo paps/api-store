@@ -121,9 +121,11 @@ const scrapeResultsAll = (arg, callback) => {
 						newInfos.name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
 						newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
 					}
-					if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
-					if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
+				} else {
+					newInfos.error = "Profile out of your network."
 				}
+				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
+				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
 			} else if (result.querySelector("figure.search-result__image > img")) {
 					newInfos.name = result.querySelector("figure.search-result__image > img").alt
 			}
@@ -233,24 +235,24 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			const resultCount = await tab.evaluate((arg, callback) => { 
 				callback(null, document.querySelectorAll(arg.selectorList).length)
 			}, { selectorList })
-			let canScroll = true
+			// let canScroll = true
 			for (let i = 1; i <= resultCount; i++) {
-				try {
+				// try {
 					await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
 						callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
 					}, { i, selectorList })
 					await tab.wait(100)
-				} catch (err) {
-					utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
-					canScroll = false
-					break
-				}
+				// } catch (err) {
+				// 	utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
+				// 	canScroll = false
+				// 	break
+				// }
 			}
-			if (canScroll) { 
+			// if (canScroll) { 
 				result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
-			} else {
-				break
-			}
+			// } else {
+			// 	break
+			// }
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
 				utils.log(hasReachedLimit, "warning")
