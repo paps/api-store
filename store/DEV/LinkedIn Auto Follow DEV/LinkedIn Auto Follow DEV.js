@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +19,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 let linkedInScraper
 let db
 
@@ -80,9 +80,9 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
         if ((await tab.getUrl()) === "https://www.linkedin.com/in/unavailable/") {
             scrapedProfile.profileId = "unavailable"
             db.push(scrapedProfile)
-            throw(`${url} is not a valid LinkedIn URL.`)
+            throw (`${url} is not a valid LinkedIn URL.`)
         } else {
-            throw(`Error while loading ${url}:\n${error}`)
+            throw (`Error while loading ${url}:\n${error}`)
         }
     }
     const selectors = [".pv-s-profile-actions__overflow-toggle", // two-step follow with click on (...) required
@@ -93,7 +93,7 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
     try {
         selector = await tab.waitUntilVisible(selectors, 15000, "or")
     } catch (error) {
-        throw(`${url} didn't load correctly`)
+        throw (`${url} didn't load correctly`)
     }
     const currentUrl = await tab.getUrl()
     scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
@@ -102,15 +102,15 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
     } else {
         if (selector === selectors[0]) { //  Case when you need to use the (...) button before and (un)follow them from there
             await tab.click(".pv-s-profile-actions__overflow-toggle")
-            try{
+            try {
                 selector = await tab.waitUntilVisible([".pv-s-profile-actions--unfollow", ".pv-s-profile-actions--follow", ".pv-dashboard-section"], 5000, "or")
             } catch (error) {
-                utils.log(`Could not ${unfollowProfiles ? "un": ""}follow ${url}, they may have blocked follow requests outside their network.`, "warning")
+                utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url}, they may have blocked follow requests outside their network.`, "warning")
             }
         }
         if (selector === ".pv-dashboard-section") { // Own profile detected
-            utils.log(`Trying to ${unfollowProfiles ? "un": ""}follow your own profile.`, "warning")
-        } else if (selector === selectors[1] || selector === selectors[2]) { 
+            utils.log(`Trying to ${unfollowProfiles ? "un" : ""}follow your own profile.`, "warning")
+        } else if (selector === selectors[1] || selector === selectors[2]) {
             if (selector === ".pv-s-profile-actions--follow" && unfollowProfiles) {
                 utils.log(`We weren't following ${url}.`, "warning")
             } else if (selector === ".pv-s-profile-actions--unfollow" && !unfollowProfiles) {
@@ -134,7 +134,7 @@ nick.newTab().then(async (tab) => {
     data = data.filter(str => str) // removing empty lines
     const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
     await linkedIn.login(tab, sessionCookie)
-    utils.log(`Urls to ${unfollowProfiles ? "un": ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")
+    utils.log(`Urls to ${unfollowProfiles ? "un" : ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")
     for (let url of urls) {
         try {
             if (url){
@@ -145,7 +145,7 @@ nick.newTab().then(async (tab) => {
                 utils.log("Empty line...", "warning")
             }
         } catch (error) {
-            utils.log(`Could not ${unfollowProfiles ? "un": ""}follow ${url} because of an error: ${error}`, "warning")
+			utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url} because of an error: ${error}`, "warning")
         }
     }
     await utils.saveResults(db, db, DB_SHORT_NAME, null, false)
