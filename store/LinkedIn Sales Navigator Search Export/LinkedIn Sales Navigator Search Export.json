@@ -1,11 +1,11 @@
 {
 	"slug": "linkedin-sales-navigator-search-export",
-	"description": "Collects LinkedIn Sales Navigator search results",
+	"description": "Collect LinkedIn Sales Navigator search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
-	"gradientBegin": "#948E99",
-	"gradientEnd": "#2E1437",
+	"gradientBegin": "#7C5BBB",
+	"gradientEnd": "#42327f",
 	"argumentHelpAnchor": "#section_argument",
 	"argumentDescription": "",
 	"defaultArgument": {
@@ -43,7 +43,7 @@
 						"helpers": [
 							"Enter either a text search <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available",
-							"<b>OR</b> make an advanced search on LinkedIn and paste the URL you're sent to here"
+							"<b>OR</b> make an advanced search on Sales Navigator and paste the URL you're sent to here"
 						],
 						"label": "LinkedIn search terms <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
 						"placeholder": "iOS developer"
