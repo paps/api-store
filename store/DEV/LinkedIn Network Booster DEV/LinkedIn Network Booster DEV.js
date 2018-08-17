@@ -313,8 +313,11 @@ nick.newTab().then(async (tab) => {
 		successInvitations.map(el => utils.log(`Invitation for ${el} is successfully send`, "done"))
 		db = db.filter(el => failedInvitations.findIndex(line => el.baseUrl === line.baseUrl) < 0)
 		if (invitations.length < 1) {
-			utils.log("Every invitations are silently block by LinkedIn, please remove those URLs OR wait 2 days until sending invitations for those URLs", "warning")
+			utils.log("Every invitations were silently blocked by LinkedIn", "warning")
+		} else {
+			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow ban`, "warning"))
 		}
+		failedInvitations.map(el => db.push({ baseUrl: el.baseUrl, error: "Shadow banned invitation" }))
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()
