@@ -102,7 +102,7 @@ const getFirstName = (arg, callback) => {
 		if (name.length > 0) {
 			callback(null, name)
 		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ?  document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
 		}
 	}
 }
@@ -236,7 +236,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					// Add them into the already added username object
 					scrapedProfile.error = "Email needed to add this person."
 					db.push(scrapedProfile)
-					throw("Email needed to add this person.")
+					throw ("Email needed to add this person.")
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
 					const selector = await tab.waitUntilVisible(["li.connect", ".pv-s-profile-actions--connect"], 5000, "or")
@@ -315,9 +315,10 @@ nick.newTab().then(async (tab) => {
 		if (invitations.length < 1) {
 			utils.log("Every invitations were silently blocked by LinkedIn", "warning")
 		} else {
-			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow ban`, "warning"))
+			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow banned`, "warning"))
 		}
 		failedInvitations.map(el => db.push({ baseUrl: el.baseUrl, error: "Shadow banned invitation" }))
+		utils.log(`${successInvitations.length} of the ${numberOfAddsPerLaunch} invitations were successfully sent`, "info")
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()
