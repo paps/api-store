@@ -65,7 +65,17 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newInfos.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
 			if (result.querySelector(".premium-icon")) { newInfos.premium = "Premium" }
 			if (result.querySelector(".openlink-badge")) { newInfos.openProfile = "Open Profile" }
-			if (result.querySelector(".company-name")) { newInfos.companyName = result.querySelector(".company-name").title }
+			if (result.querySelector(".company-name")) { 
+				newInfos.companyName = result.querySelector(".company-name").title
+				if (result.querySelector(".company-name").href) {
+					const salesCompanyUrl = new URL(result.querySelector(".company-name").href)
+					if (salesCompanyUrl.searchParams.get("companyId")) {
+						const companyId = salesCompanyUrl.searchParams.get("companyId")
+						newInfos.companyId = companyId
+						newInfos.companyUrl = "https://www.linkedin.com/company/" + companyId
+					}
+				}
+			}
 			newInfos.title = result.querySelector(".info-value").textContent.trim()
 			if (result.querySelector(".info-value:nth-child(2)")) { newInfos.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
 			if (result.querySelector(".info-value:nth-child(3)")) { newInfos.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
