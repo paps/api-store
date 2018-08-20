@@ -76,6 +76,10 @@ const scrapeResults = (arg, callback) => {
 					}
 				}
 			}
+			const memberId = result.className.split(" ").pop()
+			if (memberId.startsWith("m")) {
+				newInfos.memberId = memberId.substr(1)
+			}
 			newInfos.title = result.querySelector(".info-value").textContent.trim()
 			if (result.querySelector(".info-value:nth-child(2)")) { newInfos.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
 			if (result.querySelector(".info-value:nth-child(3)")) { newInfos.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
