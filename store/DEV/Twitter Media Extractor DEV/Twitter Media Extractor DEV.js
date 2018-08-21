@@ -26,6 +26,20 @@ const DEFAULT_ACCOUNTS_PER_LAUNCH = 2
 let requestIdVideos = []
 // }
 
+
+/**
+ * @param {String} url
+ * @return {Boolean} true if represents a valid URL otherwise false
+ */
+const isUrl = url => {
+	try {
+		new URL(url)
+		return true
+	} catch (err) {
+		return false
+	}
+}
+
 /**
  * @param {String} url - url to inspect
  * @return {Boolean} true if is twitter media otherwise false
@@ -74,7 +88,8 @@ const scrapeMediasMetadata = (arg, cb) => {
 		let res = {}
 		res.twitterPostUrl = "https://twitter.com" + el.dataset.permalinkPath
 		if (el.querySelector("div.js-adaptive-photo img")) {
-			res.pubImage = el.querySelector("div.js-adaptive-photo img").src
+			res.pubImage = Array.from(el.querySelectorAll("div.js-adaptive-photo img")).map(el => el.src)
+			res.pubImage = res.pubImage.length > 1 ? res.pubImage : res.pubImage[0]
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p") ? el.querySelector("div.js-tweet-text-container p").textContent.trim() : "no content found"
 		} else if (el.querySelector("div.js-tweet-text-container p") && !el.querySelector("div.js-macaw-cards-iframe-container")) {
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p").textContent.trim()
@@ -229,8 +244,7 @@ const createCsvOutput = json => {
 			queries = [ spreadsheetUrl ]
 		}
 	}
-
-	queries = queries.map(el => el = isTwitterMediaURL(el) ? el : addMediaPathname(el))
+	queries = queries.map(el => el = isUrl(el) ? el : `https://twitter.com/${el}`).map(el => el = isTwitterMediaURL(el) ? el : addMediaPathname(el))
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, accountsPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already processed", "warning")
