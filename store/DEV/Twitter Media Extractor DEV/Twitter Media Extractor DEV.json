@@ -25,13 +25,13 @@
 			},
 			"options": {
 				"fields": {
-					"sessionCookie": {
-						"label": "Twitter session cookie",
-						"helper": "Twitter auth_token cookie"
-					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Twitter profile URL",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"sessionCookie": {
+						"label": "Twitter session cookie",
+						"helper": "Twitter auth_token cookie"
 					},
 					"columnName": {
 						"label": "Column name from which Twitter profile URLs",
@@ -51,12 +51,12 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
 			"sessionCookie": {
 				"type": "string",
 				"required": true
-			},
-			"spreadsheetUrl": {
-				"type": "string"
 			},
 			"columnName": {
 				"type": "string"

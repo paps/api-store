@@ -142,6 +142,10 @@ const scrapeMedias = async (tab, url) => {
 		let contentCount = 0
 		let lastCount = contentCount
 		while (!await tab.evaluate(isTimelineLoaded)) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				break
+			}
 			try {
 				lastCount = contentCount
 				contentCount = await tab.evaluate(getLoadedMediaCount)
@@ -238,7 +242,7 @@ const createCsvOutput = json => {
 	}
 
 	if (spreadsheetUrl) {
-		if (!isTwitterUrl(spreadsheetUrl)) {
+		if (isUrl(spreadsheetUrl) && !isTwitterUrl(spreadsheetUrl)) {
 			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
@@ -254,6 +258,11 @@ const createCsvOutput = json => {
 	await twitter.login(tab, sessionCookie)
 
 	for (const query of queries) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		utils.log(`Scraping media at ${query}`, "info")
 		const scrapingRes = await scrapeMedias(tab, query)
 		result.push(scrapingRes)
