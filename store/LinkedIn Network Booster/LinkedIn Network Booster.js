@@ -27,6 +27,8 @@ const EMOJI_PATTERN = /\u{1F3F4}(?:\u{E0067}\u{E0062}(?:\u{E0065}\u{E006E}\u{E00
 
 const DB_NAME = "database-linkedin-network-booster.csv"
 
+const noop = () => {}
+
 // Check if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
@@ -36,6 +38,29 @@ const checkDb = (str, db) => {
 		}
 	}
 	return true
+}
+
+const getInviteesUrls = (arg, cb) => cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => el.querySelector("a[data-control-name=profile]").href))
+
+/**
+ * @async
+ * @description Returns all invitations successfully sent by LinkedIn, will remove all shadow banned invitations in the parameter list
+ * @param {Array<Object>} invitations
+ * @return {Promise<Array<Object>>} All invitations successfully sent
+ */
+const validateInvitations = async invitations => {
+	const INVITATIONS_MANAGER_URL = "https://www.linkedin.com/mynetwork/invitation-manager/sent/"
+	const withdrawTab = await nick.newTab()
+	try {
+		await withdrawTab.open(INVITATIONS_MANAGER_URL)
+		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
+		const urls = await withdrawTab.evaluate(getInviteesUrls)
+		invitations = invitations.filter(invitation => urls.includes(invitation.baseUrl))
+	} catch (err) {
+		noop()
+	}
+	await withdrawTab.close()
+	return invitations
 }
 
 // Get only a certain number of urls to add
@@ -77,7 +102,7 @@ const getFirstName = (arg, callback) => {
 		if (name.length > 0) {
 			callback(null, name)
 		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img").alt)
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
 		}
 	}
 }
@@ -141,7 +166,7 @@ const connectTo = async (selector, tab, message) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping) => {
+const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, invitations) => {
 	let scrapedProfile = {}
 	scrapedProfile.baseUrl = baseUrl
 	try {
@@ -202,6 +227,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					utils.log(`Could not add ${url} because of an error: ${err}`, "warning")
 					return
 				}
+				invitations.push(scrapedProfile)
 				utils.log(`Added ${url}.`, "done")
 			}
 		} else if (selector === selectors[1] || selector === selectors[8] || selector === selectors[9]) { // 2- Case when you need to use the (...) button before and add them from there
@@ -210,7 +236,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					// Add them into the already added username object
 					scrapedProfile.error = "Email needed to add this person."
 					db.push(scrapedProfile)
-					throw("Email needed to add this person.")
+					throw ("Email needed to add this person.")
 				} else {
 					await tab.click(".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle")
 					const selector = await tab.waitUntilVisible(["li.connect", ".pv-s-profile-actions--connect"], 5000, "or")
@@ -218,6 +244,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 						utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 					} else {
 						await connectTo(selector, tab, message)
+						invitations.push(scrapedProfile)
 						utils.log(`Added ${url}.`, "done")
 					}
 				}
@@ -234,7 +261,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 		} else if (selector === selectors[4]) { // 5- Case when this people have only the follow button visible
 			utils.log(`Can't connect to ${url} (only follow button visible)`, "warning")
 		} else if (selector === selectors[5]) { // 6- Case when the "pending" status is present (already added)
-			utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
+			utils.log(`${url} seems to be invited already and is in pending status.`, "warning")
 		} else if (selector === selectors[6]) {
 			utils.log("Trying to add your own profile.", "warning")
 		}
@@ -259,16 +286,39 @@ nick.newTab().then(async (tab) => {
 	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+	let invitations = []
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (const baseUrl of urls) {
 		try {
 			utils.log(`Adding ${baseUrl}...`, "loading")
 			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(baseUrl)
-			await addLinkedinFriend(baseUrl, newUrl, tab, message, onlySecondCircle, disableScraping)
+			await addLinkedinFriend(baseUrl, newUrl, tab, message, onlySecondCircle, disableScraping, invitations)
 		} catch (error) {
 			utils.log(`Could not add ${baseUrl} because of an error: ${error}`, "warning")
 		}
+	}
+	/**
+	 * Issue #117
+	 * "Successfull" invitations are stored here,
+	 * in order to check later in the script execution if they're sent
+	 */
+	if (invitations.length > 0) {
+		let failedInvitations = Object.assign([], invitations)
+		utils.log(`Checking LinkedIn shadow ban for the ${invitations.length} invitations "sent"...`, "info")
+		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
+		invitations = await validateInvitations(invitations)
+		let successInvitations = invitations.map(el => el.baseUrl)
+		failedInvitations = failedInvitations.filter(el => !successInvitations.includes(el.baseUrl))
+		successInvitations.map(el => utils.log(`Invitation for ${el} is successfully send`, "done"))
+		db = db.filter(el => failedInvitations.findIndex(line => el.baseUrl === line.baseUrl) < 0)
+		if (invitations.length < 1) {
+			utils.log("0 invitations sent", "warning")
+		} else {
+			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow banned`, "warning"))
+			utils.log(`${successInvitations.length} of the ${numberOfAddsPerLaunch} invitations were successfully sent`, "info")
+		}
+		failedInvitations.map(el => db.push({ baseUrl: el.baseUrl, error: "Shadow banned invitation" }))
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()

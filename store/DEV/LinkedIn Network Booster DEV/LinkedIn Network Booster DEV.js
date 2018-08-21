@@ -102,7 +102,7 @@ const getFirstName = (arg, callback) => {
 		if (name.length > 0) {
 			callback(null, name)
 		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ?  document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
 		}
 	}
 }
@@ -299,11 +299,11 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	/**
-	 * Issue #117 WIP
+	 * Issue #117
 	 * "Successfull" invitations are stored here,
 	 * in order to check later in the script execution if they're sent
 	 */
-	if (invitations.length > 1) {
+	if (invitations.length > 0) {
 		let failedInvitations = Object.assign([], invitations)
 		utils.log(`Checking LinkedIn shadow ban for the ${invitations.length} invitations "sent"...`, "info")
 		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
@@ -313,12 +313,12 @@ nick.newTab().then(async (tab) => {
 		successInvitations.map(el => utils.log(`Invitation for ${el} is successfully send`, "done"))
 		db = db.filter(el => failedInvitations.findIndex(line => el.baseUrl === line.baseUrl) < 0)
 		if (invitations.length < 1) {
-			utils.log("Every invitations were silently blocked by LinkedIn", "warning")
+			utils.log("0 invitations sent", "warning")
 		} else {
 			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow banned`, "warning"))
+			utils.log(`${successInvitations.length} of the ${numberOfAddsPerLaunch} invitations were successfully sent`, "info")
 		}
 		failedInvitations.map(el => db.push({ baseUrl: el.baseUrl, error: "Shadow banned invitation" }))
-		utils.log(`${successInvitations.length} of the ${numberOfAddsPerLaunch} invitations were successfully sent`, "info")
 	}
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()
