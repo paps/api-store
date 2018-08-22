@@ -84,9 +84,10 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".info-value:nth-child(2)")) { newInfos.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
 			if (result.querySelector(".info-value:nth-child(3)")) { newInfos.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
 			if (arg.query) { newInfos.query = arg.query }
+			profilesScraped++
 			infos.push(newInfos)
 		}
-		if (++profilesScraped >= arg.numberOnThisPage) { break }
+		if (profilesScraped >= arg.numberOnThisPage) { break }
 	}
 	callback(null, infos)
 }
@@ -105,10 +106,14 @@ const scrapeResultsLeads = (arg, callback) => {
 				newInfos.companyName = result.querySelector(".result-lockup__position-company").innerText
 			}
 			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newInfos.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
+			if (result.querySelector("span[data-entity-hovercard-id]")) {
+				newInfos.companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+			}
 			if (arg.query) { newInfos.query = arg.query }
+			profilesScraped++
 			infos.push(newInfos)
 		}
-		if (++profilesScraped >= arg.numberOnThisPage) { break }
+		if (profilesScraped >= arg.numberOnThisPage) { break }
 	}
 	callback(null, infos)
 }
