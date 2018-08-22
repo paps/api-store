@@ -166,7 +166,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 		}
 
 		if (restartAfterError) {
-			instagramJson + savedinstagramJson
+			instagramJson = savedinstagramJson
 			restartAfterError = false
 		} else {
 			instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
@@ -231,7 +231,6 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 		}
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
-			await tab.screenshot(`Tok${Date.now()}.png`)
 			interrupted = true
 			break
 		}

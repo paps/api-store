@@ -167,7 +167,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 
 		if (restartAfterError) {
-			instagramJson + savedinstagramJson
+			instagramJson = savedinstagramJson
 			restartAfterError = false
 		} else {
 			instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
@@ -232,7 +232,6 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
-			await tab.screenshot(`Tok${Date.now()}.png`)
 			interrupted = true
 			break
 		}
@@ -304,10 +303,10 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			buster.progressHint(urlCount / urls.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
 			await tab.waitUntilVisible(["main ul li:nth-child(3)", ".error-container", "article h2"], 10000, "or")
-			let followingCount
+			let followerCount
 			try {
-				followingCount = await tab.evaluate(scrapeFollowerCount)
-				if (followingCount === 0) {
+				followerCount = await tab.evaluate(scrapeFollowerCount)
+				if (followerCount === 0) {
 					utils.log("Profile has no follower.", "warning")
 					result.push({ query: url, error: "Profile has no follower" })
 					continue
@@ -326,7 +325,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				continue
 			}
 			if (!numberMaxOfFollowers) {
-				numberMaxOfFollowers = followingCount
+				numberMaxOfFollowers = followerCount
 			}
 			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers, resuming))
 			if (interrupted) { break }
