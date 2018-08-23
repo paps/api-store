@@ -33,6 +33,11 @@
 					"followersPerAccount": {
 						"label": "Number of followers to scrape per Twitter account",
 						"helper": "If you leave this field empty, the API will try to get as much followers as possible for every Twitter account"
+					},
+					"numberofProfilesperLaunch": {
+						"label": "Number of lines to process per launch <a href=\"/api-store/4457/twitter-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
 					}
 				}
 			}
@@ -56,6 +61,10 @@
 			"followersPerAccount": {
 				"type": "number",
 				"title": "Followers count to get per accounts",
+				"minimum": 1
+			},
+			"numberofProfilesperLaunch": {
+				"type": "number",
 				"minimum": 1
 			}
 		}

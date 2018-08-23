@@ -1,7 +1,7 @@
 # Find out who is following a Twitter account 🐦
 Sometimes it can be useful to know which accounts are followed by a specific one. With this API, choose your own or any Twitter account and get in seconds a clear listing of every account followed by your target.
 
-🤖💨 _Around **1000 profiles** every **minute**_ 🤖💨
+🤖💨 _Around **5000 profiles** every **90min**_ 🤖💨
 
 # What will you need? ⚙️ 
 - **"Twitter account or Spreadsheet URL"**: Choose a sepcific twitter account like `@phbuster` or choose an **open** spreadsheet url
@@ -54,6 +54,22 @@ or
 
 _// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
+
+
+To do so, simply hit the “Settings” button to define when your API is launched:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+For example, 10 profiles processed per launch, 8 launches per day: you'll process a total of 80 profiles per day.
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
