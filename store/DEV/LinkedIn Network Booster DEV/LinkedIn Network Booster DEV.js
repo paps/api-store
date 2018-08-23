@@ -15,6 +15,9 @@ const nick = new Nick({
 	printAborts: false,
 })
 
+const fs = require("fs")
+const Papa = require("papaparse")
+
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
@@ -270,6 +273,51 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	db.push(scrapedProfile)
 }
 
+/**
+ * @async
+ * @description Similar of getDataFromCsv but, it returns multiples fields instead of one
+ * @param {String} url - CSV url
+ * @param {Array<String>} fields - CSV fields to fetch
+ * @return {Promise<Array<Object>>} CSV cells to extract with all fields
+ */
+const _getFlatCsv = async (url, fields = null) => {
+	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
+		const match = url.match(urlRegex)
+		if (match) {
+			if (match[3] === "docs.google.com") {
+				if (match[8] === "edit") {
+					url = `https://docs.google.com/${match[6]}export?format=csv`
+				} else {
+					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
+				}
+			}
+			await buster.download(url, "sheet.csv")
+			const file = fs.readFileSync("sheet.csv", "UTF-8")
+			if (file.indexOf("<!DOCTYPE html>") >= 0) {
+				throw "Could not download csv, maybe csv is not public."
+			}
+			let data = (Papa.parse(file)).data
+			if (fields && Array.isArray(fields)) {
+				let dataCopy = data.slice()
+				let csvFields = dataCopy.shift()
+				for (const one of fields) {
+					if (csvFields.findIndex(el => el === one) < 0)
+						throw `No title ${one} in csv file.`
+				}
+				data = dataCopy.map(e => {
+					let cell = {}
+					fields.forEach((key, i) => cell[key] = e[i])
+					return cell
+				})
+			} else {
+				data.shift()
+			}
+			return data
+		} else {
+			throw `${url} is not a valid URL.`
+		}
+}
+
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
@@ -282,6 +330,10 @@ nick.newTab().then(async (tab) => {
 		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
+	// Test in progress ... will be remove soon
+	const tmp = await _getFlatCsv(spreadsheetUrl, [ "urls", "tag1", "tag1Value", "tag2", "tag2Value" ])
+	console.log(JSON.stringify(tmp, null, 4))
+	nick.exit()
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
