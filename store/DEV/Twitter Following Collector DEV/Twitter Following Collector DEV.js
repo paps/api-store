@@ -175,6 +175,7 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 			//
 		}
 		followingCount = await tab.evaluate(scrapeFollowingCount)
+		utils.log(`${twitterHandle} follows ${followingCount} profiles.`, "done")
 	} catch (err) {
 		//
 	}
@@ -292,7 +293,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
-			if (agentObject) {
+			if (agentObject && agentObject.nextUrl) {
 				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
 				alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
 			}
