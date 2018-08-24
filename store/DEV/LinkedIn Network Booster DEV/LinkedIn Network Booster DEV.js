@@ -277,10 +277,11 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
  * @async
  * @description Similar of getDataFromCsv but, it returns multiples fields instead of one
  * @param {String} url - CSV url
+ * @param {String} columnName - column name used for the LinkedIn URLs, default is first column
  * @param {Array<String>} fields - CSV fields to fetch
  * @return {Promise<Array<Object>>} CSV cells to extract with all fields
  */
-const _getFlatCsv = async (url, fields = null) => {
+const _getFlatCsv = async (url, columnName, fields = null) => {
 	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 		const match = url.match(urlRegex)
 		if (match) {
@@ -297,22 +298,32 @@ const _getFlatCsv = async (url, fields = null) => {
 				throw "Could not download csv, maybe csv is not public."
 			}
 			let data = (Papa.parse(file)).data
-			if (fields && Array.isArray(fields)) {
-				let dataCopy = data.slice()
-				let csvFields = dataCopy.shift()
-				for (const one of fields) {
-					if (csvFields.findIndex(el => el === one) < 0)
-						throw `No title ${one} in csv file.`
-				}
-				data = dataCopy.map(e => {
-					let cell = {}
-					fields.forEach((key, i) => cell[key] = e[i])
-					return cell
-				})
-			} else {
-				data.shift()
+			let dataRet = []
+			let columnNameIndex = 0
+			let csvFieldsIndexes = []
+			if (columnName) {
+				columnNameIndex = data[0].findIndex(el => el === columnName)
 			}
-			return data
+			if (columnNameIndex < 0) {
+				throw `No title ${columnName} in csv file.`
+			}
+			if (Array.isArray(fields)) {
+				for (const one of fields) {
+					let index = data[0].findIndex(el => el === one)
+					if (index < 0) {
+						throw `No title ${one} in csv file.`
+					}
+					csvFieldsIndexes.push({ name: one, position: index })
+				}
+			}
+			dataRet = data.map(el => {
+				let cell = {}
+				cell.url = el[columnNameIndex]
+				csvFieldsIndexes.forEach(field => cell[field.name] = el[field.position])
+				return cell
+			})
+			dataRet.shift()
+			return dataRet
 		} else {
 			throw `${url} is not a valid URL.`
 		}
@@ -331,9 +342,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
 	// Test in progress ... will be remove soon
-	const tmp = await _getFlatCsv(spreadsheetUrl, [ "urls", "tag1", "tag1Value", "tag2", "tag2Value" ])
-	console.log(JSON.stringify(tmp, null, 4))
-	nick.exit()
+	await _getFlatCsv(spreadsheetUrl, null, [ "yo", "test" ])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
