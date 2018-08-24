@@ -66,17 +66,6 @@ const validateInvitations = async invitations => {
 	return invitations
 }
 
-// Get only a certain number of urls to add
-const getUrlsToAdd = (data, numberOfAddsPerLaunch) => {
-	data = data.filter((item, pos) => data.indexOf(item) === pos) // Remove duplicates
-	const maxLength = data.length
-	if (maxLength === 0) {
-		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
-		nick.exit()
-	}
-	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
-}
-
 // Get the first name of someone from their linkedIn profile
 const getFirstName = (arg, callback) => {
 	let name = ""
@@ -136,8 +125,10 @@ const forgeMsg = (msg, scrapedProfile) => {
 }
 
 // Function to add someone
-const connectTo = async (selector, tab, message) => {
+const connectTo = async (selector, tab, message, scrapedProfile) => {
 	const firstName = await tab.evaluate(getFirstName)
+	message = message.replace("#firstName#", firstName.replace(EMOJI_PATTERN, "").trim())
+	message = forgeMsg(message, scrapedProfile)
 	await tab.click(selector)
 	await tab.waitUntilVisible(".send-invite__actions > button:nth-child(1)")
 	if (await tab.isVisible("input#email")) {
@@ -151,7 +142,7 @@ const connectTo = async (selector, tab, message) => {
 		await tab.evaluate((arg, callback) => {
 			document.getElementById("custom-message").value = arg.message
 			callback()
-		}, {message: message.replace("#firstName#", firstName.replace(EMOJI_PATTERN, "").trim())})
+		}, {message})
 		await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
 	}
 	await tab.click(".send-invite__actions > button:nth-child(2)")
@@ -169,9 +160,11 @@ const connectTo = async (selector, tab, message) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, invitations) => {
+const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, invitations, tags) => {
 	let scrapedProfile = {}
 	scrapedProfile.baseUrl = baseUrl
+	scrapedProfile = Object.assign(scrapedProfile, tags)
+	delete scrapedProfile.url
 	try {
 		/**
 		 * Using lib-linkedInScraper to open & scrape the LinkedIn profile
@@ -223,7 +216,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 				utils.log(`${url} seems to be invited already and in pending status.`, "warning")
 			} else {
 				try {
-					await connectTo(selector, tab, message)
+					await connectTo(selector, tab, message, scrapedProfile)
 				} catch (err) {
 					scrapedProfile.error = err.message || err
 					db.push(scrapedProfile)
@@ -246,7 +239,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					if (selector === ".pv-s-profile-actions--connect" && await tab.isPresent(`${selector} > li-icon[type=success-pebble-icon]`)) {
 						utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 					} else {
-						await connectTo(selector, tab, message)
+						await connectTo(selector, tab, message, scrapedProfile)
 						invitations.push(scrapedProfile)
 						utils.log(`Added ${url}.`, "done")
 					}
@@ -331,32 +324,44 @@ const _getFlatCsv = async (url, columnName, fields = null) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
+	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, customTags, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 300 },
 		{ name: "onlySecondCircle", type: "boolean", default: false },
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
 		{ name: "columnName", type: "string", default: "" },
+		{ name: "customTags", type: "object", default: null },
 		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
-	// Test in progress ... will be remove soon
-	await _getFlatCsv(spreadsheetUrl, null, [ "yo", "test" ])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
-	const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
-	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+
+	/**
+	 * @deprecated Old way
+	 */
+	// const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+	// const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
+
+
+	const data = await _getFlatCsv(spreadsheetUrl, columnName, customTags)
+	const toScrape = data.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
+	if (toScrape.length < 1) {
+		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		nick.exit()
+	}
 	let invitations = []
 	await linkedIn.login(tab, sessionCookie)
-	utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
-	for (const baseUrl of urls) {
+	utils.log(`Urls to add: ${JSON.stringify(toScrape.map(el => el.url), null, 2)}`, "done")
+	// utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
+	for (const scrapeElement of toScrape) {
 		try {
-			utils.log(`Adding ${baseUrl}...`, "loading")
-			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(baseUrl)
-			await addLinkedinFriend(baseUrl, newUrl, tab, message, onlySecondCircle, disableScraping, invitations)
+			utils.log(`Adding ${scrapeElement.url}...`, "loading")
+			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(scrapeElement.url)
+			await addLinkedinFriend(scrapeElement.url, newUrl, tab, message, onlySecondCircle, disableScraping, invitations, scrapeElement)
 		} catch (error) {
-			utils.log(`Could not add ${baseUrl} because of an error: ${error}`, "warning")
+			utils.log(`Could not add ${scrapeElement.url} because of an error: ${error}`, "warning")
 		}
 	}
 	/**
