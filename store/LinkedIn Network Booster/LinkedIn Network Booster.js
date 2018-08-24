@@ -55,7 +55,7 @@ const validateInvitations = async invitations => {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
 		const urls = await withdrawTab.evaluate(getInviteesUrls)
-		invitations = invitations.filter(invitation => urls.includes(invitation.baseUrl))
+		invitations = invitations.filter(invitation => urls.includes(invitation.url))
 	} catch (err) {
 		noop()
 	}
@@ -227,6 +227,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					utils.log(`Could not add ${url} because of an error: ${err}`, "warning")
 					return
 				}
+				scrapedProfile.url = url
 				invitations.push(scrapedProfile)
 				utils.log(`Added ${url}.`, "done")
 			}
@@ -244,6 +245,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 						utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 					} else {
 						await connectTo(selector, tab, message)
+						scrapedProfile.url = url
 						invitations.push(scrapedProfile)
 						utils.log(`Added ${url}.`, "done")
 					}
@@ -308,10 +310,10 @@ nick.newTab().then(async (tab) => {
 		utils.log(`Checking LinkedIn shadow ban for the ${invitations.length} invitations "sent"...`, "info")
 		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
 		invitations = await validateInvitations(invitations)
-		let successInvitations = invitations.map(el => el.baseUrl)
-		failedInvitations = failedInvitations.filter(el => !successInvitations.includes(el.baseUrl))
+		let successInvitations = invitations.map(el => el.url)
+		failedInvitations = failedInvitations.filter(el => !successInvitations.includes(el.url))
 		successInvitations.map(el => utils.log(`Invitation for ${el} is successfully send`, "done"))
-		db = db.filter(el => failedInvitations.findIndex(line => el.baseUrl === line.baseUrl) < 0)
+		db = db.filter(el => failedInvitations.findIndex(line => el.url === line.url) < 0)
 		if (invitations.length < 1) {
 			utils.log("0 invitations sent", "warning")
 		} else {
