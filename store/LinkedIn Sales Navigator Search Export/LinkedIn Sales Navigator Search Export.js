@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const { parse, URL } = require("url")
 
@@ -21,6 +21,9 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+const LinkedInScraper = require("./lib-LinkedInScraper")
+const linkedInScraper = new LinkedInScraper(utils, null, nick)
+
 // }
 
 
@@ -53,69 +56,69 @@ const forceCount = (url) => {
 
 const scrapeResults = (arg, callback) => {
 	const results = document.querySelectorAll("div.search-results ul > li, ul#results-list > li")
-	const infos = []
+	const data = []
 	let profilesScraped = 0
 	for (const result of results) {
 		if (result.querySelector(".name-link.profile-link")) {
-			const url = result.querySelector(".name-link.profile-link").href
-			let newInfos = { url }
-			newInfos.name = result.querySelector(".name a").title.trim()
-			if (result.querySelector(".details-container abbr")) { newInfos.degree = result.querySelector(".details-container abbr").textContent.trim() }
-			newInfos.profileImageUrl = result.querySelector(".entity-image") ? result.querySelector(".entity-image").src : result.querySelector(".person-ghost").src
-			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newInfos.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
-			if (result.querySelector(".premium-icon")) { newInfos.premium = "Premium" }
-			if (result.querySelector(".openlink-badge")) { newInfos.openProfile = "Open Profile" }
+			const profileUrl = result.querySelector(".name-link.profile-link").href
+			let newData = { profileUrl }
+			newData.name = result.querySelector(".name a").title.trim()
+			if (result.querySelector(".details-container abbr")) { newData.degree = result.querySelector(".details-container abbr").textContent.trim() }
+			newData.profileImageUrl = result.querySelector(".entity-image") ? result.querySelector(".entity-image").src : result.querySelector(".person-ghost").src
+			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newData.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
+			if (result.querySelector(".premium-icon")) { newData.premium = "Premium" }
+			if (result.querySelector(".openlink-badge")) { newData.openProfile = "Open Profile" }
 			if (result.querySelector(".company-name")) { 
-				newInfos.companyName = result.querySelector(".company-name").title
+				newData.companyName = result.querySelector(".company-name").title
 				if (result.querySelector(".company-name").href) {
 					const salesCompanyUrl = new URL(result.querySelector(".company-name").href)
 					if (salesCompanyUrl.searchParams.get("companyId")) {
 						const companyId = salesCompanyUrl.searchParams.get("companyId")
-						newInfos.companyId = companyId
-						newInfos.companyUrl = "https://www.linkedin.com/company/" + companyId
+						newData.companyId = companyId
+						newData.companyUrl = "https://www.linkedin.com/company/" + companyId
 					}
 				}
 			}
 			const memberId = result.className.split(" ").pop()
 			if (memberId.startsWith("m")) {
-				newInfos.memberId = memberId.substr(1)
+				newData.memberId = memberId.substr(1)
 			}
-			newInfos.title = result.querySelector(".info-value").textContent.trim()
-			if (result.querySelector(".info-value:nth-child(2)")) { newInfos.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
-			if (result.querySelector(".info-value:nth-child(3)")) { newInfos.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
-			if (arg.query) { newInfos.query = arg.query }
+			newData.title = result.querySelector(".info-value").textContent.trim()
+			if (result.querySelector(".info-value:nth-child(2)")) { newData.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
+			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
+			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
-			infos.push(newInfos)
+			data.push(newData)
 		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
 	}
-	callback(null, infos)
+	callback(null, data)
 }
 
 const scrapeResultsLeads = (arg, callback) => {
 	const results = document.querySelectorAll("ol.search-results__result-list li .search-results__result-container")
-	const infos = []
+	const data = []
 	let profilesScraped = 0
 	for (const result of results) {
 		if (result.querySelector(".result-lockup__name")) {
-			const url = result.querySelector(".result-lockup__name a").href
-			let newInfos = { url }
-			newInfos.name = result.querySelector(".result-lockup__name").textContent.trim()
+			const profileUrl = result.querySelector(".result-lockup__name a").href
+			let newData = { profileUrl }
+			newData.name = result.querySelector(".result-lockup__name").textContent.trim()
 			if (result.querySelector(".result-lockup__highlight-keyword")) {
-				newInfos.title = result.querySelector(".result-lockup__highlight-keyword").innerText
-				newInfos.companyName = result.querySelector(".result-lockup__position-company").innerText
+				newData.title = result.querySelector(".result-lockup__highlight-keyword").innerText
+				newData.companyName = result.querySelector(".result-lockup__position-company").innerText
 			}
-			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newInfos.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
+			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newData.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
 			if (result.querySelector("span[data-entity-hovercard-id]")) {
-				newInfos.companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+				newData.companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
 			}
-			if (arg.query) { newInfos.query = arg.query }
+			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
-			infos.push(newInfos)
+			data.push(newData)
 		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
 	}
-	callback(null, infos)
+	callback(null, data)
 }
 
 const totalResults = (arg, callback) => {
@@ -147,6 +150,23 @@ const overridePageIndexLead = (url, page) => {
 	} catch (err) {
 		return url
 	}
+}
+
+const extractDefaultUrls = async results => {
+	utils.log("Converting all Sales Navigator URLs to Default URLs...", "loading")
+	for (let i = 0; i < results.length; i++) {
+		try {
+			results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
+		} catch (err) {
+			utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
+	}
+	return results
 }
 
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
@@ -252,7 +272,7 @@ const isLinkedInSearchURL = (url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, circles, numberOfProfiles, csvName } = utils.validateArguments()
+	let { sessionCookie, searches, circles, numberOfProfiles, csvName, extractDefaultUrl } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = []
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
@@ -293,6 +313,9 @@ const isLinkedInSearchURL = (url) => {
 				continue
 			}
 			result = result.concat(await getSearchResults(tab, searchUrl, numberOfProfiles, search))
+			if (extractDefaultUrl) {
+				result = await extractDefaultUrls(result)
+			}
 		} else {
 			utils.log("Empty line... skipping entry", "warning")
 		}
