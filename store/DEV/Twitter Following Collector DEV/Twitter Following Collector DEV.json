@@ -16,7 +16,11 @@
 		"profileUrl": "Profile url of the person following the targeted account",
 		"name": "Name of the person",
 		"bio": "Bio of the person",
-		"isFollowing": "Url of the profile targeted"
+		"userId": "Their User ID",
+		"imgUrl": "Their profile picture",
+		"backgroundImg": "Their background profile image",
+		"certified": "If they are a verified Twitter profile",
+		"query": "Url of the profile targeted"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

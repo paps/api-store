@@ -286,13 +286,13 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
-			if (agentObject) {
+			if (agentObject && agentObject.nextUrl) {
 				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
 				alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
 			}
 
 		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
+			utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
 		}
 	}
 	if (!followersPerAccount) {

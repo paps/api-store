@@ -4,7 +4,7 @@ Sometimes it can be useful to know which accounts are followed by a specific one
 🤖💨 _Around **1000 profiles** every **minute**_ 🤖💨
 
 # What will you need? ⚙️ 
-- **"Twitter account or Spreadsheet URL"**: Choose a sepcific twitter account like `@phbuster` or choose an **open** spreadsheet url
+- **"Twitter account or Spreadsheet URL"**: Choose a specific twitter account like `@phbuster` or choose an **open** spreadsheet url
 - **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
 
 # Which steps to follow?

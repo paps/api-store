@@ -19,7 +19,7 @@
 		"userId": "Their User ID",
 		"imgUrl": "Their profile picture",
 		"backgroundImg": "Their background profile image",
-		"Certified": "If they are a verified Twitter profile",
+		"certified": "If they are a verified Twitter profile",
 		"query": "Url of the profile targeted"
 	},
 	"defaultArgumentAllowed": false,
