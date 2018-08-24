@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -37,6 +36,7 @@ let rateLimited
 let lastSavedQuery
 let alreadyScraped
 let twitterUrl
+let isProtected
 
 
 const ajaxCall = (arg, cb) => {
@@ -78,7 +78,6 @@ const removeDuplicates = (arr) => {
 const interceptTwitterApiCalls = e => {
 	if (e.response.url.indexOf("users?include_available") > -1 && e.response.status === 200) {
 		interceptedUrl = e.response.url
-		console.log("interceptedi", e.response.url)
 		gl.headers = e.response.headers
 	}
 	if (e.response.url.indexOf("media_timeline") > -1 && e.response.status === 200) {
@@ -105,22 +104,17 @@ const scrapeFollowerCount = (arg, callback) => {
 
 const scrapeFirstFollowers = async (tab, profileUrl) => {
 	await tab.waitUntilVisible("div.stream-container")
-	// await tab.screenshot(`scrapeF${new Date()}.png`)
-	// await buster.saveText(await tab.getContent(), `scrapeF${Date.now()}.html`)
 	let minPosition
 	try {
 		minPosition = await tab.evaluate((arg, cb) => cb(null, document.querySelector("div.stream-container").getAttribute("data-min-position")))
-		console.log("minPOS=", minPosition)
 	} catch (err) {
-		console.log("errpos", err)
+		//
 	}
 	let res
 	try {
 		const usl = `${profileUrl}/followers/users?min_position=${minPosition}`
-		console.log("uZZ", usl)
 		res = JSON.parse(await tab.evaluate(ajaxCall, {url: usl}))
 	} catch (err) {
-		console.log("Rate Limit Reached")
 		rateLimited = true
 		interrupted = true
 		return []
@@ -129,49 +123,32 @@ const scrapeFirstFollowers = async (tab, profileUrl) => {
 	return extractProfiles(res.items_html, profileUrl)
 }
 const scrapeFollowers = async (tab, profileUrl, twitterUrl, keepScraping) => {
-	// await tab.screenshot(`scrapeMain${new Date()}.png`)
-	// await buster.saveText(await tab.getContent(), `scrapeMain${Date.now()}.html`)
-	// const urlObject = new URL(interceptedUrl)
-	// const position = urlObject.searchParams.get("max_position")
 	let response
 	try {
-		// const usl = `https://twitter.com/${twitterHandle}/followers/users?min_position=${position}`
-		// console.log("uZZ", usl)
 		response = JSON.parse(await tab.evaluate(ajaxCall, {url: twitterUrl}))
 	} catch (err) {
-		// console.log("eoh", err)
-		console.log("Rate Limit Reached")
-
 		rateLimited = true
 		interrupted = true
 		return [ [], twitterUrl, false ]
 	}
-	// console.log("rekmse", response)
 	const newPosition = response.min_position
-	console.log("newPos=", newPosition)
-	console.log("new POs= 0", newPosition === 0)
-	console.log("typeos", typeof newPosition)
-	if (typeof newPosition === "undefined" || newPosition === "0") { // if there's an error with getting the position we're starting the scraping over for this profile
-		console.log("errour")
+	keepScraping = response.has_more_items
+	if (keepScraping && (typeof newPosition === "undefined" || newPosition === "0")) { // if there's an error with getting the position we're starting the scraping over for this profile
 		throw "Error getting the scraping position"
 	}
-	keepScraping = response.has_more_items
 	twitterUrl = `${profileUrl}/followers/users?max_position=${newPosition}`
-	console.log("twitAR", twitterUrl)
 	return [ extractProfiles(response.items_html, profileUrl), twitterUrl, keepScraping ]
 }
 
 const getJsonUrl = async (tab, profileUrl) => {
 	await tab.open(profileUrl + "/followers")
-	await tab.waitUntilVisible(".GridTimeline")
+	const selector = await tab.waitUntilVisible([".GridTimeline" , ".ProtectedTimeline"], 5000, "or")
+	if (selector === ".ProtectedTimeline") { isProtected = true }
 	await tab.scrollToBottom()
 	await tab.wait(1000)
 }
 
 const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resuming) => {
-
-	// let twitterJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
-	// console.log("json", twitterJson)
 	// the regex should handle @xxx
 	if (twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)) {
 		twitterHandle = twitterHandle.match(/twitter\.com\/(@?[A-z0-9_]+)/)[1]
@@ -183,7 +160,6 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 		profileCount = alreadyScraped
 	}
 	const profileUrl = `https://twitter.com/${twitterHandle}`
-	console.log("url=", profileUrl)
 	await tab.open(profileUrl)
 	let followerCount
 	let result = []
@@ -194,15 +170,10 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 			//
 		}
 		followerCount = await tab.evaluate(scrapeFollowerCount)
-		await tab.screenshot(`fC${new Date()}.png`)
-		await buster.saveText(await tab.getContent(), `fC${Date.now()}.html`)
-		console.log("Follower Count=", followerCount)
+		utils.log(`${twitterHandle} has ${followerCount} followers.`, "done")
 		
 	} catch (err) {
 		//
-		console.log("mimimimimimimi", err)
-		await tab.screenshot(`mi${new Date()}.png`)
-		await buster.saveText(await tab.getContent(), `mi${Date.now()}.html`)
 	}
 	if (followerCount) {
 		let numberMaxOfFollowers = followersPerAccount || followerCount
@@ -210,21 +181,24 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 			try {
 				result = await scrapeFirstFollowers(tab, profileUrl, followersPerAccount)
 			} catch (err) {
-				console.log("ermm", err)
+				//
 			}
 		}
-		// console.log("on a les first")
 		if (resuming || !followersPerAccount || result.length < followersPerAccount) {
 			if (!resuming) {
 				await getJsonUrl(tab, profileUrl)
 			} else {
 				interceptedUrl = agentObject.nextUrl
-				console.log("resuming with ", interceptedUrl)
 			}
-			if (interceptedUrl) {
+			if (isProtected) {
+				utils.log(`Could not extract followers, ${twitterHandle} is protected.`, "warning")
+				result.push({ query: profileUrl, error: "Profile Protected"})
+				isProtected = false
+			} else if (interceptedUrl) {
 				twitterUrl = interceptedUrl
 				let keepScraping = true
 				let res
+				let displayResult = 0
 				do {
 					const timeLeft = await utils.checkTimeLeft()
 					if (!timeLeft.timeLeft) {
@@ -234,7 +208,6 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 					}
 					try {
 						[ res, twitterUrl, keepScraping ] = await scrapeFollowers(tab, profileUrl, twitterUrl, followersPerAccount)
-
 					} catch (err) {
 						if (resuming) {
 							utils.log(`${err}, restarting followers scraping`, "warning")
@@ -245,18 +218,13 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 							continue
 						}
 					}
-					console.log("resLengh", res.length)
 					result = result.concat(res)
-					console.log("twitterURL", twitterUrl)
 					profileCount += res.length
-					buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
-					console.log("totalngh", profileCount)
-					if (followersPerAccount && profileCount >= followersPerAccount) { 
-						console.log("on sort de la boucle")
-						break
-					}
+					displayResult++
+					if (displayResult % 25 === 24) { utils.log(`Got ${profileCount} followers.`, "info") }
+					buster.progressHint(profileCount / numberMaxOfFollowers, `Loading followers... ${profileCount}/${numberMaxOfFollowers}`)
+					if (followersPerAccount && profileCount >= followersPerAccount) { break }
 					if (rateLimited) {
-						console.log("on sort car Rate Limted")
 						interrupted = true
 						break
 					}
@@ -275,8 +243,6 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	let profileList = htmlContent.split("ProfileTimelineUser")
 	profileList.shift()
 	const result = []
-	// console.log("pL", profileList)
-	console.log("proFOUl", profileUrl)
 	for (const profile of profileList) {
 		const data = {}
 		const chr = cheerio.load(profile)
@@ -322,10 +288,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			agentObject = await buster.getAgentObject()
 			if (agentObject) {
 				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
-				console.log("last saved", lastSavedQuery)
 				alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
-				console.log("agent Object = ", agentObject)
-				console.log("already Scraped:", alreadyScraped)
 			}
 
 		} catch (err) {
@@ -346,13 +309,15 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		}
 	}
 	twitterUrls = twitterUrls.filter(str => str) // removing empty lines
+	
+	for (let i = 0; i < twitterUrls.length; i++) { // removing ending slash
+		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
+	}
+
 	if (!numberofProfilesperLaunch) {
 		numberofProfilesperLaunch = twitterUrls.length
 	}
-	console.log("numberofProfilesperLaunch:", numberofProfilesperLaunch)
-	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls, null, 4)}`)
 
-	// twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
 	twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls, null, 4)}`)
 
@@ -374,27 +339,15 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		result = result.concat(followers)
 		if (interrupted) { break }
 	}
-
+	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 90min.", "warning") }
 	if (result.length !== initialResultLength) {
 		if (interrupted && twitterUrl) { 
 			await buster.setAgentObject({ nextUrl: twitterUrl })
-			console.log("setting Agent Object with nextUrl=", twitterUrl)
 		} else {
 			await buster.setAgentObject({})
-			console.log("deleting Agent Object")
 		}
 	}
-
-	
-	// if (interrupted && twitterUrl) { 
-	// 	await buster.setAgentObject({ nextUrl: twitterUrl })
-	// 	console.log("setting Agent Object with nextUrl=", twitterUrl)
-	// } else if (result.length !== initialResultLength) {
-	// 	await buster.setAgentObject({})
-	// 	console.log("deleting Agent Object")
-	// }
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-
 	result = removeDuplicates(result)
 	await utils.saveResults(result, result)
 	nick.exit()

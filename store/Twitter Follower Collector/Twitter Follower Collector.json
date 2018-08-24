@@ -16,7 +16,11 @@
 		"profileUrl": "Profile url of the person following the targeted account",
 		"name": "Name of the person",
 		"bio": "Bio of the person",
-		"isFollowing": "Url of the profile targeted"
+		"userId": "Their User ID",
+		"imgUrl": "Their profile picture",
+		"backgroundImg": "Their background profile image",
+		"Certified": "If they are a verified Twitter profile",
+		"query": "Url of the profile targeted"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -33,6 +37,11 @@
 					"followersPerAccount": {
 						"label": "Number of followers to scrape per Twitter account",
 						"helper": "If you leave this field empty, the API will try to get as much followers as possible for every Twitter account"
+					},
+					"numberofProfilesperLaunch": {
+						"label": "Number of lines to process per launch <a href=\"/api-store/4130/twitter-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
 					}
 				}
 			}
@@ -56,6 +65,10 @@
 			"followersPerAccount": {
 				"type": "number",
 				"title": "Followers count to get per accounts",
+				"minimum": 1
+			},
+			"numberofProfilesperLaunch": {
+				"type": "number",
 				"minimum": 1
 			}
 		}
