@@ -16,11 +16,13 @@
 			"second": true,
 			"third": true
 		},
-		"numberOfProfiles": 25
+		"numberOfProfiles": 25,
+		"extractDefaultUrl": false
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
-		"url": "LinkedIn Sales Navigator profile URL",
+		"profileUrl": "LinkedIn Sales Navigator profile URL",
+		"defaultProfileUrl" : "Default profile URL (if checked)",
 		"currentJob": "",
 		"name": "Full name of the person",
 		"companyName": "",
@@ -70,7 +72,10 @@
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
-					}
+					},
+					"extractDefaultUrl": {
+                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> (takes longer)"
+                    }
 				}
 			}
 		}
@@ -112,7 +117,11 @@
             "csvName": {
 				"type": "string",
 				"required": false
-			}
+			},
+			"extractDefaultUrl": {
+				"type": "boolean",
+				"default": "false"
+            }
 		}
 	}
 }
