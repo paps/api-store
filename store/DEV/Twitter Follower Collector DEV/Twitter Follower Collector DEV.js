@@ -314,6 +314,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
 	}
 
+	for (let i = 0; i < twitterUrls.length; i++) { // converting @username to https://twitter.com/username
+		if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = `https://twitter.com/${twitterUrls[i].substr(1)}` }
+	}
+
 	if (!numberofProfilesperLaunch) {
 		numberofProfilesperLaunch = twitterUrls.length
 	}
@@ -326,6 +330,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (agentObject && url === lastSavedQuery) {
+			if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 4800000) {
+				utils.log("Still rate limited, try later.", "info")
+				nick.exit()
+			}
 			utils.log(`Resuming scraping for ${url}...`, "info")
 			resuming = true
 		} else {
@@ -342,7 +350,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 90min.", "warning") }
 	if (result.length !== initialResultLength) {
 		if (interrupted && twitterUrl) { 
-			await buster.setAgentObject({ nextUrl: twitterUrl })
+			await buster.setAgentObject({ nextUrl: twitterUrl, timestamp: new Date() })
 		} else {
 			await buster.setAgentObject({})
 		}
