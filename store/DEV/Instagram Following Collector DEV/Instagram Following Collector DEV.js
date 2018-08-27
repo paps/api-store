@@ -137,7 +137,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div:last-of-type > ul li:last-of-type", 7500)
 	} catch (err) {
 		// Hitting Instagram rate limit
-		utils.log("Couldn't load following list, Instagram rate limit probably reached.", "warning")
+		utils.log("Couldn't load followers list, Instagram rate limit probably reached.", "warning")
 		rateLimited = true
 		return result
 	}
