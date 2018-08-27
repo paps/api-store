@@ -64,7 +64,7 @@ const checkDb = (str, db) => {
 }
 
 // Removes any duplicate profile 
-const removeDuplicates = (arr) => {
+const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
 		if (!resultArray.find(el => el.screenName === arr[i].screenName && el.query === arr[i].query)) {
@@ -73,7 +73,6 @@ const removeDuplicates = (arr) => {
 	}
 	return resultArray
 }
-
 
 const interceptTwitterApiCalls = e => {
 	if (e.response.url.indexOf("users?include_available") > -1 && e.response.status === 200) {
@@ -330,7 +329,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (agentObject && url === lastSavedQuery) {
-			if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 4800000) {
+			if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
 				utils.log("Still rate limited, try later.", "info")
 				nick.exit()
 			}
@@ -343,12 +342,21 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		buster.progressHint(urlCount / twitterUrls.length, `Processing profile n°${urlCount}...`)
 		utils.log(`Getting followers for ${url}`, "loading")
 
-		const followers = await getTwitterFollowers(tab, url, followersPerAccount, resuming)
-		result = result.concat(followers)
+		let followers = await getTwitterFollowers(tab, url, followersPerAccount, resuming)
+		followers = removeDuplicatesSelf(followers)
+		if (followers.length) {
+			const followersLength = followers.length
+			for (let i = 0; i < followersLength; i++) {
+				if (!result.find(el => el.screenName === followers[i].screenName && el.query === followers[i].query)) {
+					result.push(followers[i])
+				}
+			}
+		}
 		if (interrupted) { break }
 	}
-	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 90min.", "warning") }
+	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 2h.", "warning") }
 	if (result.length !== initialResultLength) {
+		await utils.saveResults(result, result)
 		if (interrupted && twitterUrl) { 
 			await buster.setAgentObject({ nextUrl: twitterUrl, timestamp: new Date() })
 		} else {
@@ -356,8 +364,6 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-	result = removeDuplicates(result)
-	await utils.saveResults(result, result)
 	nick.exit()
 })()
 	.catch(err => {
