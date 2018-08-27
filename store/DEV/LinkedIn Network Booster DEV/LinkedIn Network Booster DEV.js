@@ -274,22 +274,22 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
  * @param {Array<String>} fields - CSV fields to fetch
  * @return {Promise<Array<Object>>} CSV cells to extract with all fields
  */
-const _getFlatCsv = async (url, columnName, fields = null) => {
+const getMultipleFieldsFromCsv = async (url, columnName, fields = null) => {
 	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
-		const match = url.match(urlRegex)
-		if (match) {
-			if (match[3] === "docs.google.com") {
-				if (match[8] === "edit") {
-					url = `https://docs.google.com/${match[6]}export?format=csv`
-				} else {
-					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
-				}
+	const match = url.match(urlRegex)
+	if (match) {
+		if (match[3] === "docs.google.com") {
+			if (match[8] === "edit") {
+				url = `https://docs.google.com/${match[6]}export?format=csv`
+			} else {
+				url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
 			}
-			await buster.download(url, "sheet.csv")
-			const file = fs.readFileSync("sheet.csv", "UTF-8")
-			if (file.indexOf("<!DOCTYPE html>") >= 0) {
-				throw "Could not download csv, maybe csv is not public."
-			}
+		}
+		await buster.download(url, "sheet.csv")
+		const file = fs.readFileSync("sheet.csv", "UTF-8")
+		if (file.indexOf("<!DOCTYPE html>") >= 0) {
+			throw "Could not download csv, maybe csv is not public."
+		}
 			let data = (Papa.parse(file)).data
 			let dataRet = []
 			let columnNameIndex = 0
@@ -345,7 +345,7 @@ nick.newTab().then(async (tab) => {
 	// const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
 
 
-	const data = await _getFlatCsv(spreadsheetUrl, columnName, customTags)
+	const data = await getMultipleFieldsFromCsv(spreadsheetUrl, columnName, customTags)
 	const toScrape = data.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
 	if (toScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
@@ -354,7 +354,6 @@ nick.newTab().then(async (tab) => {
 	let invitations = []
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(toScrape.map(el => el.url), null, 2)}`, "done")
-	// utils.log(`Urls to add: ${JSON.stringify(urls, null, 2)}`, "done")
 	for (const scrapeElement of toScrape) {
 		try {
 			utils.log(`Adding ${scrapeElement.url}...`, "loading")
@@ -371,7 +370,7 @@ nick.newTab().then(async (tab) => {
 	 */
 	if (invitations.length > 0) {
 		let failedInvitations = Object.assign([], invitations)
-		utils.log(`Checking LinkedIn shadow ban for the ${invitations.length} invitations "sent"...`, "info")
+		utils.log(`Checking LinkedIn shadow ban for ${invitations.length} invitation${invitations.length === 1 ? "" : "s"} ...`, "info")
 		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
 		invitations = await validateInvitations(invitations)
 		let successInvitations = invitations.map(el => el.baseUrl)

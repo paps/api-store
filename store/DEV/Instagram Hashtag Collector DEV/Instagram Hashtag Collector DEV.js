@@ -24,7 +24,7 @@ const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 // }
 
-const getClassNameFromGenericSelector = (arg, cb) => cb(null, document.querySelector(arg.selector).className)
+const getClassNameFromGenericSelector = (arg, cb) => cb(null, (document.querySelector(arg.selector)) ? document.querySelector(arg.selector).className : null)
 
 /**
  * @async
@@ -77,7 +77,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			// We need to check if the last selector used to switch images from the carousel is the same
 			// If not there is no more image to look
 			const hasMorePosts = await tab.evaluate(getClassNameFromGenericSelector, { selector: selectors.NEXT_POST })
-			if (hasMorePosts !== carouselNextSelector) {
+			if (hasMorePosts !== carouselNextSelector || !hasMorePosts) {
 				break
 			}
 			// if (!await tab.isPresent(selectors.NEXT_POST)) {
