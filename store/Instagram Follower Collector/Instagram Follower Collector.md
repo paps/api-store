@@ -83,7 +83,7 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to get followers from per launch, or leave that field blank to scrape every profile from your list.
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
 
 To do so, simply hit the “Settings” button to define when your API is launched:
@@ -96,7 +96,7 @@ Then, select a frequency:
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
-For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API.
+For example, 10 profiles processed per launch, 8 launches per day: you'll process a total of 80 profiles per day.
 
 
 # Limits
