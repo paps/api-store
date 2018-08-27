@@ -133,7 +133,7 @@ const forgeNewUrl = (endCursor) => {
 const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	let result = []
 	try {
-		await tab.click("main ul li:nth-child(2) a")
+		await tab.click("main ul li:nth-child(3) a")
 		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div:last-of-type > ul li:last-of-type", 7500)
 	} catch (err) {
 		// Hitting Instagram rate limit
