@@ -361,6 +361,7 @@ nick.newTab().then(async (tab) => {
 			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(scrapeElement.url)
 			await addLinkedinFriend(scrapeElement.url, newUrl, tab, message, onlySecondCircle, disableScraping, invitations, scrapeElement)
 		} catch (error) {
+			db.push({ baseUrl: scrapeElement.url, error: error.message || error })
 			utils.log(`Could not add ${scrapeElement.url} because of an error: ${error}`, "warning")
 		}
 	}
