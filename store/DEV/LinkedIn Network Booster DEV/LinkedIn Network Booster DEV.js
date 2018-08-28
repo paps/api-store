@@ -223,6 +223,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 					utils.log(`Could not add ${url} because of an error: ${err}`, "warning")
 					return
 				}
+				scrapedProfile.url = url
 				invitations.push(scrapedProfile)
 				utils.log(`Added ${url}.`, "done")
 			}
@@ -240,6 +241,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 						utils.log(`${url} seems to be invited already and the in pending status.`, "warning")
 					} else {
 						await connectTo(selector, tab, message, scrapedProfile)
+						scrapedProfile.url = url
 						invitations.push(scrapedProfile)
 						utils.log(`Added ${url}.`, "done")
 					}
@@ -274,9 +276,12 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
  * @param {Array<String>} fields - CSV fields to fetch
  * @return {Promise<Array<Object>>} CSV cells to extract with all fields
  */
-const getMultipleFieldsFromCsv = async (url, columnName, fields = null) => {
+const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLogs = true) => {
 	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
 	const match = url.match(urlRegex)
+	if (printLogs) {
+		utils.log(`Getting data from ${url} ...`, "loading")
+	}
 	if (match) {
 		if (match[3] === "docs.google.com") {
 			if (match[8] === "edit") {
@@ -316,6 +321,9 @@ const getMultipleFieldsFromCsv = async (url, columnName, fields = null) => {
 				return cell
 			})
 			dataRet.shift()
+			if (printLogs) {
+				utils.log(`Got ${dataRet.length} lines from csv.`, "done")
+			}
 			return dataRet
 		} else {
 			throw `${url} is not a valid URL.`
@@ -337,13 +345,6 @@ nick.newTab().then(async (tab) => {
 	])
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
-
-	/**
-	 * @deprecated Old way
-	 */
-	// const data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
-	// const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfAddsPerLaunch)
-
 
 	const data = await getMultipleFieldsFromCsv(spreadsheetUrl, columnName, customTags)
 	const toScrape = data.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
@@ -373,10 +374,10 @@ nick.newTab().then(async (tab) => {
 		utils.log(`Checking LinkedIn shadow ban for ${invitations.length} invitation${invitations.length === 1 ? "" : "s"} ...`, "info")
 		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
 		invitations = await validateInvitations(invitations)
-		let successInvitations = invitations.map(el => el.baseUrl)
-		failedInvitations = failedInvitations.filter(el => !successInvitations.includes(el.baseUrl))
+		let successInvitations = invitations.map(el => el.url)
+		failedInvitations = failedInvitations.filter(el => !successInvitations.includes(el.url))
 		successInvitations.map(el => utils.log(`Invitation for ${el} is successfully send`, "done"))
-		db = db.filter(el => failedInvitations.findIndex(line => el.baseUrl === line.baseUrl) < 0)
+		db = db.filter(el => failedInvitations.findIndex(line => el.url === line.url) < 0)
 		if (invitations.length < 1) {
 			utils.log("0 invitations sent", "warning")
 		} else {
