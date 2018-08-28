@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder" // Save all files at the end of the script
 
 const { parse } = require("url")
 
@@ -22,6 +23,27 @@ const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
+let interceptedUrl
+let interceptedHeaders
+/* global $ */
+
+const ajaxCall = (arg, cb) => {
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			cb(null, res)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
+	}
+}
 
 // Checks if a url is already in the csv
 const checkDb = (str, db) => {
@@ -71,15 +93,30 @@ const removeDuplicates = (arr, key) => {
 			if (arr[i].inCommon) { resultArray[index].inCommon = arr[i].inCommon }
 			if (arr[i].category === "Friend - Admin") {
 				resultArray[index].category = arr[i].category
-			} else {
-				if (arr[i].category && resultArray[index].category !== "Friend - Admin"){
-					resultArray[index].category = arr[i].category
-				}
+			} else if (arr[i].category && resultArray[index].category !== "Friend - Admin") {
+				resultArray[index].category = arr[i].category
 			}
+			
 			if (arr[i].localMember) { resultArray[index].localMember = arr[i].localMember }
 		}
 	}
 	return resultArray
+}
+
+const interceptFacebookApiCalls = e => {
+	if (e.response.url.indexOf("?gid=") > -1 && e.response.status === 200) {
+		interceptedUrl = e.response.url
+	}
+}
+
+const onHttpRequest = (e) => {
+	if (e.request.url.indexOf("?gid=") > -1) {
+
+		interceptedHeaders = e.request.headers
+		console.log("on stock headers", interceptedHeaders)
+		console.log("urlreq", e.request.url)
+
+	}
 }
 
 // Getting the group name and member count
@@ -106,11 +143,10 @@ const scrape = (arg, callback) => {
 		newInfos.name = result.querySelector("img").getAttribute("aria-label")
 		if (arg.path === "admins") {
 			newInfos.category = result.querySelector(".friendButton") ? "Friend - Admin" : "Admin"
-		} else {
-			if (result.querySelector(".friendButton")) {
-				newInfos.category = "Friend"
-			}
+		} else if (result.querySelector(".friendButton")) {
+			newInfos.category = "Friend"
 		}
+
 
 		if (arg.path === "local_members") {
 			newInfos.localMember = document.querySelector("#groupsMemberBrowserContent span").textContent
@@ -160,46 +196,63 @@ const getGroupResult = async (tab, url, path, totalCount) => {
 		// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 		return result
 	}
-	let moreToLoad
-	let profilesCount = 0 
-	let showMessage = 0
-	let lastScrollDate = new Date()
-	do{
-		try {
+	await tab.scrollToBottom()
+	await tab.wait(2000)
+	await tab.screenshot(`scroll${new Date()}.png`)
+	await buster.saveText(await tab.getContent(), `scroll${Date.now()}.html`)
+	console.log("interceptedUrl=", interceptedUrl)
+	console.log("interceptedHeaders=", interceptedHeaders)
+	await tab.inject("../injectables/jquery-3.0.0.min.js")
+	let htmlResponse
+	try {
+		htmlResponse = await tab.evaluate(ajaxCall, {url: interceptedUrl, headers: interceptedHeaders})
+		htmlResponse = htmlResponse.slice(htmlResponse.indexOf("__html") + 8)
+		console.log("r", htmlResponse)
 
-			const checkProfilesCount = await tab.evaluate((arg, callback) => {
-				callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
-			})
-			moreToLoad = await tab.evaluate((arg, callback) => {
-				callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
-			})
+	} catch (err) {
+		console.log("erres,", JSON.stringify(err.cause || err))
+		console.log("err2", err)
+	}
+	// let moreToLoad
+	// let profilesCount = 0 
+	// let showMessage = 0
+	// let lastScrollDate = new Date()
+	// do {
+	// 	try {
 
-			if (checkProfilesCount > profilesCount) {
-				showMessage++
-				profilesCount = checkProfilesCount
-				if (showMessage % 20 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
-				buster.progressHint(profilesCount / totalCount, `${profilesCount} profiles loaded`)
-				await tab.scrollToBottom()
-				lastScrollDate = new Date()
-			} else {
-				await tab.wait(200)
-			}
+	// 		const checkProfilesCount = await tab.evaluate((arg, callback) => {
+	// 			callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
+	// 		})
+	// 		moreToLoad = await tab.evaluate((arg, callback) => {
+	// 			callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
+	// 		})
 
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
+	// 		if (checkProfilesCount > profilesCount) {
+	// 			showMessage++
+	// 			profilesCount = checkProfilesCount
+	// 			if (showMessage % 20 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
+	// 			buster.progressHint(profilesCount / totalCount, `${profilesCount} profiles loaded`)
+	// 			await tab.scrollToBottom()
+	// 			lastScrollDate = new Date()
+	// 		} else {
+	// 			await tab.wait(200)
+	// 		}
 
-			if (new Date() - lastScrollDate > 15000) {
-				utils.log("Scrolling took too long", "warning")
-				break
-			}  
-		} catch (err) {
-			utils.log("Error scrolling down the page", "error") 
-		}
-	} while (moreToLoad)
-	buster.progressHint(1, `${profilesCount} profiles loaded`)
+	// 		const timeLeft = await utils.checkTimeLeft()
+	// 		if (!timeLeft.timeLeft) {
+	// 			utils.log(timeLeft.message, "warning")
+	// 			break
+	// 		}
+
+	// 		if (new Date() - lastScrollDate > 15000) {
+	// 			utils.log("Scrolling took too long", "warning")
+	// 			break
+	// 		}  
+	// 	} catch (err) {
+	// 		utils.log("Error scrolling down the page", "error") 
+	// 	}
+	// } while (moreToLoad)
+	// buster.progressHint(1, `${profilesCount} profiles loaded`)
 	result = result.concat(await tab.evaluate(scrape, {url, path}))
 	return result
 }
@@ -233,11 +286,13 @@ nick.newTab().then(async (tab) => {
 	}
 	utils.log(`Groups to scrape: ${JSON.stringify(groupsUrl, null, 2)}`, "done")
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
+	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (let url of groupsUrl) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			utils.log(`Getting data from ${url}...`, "loading")
 			let firstResults
-			try{
+			try {
 				firstResults = await getFirstResult(tab, url)
 				if (firstResults) {
 					utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
@@ -252,7 +307,7 @@ nick.newTab().then(async (tab) => {
 			if (checkInCommon) { browseArray.push("members_with_things_in_common") }
 			if (checkLocal) { browseArray.push("local_members") }
 			for (const path of browseArray){
-				try{
+				try {
 					result = result.concat(await getGroupResult(tab, url, path, parseInt(firstResults.membersCount.replace(/\s+/g, ""), 10)))
 				} catch (err) {
 					utils.log(`Could not connect to ${url + path}  ${err}`, "error")
@@ -264,6 +319,8 @@ nick.newTab().then(async (tab) => {
 	}
 
 	const finalResult = removeDuplicates(result, "profileUrl")
+	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
+	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 
 	await utils.saveResults(finalResult, finalResult, csvName)
 
