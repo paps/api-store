@@ -25,6 +25,15 @@ const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 let interceptedUrl
 let interceptedHeaders
+let alreadyScraped
+let agentObject
+let ajaxUrl
+let interrupted
+let lastSavedQuery
+const cheerio = require("cheerio")
+const { URL } = require("url")
+
+
 /* global $ */
 
 const ajaxCall = (arg, cb) => {
@@ -186,82 +195,176 @@ const getFirstResult = async (tab, url) => {
 	return result
 }
 
-const getGroupResult = async (tab, url, path, totalCount) => {
-	utils.log(`Getting data from ${url + path}...`, "loading")
-	let result = []
-	await tab.open(url + path)
-	try {
-		await tab.waitUntilVisible("#groupsMemberBrowserContent", 7500)
-	} catch (err) {
-		// No need to go any further, if the API can't determine if there are (or not) results in the opened page
-		return result
+const extractProfiles = (htmlContent, groupUrl, groupName) => {
+	let profileList = htmlContent.split("GroupProfileGridItem")
+	profileList.shift()
+	const result = []
+	for (const profile of profileList) {
+		const data = {}
+		const chr = cheerio.load(profile)
+		const url = chr("a").attr("href")
+		const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
+		data.profileUrl = profileUrl
+		console.log("profileUrl:", data.profileUrl)
+		const name = chr("img").attr("aria-label")
+		data.name = name
+		console.log("name:", data.name)
+		const imgUrl = chr("img").attr("src")
+		data.imgUrl = imgUrl
+		console.log("imgUrl:", data.imgUrl)
+		const memberSince = chr(".timestamp").attr("title")
+		if (memberSince) { data.memberSince = memberSince }
+		console.log("memberSince:", data.memberSince)
+		let additionalData = chr(".timestampContent").parents().next().html()
+		const additionalDataText = chr(".timestampContent").parents().next().text()
+		if (additionalData && additionalDataText && additionalData.length > additionalDataText.length) { additionalData = additionalDataText }
+		if (additionalData) { data.additionalData = additionalData }
+		console.log("additional:", data.additionalData)
+		data.groupUrl = groupUrl
+		data.groupName = groupName
+		result.push(data)
 	}
+	const chrHtml = cheerio.load(htmlContent)
+	const cursorUrl = chrHtml(".uiMorePager a").attr("href")
+	return [ result, cursorUrl ]
+}
+
+const getJsonUrl = async (tab, url) => {
+	await tab.open(url)
+	await tab.wait(2000)
 	await tab.scrollToBottom()
 	await tab.wait(2000)
-	await tab.screenshot(`scroll${new Date()}.png`)
-	await buster.saveText(await tab.getContent(), `scroll${Date.now()}.html`)
-	console.log("interceptedUrl=", interceptedUrl)
-	console.log("interceptedHeaders=", interceptedHeaders)
+}
+
+const getJsonResponse = async (tab) => {
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
-	let htmlResponse
+	let jsonResponse = await tab.evaluate(ajaxCall, {url: interceptedUrl, headers: interceptedHeaders})
+	jsonResponse = JSON.parse(jsonResponse.slice(9))
+	jsonResponse = jsonResponse.domops[0][3].__html
+	return jsonResponse
+}
+
+const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl) => {
+	let jsonResponse
 	try {
-		htmlResponse = await tab.evaluate(ajaxCall, {url: interceptedUrl, headers: interceptedHeaders})
-		htmlResponse = htmlResponse.slice(htmlResponse.indexOf("__html") + 8)
-		console.log("r", htmlResponse)
-
+		await tab.inject("../injectables/jquery-3.0.0.min.js")
+		jsonResponse = await tab.evaluate(ajaxCall, {url: ajaxUrl, headers: interceptedHeaders})
+		jsonResponse = JSON.parse(jsonResponse.slice(9))
+		jsonResponse = jsonResponse.domops[0][3].__html
 	} catch (err) {
-		console.log("erres,", JSON.stringify(err.cause || err))
-		console.log("err2", err)
+		interrupted = true
+		return [ [], ajaxUrl, false ]
 	}
-	// let moreToLoad
-	// let profilesCount = 0 
-	// let showMessage = 0
-	// let lastScrollDate = new Date()
-	// do {
-	// 	try {
+	let cursorUrl
+	let result
+	[ result, cursorUrl ] = extractProfiles(jsonResponse, groupUrl, groupName)
+	cursorUrl = new URL("https://facebook.com" + cursorUrl)
+	const cursor = cursorUrl.searchParams.get("cursor")
+	const nextUrl = new URL(interceptedUrl)
+	nextUrl.searchParams.set("cursor", cursor)
+	nextUrl.searchParams.set("limit", 500)
+	ajaxUrl = nextUrl.href
+	const keepScraping = jsonResponse.includes("cursor")
+	return [ result, ajaxUrl, keepScraping ]
+}
 
-	// 		const checkProfilesCount = await tab.evaluate((arg, callback) => {
-	// 			callback(null, document.querySelectorAll(".uiList.clearfix > div").length)
-	// 		})
-	// 		moreToLoad = await tab.evaluate((arg, callback) => {
-	// 			callback(null, document.querySelector(".clearfix.mam.uiMorePager.stat_elem.morePager"))
-	// 		})
 
-	// 		if (checkProfilesCount > profilesCount) {
-	// 			showMessage++
-	// 			profilesCount = checkProfilesCount
-	// 			if (showMessage % 20 === 0) { utils.log(`Loaded ${profilesCount} profiles...`, "loading") }
-	// 			buster.progressHint(profilesCount / totalCount, `${profilesCount} profiles loaded`)
-	// 			await tab.scrollToBottom()
-	// 			lastScrollDate = new Date()
-	// 		} else {
-	// 			await tab.wait(200)
-	// 		}
+const getFacebookMembers = async (tab, groupUrl, membersPerAccount, resuming) => {
+	let result = []
 
-	// 		const timeLeft = await utils.checkTimeLeft()
-	// 		if (!timeLeft.timeLeft) {
-	// 			utils.log(timeLeft.message, "warning")
-	// 			break
-	// 		}
-
-	// 		if (new Date() - lastScrollDate > 15000) {
-	// 			utils.log("Scrolling took too long", "warning")
-	// 			break
-	// 		}  
-	// 	} catch (err) {
-	// 		utils.log("Error scrolling down the page", "error") 
-	// 	}
-	// } while (moreToLoad)
-	// buster.progressHint(1, `${profilesCount} profiles loaded`)
-	result = result.concat(await tab.evaluate(scrape, {url, path}))
+	let profileCount = 0
+	let firstResults
+	try {
+		firstResults = await getFirstResult(tab, groupUrl)
+		if (firstResults) {
+			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
+		} else {
+			utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			return []
+		}
+	} catch (err) {
+		utils.log(`Could not connect to ${groupUrl}`, "error")
+		return []
+	}
+	if (resuming) {
+		profileCount = alreadyScraped
+	}
+	const url = groupUrl + "recently_joined"
+	let numberMaxOfMembers = membersPerAccount || firstResults.membersCount
+	if (resuming || !membersPerAccount || result.length < membersPerAccount) {
+		if (!resuming) {
+			try {
+				await getJsonUrl(tab, url)
+				console.log("interceptedUrl=", interceptedUrl)
+				console.log("interceptedHeaders=", interceptedHeaders)
+				await tab.inject("../injectables/jquery-3.0.0.min.js")
+				try {
+					// console.log("htmlcode", htmlResponse)
+					let cursorUrl
+					[ result, cursorUrl ] = extractProfiles(await getJsonResponse(tab))
+					cursorUrl = new URL("https://facebook.com" + cursorUrl)
+					const cursor = cursorUrl.searchParams.get("cursor")
+					let nextUrl = new URL(interceptedUrl)
+					nextUrl.searchParams.set("cursor", cursor)
+					nextUrl.searchParams.set("limit", 500)
+					nextUrl = nextUrl.href
+					console.log("next", nextUrl)
+					
+				} catch (err) {
+					console.log("Couldn't get response", err)
+				}
+			} catch (err) {
+				console.log("err, ", err)
+			}
+		} else {
+			interceptedUrl = agentObject.nextUrl
+		}
+		if (interceptedUrl) {
+			ajaxUrl = interceptedUrl
+			let keepScraping = true
+			let res
+			let displayResult = 0
+			do {
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+					interrupted = true
+					break
+				}
+				try {
+					[ res, ajaxUrl, keepScraping ] = await scrapeMembers(tab, groupUrl, firstResults.groupName, ajaxUrl)
+				} catch (err) {
+					if (resuming) {
+						utils.log(`${err}, restarting followers scraping`, "warning")
+						resuming = false
+						await getJsonUrl(tab, groupUrl)
+						ajaxUrl = interceptedUrl
+						profileCount = 0
+						continue
+					}
+				}
+				result = result.concat(res)
+				profileCount += res.length
+				displayResult++
+				// if (displayResult % 25 === 24) { 
+					utils.log(`Got ${profileCount} members.`, "info")
+				// }
+				buster.progressHint(profileCount / numberMaxOfMembers, `Loading members... ${profileCount}/${numberMaxOfMembers}`)
+				if (membersPerAccount && profileCount >= membersPerAccount) { break }
+			} while (keepScraping)
+		}
+	}
+	if (membersPerAccount) { result = result.slice(0, membersPerAccount) }
 	return result
 }
 
+
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, groupsUrl, columnName, checkInCommon, checkLocal, csvName } = utils.validateArguments()
-	let result = []
+	let { sessionCookieCUser, sessionCookieXs, groupsUrl, columnName, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
+	let result = await utils.getDb(csvName + ".csv")
+	const initialResultLength = result.length
 	let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)
 	if (isAFacebookGroupUrl) { // Facebook Group URL
 		groupsUrl = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
@@ -291,27 +394,10 @@ nick.newTab().then(async (tab) => {
 	for (let url of groupsUrl) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			utils.log(`Getting data from ${url}...`, "loading")
-			let firstResults
 			try {
-				firstResults = await getFirstResult(tab, url)
-				if (firstResults) {
-					utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
-				} else {
-					utils.log(`Could not get data from ${url}, it may be a closed group you're not part of.`, "error")
-					continue
-				}
+				result = result.concat(await getFacebookMembers(tab, url))
 			} catch (err) {
-				utils.log(`Could not connect to ${url}`, "error")
-			}
-			const browseArray = ["recently_joined", "admins"]
-			if (checkInCommon) { browseArray.push("members_with_things_in_common") }
-			if (checkLocal) { browseArray.push("local_members") }
-			for (const path of browseArray){
-				try {
-					result = result.concat(await getGroupResult(tab, url, path, parseInt(firstResults.membersCount.replace(/\s+/g, ""), 10)))
-				} catch (err) {
-					utils.log(`Could not connect to ${url + path}  ${err}`, "error")
-				}
+				utils.log(`Could not connect to ${url}  ${err}`, "error")
 			}
 		} else {  
 			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
@@ -322,8 +408,14 @@ nick.newTab().then(async (tab) => {
 	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 
-	await utils.saveResults(finalResult, finalResult, csvName)
-
+	if (result.length !== initialResultLength) {
+		await utils.saveResults(finalResult, finalResult, csvName)
+		if (interrupted && ajaxUrl) { 
+			await buster.setAgentObject({ nextUrl: ajaxUrl })
+		} else {
+			await buster.setAgentObject({})
+		}
+	}
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
