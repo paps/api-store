@@ -39,7 +39,7 @@ const jsonToCsv = json => {
 }
 
 const scrapeResults = (args, callback) => {
-	const results = document.querySelectorAll("ul.results-list > li")
+	const results = document.querySelectorAll("ul.results-list > li, ul.search-results__list > li")
 	const linkedInUrls = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {

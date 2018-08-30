@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
 
 const { URL } = require("url")
 
@@ -21,7 +21,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const DB_NAME = "result.csv"
 // }
@@ -39,7 +39,7 @@ const jsonToCsv = json => {
 }
 
 const scrapeResults = (args, callback) => {
-	const results = document.querySelectorAll("ul.results-list > li")
+	const results = document.querySelectorAll("ul.results-list > li, ul.search-results__list > li")
 	const linkedInUrls = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
