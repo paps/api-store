@@ -139,8 +139,8 @@ class LinkedIn {
 
 		if (await tab.isPresent(COMMERCIAL_LIMIT_SELECTOR)) {
 			errorToRet = await tab.evaluate((arg, cb) => {
-				const headLine = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info h2").textContent.trim() : null
-				const subText = (document.querySelector(".search-paywall__info")) ? document.querySelector(".search-paywall__info p:first-of-type").textContent.trim() : null
+				const headLine = (document.querySelector(".search-paywall__info h2")) ? document.querySelector(".search-paywall__info h2").textContent.trim() : null
+				const subText = (document.querySelector(".search-paywall__info p:first-of-type")) ? document.querySelector(".search-paywall__info p:first-of-type").textContent.trim() : null
 				cb(null, (!headLine || !subText) ? null : `${headLine}\n${subText}`)
 			})
 			if (!errorToRet) {
