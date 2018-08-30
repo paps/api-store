@@ -176,14 +176,14 @@ const scrapeInfos = (arg, callback) => {
 		const sel = document.querySelector(".pv-profile-section.pv-top-card-section .pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections")
 		if (sel) {
 			/**
-			 * HACK: Issue #52
+			 * Issue #52
 			 * Scrapping only the number not the text (thanks to the new Linkedin UI)
 			 */
 			infos.general.connections = sel.textContent.trim().match(/\d+\+?/)[0]
 		}
 
 		/**
-		 * HACK: issue #49 lib-LinkedInScraper: Better description field extraction
+		 * Issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
 		 * the code below replace all br tags by a newline character, and remove elippsis string used by LinkedIn
 		 */
@@ -202,8 +202,8 @@ const scrapeInfos = (arg, callback) => {
 		// Get subscribers count
 		if (document.querySelector("div.pv-profile-section.pv-recent-activity-section")) {
 			/**
-			 * BUG: issue #12 Cannot read property 'textContent' of null
-			 * NOTE: This selector is not always available, the script should test before accessing data from the selector
+			 * Issue #12 Cannot read property 'textContent' of null
+			 * This selector is not always available, the script should test before accessing data from the selector
 			 */
 			if (document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span")) {
 				const subscribersText = document.querySelector("div.pv-profile-section.pv-recent-activity-section h3.pv-recent-activity-section__follower-count > span").textContent.trim().replace(/,/g, "").replace(/\./g, "").replace(/\s/g, "")
@@ -216,14 +216,40 @@ const scrapeInfos = (arg, callback) => {
 			// Get all profile jobs listed
 			const jobs = document.querySelectorAll("section.pv-profile-section.experience-section ul li")
 			if (jobs) {
-				infos.jobs = getListInfos(jobs, [
-					{ key: "companyName", attribute: "textContent", selector: ".pv-entity__secondary-title" },
-					{ key: "companyUrl", attribute: "href", selector: "a[data-control-name=\"background_details_company\"]" },
-					{ key: "jobTitle", attribute: "textContent", selector: "a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3" },
-					{ key: "dateRange", attribute: "textContent", selector: ".pv-entity__date-range > span:nth-child(2)" },
-					{ key: "location", attribute: "textContent", selector: ".pv-entity__location > span:nth-child(2)" },
-					{ key: "description", attribute: "textContent", selector: ".pv-entity__description" },
-				])
+				Array.from(jobs).map(el => {
+					const t = el.querySelector("span.lt-line-clamp__line.lt-line-clamp__line--last a")
+					t && t.click()
+					return t !== null
+				})
+				/**
+				 * Issue #128: removing getListInfos call while scraping jobs
+				 * Specific process used when scraping jobs descriptions
+				 * (same as profile description)
+				 */
+				infos.jobs = Array.from(jobs).map(el => {
+					let job = {}
+					job.companyName = (el.querySelector(".pv-entity__secondary-title") ? el.querySelector(".pv-entity__secondary-title").textContent.trim() : null)
+					job.companyUrl = (el.querySelector("a[data-control-name=\"background_details_company\"]") ? el.querySelector("a[data-control-name=\"background_details_company\"]").href : null)
+					job.jobTitle = (el.querySelector("a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3") ? el.querySelector("a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3").textContent.trim() : null)
+					job.dateRange = (el.querySelector(".pv-entity__date-range > span:nth-child(2)") ? el.querySelector(".pv-entity__date-range > span:nth-child(2)").textContent.trim() : null)
+					job.location = (el.querySelector(".pv-entity__location > span:nth-child(2)") ? el.querySelector(".pv-entity__location > span:nth-child(2)").textContent.trim() : null)
+					let description = null
+					if (el.querySelector(".pv-entity__description")) {
+						let seeMoreElement = el.querySelector(".lt-line-clamp__ellipsis")
+						let seeLessElement = el.querySelector(".lt-line-clamp__less")
+						if (seeMoreElement) {
+							seeMoreElement.parentNode.removeChild(seeMoreElement)
+						}
+						if (seeLessElement) {
+							seeLessElement.parentNode.removeChild(seeLessElement)
+						}
+						let cleanedHTML = el.querySelector(".pv-entity__description").innerHTML.replace(/(<\/?br>)/g, "\n")
+						el.querySelector(".pv-entity__description").innerHTML = cleanedHTML
+						description = el.querySelector(".pv-entity__description").textContent.trim()
+					}
+					job.description = description
+					return job
+				})
 			}
 			// Get all profile schools listed
 			const schools = document.querySelectorAll(".pv-profile-section.education-section ul > li")
