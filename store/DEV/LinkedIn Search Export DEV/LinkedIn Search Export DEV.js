@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -230,23 +229,18 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			if (searchCat === "jobs") { 
 				selectorList = "ul.jobs-search-results__list > li"
 			} else {
-				selectorList = "div.search-results ul > li"
+				selectorList = "ul.search-results__list > li, ul.results-list > li"
 			}
 			const resultCount = await tab.evaluate((arg, callback) => { 
 				callback(null, document.querySelectorAll(arg.selectorList).length)
 			}, { selectorList })
-			// let canScroll = true
 			for (let i = 1; i <= resultCount; i++) {
-				// try {
 					await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+						if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
 						callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+						}
 					}, { i, selectorList })
 					await tab.wait(100)
-				// } catch (err) {
-				// 	utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
-				// 	canScroll = false
-				// 	break
-				// }
 			}
 			// if (canScroll) { 
 				result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
