@@ -54,8 +54,9 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 # ⚙️️ Repetition setup ⚙️
 
 If your input spreadsheet has a lot of rows, your Phantombuster account might not have enough execution time to find all the profile URLs in a single day. No worries though! You can set up **an automatic launch per day** to continue finding profile URLs over weeks or months if necessary.
+You can choose how many lines to handle per launch. If you leave that configuration field empty, the API will try to process all of them.
 
-To do so, first go to your API's settings:
+Then, go to your API's settings:
 
 <center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
