@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js, lib-WebSearch.js"
 
 const url = require("url")
 const { URL } = require("url")
@@ -22,6 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
+const WebSearch = require("./lib-WebSearch")
 
 let graphql = null
 let hashWasFound = false
@@ -198,6 +199,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
+	const webSearch = new WebSearch(tab, buster)
 	const scrapedData = []
 
 	if (!maxPosts) { maxPosts = 1000 }
@@ -293,17 +295,20 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 					targetUrl = await instagram.searchLocation(tab, term)
 				}
 			}
-			if (!targetUrl) {
-				utils.log(`No search result page found for ${term}.`, "error")
-				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
-				continue
+			if (!targetUrl) { // Using webSearch if we can't find location through instagram
+				let search = await webSearch.search(term + "location instagram")
+				let firstSearch
+				if (search && search.results[0].link) {
+					firstSearch = search.results[0].link
+					if (firstSearch.startsWith("https://www.instagram.com/explore/locations/")) {
+						targetUrl = firstSearch
+					} else {
+						utils.log(`No search result page found for ${term}.`, "error")
+						terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
+						continue
+					}
+				}
 			}
-			// const [httpCode] = await tab.open(targetUrl)
-			// if (httpCode === 404) {
-			// 	utils.log(`No results found for ${term}`, "error")
-			// 	terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
-			// 	continue
-			// }
 			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl }) 
 
 			try {
