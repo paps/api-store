@@ -242,11 +242,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					}, { i, selectorList })
 					await tab.wait(100)
 			}
-			// if (canScroll) { 
 				result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
-			// } else {
-			// 	break
-			// }
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
 				utils.log(hasReachedLimit, "warning")
@@ -275,8 +271,6 @@ const isLinkedInSearchURL = (targetUrl) => {
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
 			if (urlObject.pathname.includes("schools")) { return "schools" } // Schools search
 			if (urlObject.pathname.includes("jobs")) { return "jobs" } // Jobs search
-		} else {
-			return -1
 		}
 	}
 	return 0
@@ -314,9 +308,6 @@ const isLinkedInSearchURL = (targetUrl) => {
 				utils.log("Empty line... skipping entry.", "warning")
 				continue
 			}
-		} else if (isSearchURL === -1) {
-			utils.log(`${search} doesn't represent a LinkedIn search URL or a LinkedIn search keyword ... skipping entry.`, "warning")
-			continue
 		} else {
 			searchUrl = search
 		}
