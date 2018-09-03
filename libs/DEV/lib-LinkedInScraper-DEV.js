@@ -147,11 +147,13 @@ const scrapeInfos = (arg, callback) => {
 
 	/**
 	 * @description Function used removed nested array from the list parameter
+	 * Use Infinity if you want remove depth restrictions
 	 * @param {Array<Any>} list
 	 * @param {Number} [depth] - Recursion calls to be performed
 	 * @return <Array<Any>> Flatten array
 	 */
 	const flatArray = (list, depth = 3) => {
+		depth = ~~depth
 		if (depth === 0) return list
 		return list.reduce((acc, val) => {
 			if (Array.isArray(val)) {
@@ -294,12 +296,8 @@ const scrapeInfos = (arg, callback) => {
 					if (el.querySelector(".pv-entity__description")) {
 						let seeMoreElement = el.querySelector(".lt-line-clamp__ellipsis")
 						let seeLessElement = el.querySelector(".lt-line-clamp__less")
-						if (seeMoreElement) {
-							seeMoreElement.parentNode.removeChild(seeMoreElement)
-						}
-						if (seeLessElement) {
-							seeLessElement.parentNode.removeChild(seeLessElement)
-						}
+						seeMoreElement && seeMoreElement.parentNode.removeChild(seeMoreElement)
+						seeLessElement && seeLessElement.parentNode.removeChild(seeLessElement)
 						let cleanedHTML = el.querySelector(".pv-entity__description").innerHTML.replace(/(<\/?br>)/g, "\n")
 						el.querySelector(".pv-entity__description").innerHTML = cleanedHTML
 						description = el.querySelector(".pv-entity__description").textContent.trim()
