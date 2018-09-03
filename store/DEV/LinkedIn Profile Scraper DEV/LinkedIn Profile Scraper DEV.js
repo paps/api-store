@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,7 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const { URL } = require("url")
 
 const DB_NAME = "result"
@@ -123,7 +123,6 @@ const removeLinkedinSubdomains = url => {
 	}
 
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
-
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
@@ -172,8 +171,9 @@ const removeLinkedinSubdomains = url => {
 	}
 	if (noDatabase) {
 		nick.exit()
+		//
 	} else {
-		await utils.saveResults(result, db, DB_NAME, null, false)
+		await utils.saveResults(result, db, DB_NAME, null, true)
 		nick.exit(0)
 	}
 })()

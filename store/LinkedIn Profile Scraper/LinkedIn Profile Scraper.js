@@ -167,7 +167,7 @@ const removeLinkedinSubdomains = url => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResults(result, db, DB_NAME, null, false)
+		await utils.saveResults(result, db, DB_NAME, null, true)
 		nick.exit(0)
 	}
 })()
