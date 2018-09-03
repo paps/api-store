@@ -26,7 +26,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
 const scrapeCompanyLink = (arg, callback) => {
-	callback(null, document.querySelector("li.search-result a.search-result__result-link").href)
+	callback(null, document.querySelector("li.search-result a.search-result__result-link") ? document.querySelector("li.search-result a.search-result__result-link").href : null)
 }
 
 // Checks if a url is already in the csv
@@ -182,6 +182,10 @@ const isLinkedUrl = target => {
 						await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
 						await tab.waitUntilVisible("div.search-results-container")
 						link = await tab.evaluate(scrapeCompanyLink)
+						if (!link) { 
+							result.push({ query: company, error:"No results found"})
+							throw "No results were found."
+						}
 					}
 				} else {
 					link = company
