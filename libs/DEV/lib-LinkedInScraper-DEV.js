@@ -144,6 +144,25 @@ const scrapeInfos = (arg, callback) => {
 		}
 		return result
 	}
+
+	/**
+	 * @description Function used removed nested array from the list parameter
+	 * @param {Array<Any>} list
+	 * @param {Number} [depth] - Recursion calls to be performed
+	 * @return <Array<Any>> Flatten array
+	 */
+	const flatArray = (list, depth = 3) => {
+		if (depth === 0) return list
+		return list.reduce((acc, val) => {
+			if (Array.isArray(val)) {
+				acc.push(...flatArray(val, depth - 1))
+			} else {
+				acc.push(val)
+			}
+			return acc
+		}, [])
+	}
+
 	const infos = {}
 	if (document.querySelector(".pv-profile-section.pv-top-card-section")) {
 		// Get primary infos
@@ -214,13 +233,34 @@ const scrapeInfos = (arg, callback) => {
 		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
-			const jobs = document.querySelectorAll("section.pv-profile-section.experience-section ul li")
+			// Issue 128: new UI (experiences are stacked in a li if the company doesn't change)
+			const jobs = document.querySelectorAll("section.pv-profile-section.experience-section ul li.pv-profile-section")
 			if (jobs) {
+				// Expand all descriptions
 				Array.from(jobs).map(el => {
 					const t = el.querySelector("span.lt-line-clamp__line.lt-line-clamp__line--last a")
 					t && t.click()
 					return t !== null
 				})
+
+				const extractJobDescription = el => {
+					let description = null
+					if (el.querySelector(".pv-entity__description")) {
+						let seeMoreElement = el.querySelector(".lt-line-clamp__ellipsis")
+						let seeLessElement = el.querySelector(".lt-line-clamp__less")
+						if (seeMoreElement) {
+							seeMoreElement.parentNode.removeChild(seeMoreElement)
+						}
+						if (seeLessElement) {
+							seeLessElement.parentNode.removeChild(seeLessElement)
+						}
+						let cleanedHTML = el.querySelector(".pv-entity__description").innerHTML.replace(/(<\/?br>)/g, "\n")
+						el.querySelector(".pv-entity__description").innerHTML = cleanedHTML
+						description = el.querySelector(".pv-entity__description") ? el.querySelector(".pv-entity__description").textContent.trim() : null
+					}
+					return description
+				}
+
 				/**
 				 * Issue #128: removing getListInfos call while scraping jobs
 				 * Specific process used when scraping jobs descriptions
@@ -228,6 +268,23 @@ const scrapeInfos = (arg, callback) => {
 				 */
 				infos.jobs = Array.from(jobs).map(el => {
 					let job = {}
+
+					/**
+					 * Issue #128: Differents positions in the same company need a specific handler
+					 */
+					if (el.querySelector(".pv-entity__position-group")) {
+						let companyName = (el.querySelector(".pv-entity__company-details .pv-entity__company-summary-info span:last-of-type") ? el.querySelector(".pv-entity__company-details .pv-entity__company-summary-info span:last-of-type").textContent.trim() : null)
+						let companyUrl = (el.querySelector("a[data-control-name=\"background_details_company\"]") ? el.querySelector("a[data-control-name=\"background_details_company\"]").href : null)
+						return Array.from(el.querySelectorAll("li.pv-entity__position-group-role-item")).map(stackedEl => {
+							let stackedJob = { companyName, companyUrl }
+							stackedJob.jobTitle = stackedEl.querySelector(".pv-entity__summary-info-v2 > h3 > span:last-of-type") ? stackedEl.querySelector(".pv-entity__summary-info-v2 > h3 > span:last-of-type").textContent.trim() : null
+							stackedJob.dateRange = stackedEl.querySelector(".pv-entity__date-range > span:last-of-type") ? stackedEl.querySelector(".pv-entity__date-range > span:last-of-type").textContent.trim() : null
+							stackedJob.location = stackedEl.querySelector(".pv-entity__location > span:last-of-type") ? stackedEl.querySelector(".pv-entity__location > span:last-of-type").textContent.trim() : null
+							stackedJob.description = extractJobDescription(stackedEl)
+							return stackedJob
+						})
+					}
+
 					job.companyName = (el.querySelector(".pv-entity__secondary-title") ? el.querySelector(".pv-entity__secondary-title").textContent.trim() : null)
 					job.companyUrl = (el.querySelector("a[data-control-name=\"background_details_company\"]") ? el.querySelector("a[data-control-name=\"background_details_company\"]").href : null)
 					job.jobTitle = (el.querySelector("a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3") ? el.querySelector("a[data-control-name=\"background_details_company\"] div.pv-entity__summary-info > h3").textContent.trim() : null)
@@ -250,6 +307,7 @@ const scrapeInfos = (arg, callback) => {
 					job.description = description
 					return job
 				})
+				infos.jobs = flatArray(infos.jobs, 2)
 			}
 			// Get all profile schools listed
 			const schools = document.querySelectorAll(".pv-profile-section.education-section ul > li")
