@@ -63,8 +63,7 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 	delete csv.skill1
 	delete csv.skill2
 	delete csv.skill3
-
-	if (infos.skills.length > 0) {
+	if (infos.skills && infos.skills.length > 0) {
 		for (let i = 0; i < skillsToRet; i++) {
 			if (i > infos.skills.length) {
 				break
