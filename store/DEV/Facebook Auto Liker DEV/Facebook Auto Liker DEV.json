@@ -1,0 +1,121 @@
+{
+	"slug": "facebook-auto-liker",
+	"description": "Automatically like the last posts of a list of Facebook profiles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_liker/twitter_auto_liker_2.png",
+	"argumentDescription": "",
+	"gradientBegin": "#FFB75E",
+	"gradientEnd": "#6eaeb9",
+	"hidden": false,
+	"new": false,
+	"defaultArgument": {
+		"sessionCookie": "session_cookie",
+		"spreadsheetUrl": "phbuster"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookieCUser": {
+                        "label": "Session cookie c_user <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Session cookie xs <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_4createanicespreadsheet\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
+					},
+					"columnName": {
+						"label": "Column name from which Twitter profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
+						"placeholder": "Twitter Profile"
+					},
+					"numberOfProfilesPerLaunch": {
+						"label": "Number of profiles to process per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will open 10 profile per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"likesCountPerProfile": {
+						"label": "Number of likes to send per profile per launch <a target=\"_blank\" href=\"/api-store/5770/twitter-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will like 1 post per profile per launch",
+						"inputType": "number",
+						"placeholder": 1
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 8
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfProfilesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"likesCountPerProfile": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 1000,
+				"default": 1
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
