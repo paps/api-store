@@ -49,7 +49,7 @@ const waitWhileHttpErrors = async (utils, tab) => {
 }
 
 class Twitter {
-	constructor (nick, buster, utils) {
+	constructor(nick, buster, utils) {
 		this.nick = nick
 		this.buster = buster
 		this.utils = utils
@@ -99,6 +99,7 @@ class Twitter {
 			await tab.waitUntilVisible(".DashboardProfileCard")
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
 		} catch (error) {
+			await tab.screenshot(`Tok${Date.now()}.png`)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
 			this.nick.exit(1)
 		}
@@ -112,7 +113,7 @@ class Twitter {
 	 * @param {Number} [limit] - Max of followers to collect from the page (if not present: collect all followers)
 	 * @return {Promise<Array<Any>>} Array containing Followers
 	 */
-	async collectFollowers(tab, url, limit = -1) {
+	async collectFollowers(tab, url, limit = -1, isNetworkCleaner = false) {
 		tab.driver.client.on("Network.responseReceived", interceptHttpResponse)
 
 		await tab.open(url)
@@ -137,7 +138,12 @@ class Twitter {
 				this.utils.log(`Loaded ${await tab.evaluate(_getFollowersNb)} accounts`, "info")
 			} catch (error) {
 				if (RATE_LIMIT_REACHED) {
-					await waitWhileHttpErrors(this.utils, tab)
+					if (!isNetworkCleaner) {
+						await waitWhileHttpErrors(this.utils, tab)						
+					} else {
+					this.utils.log("Twitter rate limit reached, you should try again later.", "warning")
+					this.nick.exit(1)
+					}
 				} else {
 					this.utils.log(`Loaded ${await tab.evaluate(_getFollowersNb)} accounts.`, "done")
 					break
