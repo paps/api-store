@@ -100,7 +100,6 @@ const getFirstName = (arg, callback) => {
 }
 
 const forgeMsg = (msg, scrapedProfile) => {
-
 	// Way to wipe emojis for all scraped fields which could contain emojis
 	for (const field of [ "firstName", "lastName", "fullName"]) {
 		// Lazy check of null value
@@ -317,7 +316,12 @@ const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLog
 			dataRet = data.map(el => {
 				let cell = {}
 				cell.url = el[columnNameIndex]
-				csvFieldsIndexes.forEach(field => cell[field.name] = el[field.position])
+				csvFieldsIndexes.forEach(field => {
+					// Removing # character at the beginning & end of the string if present
+					// So far we assume all fieldName are trim
+					let fieldName = field.name.startsWith("#") && field.name.endsWith("#") ? field.name.substr(1, field.name.length - 2) : field.name
+					cell[fieldName] = el[field.position]
+				})
 				return cell
 			})
 			dataRet.shift()
@@ -332,7 +336,7 @@ const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLog
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	const [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, customTags, hunterApiKey, disableScraping] = utils.checkArguments([
+	let [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, customTags, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 300 },
@@ -343,6 +347,7 @@ nick.newTab().then(async (tab) => {
 		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
+	customTags = customTags.map(el => el.trim())
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 
