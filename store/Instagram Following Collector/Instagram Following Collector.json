@@ -1,8 +1,8 @@
 {
 	"slug": "instagram-following-collector",
-	"description": "Extract a list of all the profiles followed by any Instagram account",
+	"description": "List all profiles followed by Instagram users",
 	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#833ab4",
@@ -47,7 +47,7 @@
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {
-						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to process per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},

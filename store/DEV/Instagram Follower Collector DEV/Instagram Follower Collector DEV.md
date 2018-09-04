@@ -3,26 +3,14 @@ The 1st step in order to know who is following a specific Instagram account is t
 * Instagram Profile Url
 * Full Name
 
-# Our Solution
-
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and collect all the info from the designated profiles.
-
-
 # What will you need? ⚙️ 
 
 - **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it, or a single specific Instagram URL.
+- **Number of followers to collect per profile**: If you want a fixed number of followers scraped (or all of them if empty).
+- **Number of profiles to process per launch**: The number of lines from your spreadsheet to process.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
-
-
-# Which data will you collect?
-
-
-1. Instagram profile link
-1. Instagram username
-1. Full name
-1. Profile image URL
 
 
 # Which steps to follow?
@@ -108,4 +96,4 @@ For example, 10 profiles processed per launch, 8 launches per day: you'll proces
 
 Please be aware that this API will manipulate your Instagram account on your behalf.
 
-Instagram has set rate limits of 200 requests an hour per token. We have noticed that after a few thousands followers collected, you'll need to wait a few minutes before scraping again. We recommend spacing launches consequently.
+Instagram has set rate limits of 200 requests an hour per token. We have noticed that after a few thousands followers collected, you'll need to wait around 15 minutes before scraping again. We recommend spacing launches consequently.

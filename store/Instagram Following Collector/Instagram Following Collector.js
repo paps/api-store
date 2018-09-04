@@ -26,7 +26,6 @@ const { parse } = require("url")
 
 // }
 const gl = {}
-const rc = {}
 let graphqlUrl
 let requestSingleId
 let agentObject
@@ -111,10 +110,9 @@ const scrapeFollowingCount = (arg, callback) => {
 
 
 const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("suggested") && !e.response.url.includes("user_id")) {
 		requestSingleId = e.requestId
 		graphqlUrl = e.response.url
-		rc.headers = e.response.headers
 	}
 }
 
@@ -156,6 +154,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	let instagramJson
 	let savedinstagramJson
 	let allCollected = false
+	let displayResult = 0
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -170,6 +169,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			restartAfterError = false
 		} else {
 			instagramJson = await tab.driver.client.Network.getResponseBody({ requestId : requestSingleId })
+			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			instagramJson = JSON.parse(instagramJson.body)
 			savedinstagramJson = instagramJson
 		}
@@ -194,6 +194,8 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 						profilesArray.push(data)
 					}
 					profileCount += nodes.length
+					displayResult++
+					if (displayResult % 15 === 14) { utils.log(`Got ${profileCount} followers.`, "info") }
 					buster.progressHint(profileCount / numberMaxOfFollowing, `Charging following list... ${profileCount}/${numberMaxOfFollowing}`)
 				} else {
 					nextUrl = agentObject.nextUrl

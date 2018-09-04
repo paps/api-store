@@ -157,6 +157,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	let instagramJson
 	let savedinstagramJson
 	let allCollected = false
+	let displayResult = 0
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -195,6 +196,8 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 						profilesArray.push(data)
 					}
 					profileCount += nodes.length
+					displayResult++
+					if (displayResult % 15 === 14) { utils.log(`Got ${profileCount} followers.`, "info") }
 					buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
 				} else {
 					nextUrl = agentObject.nextUrl

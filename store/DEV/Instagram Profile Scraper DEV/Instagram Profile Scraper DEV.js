@@ -23,14 +23,14 @@ const instagram = new Instagram(nick, buster, utils)
 const { parse } = require("url")
 // }
 
-const getUrlsToScrape = (data, numberOfPagesPerLaunch) => {
+const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-	return data.slice(0, Math.min(numberOfPagesPerLaunch, maxLength)) // return the first elements
+	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
 // Checks if a url is already in the csv
@@ -48,7 +48,7 @@ const cleanInstagramUrl = (url) => {
 		let path = parse(url).pathname
 		path = path.slice(1)
 		const id = path.slice(0, path.indexOf("/"))
-		if (id !== "p") { /// not a picture url
+		if (id !== "p") { // not a picture url
 			return "https://www.instagram.com/" + id 
 		}
 	}
@@ -106,9 +106,9 @@ const scrapePage = (arg, callback) => {
 			data.status = "Following"
 		}
 	}
-	postsCount = parseInt(postsCount.replace(/[^\d]/g, ""), 10)
-	followersCount = parseInt(followersCount.replace(/[^\d]/g, ""), 10)
-	followingCount = parseInt(followingCount.replace(/[^\d]/g, ""), 10)
+	postsCount = parseInt(postsCount.replace(/,/g, ""), 10)
+	followersCount = parseInt(followersCount.replace(/,/g, ""), 10)
+	followingCount = parseInt(followingCount.replace(/,/g, ""), 10)
 	data.postsCount = postsCount
 	data.followersCount = followersCount
 	data.followingCount = followingCount
@@ -117,7 +117,7 @@ const scrapePage = (arg, callback) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfPagesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let urls, result
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
@@ -135,11 +135,11 @@ const scrapePage = (arg, callback) => {
 			urls[i] = cleanInstagramUrl(urls[i])
 		}
 		urls = urls.filter(str => str) // removing empty lines
-		if (!numberOfPagesPerLaunch) {
-			numberOfPagesPerLaunch = urls.length
+		if (!numberOfProfilesPerLaunch) {
+			numberOfProfilesPerLaunch = urls.length
 		} 	
 		result = await utils.getDb(csvName + ".csv")
-		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberOfPagesPerLaunch)
+		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberOfProfilesPerLaunch)
 	}
 
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
@@ -161,6 +161,7 @@ const scrapePage = (arg, callback) => {
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
+				result.push({ profileUrl: url, error: "Broken link or page has been removed" })
 				continue
 			}
 			result = result.concat(await tab.evaluate(scrapePage, { url }))

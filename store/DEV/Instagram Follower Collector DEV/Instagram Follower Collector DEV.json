@@ -47,7 +47,7 @@
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {
-						"label": "Number of profiles to collect from per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to process per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},

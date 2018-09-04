@@ -4,7 +4,7 @@ You have a list of Instagram profiles and need to quickly extract information fr
 
 # Our Solution
 
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and collect all the info from the designated profiles.
+Launch an automated agent that will connect as yourself on Instagram. It will then browse and collect data from the designated profiles.
 
 
 # What will you need? ⚙️ 
@@ -13,24 +13,6 @@ Launch an automated agent that will connect as yourself on Instagram. It will th
 - **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
-
-
-# Which data will you collect?
-
-
-1. Instagram profile link
-1. Instagram username
-1. Full name
-<img src="https://phantombuster.imgix.net/api-store/Linkedin_profile_scrapper/keyword_short.png" style="float:right; border:none;box-shadow:none;">
-
-1. Bio description
-1. N° of posts
-1. N° of followers
-1. N° of accounts followed
-1. Website (if available)
-1. Profile image URL
-1. Status (if you follow or have blocked that account)
-
 
 
 # Which steps to follow?
@@ -74,7 +56,7 @@ or
 _// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
 
 ## 5. Add a Google Spreadsheet 📑
-Below your session cookie you’ll find _Spreadsheet URL_
+Below your session cookie you’ll find _Spreadsheet URL_.
 
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
 <center>![](https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrrpr_spreadsheet.png)</center>
@@ -84,7 +66,6 @@ You can specify the name of the column that contains the profile links. Simply e
 
 **Please make sure your file is publicly accessible!**
 
-You can also enter a CSV file URL, it will work the same :)
 You can also enter a single Instagram profile URL directly in the field.
 
 
@@ -111,4 +92,4 @@ Then, select a frequency:
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
-For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API.
+For example, 100 profiles scraped per launch, 8 launches per day: you'll have a total of 800 profiles per day. We recommend not exceeding these values with this API as it takes some time to scrape this many profiles.
