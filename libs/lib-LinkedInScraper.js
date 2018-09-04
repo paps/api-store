@@ -404,7 +404,7 @@ const scrapingProcess = async (tab, url, utils) => {
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
 		utils.log("Profile loaded.", "done")
 	} catch (error) {
-		throw("Could not load the profile.")
+		throw ("Could not load the profile.")
 	}
 	try {
 		utils.log("Scrolling to load all data of the profile...", "loading")
@@ -649,7 +649,7 @@ class LinkedInScraper {
 			await tab.waitUntilVisible("#profile-wrapper", 15000)
 			this.utils.log("Profile loaded.", "done")
 		} catch (error) {
-			throw("Could not load the profile.")
+			throw ("Could not load the profile.")
 		}
 		try {
 			this.utils.log("Scrolling to load all data of the profile...", "loading")
