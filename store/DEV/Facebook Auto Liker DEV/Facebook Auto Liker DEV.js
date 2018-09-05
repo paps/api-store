@@ -24,6 +24,7 @@ const facebook = new Facebook(nick, buster, utils)
 const DB_NAME = "result.csv"
 const DEFAULT_LIKE_COUNT = 1
 const DEFAULT_PROFILE_LAUNCH = 1
+let rateLimited
 // }
 
 const filterUrls = (str, db) => {
@@ -52,16 +53,26 @@ const clickAllPosts = (arg, cb) => {
 	allLikes = allLikes.slice(0, arg.likesCount)
 	allLikes = allLikes.filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink")
 	console.log("Out of last ", arg.likesCount, " posts, the last", allLikes.length, " are not liked yet")
-	let isBlocked = false
 	for (const like of allLikes) {
 		like.click()
-		if (Array.from(document.querySelectorAll("ul > li > a")).filter(el => el.href.includes("/help/contact/")).length) {
-			// console.log("Blocked by Facebook !")
-			isBlocked = true
-			break
-		}
 	}
-	cb(null, [ allLikes.length, Array.from(document.querySelectorAll("ul > li > a")).filter(el => el.href.includes("/help/contact/")).length ])
+	cb(null, allLikes.length)
+}
+
+const isBlocked = (arg, cb) => {
+	const block = Array.from(document.querySelectorAll("ul > li > a")).filter(el => el.href.includes("/help/contact/")).length
+	cb(null, block)
+}
+
+// get the name of visited profile
+const getName = (arg, cb) => {
+	let name
+	if (document.querySelector("#fb-timeline-cover-name")) { name = document.querySelector("#fb-timeline-cover-name").textContent }
+	cb(null, name)
+}
+
+const getLikeCount = (arg, cb) => {
+	cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink").length)
 }
 
 /**
@@ -79,15 +90,16 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 	if (httpCode === 404) {
 		throw `Cannot open the URL: ${url}`
 	}
-
-	console.log("we try")
+	
 	try {
 		await tab.waitUntilVisible(".userContentWrapper", 7500)
 	} catch (err) {
 		utils.log(`Cannot open profile ${url}, due to ${err.message || err}`, "warning")
 		return { facebookUrl: url, likeCount: 0, urls: [] }
 	}
-
+	const name = await tab.evaluate(getName)
+	const likedCount = await tab.evaluate(getLikeCount)
+	utils.log(`Opened profile of ${name}, already ${likedCount} posts liked.`, "done")
 	let likeCount = 0
 	let newCount = 0
 	let lastDate = new Date()
@@ -107,18 +119,25 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 			break
 		}
 	} while (likeCount < likesCount)
-	console.log("1")
-	let clickCount, isBlocked
-	[ clickCount, isBlocked ] = await tab.evaluate(clickAllPosts, { likesCount })
-	if (isBlocked) { console.log("We're blocked !") }
-	console.log("iB", isBlocked)
-	console.log("We clicked on ", clickCount, " posts.")
+	let clickCount
+	clickCount = await tab.evaluate(clickAllPosts, { likesCount })
+	await tab.wait(2000)
+	if (await tab.evaluate(isBlocked)) {
+		utils.log("Blocked by Facebook because of too many Like attempts, you should try later.", "warning")
+		rateLimited = true
+	}
 	await tab.screenshot(`${likeCount} posts ${Date.now()}.png`)
 	await buster.saveText(await tab.getContent(), `${likeCount} posts ${Date.now()}.html`)
-	const likedCount = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink").length))
-	const unlikedCount = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink").length))
-	console.log("There is ", likedCount, " liked posts and ", unlikedCount, "unliked posts on this page.")
-	utils.log(`Last ${likeCount} posts have been liked for ${profile}`, "done")
+	let newLikedCount = await tab.evaluate(getLikeCount)
+	newLikedCount -= likedCount
+	if (newLikedCount) {
+		utils.log(`${newLikedCount} new post${newLikedCount > 1 ? "s have" : " has"} been liked`, "done")
+	} else {
+		utils.log("No new post liked this time.", "done")
+	}
+	// const unlikedCount = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink").length))
+	// console.log("There is ", likedCount, " liked posts and ", unlikedCount, "unliked posts on this page.")
+	// utils.log(`Last ${likeCount} posts have been liked for ${profile}`, "done")
 }
 
 /**
@@ -184,13 +203,14 @@ const isFacebookUrl = target => {
 		}
 		try {
 			// let profileLiked = null
-			console.log("profile", profile)
-			console.log("likesCountPerProfile", likesCountPerProfile)
+			utils.log(`Loading profile for ${profile}`, "loading")
+			// console.log("likesCountPerProfile", likesCountPerProfile)
 			await loadProfileAndLike(tab, profile, likesCountPerProfile)
 			// profileLiked.query = profile.query
 			// likedCount += profileLiked.likeCount
 			// result.push(profileLiked)
 			// db.push(profileLiked)
+			if (rateLimited) { break }
 		} catch (err) {
 			utils.log(`Cannot like ${profile} due to: ${err.message || err}`, "error")
 		}
