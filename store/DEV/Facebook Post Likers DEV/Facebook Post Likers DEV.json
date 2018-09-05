@@ -1,0 +1,99 @@
+{
+	"slug": "facebook-post-likers",
+	"description": "Extract a list of all the profiles that follow any Instagram account",
+	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#fcb045",
+	"gradientEnd": "#DA2E82",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberofProfilesperLaunch": 10
+	},
+	"outputDescription": {
+		"profileUrl": "Instagram profile URL",
+		"imageUrl": "Profile picture URL",
+		"profileName ": "Instagram username",
+		"fullName": "Full name of the person",
+		"followedByUser": "If you follow that account"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+                    "sessionCookieCUser": {
+                        "label": "Session cookie c_user <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Session cookie xs <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Instagram URL"
+						],
+						"label": "Instagram account or Spreadsheet URL <a href=\"/api-store/7175/instagram-follower-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "Instagram Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberMaxOfFollowers": {
+						"label": "Number of followers to collect per profile - if none will try to scrape all of them",
+						"inputType": "number"
+					},
+					"numberofProfilesperLaunch": {
+						"label": "Number of profiles to process per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+            "sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 8
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberMaxOfFollowers": {
+				"type": "number",
+				"minimum": 1
+			},
+			"numberofProfilesperLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
