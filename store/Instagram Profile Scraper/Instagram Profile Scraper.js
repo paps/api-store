@@ -47,7 +47,8 @@ const cleanInstagramUrl = (url) => {
 	if (url && url.includes("instagram.")) {
 		let path = parse(url).pathname
 		path = path.slice(1)
-		const id = path.slice(0, path.indexOf("/"))
+		let id = path
+		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
 		if (id !== "p") { // not a picture url
 			return "https://www.instagram.com/" + id 
 		}
