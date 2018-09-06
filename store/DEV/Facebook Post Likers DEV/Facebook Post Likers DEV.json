@@ -45,8 +45,8 @@
 						"placeholder": "Instagram Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
-					"numberMaxOfFollowers": {
-						"label": "Number of followers to collect per profile - if none will try to scrape all of them",
+					"numberMaxOfLikes": {
+						"label": "Number of likes to collect per post - if none will try to scrape all of them",
 						"inputType": "number"
 					},
 					"numberofProfilesperLaunch": {
@@ -82,7 +82,7 @@
 			"columnName": {
 				"type": "string"
 			},
-			"numberMaxOfFollowers": {
+			"numberMaxOfLikes": {
 				"type": "number",
 				"minimum": 1
 			},

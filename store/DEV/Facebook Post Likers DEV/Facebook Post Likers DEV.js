@@ -26,15 +26,16 @@ const { parse } = require("url")
 /* global $ */
 
 // }
-const gl = {}
 let graphqlUrl
-let requestSingleId
 let agentObject
-let interrupted
+let interrupted = false
 let rateLimited
 let lastQuery
 let nextUrl
-let alreadyScraped
+let interceptedUrl
+let interceptedHeaders
+const cheerio = require("cheerio")
+const { URL } = require("url")
 
 const ajaxCall = (arg, cb) => {
 	try {
@@ -111,22 +112,54 @@ const scrapeFollowerCount = (arg, callback) => {
 	callback(null, followersCount)
 }
 
-const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
-		requestSingleId = e.requestId
-		graphqlUrl = e.response.url
+const interceptFacebookApiCalls = e => {
+	if (e.response.url.indexOf("?limit=") > -1 && e.response.status === 200) {
+		interceptedUrl = e.response.url
 	}
 }
 
 const onHttpRequest = (e) => {
-	if (e.request.url.indexOf("graphql/query/?query_hash") > -1 && e.request.url.includes("2id")) {
-		gl.headers = e.request.headers
+	if (e.request.url.indexOf("?limit=") > -1) {
+		interceptedHeaders = e.request.headers
 	}
 }
-
 const forgeNewUrl = (endCursor) => {
 	const newUrl = graphqlUrl.slice(0, graphqlUrl.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
 	return newUrl
+}
+
+const getFirstLikers = async (tab, url) => {
+	await tab.open(url)
+	await tab.waitUntilVisible(".fb_content")
+	const result = await tab.evaluate(scrapeLikers)
+	return result
+}
+
+const scrapeAllLikers = async (tab) => {
+	await buster.saveText(await tab.getContent(), `avbt${Date.now()}.html`)
+	const buttonsCount = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll(".uiMorePagerPrimary")).length))
+	console.log("buttonsCount", buttonsCount)
+	for (let buttonNb = 0; buttonNb < buttonsCount; buttonNb++) {
+		await tab.evaluate(clickExpandButtons, { buttonNb })
+		await tab.wait(1000)
+		console.log("interceptedUrl", interceptedUrl)
+		const newUrl = forceLimit(interceptedUrl)
+		console.log("newUrl", newUrl)
+		await tab.inject("../injectables/jquery-3.0.0.min.js")
+		let jsonResponse = await tab.evaluate(ajaxCall, {url: newUrl, headers: interceptedHeaders})
+		jsonResponse = JSON.parse(jsonResponse.slice(9))
+		jsonResponse = jsonResponse.domops[1][3] ? jsonResponse.domops[1][3].__html : null
+		console.log("jsonResponse", jsonResponse)
+	}
+}
+
+const forceLimit = url => {
+	const urlObject = new URL(url)
+	const maxCount = urlObject.searchParams.get("total_count")
+	console.log("maxCount", maxCount)
+	const limit = Math.min(maxCount, 2000)
+	urlObject.searchParams.set("limit", limit)
+	return urlObject.href
 }
 
 const getLikeCount = (arg, cb) => {
@@ -135,19 +168,41 @@ const getLikeCount = (arg, cb) => {
 
 const clickExpandButtons = (arg, cb) => {
 	const nextButtons = Array.from(document.querySelectorAll(".uiMorePagerPrimary"))
-	for (const button of nextButtons) {
-		button.click()
-	}
+	// for (const button of nextButtons) {
+	// 	button.click()
+	// }
+	nextButtons[arg.buttonNb].click()
 	cb(null, null)
 }
-const loadMoreLikes = async (tab, numberMaxOfLikes) => {
-	const initDate = new Date()
+const loadMoreLikes = async (tab, numberMaxOfLikes, likeAlreadyScraped) => {
+	let lastDate = new Date()
+	let oldLikeCount = -1
+	let newLikeCount = 0
 	do {
-		console.log("Il y a ", await tab.evaluate(getLikeCount), " likes.")
-		await tab.evaluate(clickExpandButtons)
-		console.log("Il y a ", await tab.evaluate(getLikeCount), " likes.")
-	} while (new Date() - initDate < 30000)
+		newLikeCount = await tab.evaluate(getLikeCount)
+		if (newLikeCount > oldLikeCount) {
+			await tab.evaluate(clickExpandButtons)
+			await tab.wait(200)
+			oldLikeCount = newLikeCount
+			lastDate = new Date()
+			utils.log(`${newLikeCount + likeAlreadyScraped} likes scraped`, "info")
+		}
+		if (new Date() - lastDate > 10000) { 
+			console.log("too long")
+			await tab.screenshot(`toolong ${Date.now()}.png`)
+			await buster.saveText(await tab.getContent(), `toolong${Date.now()}.html`)
+			interrupted = true
 
+			break
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			interrupted = true
+			break
+		}
+	} while (!numberMaxOfLikes || newLikeCount < numberMaxOfLikes)
+	return newLikeCount + likeAlreadyScraped
 }
 
 const scrapeLikers = (arg, cb) => {
@@ -155,7 +210,11 @@ const scrapeLikers = (arg, cb) => {
 	const data = []
 	for (const result of results){
 		const newData = {}
-		if (result.querySelector("a")) { newData.profileUrl = result.querySelector("a").href }
+		if (result.querySelector("a")) { 
+			const url = result.querySelector("a").href
+			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
+			newData.profileUrl = profileUrl
+		}
 		if (result.querySelectorAll("a")[1]) { newData.name = result.querySelectorAll("a")[1].textContent }
 		if (result.querySelector("img")) { newData.imageUrl = result.querySelector("img").src }
 		const reactionType = result.parentElement.getAttribute("id")
@@ -180,6 +239,7 @@ const scrapeLikers = (arg, cb) => {
 				break
 		}
 		data.push(newData)
+		result.parentElement.removeChild(result)
 	}
 	cb(null, data)
 }
@@ -220,9 +280,9 @@ const scrapeLikers = (arg, cb) => {
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
 	}	
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
-	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
-	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
+	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 
 	let urlCount = 0
 
@@ -240,26 +300,48 @@ const scrapeLikers = (arg, cb) => {
 			await tab.open(url)
 			await tab.screenshot(`avas ${Date.now()}.png`)
 			await buster.saveText(await tab.getContent(), `ava${Date.now()}.html`)
-			await tab.waitUntilVisible("#fbPhotoSnowliftAuthorName")
-
-			let publicationAuthor = await tab.evaluate((arg, cb) => {
-				let name
-				if (document.querySelector("#fbPhotoSnowliftAuthorName")){
-					name = document.querySelector("#fbPhotoSnowliftAuthorName").textContent
-				}
-				cb(null, name)
-			})
+			let selector
+			try {
+				selector = await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
+			} catch (err) {
+				await tab.screenshot(`toolong ${Date.now()}.png`)
+				await buster.saveText(await tab.getContent(), `toolong${Date.now()}.html`)
+			}
+			let publicationAuthor = "unknown"
+			if (selector === "#fbPhotoSnowliftAuthorName") {
+				publicationAuthor = await tab.evaluate((arg, cb) => {
+					let name
+					if (document.querySelector("#fbPhotoSnowliftAuthorName")){
+						name = document.querySelector("#fbPhotoSnowliftAuthorName").textContent
+					}
+					cb(null, name)
+				})
+			} else {
+				publicationAuthor = await tab.evaluate((arg, cb) => {
+					const name = Array.from(document.querySelectorAll("img")).filter(el => el.getAttribute("aria-label"))[0].getAttribute("aria-label")
+					cb(null, name)
+				})
+			}
 			let urlToGo = await tab.evaluate((arg, cb) => {
-				cb(null, Array.from(document.querySelectorAll(".fbPhotosSnowliftFeedback a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
+				cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 			})
 			utils.log(`Author's name is ${publicationAuthor} and urlToGo is ${urlToGo}`, "done")
-			await tab.open(urlToGo)
-			await tab.waitUntilVisible(".fb_content")
 
-			await loadMoreLikes(tab, numberMaxOfLikes)
-			result = await tab.evaluate(scrapeLikers)
-			await tab.screenshot(`posts ${Date.now()}.png`)
-			await buster.saveText(await tab.getContent(), `po${Date.now()}.html`)
+			result = await getFirstLikers(tab, urlToGo)
+
+			await scrapeAllLikers(tab)
+
+			// let likesScraped = []
+			// let likesToScraped = numberMaxOfLikes
+			// do {
+			// 	let numberToScrape = numberMaxOfLikes ? Math.min(likesToScraped, 1000) : 1000
+			// 	console.log("numberToScrape", numberToScrape)
+			// 	const numberScraped = await loadMoreLikes(tab, numberToScrape, likesScraped.length)
+			// 	likesToScraped -= numberScraped
+			// 	likesScraped = likesScraped.concat(await tab.evaluate(scrapeLikers))
+			// } while (!interrupted && (!numberMaxOfLikes || likesScraped.length < numberMaxOfLikes))
+			// console.log("Total of ", likesScraped.length, " likes scraped!")
+			// result = result.concat(likesScraped)
 			// let followerCount
 			// try {
 			// 	followerCount = await tab.evaluate(scrapeFollowerCount)
@@ -312,7 +394,7 @@ const scrapeLikers = (arg, cb) => {
 		}
 		await utils.saveResults(result, result)
 	}
-	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
+	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 
 	nick.exit(0)
