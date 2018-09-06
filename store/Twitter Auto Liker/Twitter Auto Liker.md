@@ -92,5 +92,3 @@ If you want to use this API programmatically you can **replace** the argument **
 
 It should look just like this :
 `{ "queries": ["phbuster", "paps__"], "noDatabase": true, "sessionCookie": "xxxx" }`
-
-Please note that launching the API on the same profiles multiple times will like/unlike their tweets.
