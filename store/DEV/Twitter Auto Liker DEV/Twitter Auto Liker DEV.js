@@ -299,7 +299,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 		}
 	}
 
-	utils.log(`Total of ${likedCount} tweet${(likedCount === 1) ? "" : "s" } liked (${result.length} profile${(result.length === 1) ? "" : "s" })`, "done")
+	utils.log(`Total of ${likedCount} tweet${(likedCount === 1) ? "" : "s" } ${undoLikes ? "undo" : "liked" } (${result.length} profile${(result.length === 1) ? "" : "s" })`, "done")
 
 	try {
 		await buster.setResultObject(result)
