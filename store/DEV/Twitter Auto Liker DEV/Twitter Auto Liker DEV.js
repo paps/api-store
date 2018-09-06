@@ -63,14 +63,44 @@ const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
  * @return {Promise<Object>} Tweets liked count & URLs
  */
 const likeTweets = (arg, cb) => {
-	const tweetsLoaded = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
+
+	const flatten = (list, depth = 3) => {
+		depth = ~~depth
+		if (depth === 0) return list
+		return list.reduce((acc, val) => {
+			if (Array.isArray(val)) {
+				acc.push(...flatten(val, depth - 1))
+			} else {
+				acc.push(val)
+			}
+			return acc
+		}, [])
+	}
+
+	/**
+	 * @param {Element} el - HTML element
+	 * @param {String} selector parent node selector
+	 * @return {Element|null} null is body is reached otherwise the matched parent element
+	 */
+	const parentUntils = (el, selector) => {
+		if (el.classList.contains(selector)) return el
+		if (el.tagName.toLowerCase() === "body") return null
+		return parentUntils(el.parentNode, selector)
+	}
+
+	let tweetsLoaded = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
 	const tweetURLs = []
+
+	// Issue #131
+	tweetsLoaded = flatten(tweetsLoaded.map(tweet => Array.from(tweet.querySelectorAll("div.ProfileTweet-action.ProfileTweet-action--favorite.js-toggleState button")).filter(el => getComputedStyle(el).display === "inline-block"))).filter(el => el.classList.contains("ProfileTweet-actionButton")).map(el => parentUntils(el, "tweet"))
+
 	/**
 	 * If the script loaded more tweets than likesCount, then we remove trailing tweets to get the exact count
 	 */
 	if (tweetsLoaded.length > arg.likesCount) {
 		tweetsLoaded.splice(arg.likesCount - tweetsLoaded.length)
 	}
+
 	for (const one of tweetsLoaded) {
 		one.querySelector(".HeartAnimation").click()
 		tweetURLs.push(`https://twitter.com${one.dataset.permalinkPath}`)
