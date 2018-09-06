@@ -92,7 +92,7 @@ const likeTweets = (arg, cb) => {
 	const tweetURLs = []
 
 	// Issue #131
-	tweetsLoaded = flatten(tweetsLoaded.map(tweet => Array.from(tweet.querySelectorAll("div.ProfileTweet-action.ProfileTweet-action--favorite.js-toggleState button")).filter(el => getComputedStyle(el).display === "inline-block"))).filter(el => el.classList.contains("ProfileTweet-actionButton")).map(el => parentUntils(el, "tweet"))
+	tweetsLoaded = flatten(tweetsLoaded.map(tweet => Array.from(tweet.querySelectorAll("div.ProfileTweet-action.ProfileTweet-action--favorite.js-toggleState button")).filter(el => getComputedStyle(el).display === arg.undoLikes ? "inline-block" : "none"))).filter(el => el.classList.contains("ProfileTweet-actionButton")).map(el => parentUntils(el, "tweet"))
 
 	/**
 	 * If the script loaded more tweets than likesCount, then we remove trailing tweets to get the exact count
@@ -139,10 +139,11 @@ const getLoadedTweetsCount = (arg, cb) => {
  * @throws if there were an error during when opening the profile or during the like procedure
  * @param {Object} tab - Nickjs tab object
  * @param {String} profile - url or profile name to open
- * @param {Number} [likesCount] - Total count of tweets to like in the given profile (default 1)
+ * @param {Number} [likesCount] - Total count of tweets to like in the given profile
+ * @param {Boolean} [undoLikes] - Determine if the function should like or cancel likes
  * @return {Promise<Object>}
  */
-const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT) => {
+const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT, undoLikes = false) => {
 	const url = isUrl(profile) ? profile : `https://twitter.com/${profile}`
 
 	const [httpCode] = await tab.open(url)
@@ -216,8 +217,8 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT)
 			break
 		}
 	}
-	utils.log(`Liking ${likesCount}`, "info")
-	const scrapedData = await tab.evaluate(likeTweets, { likesCount })
+	utils.log(undoLikes ? `Undoing ${likesCount} likes` : `Liking ${likesCount} tweets`, "info")
+	const scrapedData = await tab.evaluate(likeTweets, { likesCount, undoLikes })
 	scrapedData.twitterUrl = url
 	scrapedData.handle = getTwitterHandle(await tab.getUrl())
 	return scrapedData
@@ -243,7 +244,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 ;(async () => {
 	const tab = await nick.newTab()
 	let likedCount = 0
-	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase} = utils.validateArguments()
+	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase, undoLikes} = utils.validateArguments()
 
 	let db = noDatabase ? [] : await utils.getDb(DB_NAME)
 
@@ -271,6 +272,10 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 		numberOfProfilesPerLaunch = DEFAULT_PROFILE_LAUNCH
 	}
 
+	if (typeof undoLikes !== "boolean") {
+		undoLikes = false
+	}
+
 	const result = []
 
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
@@ -284,7 +289,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 		}
 		try {
 			let profileLiked = null
-			profileLiked = await loadProfileAndLike(tab, profile.url, likesCountPerProfile)
+			profileLiked = await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
 			profileLiked.query = profile.query
 			likedCount += profileLiked.likeCount
 			result.push(profileLiked)
