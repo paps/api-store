@@ -270,10 +270,12 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 /**
  * @async
  * @description Similar of getDataFromCsv but, it returns multiples fields instead of one
+ * the function assumes that columnName parameter represents the LinkedIn profiles URLs location (legacy support)
  * @param {String} url - CSV url
  * @param {String} columnName - column name used for the LinkedIn URLs, default is first column
- * @param {Array<String>} fields - CSV fields to fetch
- * @return {Promise<Array<Object>>} CSV cells to extract with all fields
+ * @param {Array<String>} fields - CSV fields to fetch (represents all custom tags)
+ * @return {Promise<Array<Object>>} JS representation of all CSV cells to extract
+ * @throws if the function is trying to access a non-existant column in the CSV, or if the CSV can't be download
  */
 const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLogs = true) => {
 	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
@@ -304,6 +306,7 @@ const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLog
 			if (columnNameIndex < 0) {
 				throw `No title ${columnName} in csv file.`
 			}
+			// All elements in the fields parameter must be present in the CSV
 			if (Array.isArray(fields)) {
 				for (const one of fields) {
 					let index = data[0].findIndex(el => el === one)
@@ -318,12 +321,13 @@ const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLog
 				cell.url = el[columnNameIndex]
 				csvFieldsIndexes.forEach(field => {
 					// Removing # character at the beginning & end of the string if present
-					// So far we assume all fieldName are trim
+					// So far we assume fieldName value was trimmed
 					let fieldName = field.name.startsWith("#") && field.name.endsWith("#") ? field.name.substr(1, field.name.length - 2) : field.name
 					cell[fieldName] = el[field.position]
 				})
 				return cell
 			})
+			// TODO: test if columnName = null && fields = []
 			dataRet.shift()
 			if (printLogs) {
 				utils.log(`Got ${dataRet.length} lines from csv.`, "done")
@@ -347,7 +351,9 @@ nick.newTab().then(async (tab) => {
 		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
-	customTags = customTags.map(el => el.trim())
+	spreadsheetUrl = spreadsheetUrl.trim()
+	customTags = customTags.map(el => el.trim()) // all elements musn't have whitespaces at the beginning / end of the content
+	hunterApiKey = hunterApiKey.trim()
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 
