@@ -32,10 +32,9 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
-							"<b>Please be gentle.</b> This API will manipulate Instagram on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available), or directly an Instagram URL"
 						],
-						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7195/instagram-following-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Instagram account or Spreadsheet URL <a href=\"/api-store/7195/instagram-following-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",

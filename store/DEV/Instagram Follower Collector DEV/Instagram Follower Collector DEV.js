@@ -330,14 +330,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			}
 			let followers = await getFollowers(tab, url, numberMaxOfFollowers, resuming)
 			followers = removeDuplicatesSelf(followers)
-			if (followers.length) {
-				const followersLength = followers.length
-				for (let i = 0; i < followersLength; i++) {
-					if (!result.find(el => el.profileUrl === followers[i].profileUrl && el.query === followers[i].query)) {
-						result.push(followers[i])
-					}
-				}
-			}
+			if (followers.length) { result = result.concat(followers) }
 			if (interrupted) { break }
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
@@ -354,7 +347,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		} else {
 			await buster.setAgentObject({})
 		}
-		await utils.saveResults(result, result)
+		await utils.saveResults(result, result, csvName)
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
