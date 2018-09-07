@@ -28,12 +28,12 @@ const selectors = {
 	root: "div[role=dialog]",
 	reviewsTab: "div[role=tablist] > div[role=tab]:nth-child(2)",
 	reviewsPanel: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
-	nextPaginationElement: "a[ga\\:type=NextLink]",
+	nextPaginationElement: "div[ga\\:type=PaginationBar] a[ga\\:type=NextLink]",
 	waitCondition: "span[ga\\:type=PaginationMessage]",
-	filtersBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) span",
-	dropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1)",
-	languagesDropDown: "span[tabindex]:first-of-type",
-	languagesSelection: "span ~ div > div:last-of-type",
+	filtersBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span",
+	dropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span > span:nth-child(1)",
+	reviewsDropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span > span:last-of-type",
+	dropDownSelection: "span ~ div > div:last-of-type",
 	reviewsFilter: "span[role=button]:last-of-type",
 	lastReviewInPage: "div[ga\\:type=\"CommentList\"] > div[ga\\:annotation-index]:last-of-type"
 }
@@ -185,11 +185,11 @@ const scrapeReviews = async (tab, url) => {
 		utils.log(`Scraping reviews for the extension ${extensionName} ...`, "loading")
 		await emulateHumanClick(tab, selectors.reviewsTab)
 		await tab.waitUntilVisible(selectors.reviewsPanel, 15000)
-		await emulateHumanClick(tab, `${selectors.filtersBase} ${selectors.reviewsFilter}`)
-		await emulateHumanClick(tab, `${selectors.dropDownBase} ${selectors.languagesDropDown}`)
-		await emulateHumanClick(tab, `${selectors.dropDownBase} ${selectors.languagesSelection}`)
+		await emulateHumanClick(tab, `${selectors.dropDownBase}`)
+		await emulateHumanClick(tab, `${selectors.filtersBase} ${selectors.dropDownSelection}`)
+		await emulateHumanClick(tab, `${selectors.reviewsDropDownBase}`)
+		await emulateHumanClick(tab, `${selectors.reviewsDropDownBase} ${selectors.dropDownSelection}`)
 		await tab.wait(1000)
-
 		res.reviews = res.reviews.concat(await loadAndScrape(tab, url))
 		utils.log(`Got ${res.reviews.length} reviews`, "info")
 
@@ -239,7 +239,6 @@ const createCsvOutput = json => {
 	}
 
 	urls = urls.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, extensionsPerLaunch)
-
 	if (urls.length < 1) {
 		utils.log("Input is empty OR all urls are already scraped", "warning")
 		nick.exit(0)
@@ -265,9 +264,7 @@ const createCsvOutput = json => {
 		scrapingRes.push(reviewRes)
 		i++
 	}
-
 	db = db.concat(createCsvOutput(scrapingRes))
-
 	await utils.saveResults(scrapingRes, db, SHORT_DB_NAME, null, false)
 	nick.exit()
 })()
