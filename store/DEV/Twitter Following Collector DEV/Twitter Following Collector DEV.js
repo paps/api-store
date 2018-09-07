@@ -64,7 +64,7 @@ const checkDb = (str, db) => {
 }
 
 // Removes any duplicate profile 
-const removeDuplicates = (arr) => {
+const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
 		if (!resultArray.find(el => el.screenName === arr[i].screenName && el.query === arr[i].query)) {
@@ -73,7 +73,6 @@ const removeDuplicates = (arr) => {
 	}
 	return resultArray
 }
-
 
 const interceptTwitterApiCalls = e => {
 	if (e.response.url.indexOf("users?include_available") > -1 && e.response.status === 200) {
@@ -321,8 +320,11 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
 	}
 
-	for (let i = 0; i < twitterUrls.length; i++) { // converting @username to https://twitter.com/username
-		if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = `https://twitter.com/${twitterUrls[i].substr(1)}` }
+	for (let i = 0; i < twitterUrls.length; i++) { // converting (@)username to https://twitter.com/username
+		if (!isUrl(twitterUrls[i])) {
+			if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = twitterUrls[i].substr(1)	}
+			twitterUrls[i] = `https://twitter.com/${twitterUrls[i]}`
+		}
 	}
 
 	if (!numberofProfilesperLaunch) {
@@ -345,20 +347,28 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		buster.progressHint(urlCount / twitterUrls.length, `Processing profile n°${urlCount}...`)
 		utils.log(`Getting followers for ${url}`, "loading")
 
-		const followers = await getTwitterFollowing(tab, url, followersPerAccount, resuming)
-		result = result.concat(followers)
+		let followers = await getTwitterFollowing(tab, url, followersPerAccount, resuming)
+		followers = removeDuplicatesSelf(followers)
+		if (followers.length) {
+			const followersLength = followers.length
+			for (let i = 0; i < followersLength; i++) {
+				if (!result.find(el => el.screenName === followers[i].screenName && el.query === followers[i].query)) {
+					result.push(followers[i])
+				}
+			}
+		}
 		if (interrupted) { break }
 	}
 
-	if (interrupted && twitterUrl) { 
-		await buster.setAgentObject({ nextUrl: twitterUrl })
-	} else if (result.length !== initialResultLength) {
-		await buster.setAgentObject({})
+	if (result.length !== initialResultLength) {
+		await utils.saveResults(result, result)
+		if (interrupted && twitterUrl) { 
+			await buster.setAgentObject({ nextUrl: twitterUrl })
+		} else {
+			await buster.setAgentObject({})
+		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-
-	result = removeDuplicates(result)
-	await utils.saveResults(result, result)
 	nick.exit()
 })()
 	.catch(err => {

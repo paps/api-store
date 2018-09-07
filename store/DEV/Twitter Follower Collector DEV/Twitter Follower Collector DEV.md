@@ -7,7 +7,7 @@ The 1st step in order to know who is following a specific Twitter account is to 
 🤖💨 _Around **5000 profiles** every **90min**_ 🤖💨
 
 # What will you need? ⚙️ 
-- **"Twitter account or Spreadsheet URL"**: Choose a sepcific twitter account like `@phbuster` or choose an open spreadsheet url
+- **"Twitter account or Spreadsheet URL"**: Choose a specific twitter account like `@phbuster` or choose an open spreadsheet url
 - **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
 
 # Which steps to follow?

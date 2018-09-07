@@ -111,8 +111,8 @@ const scrapeFirstFollowers = async (tab, profileUrl) => {
 	}
 	let res
 	try {
-		const usl = `${profileUrl}/followers/users?min_position=${minPosition}`
-		res = JSON.parse(await tab.evaluate(ajaxCall, {url: usl}))
+		const newUrl = `${profileUrl}/followers/users?min_position=${minPosition}`
+		res = JSON.parse(await tab.evaluate(ajaxCall, {url: newUrl}))
 	} catch (err) {
 		rateLimited = true
 		interrupted = true
@@ -313,8 +313,11 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
 	}
 
-	for (let i = 0; i < twitterUrls.length; i++) { // converting @username to https://twitter.com/username
-		if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = `https://twitter.com/${twitterUrls[i].substr(1)}` }
+	for (let i = 0; i < twitterUrls.length; i++) { // converting (@)username to https://twitter.com/username
+		if (!isUrl(twitterUrls[i])) {
+			if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = twitterUrls[i].substr(1)	}
+			twitterUrls[i] = `https://twitter.com/${twitterUrls[i]}`
+		}
 	}
 
 	if (!numberofProfilesperLaunch) {
