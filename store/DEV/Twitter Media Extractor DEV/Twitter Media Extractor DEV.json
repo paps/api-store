@@ -1,17 +1,28 @@
 {
 	"slug": "twitter-media-extractor",
-	"description": "",
+	"description": "Collect all metadata from any Twitter medias",
 	"image": "",
 	"gradientBegin": "#35C2DB",
 	"gradientEnd": "#35C2BF",
 	"argumentDescription": "",
-	"argumentHelpAnchor": "",
+	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": false,
 	"hidden": true,
 	"new": false,
 	"defaultArgument": {
-		"sessionCookie": "",
+		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://twitter.com/phbuster"
+	},
+	"outputDescription": {
+		"twitterPostUrl": "Tweet URL",
+		"tweetContent": "",
+		"query": "Original query (most of the time the Twitter profile / Twitter handle)",
+		"pubImage": "Tweet images URLs (if available)",
+		"mediaUrl": "External media URL",
+		"mediaDescription": "Description of the external media",
+		"duration": "Video duration (if available in ms)",
+		"views": "Video views (if available)",
+		"videoUrl": "URL to download the video (if available)"
 	},
 	"argumentForm": {
 		"enabled": true,
