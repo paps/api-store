@@ -26,7 +26,6 @@ const { parse } = require("url")
 
 // }
 const gl = {}
-const rc = {}
 let graphqlUrl
 let requestSingleId
 let agentObject
@@ -88,7 +87,7 @@ const cleanInstagramUrl = (url) => {
 }
 
 // Removes any duplicate profile 
-const removeDuplicates = (arr) => {
+const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
 		if (!resultArray.find(el => el.profileUrl === arr[i].profileUrl && el.query === arr[i].query)) {
@@ -115,7 +114,6 @@ const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
 		requestSingleId = e.requestId
 		graphqlUrl = e.response.url
-		rc.headers = e.response.headers
 	}
 }
 
@@ -330,7 +328,9 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			if (!numberMaxOfFollowers) {
 				numberMaxOfFollowers = followerCount
 			}
-			result = result.concat(await getFollowers(tab, url, numberMaxOfFollowers, resuming))
+			let followers = await getFollowers(tab, url, numberMaxOfFollowers, resuming)
+			followers = removeDuplicatesSelf(followers)
+			if (followers.length) { result = result.concat(followers) }
 			if (interrupted) { break }
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
@@ -341,15 +341,17 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	if (rateLimited) {
 		utils.log("Stopping the agent. You should retry in 15min.", "warning")
 	}
-	if (interrupted) { 
-		await buster.setAgentObject({ nextUrl, lastQuery })
-	} else if (result.length !== initialResultLength) {
-		await buster.setAgentObject({})
+	if (result.length !== initialResultLength) {
+		if (interrupted) { 
+			await buster.setAgentObject({ nextUrl, lastQuery })
+		} else {
+			await buster.setAgentObject({})
+		}
+		await utils.saveResults(result, result, csvName)
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	result = removeDuplicates(result)
-	await utils.saveResults(result, result, csvName, null, false)
+	
 	nick.exit(0)
 })()
 .catch(err => {
