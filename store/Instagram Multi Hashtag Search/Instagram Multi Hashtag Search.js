@@ -143,8 +143,17 @@ const scrapeFirstPage = async tab => {
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
 	hashWasFound = false
-	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div h2 ~ div", divSelector: "div > div > div > div > div[class]" })
+	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div", divSelector: "div > div > div > div" })	
 	data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
+	for (let i = 0; i < data.length; i++) { //  checking the post manually if the description isn't available (video posts)
+		if (data[i].postUrl && !data[i].description) {
+			const tabT = await nick.newTab()
+			await tabT.open(data[i].postUrl)
+			const result = await instagram.scrapePost(tabT)
+			if (result && result.description) { data[i].description = result.description }
+			await tabT.close()
+		}
+	}
 	return data	
 }
 

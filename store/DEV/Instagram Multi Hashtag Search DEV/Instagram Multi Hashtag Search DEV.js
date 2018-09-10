@@ -143,8 +143,17 @@ const scrapeFirstPage = async tab => {
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
 	hashWasFound = false
-	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div h2 ~ div", divSelector: "div > div > div > div > div[class]" })
+	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div", divSelector: "div > div > div > div" })	
 	data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
+	for (let i = 0; i < data.length; i++) { //  checking the post manually if the description isn't available (video posts)
+		if (data[i].postUrl && !data[i].description) {
+			const tabT = await nick.newTab()
+			await tabT.open(data[i].postUrl)
+			const result = await instagram.scrapePost(tabT)
+			if (result && result.description) { data[i].description = result.description }
+			await tabT.close()
+		}
+	}
 	return data	
 }
 
@@ -322,7 +331,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 
 			//scraping the first page the usual way
 			scrapedResult = await scrapeFirstPage(tab)
-
+			
 			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
 			if (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount)) {
 				await scrapePosts(tab, scrapedResult, maxPosts, term)
