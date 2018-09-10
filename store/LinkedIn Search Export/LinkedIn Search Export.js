@@ -212,60 +212,64 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	}
 	for (; stepCounter <= numberOfPage; i++, stepCounter++) {
 		utils.log(`Getting data from page ${i}...`, "loading")
-		await tab.open(overridePageIndex(searchUrl, i, searchCat))
-		let selector
 		try {
-			selector = await tab.waitUntilVisible(selectors, 15000, "or")
-		} catch (err) {
-			// No need to go any further, if the API can't determine if there are (or not) results in the opened page
-			utils.log(err.message || err, "warning")
-			return result
-		}
-		if (selector === selectors[0] || selector === selectors[2]) {
-			utils.log("No result on that page.", "done")
-			break
-		} else {
-			let selectorList
-			if (searchCat === "jobs") { 
-				selectorList = "ul.jobs-search-results__list > li"
-			} else {
-				selectorList = "ul.search-results__list > li, ul.results-list > li"
+			await tab.open(overridePageIndex(searchUrl, i, searchCat))
+			let selector
+			try {
+				selector = await tab.waitUntilVisible(selectors, 15000, "or")
+			} catch (err) {
+				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+				utils.log(err.message || err, "warning")
+				return result
 			}
-			const resultCount = await tab.evaluate((arg, callback) => { 
-				callback(null, document.querySelectorAll(arg.selectorList).length)
-			}, { selectorList })
-			let canScroll = true
-			for (let i = 1; i <= resultCount; i++) {
-				try {
-					await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
-						if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
-						callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
-						}
-					}, { i, selectorList })
-					await tab.wait(100)
-				} catch (err) {
-					utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
-					canScroll = false
+			if (selector === selectors[0] || selector === selectors[2]) {
+				utils.log("No result on that page.", "done")
+				break
+			} else {
+				let selectorList
+				if (searchCat === "jobs") { 
+					selectorList = "ul.jobs-search-results__list > li"
+				} else {
+					selectorList = "ul.search-results__list > li, ul.results-list > li"
+				}
+				const resultCount = await tab.evaluate((arg, callback) => { 
+					callback(null, document.querySelectorAll(arg.selectorList).length)
+				}, { selectorList })
+				let canScroll = true
+				for (let i = 1; i <= resultCount; i++) {
+					try {
+						await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+							if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
+							callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+							}
+						}, { i, selectorList })
+						await tab.wait(100)
+					} catch (err) {
+						utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
+						canScroll = false
+						break
+					}
+				}
+				if (canScroll) { 
+					result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
+				} else {
 					break
 				}
+				let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+				if (hasReachedLimit) {
+					utils.log(hasReachedLimit, "warning")
+					break
+				} else {
+					utils.log(`Got URLs for page ${i}.`, "done")
+				}
 			}
-			if (canScroll) { 
-				result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
-			} else {
-				break
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				return result
 			}
-			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
-			if (hasReachedLimit) {
-				utils.log(hasReachedLimit, "warning")
-				break
-			} else {
-				utils.log(`Got URLs for page ${i}.`, "done")
-			}
-		}
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			return result
+		} catch (err) {
+			utils.log(`Couldn't load page ${i}: ${err}`, "error")
 		}
 	}
 	utils.log("All pages with result scrapped.", "done")
