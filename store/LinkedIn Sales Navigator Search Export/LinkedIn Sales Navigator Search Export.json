@@ -3,7 +3,6 @@
 	"description": "Collect LinkedIn Sales Navigator search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
 	"hidden": false,
-	"new": true,
 	"gradientBegin": "#7C5BBB",
 	"gradientEnd": "#42327f",
 	"argumentHelpAnchor": "#section_argument",
@@ -74,7 +73,7 @@
                         "placeholder": "result"
 					},
 					"extractDefaultUrl": {
-                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> (takes longer)"
+                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> (takes longer, also visits their profile)"
                     }
 				}
 			}

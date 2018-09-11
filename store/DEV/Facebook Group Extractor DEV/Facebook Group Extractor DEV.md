@@ -51,7 +51,7 @@ or
 
 <center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/cookiesFB.png)</center>
 
-* Locate the “x_user” cookie.
+* Locate the “c_user” cookie.
 
 <center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/c_userCookie.png)</center/>
 

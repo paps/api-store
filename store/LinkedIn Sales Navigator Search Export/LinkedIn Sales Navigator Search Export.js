@@ -155,15 +155,17 @@ const overridePageIndexLead = (url, page) => {
 const extractDefaultUrls = async results => {
 	utils.log("Converting all Sales Navigator URLs to Default URLs...", "loading")
 	for (let i = 0; i < results.length; i++) {
-		try {
-			results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
-		} catch (err) {
-			utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
-		}
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			break
+		if (results[i].profileUrl) {
+			try {
+				results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
+			} catch (err) {
+				utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
+			}
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
 		}
 	}
 	return results
@@ -312,10 +314,11 @@ const isLinkedInSearchURL = (url) => {
 				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
 				continue
 			}
-			result = result.concat(await getSearchResults(tab, searchUrl, numberOfProfiles, search))
+			let tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
 			if (extractDefaultUrl) {
-				result = await extractDefaultUrls(result)
+				tempResult = await extractDefaultUrls(tempResult)
 			}
+			result = result.concat(tempResult)
 		} else {
 			utils.log("Empty line... skipping entry", "warning")
 		}

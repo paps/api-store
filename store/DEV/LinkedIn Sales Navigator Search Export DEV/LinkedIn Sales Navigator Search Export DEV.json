@@ -73,7 +73,7 @@
                         "placeholder": "result"
 					},
 					"extractDefaultUrl": {
-                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> (takes longer)"
+                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> (takes longer, also visits their profile)"
                     }
 				}
 			}
