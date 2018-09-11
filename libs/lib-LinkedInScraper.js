@@ -670,37 +670,30 @@ class LinkedInScraper {
 	async salesNavigatorUrlConverter(url) {
 		let urlObject = parse(url)
 		if (urlObject.pathname.startsWith("/sales")) { // Sales Navigator link
-			if (urlObject.pathname.startsWith("/sales/profile/")) { url = urlObject.hostname + "/sales/people" + urlObject.pathname.slice(14) } // converting '/sales/profile' to '/sales/people
+			if (urlObject.pathname.startsWith("/sales/profile/")) { // converting '/sales/profile' to '/sales/people
+				url = urlObject.hostname + "/sales/people" + urlObject.pathname.slice(14)
+				urlObject = parse(url)
+			}
+			let path = urlObject.pathname
+			path = path.slice(14)
+			const id = path.slice(0, path.indexOf(","))
+			const newUrl = `https://linkedin.com/in/${id}`
 			try {
 				const tab = await this.nick.newTab()
-				await tab.open(url)
-				await tab.waitUntilPresent("code", 15000)
-				await tab.wait(3000)
+				await tab.open(newUrl)
+				await tab.wait(2000)
 				try {
-					const location = await tab.evaluate((arg, cb) => cb(null, document.location.href)) // if no Sales Navigator account, it automatically redirects to the classic profile
-					const locationObject = parse(location)
-					if (locationObject.pathname.startsWith("/in/")) { return location }
+					const location = await tab.evaluate((arg, cb) => cb(null, document.location.href))
+					if (location !== newUrl) { 
+						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						return location
+					} else {
+						await tab.wait(10000)
+						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						return location
+					}
 				} catch (err) {
 					this.utils.log("Error accessing current location", "warning")
-				}
-				const codeTag = await tab.evaluate((arg, callback) => {
-					const codes = Array.prototype.slice.call(document.querySelectorAll("code"))
-					for (const code of codes) {
-						if (code.textContent.includes("flagship")) { return callback(null, code.textContent) }
-					}
-					callback(null, null)
-				})
-				await tab.close()
-				if (codeTag) {
-					const convertedUrl = JSON.parse(codeTag).flagshipProfileUrl
-					this.utils.log(`Converting ${url} to ${convertedUrl}`, "info")
-					if (convertedUrl && convertedUrl.indexOf("linkedin.com") > -1) {
-						return convertedUrl
-					} else {
-						throw "Profile doesn't contain a LinkedIn Profile Url"
-					}
-				} else {
-					throw "Could not find a LinkedIn Profile Url in Sales Navigator Profile"
 				}
 			} catch (err) {
 				this.utils.log(`Could not open ${url}, ${err}`, "error")
