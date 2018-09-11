@@ -15,9 +15,6 @@ const nick = new Nick({
 	printAborts: false,
 })
 
-const fs = require("fs")
-const Papa = require("papaparse")
-
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
@@ -99,6 +96,15 @@ const getFirstName = (arg, callback) => {
 	}
 }
 
+/**
+ * @param {String} msg - message
+ * @return {Array<Strign>} all tags
+ */
+const getMessageTags = msg => {
+	const matches = msg.match(/#[a-zA-Z0-9]+#/gm)
+	return matches.map(tag => tag.replace(/#/g, "").trim())
+}
+
 const forgeMsg = (msg, scrapedProfile) => {
 	// Way to wipe emojis for all scraped fields which could contain emojis
 	for (const field of [ "firstName", "lastName", "fullName"]) {
@@ -159,22 +165,22 @@ const connectTo = async (selector, tab, message, scrapedProfile) => {
 }
 
 // Full function to add someone with different cases
-const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, invitations, tags) => {
+const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, invitations) => {
 	let scrapedProfile = {}
 	scrapedProfile.baseUrl = baseUrl
-	scrapedProfile = Object.assign(scrapedProfile, tags)
+	scrapedProfile = Object.assign(scrapedProfile)
 	delete scrapedProfile.url
 	try {
 		/**
-		 * Using lib-linkedInScraper to open & scrape the LinkedIn profile
-		 */
-		if (!disableScraping) {
+		* lib-linkedInScraper used to open & scrape the LinkedIn profile
+		*/
+		if (disableScraping) {
+			await tab.open(url)
+			await tab.waitUntilVisible("#profile-wrapper", 15000)
+		} else {
 			const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
 			scrapedProfile = Object.assign(scrapedProfile, scrapingResult.csv)
 			message = forgeMsg(message, Object.assign({}, scrapedProfile))
-		} else {
-			await tab.open(url)
-			await tab.waitUntilVisible("#profile-wrapper", 15000)
 		}
 	} catch (error) {
 		// In case the url is unavailable we consider this person added because its url isn't valid
@@ -267,98 +273,31 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	db.push(scrapedProfile)
 }
 
-/**
- * @async
- * @description Similar of getDataFromCsv but, it returns multiples fields instead of one
- * the function assumes that columnName parameter represents the LinkedIn profiles URLs location (legacy support)
- * @param {String} url - CSV url
- * @param {String} columnName - column name used for the LinkedIn URLs, default is first column
- * @param {Array<String>} fields - CSV fields to fetch (represents all custom tags)
- * @return {Promise<Array<Object>>} JS representation of all CSV cells to extract
- * @throws if the function is trying to access a non-existant column in the CSV, or if the CSV can't be download
- */
-const getMultipleFieldsFromCsv = async (url, columnName, fields = null, printLogs = true) => {
-	const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)(:([^/]*))?((\/[\w/-]+)*\/)([\w\-.]+[^#?\s]+)(\?([^#]*))?(#(.*))?$/
-	const match = url.match(urlRegex)
-	if (printLogs) {
-		utils.log(`Getting data from ${url} ...`, "loading")
-	}
-	if (match) {
-		if (match[3] === "docs.google.com") {
-			if (match[8] === "edit") {
-				url = `https://docs.google.com/${match[6]}export?format=csv`
-			} else {
-				url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
-			}
-		}
-		await buster.download(url, "sheet.csv")
-		const file = fs.readFileSync("sheet.csv", "UTF-8")
-		if (file.indexOf("<!DOCTYPE html>") >= 0) {
-			throw "Could not download csv, maybe csv is not public."
-		}
-			let data = (Papa.parse(file)).data
-			let dataRet = []
-			let columnNameIndex = 0
-			let csvFieldsIndexes = []
-			if (columnName) {
-				columnNameIndex = data[0].findIndex(el => el === columnName)
-			}
-			if (columnNameIndex < 0) {
-				throw `No title ${columnName} in csv file.`
-			}
-			// All elements in the fields parameter must be present in the CSV
-			if (Array.isArray(fields)) {
-				for (const one of fields) {
-					let index = data[0].findIndex(el => el === one)
-					if (index < 0) {
-						throw `No title ${one} in csv file.`
-					}
-					csvFieldsIndexes.push({ name: one, position: index })
-				}
-			}
-			dataRet = data.map(el => {
-				let cell = {}
-				cell.url = el[columnNameIndex]
-				csvFieldsIndexes.forEach(field => {
-					// Removing # character at the beginning & end of the string if present
-					// So far we assume fieldName value was trimmed
-					let fieldName = field.name.startsWith("#") && field.name.endsWith("#") ? field.name.substr(1, field.name.length - 2) : field.name
-					cell[fieldName] = el[field.position]
-				})
-				return cell
-			})
-			// TODO: test if columnName = null && fields = []
-			dataRet.shift()
-			if (printLogs) {
-				utils.log(`Got ${dataRet.length} lines from csv.`, "done")
-			}
-			return dataRet
-		} else {
-			throw `${url} is not a valid URL.`
-		}
-}
-
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, customTags, hunterApiKey, disableScraping] = utils.checkArguments([
+	let [sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping] = utils.checkArguments([
 		{ name: "sessionCookie", type: "string", length: 10 },
 		{ name: "spreadsheetUrl", type: "string", length: 10 },
 		{ name: "message", type: "string", default: "", maxLength: 300 },
 		{ name: "onlySecondCircle", type: "boolean", default: false },
 		{ name: "numberOfAddsPerLaunch", type: "number", default: 10, maxInt: 10 },
 		{ name: "columnName", type: "string", default: "" },
-		{ name: "customTags", type: "object", default: null },
 		{ name: "hunterApiKey", type: "string", default: "" },
 		{ name: "disableScraping", type: "boolean", default: false },
 	])
 	spreadsheetUrl = spreadsheetUrl.trim()
-	customTags = customTags.map(el => el.trim()) // all elements musn't have whitespaces at the beginning / end of the content
 	hunterApiKey = hunterApiKey.trim()
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 
-	const data = await getMultipleFieldsFromCsv(spreadsheetUrl, columnName, customTags)
-	const toScrape = data.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
+	// TODO: filter scraping fields
+	let columns = [ columnName ]
+	if (message) {
+		let tags = getMessageTags(message)
+		columns = columns.concat(Array.isArray(tags) ? tags : [])
+	}
+	const rows = await utils.getDataFromCsv(spreadsheetUrl, columns)
+	const toScrape = rows.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
 	if (toScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
@@ -370,7 +309,7 @@ nick.newTab().then(async (tab) => {
 		try {
 			utils.log(`Adding ${scrapeElement.url}...`, "loading")
 			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(scrapeElement.url)
-			await addLinkedinFriend(scrapeElement.url, newUrl, tab, message, onlySecondCircle, disableScraping, invitations, scrapeElement)
+			await addLinkedinFriend(scrapeElement.url, newUrl, tab, message, onlySecondCircle, disableScraping, invitations)
 		} catch (error) {
 			db.push({ baseUrl: scrapeElement.url, error: error.message || error })
 			utils.log(`Could not add ${scrapeElement.url} because of an error: ${error}`, "warning")

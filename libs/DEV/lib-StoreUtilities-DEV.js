@@ -186,6 +186,7 @@ class StoreUtilities {
 
 	// Function to get data from a google spreadsheet or from a csv
 	async getDataFromCsv2 (url, columnName, printLogs = true) {
+		// TODO: handle multiple columns with columnName as array
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -246,8 +247,15 @@ class StoreUtilities {
 		return result
 	}
 
-	// Function to get data from a google spreadsheet or from a csv
+	/**
+	 * @description Function to get data from a google spreadsheet or from a csv
+	 * @param {String} url - Spreadsheet / CSV URL
+	 * @param {String|Array<String>} columnName
+	 * @param {Boolean} [printLogs] - verbose / quiet mode
+	 * @return {Promise<Array<String>>|Promise<Array<Any>>}
+	 */
 	async getDataFromCsv(url, columnName, printLogs = true) {
+		// TODO: handle multiple columns with columnName as array
 		const buster = this.buster
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -269,20 +277,28 @@ class StoreUtilities {
 			}
 			let data = (Papa.parse(file)).data
 			let column = 0
-			if (columnName) {
-				let i = 0;
-				for (; i < data[0].length; i++) {
-					if (data[0][i] === columnName) {
-						column = i
-						break
-					}
-				}
-				if (column !== i) {
+			let result
+			if (typeof columnName === "string") {
+				column = data[0].findIndex(el => el === columnName)
+				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
-				data.shift()
+				result = data.map(line => line[column])
+			} else if (Array.isArray(columnName)) {
+				let fieldsPositions
+				for (const field of columnName) {
+					let index = data[0].findIndex(cell => cell === field)
+					if (index < 0) {
+						throw `No title ${columnName} in csv file.`
+					}
+					fieldsPositions.push({ name: field, position: index })
+				}
+				result = data.map(el => {
+					let cell = {}
+					fieldsPositions.forEach(field => cell[field.name] = el[field.position])
+					return cell
+				})
 			}
-			const result = data.map(line => line[column])
 			if (printLogs) {
 				this.log(`Got ${result.length} lines from csv.`, "done")
 			}

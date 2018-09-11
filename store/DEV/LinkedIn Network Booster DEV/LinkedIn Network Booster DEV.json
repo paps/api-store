@@ -44,13 +44,6 @@
 					"onlySecondCircle": {
 						"rightLabel": "<b>Only invite 2nd-degree connections</b>"
 					},
-					"customTags": {
-						"label": "Custom tags for the message",
-						"actionbarStyle": "top",
-						"collapsible": true,
-						"toolbarSticky": true,
-						"hideToolbarWithChildren": true
-					},
 					"message": {
 						"label": "Message <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
@@ -93,13 +86,6 @@
 			},
 			"onlySecondCircle": {
 				"type": "boolean"
-			},
-			"customTags": {
-				"type": "array",
-				"items": {
-					"type": "string",
-					"minLength": 1
-				}
 			},
 			"message": {
 				"type": "string",
