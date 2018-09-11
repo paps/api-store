@@ -18,6 +18,13 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
 			"options": {
 				"fields": {
 					"sessionCookie": {
@@ -67,38 +74,38 @@
 				"minimum": 1,
 				"maximum": 10
 			},
-			"messagesPerLaunch": {
+			"messagesPerExtract": {
 				"type": "number",
 				"minimum": 1,
 				"maximum": 10
 
+			}
+		},
+		"oneOf": [
+			{
+				"required": [ "spreadsheetUrl" ]
 			},
-			"oneOf": [
-				{
-					"required": [ "spreadsheetUrl" ]
-				},
-				{
-					"properties": {
-						"queries": {
-							"required": true,
-							"type": "array",
-							"items": {
-								"type": "string",
-								"minLength": 1
-							}
-						}
-					}
-				},
-				{
-					"properties": {
-						"queries": {
-							"required": true,
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
 							"type": "string",
 							"minLength": 1
 						}
 					}
 				}
-			]
-		}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }
