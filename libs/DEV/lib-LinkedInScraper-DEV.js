@@ -678,18 +678,21 @@ class LinkedInScraper {
 			path = path.slice(14)
 			const id = path.slice(0, path.indexOf(","))
 			const newUrl = `https://linkedin.com/in/${id}`
+			let tab
 			try {
-				const tab = await this.nick.newTab()
+				tab = await this.nick.newTab()
 				await tab.open(newUrl)
 				await tab.wait(2000)
 				try {
 					const location = await tab.evaluate((arg, cb) => cb(null, document.location.href))
 					if (location !== newUrl) { 
 						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						await tab.close()
 						return location
 					} else {
 						await tab.wait(10000)
 						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						await tab.close()
 						return location
 					}
 				} catch (err) {
@@ -698,6 +701,7 @@ class LinkedInScraper {
 			} catch (err) {
 				this.utils.log(`Could not open ${url}, ${err}`, "error")
 			}
+			await tab.close()
 		}
 		return url
 	}
