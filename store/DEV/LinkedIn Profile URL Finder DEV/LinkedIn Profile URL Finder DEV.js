@@ -1,14 +1,14 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const { URL } = require("url")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -59,7 +59,6 @@ const normalizeLinkedInURL = url => {
 	if (!csvName) {
 		csvName = DEFAULT_DB_NAME
 	}
-
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(queries) === "string") {
@@ -68,6 +67,7 @@ const normalizeLinkedInURL = url => {
 
 	db = await utils.getDb(`${csvName}.csv`)
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	queries = queries.filter(str => str) // removing empty lines
 	if (numberOfLinesToProcess) { queries = queries.slice(0, numberOfLinesToProcess) }
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")

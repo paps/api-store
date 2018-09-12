@@ -69,6 +69,7 @@ const normalizeLinkedInURL = url => {
 	db = await utils.getDb(`${csvName}.csv`)
 
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	queries = queries.filter(str => str) // removing empty lines
 	if (numberOfLinesToProcess) { queries = queries.slice(0, numberOfLinesToProcess) }
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")

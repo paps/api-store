@@ -63,7 +63,7 @@
 						}
 					},
 					"numberOfProfiles": {
-						"label": "Number of profiles to scrape <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to scrape <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_7howmanyprofiles\" target=\"_blank\">(?)</a>",
 						"placeholder": 25,
 						"inputType": "number",
 						"helper": "<b>LinkedIn limits search results to the first 1 000 profiles."
