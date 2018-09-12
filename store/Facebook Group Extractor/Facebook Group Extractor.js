@@ -165,8 +165,10 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		const data = {}
 		const chr = cheerio.load(profile)
 		const url = chr("a").attr("href")
-		const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
-		data.profileUrl = profileUrl
+		if (url) {
+			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
+			data.profileUrl = profileUrl
+		}
 		const name = chr("img").attr("aria-label")
 		data.name = name
 		const profilePicture = chr("img").attr("src")
@@ -237,9 +239,10 @@ const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape,
 	let result
 	[ result, cursorUrl ] = extractProfiles(jsonResponse, groupUrl, groupName)
 	ajaxUrl = forgeNewUrl(cursorUrl, numberAlreadyScraped + result.length, membersToScrape)
-	let keepScraping
+	let keepScraping = false
 	if (cursorUrl) { keepScraping = true }
-	return [ result, ajaxUrl, keepScraping, false ]
+	const scrapeMembersObject = { result, ajaxUrl, keepScraping, error: false}
+	return scrapeMembersObject
 }
 
 const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLaunch, resuming) => {
@@ -307,7 +310,11 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 			break
 		}
 		try {
-			[ res, ajaxUrl, keepScraping, error ] = await scrapeMembers(tab, groupUrl, firstResults.groupName, ajaxUrl, membersToScrape, result.length)
+			const scrapeMembersObject = await scrapeMembers(tab, groupUrl, firstResults.groupName, ajaxUrl, membersToScrape, result.length)
+			res = scrapeMembersObject.result
+			ajaxUrl = scrapeMembersObject.ajaxUrl
+			keepScraping = scrapeMembersObject.keepScraping
+			error = scrapeMembersObject.error
 		} catch (err) {
 			if (resuming) {
 				utils.log(`${err}, restarting followers scraping`, "warning")
