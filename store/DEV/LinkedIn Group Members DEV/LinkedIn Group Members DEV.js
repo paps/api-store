@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
@@ -21,10 +21,40 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
+const { URL } = require("url")
+
 /* global $ */
 
+const LEGACY_ENDPOINT_PATTERN = 0
+const VOYAGER_ENDPOINT_PATTERN = 1
 // }
 const gl = {}
+
+let endpointPattern = LEGACY_ENDPOINT_PATTERN
+
+
+const extractQueryString = (url, field) => {
+	let urlRep
+
+	try {
+		urlRep = new URL(url)
+		return urlRep.searchParams.get(field)
+	} catch (err) {
+		return null
+	}
+}
+
+const updateUrlParam = (url, field, value) => {
+	let urlRep
+
+	try {
+		urlRep = new URL(url)
+		urlRep.searchParams.set(field, value.toString())
+		return urlRep.toString()
+	} catch (err) {
+		return url
+	}
+}
 
 /**
  * @description Browser context function used to return if possible skills, groups & localization of a group member
@@ -46,7 +76,7 @@ const getMemberDetails = (arg, cb) => {
 				if (res.data[0].skills) {
 					for (const one of res.data[0].skills) {
 						if (i < 3) {
-							member[`skill${i+1}`] = one.localizedName
+							member[`skill${i + 1}`] = one.localizedName
 						}
 						i++
 					}
@@ -56,7 +86,7 @@ const getMemberDetails = (arg, cb) => {
 				}
 
 				if (res.data[0].industry) {
-					member.industry =res.data[0].industry
+					member.industry = res.data[0].industry
 				}
 
 				if (res.data[0].education) {
@@ -67,8 +97,8 @@ const getMemberDetails = (arg, cb) => {
 				if (res.data[0].memberGroups) {
 					for (const group of res.data[0].memberGroups) {
 						if (i < 3) {
-							member[`group${i+1}`] = group.name
-							member[`groupUrl${i+1}`] = `https://www.linkedin.com/groups/${group.id}`
+							member[`group${i + 1}`] = group.name
+							member[`groupUrl${i + 1}`] = `https://www.linkedin.com/groups/${group.id}`
 						}
 						i++
 					}
@@ -91,19 +121,20 @@ const checkGroup = async (tab, groupUrl) => {
 	await tab.open(groupUrl + "/members")
 	const selectors = [
 		"ul.manage-members-list",
+		"div.groups-members-list",
 		"div.js-admins-region",
 		"div#main.error404"
 	]
 	try {
 		const selector = await tab.waitUntilVisible(selectors, 10000, "or")
-		if (selector === selectors[0]) { // Case 1 - Valid group
+		if (selector === selectors[0] || selector === selectors[1]) { // Case 1 - Valid group
 			return true
 		}
-		if (selector === selectors[1]) { // Case 2 - Valid group but the account isn't part of it
+		if (selector === selectors[2]) { // Case 2 - Valid group but the account isn't part of it
 			utils.log("You are not part of this group -- Can't get members list", "error")
 			nick.exit(1)
 		}
-		if (selector === selectors[2]) { // Case 3 - Not a valid group
+		if (selector === selectors[3]) { // Case 3 - Not a valid group
 			utils.log("This page doesn't exist, please check the url", "error")
 			nick.exit(1)
 		}
@@ -114,8 +145,13 @@ const checkGroup = async (tab, groupUrl) => {
 
 }
 
-// Loop over the pages of the group to get all members (maximum is 2500)
-const getGroupMembers = async (tab) => {
+/**
+ * @description Loop over the pages of the group to get all members (maximum is 2500 => LinkedIn restriction)
+ * @param {Object} tab - Nickjs Tab Object
+ * @param {Number} patternNumber - URL pattern used to make AJAX call (0 => legacy / 1 => new endpoint)
+ * @return {Promise<Array<Object>>} all members
+ */
+const getGroupMembers = async (tab, patternNumber) => {
 	let errors = 0
 	const members = []
 	while (true) {
@@ -139,6 +175,9 @@ const getGroupMembers = async (tab) => {
 		}
 		errors = 0
 		if (response.data) {
+			if (patternNumber === VOYAGER_ENDPOINT_PATTERN) {
+				response.data = response.included.filter(el => el["$type"] && el["$type"] === "com.linkedin.voyager.identity.shared.MiniProfile")
+			}
 			for (const item of response.data) {
 				const newMember = {}
 				if (item.mini) {
@@ -159,6 +198,12 @@ const getGroupMembers = async (tab) => {
 					newMember.lastName = mini.lastName
 					newMember.fullName = mini.firstName + " " + mini.lastName
 					newMember.headline = mini.headline
+				} else {
+					newMember.profileUrl = `https://www.linkedin.com/in/${item.publicIdentifier}`
+					newMember.firstName = item.firstName
+					newMember.lastName = item.lastName
+					newMember.fullName = `${item.firstName} ${item.lastName}`
+					newMember.headline = item.occupation
 				}
 				if (item.currentPosition) {
 					const currentPosition = item.currentPosition
@@ -171,13 +216,33 @@ const getGroupMembers = async (tab) => {
 				members.push(newMember)
 			}
 		}
-		if (response.meta && response.meta.next && response.data.length > 0) {
-			utils.log(`Got ${members.length} members from the list.`, "info")
-			gl.url = response.meta.next
-		} else {
-			utils.log(`Got ${members.length} members from the list.`, "done")
-			break
+
+		if (patternNumber === LEGACY_ENDPOINT_PATTERN) {
+			if (response.meta && response.meta.next && response.data.length > 0) {
+				utils.log(`Got ${members.length} members from the list.`, "info")
+				gl.url = response.meta.next
+			} else {
+					utils.log(`Got ${members.length} members from the list.`, "done")
+					break
+			}
+		} else if (patternNumber === VOYAGER_ENDPOINT_PATTERN) {
+			let lastIndex = extractQueryString(gl.url, "start")
+			let lastCount = extractQueryString(gl.url, "count")
+			lastIndex = lastIndex ? parseInt(lastIndex, 10) : null
+			lastCount = lastCount ? parseInt(lastCount, 10) : null
+			lastIndex += (lastCount + 1)
+			lastCount = 100
+			gl.url = updateUrlParam(gl.url, "start", lastIndex)
+			gl.url = updateUrlParam(gl.url, "count", lastCount)
+			gl.url = decodeURIComponent(gl.url)
+			if (response.data.length < 1) {
+				utils.log(`Got ${members.length} members from the list`, "done")
+				break
+			} else {
+				utils.log(`Got ${members.length} members from the list`, "info")
+			}
 		}
+
 	}
 	return members
 }
@@ -203,9 +268,16 @@ const ajaxCall = (arg, callback) => {
 
 // Get http request headers
 const onHttpRequest = (e) => {
-	if (e.request.url.indexOf("https://www.linkedin.com/communities-api/v1/memberships/community") > -1) {
+	const firstPattern = "https://www.linkedin.com/communities-api/v1/memberships/community"
+	const secondPattern = "https://www.linkedin.com/voyager/api/groups/groups/urn:li:group:"
+	if (e.request.url.indexOf(firstPattern) > -1 || e.request.url.indexOf(secondPattern) > -1) {
 		gl.headers = e.request.headers
 		gl.url = e.request.url
+		if (e.request.url.indexOf(firstPattern) > -1) {
+			endpointPattern = LEGACY_ENDPOINT_PATTERN
+		} else if (e.request.url.indexOf(secondPattern) > -1) {
+			endpointPattern = VOYAGER_ENDPOINT_PATTERN
+		}
 	}
 }
 
@@ -222,15 +294,24 @@ const onHttpRequest = (e) => {
 	await checkGroup(tab, groupUrl)
 	await tab.wait(3000)
 	if (!gl.url) {
-		await tab.click("a.pagination-link.next:not(.hidden)")
+		if (await tab.isPresent("a.pagination-link.next:not(.hidden)")) {
+			await tab.click("a.pagination-link.next:not(.hidden)")
+		} else {
+			await tab.scrollToBottom()
+		}
 		await tab.wait(3000)
 		if (!gl.url) {
-			throw("Could not get members of this group.")
+			throw ("Could not get members of this group.")
 		}
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+	if (endpointPattern === VOYAGER_ENDPOINT_PATTERN) {
+		await tab.scroll(0, 0)
+		gl.url = updateUrlParam(gl.url, "start", 0)
+		gl.url = decodeURIComponent(updateUrlParam(gl.url, "count", 100))
+	}
 	utils.log(`Getting members for group ${groupName}...`, "loading")
-	const members = await getGroupMembers(tab)
+	const members = await getGroupMembers(tab, endpointPattern)
 	await utils.saveResults(members, members, groupName)
 	await linkedIn.saveCookie()
 	nick.exit()
