@@ -55,7 +55,7 @@
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "profilesPerLaunch": {
-						"label": "Number of members to collect per launch (only if you have one group that you want to fully scrape) - if none will try to scrape all of them in one go",
+						"label": "Number of profiles to process per launch - if none will try to scrape all of them",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -87,8 +87,7 @@
                 "type": "string"
             },
             "profilesPerLaunch": {
-				"type": "number",
-				"minimum": 15
+				"type": "number"
 			},
             "csvName": {
 				"type": "string",

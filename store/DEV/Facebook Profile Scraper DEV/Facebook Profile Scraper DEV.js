@@ -23,15 +23,7 @@ const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
-let interceptedUrl
-let interceptedHeaders
-let alreadyScraped = 0
-let agentObject
-let ajaxUrl
-let stillMoreToScrape
-let lastQuery
-let error
-const cheerio = require("cheerio")
+let blocked
 const { URL } = require("url")
 
 
@@ -40,22 +32,56 @@ const { URL } = require("url")
 // Checks if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
-		if (str === line.groupUrl) {
+		if (str === line.url) {
 			return false
 		}
 	}
 	return true
 }
 
+
+const cleanFacebookProfileUrl = url => {
+	try {
+		const urlObject = new URL(url)
+		if (urlObject) {
+			if (url.includes("profile.php?id=")) {
+				const id = urlObject.searchParams.get("id")
+				return "https://facebook.com/profile.php?id=" + id
+			} else {
+				let path = urlObject.pathname.slice(1)
+				if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
+				return "https://facebook.com/" + path
+			}
+		}
+	} catch (err) {
+		return null
+	}
+}
+
 // Checks if a url is a facebook group url
-const isFacebookProfileUrl = (url) => {
+const isFacebookProfileUrl = url => {
 	let urlObject = parse(url.toLowerCase())
 	if (urlObject.hostname.includes("facebook.com")) { return true }
 	return false
 }
 
- 
-const scrapeFirstPage = (arg, cb) => {
+const scrapeWorkPage = (arg, cb) => {
+	const extractData = array => array.map(el => {
+		const data = {}
+		if (el.querySelector("a")) {
+			data.url = el.querySelector("a").href
+			const nameDiv = el.querySelector("div > div > div > div > div:last-of-type > div")
+			if (nameDiv) {
+				data.name = nameDiv.textContent
+			}
+			const description = el.querySelector("div > div > div > div > div:last-of-type > div:last-of-type")
+			if (description && description.textContent) {
+				data.description = description.textContent
+			}
+		}
+		return data
+	})
+
 	const scrapedData = { url:arg.url }
 	if (document.querySelector(".photoContainer a > img")) {
 		scrapedData.profilePictureUrl = document.querySelector(".photoContainer a > img").src
@@ -66,55 +92,24 @@ const scrapeFirstPage = (arg, cb) => {
 	if (document.querySelector("#fb-timeline-cover-name")) {
 		scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
 	}
+	if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
+		let friendsCount = document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type").textContent
+		friendsCount = parseInt(friendsCount.replace(/[, ]/g, ""), 10)
+		scrapedData.friendsCount = friendsCount
+	}
 
-	if (document.querySelector("#intro_container_id > div")) {
-		const intro = Array.from(document.querySelector("#intro_container_id > div").querySelectorAll("ul li")).map(el => el.textContent)
-		scrapedData.intro = intro
+	// if Add friend button is hidden, we're already friend
+	if (document.querySelector(".FriendRequestAdd")) {
+		scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
 	}
-	cb(null, scrapedData)
-}
 
-const scrapeAboutPage = (arg, cb) => {
-	const scrapedData = {}
-	const birthdayDiv = Array.from(document.querySelectorAll("ul")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0]
-	if (birthdayDiv && birthdayDiv.querySelector("li > div > div:last-of-type > span > div:last-of-type")) {
-		scrapedData.birthday = birthdayDiv.querySelector("li > div > div:last-of-type > span > div:last-of-type").textContent
-	}
-	const education = Array.from(document.querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
-	if (education) {
-		scrapedData.education = education.map(el => el.textContent)
-	}
-	const places = Array.from(document.querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")
-	if (places) {
-		scrapedData.places = places[0].textContent
-	}
-	const relationships = Array.from(document.querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")
-	if (relationships) {
-		scrapedData.relationships = relationships[0].textContent
-	}
-	cb(null, scrapedData)
-}
-
-const scrapeWorkPage = (arg, cb) => {
-	const extractData = array => array.map(el => {
-		const data = { url: el.querySelector("a").href }
-		const nameDiv = el.querySelector("div > div > div > div > div:last-of-type > div")
-		if (nameDiv) {
-			data.name = nameDiv.textContent
-		}
-		const description = el.querySelector("div > div > div > div > div:last-of-type > div:last-of-type")
-		if (description && description.textContent) {
-			data.description = description.textContent
-		}
-		return data
-		}
-	)
-	const scrapedData = {}
 	const workLi = Array.from(document.querySelector("#pagelet_eduwork > div > div > ul").querySelectorAll("li"))
-	scrapedData.work = extractData(workLi)
+	const work = extractData(workLi)
+	if (work[0] && Object.keys(work[0]).length) { scrapedData.work = extractData(workLi) }
 	const educationLi = Array.from(document.querySelector("#pagelet_eduwork > div > div:last-of-type > ul").querySelectorAll("li"))
-	scrapedData.education = extractData(educationLi)
-	
+	const education = extractData(educationLi)
+	if (education[0] && Object.keys(education[0]).length) { scrapedData.education = extractData(educationLi) }
+
 	cb(null, scrapedData)
 }
 
@@ -122,34 +117,151 @@ const scrapeLivingPage = (arg, cb) => {
 	const scrapedData = {}
 	if (document.querySelector("#current_city span")) {
 		scrapedData.currentCity = document.querySelector("#current_city span").textContent
+		if (document.querySelector("#current_city span a")) { scrapedData.currentCityUrl = document.querySelector("#current_city span a").href }
 	}
 	
 	if (document.querySelector("#hometown span")) {
 		scrapedData.hometown = document.querySelector("#hometown span").textContent 
+		if (document.querySelector("#hometown span a")) { scrapedData.hometownUrl = document.querySelector("#hometown span a").href }
 	}
-	cb(null, {living: scrapedData})
+	const result = scrapedData.length ? { living : scrapedData } : null
+	cb(null, result)
 }
 
+const scrapeContactInfoPage = (arg, cb) => {
+	const camelCaser = str => str.charAt(0).toLowerCase() + str.replace(/ /g,"").substr(1)
+	
+	const scrapedData = {}
+	const contactInfo = document.querySelectorAll(".fbProfileEditExperiences")
+	if (contactInfo[0] && contactInfo[0].querySelector("span")) {
+		scrapedData.contactInfo = contactInfo[0].querySelector("span").textContent
+	}
+
+	const infoLi = Array.from(document.querySelectorAll(".fbProfileEditExperiences")[1].querySelectorAll("li  > div")).map(el => {
+		const data = {}
+		let property
+		if (el.querySelector("div span")) { 
+			property = el.querySelector("div span").textContent
+			const value = el.querySelector("div:last-of-type")
+			if (value) {
+				data[camelCaser(property)] = el.querySelector("div:last-of-type").textContent
+			}
+		}
+		return data
+	})
+	for (const obj of infoLi) {
+		scrapedData[(Object.keys(obj)[0])] = Object.values(obj)[0]
+	}
+
+	cb(null, scrapedData)
+}
+
+const scrapeRelationshipPage = (arg, cb) => {
+	const scrapedData = {}
+	const relationship = document.querySelectorAll(".fbProfileEditExperiences")
+	if (relationship[0]) {
+		if (relationship[0].querySelector("a")) { // in a relationship
+			const relationshipDiv = relationship[0].querySelector("div > div > div > div > div > div:last-of-type")
+			if (relationshipDiv && relationshipDiv.querySelector("div") && relationshipDiv.querySelector("div:last-of-type")) {
+				const relationshipObject = {
+					relationshipWith : relationshipDiv.querySelector("div").textContent,
+					description : relationshipDiv.querySelector("div:last-of-type").textContent,
+					profileUrl : relationship[0].querySelector("a").href
+				}
+				scrapedData.relationship = relationshipObject
+			}
+		} else { // single
+		scrapedData.relationship = relationship[0].textContent
+		}
+	}
+
+	if (relationship[1]){
+		const familyMembers = Array.from(relationship[1].querySelectorAll("li")).map(el => {
+		
+			const data = {}
+			if (el.querySelector("div > div > div > div > div > div:last-of-type > div")) {
+				data.name = el.querySelector("div > div > div > div > div > div:last-of-type > div").textContent
+			}
+			if (el.querySelector("div > div > div > div > div > div:last-of-type > div:last-of-type")) {
+				data.link = el.querySelector("div > div > div > div > div > div:last-of-type > div:last-of-type").textContent
+			}
+			if (el.querySelector("div > div > div > div > div a")) {
+				data.profileUrl = el.querySelector("div > div > div > div > div a").href
+			}
+			return data
+		})
+		if (familyMembers[0] && Object.keys(familyMembers[0]).length) { scrapedData.familyMembers = familyMembers }
+	}
+	cb(null, scrapedData)
+}
+const scrapeBioPage = (arg, cb) => {
+	
+	const scrapedData = {}
+	if (document.querySelector("#pagelet_bio > div > ul")) { 
+		scrapedData.bio = document.querySelector("#pagelet_bio > div > ul").textContent
+	}
+	if (document.querySelector("#pagelet_quotes > div > ul")) { 
+		scrapedData.quotes = document.querySelector("#pagelet_bio > div > ul").textContent
+	}
+	cb(null, scrapedData)
+}
+
+const scrapeLifeEventsPage = (arg, cb) => {
+	const events = Array.from(document.querySelectorAll(".fbProfileEditExperiences > li")).map(el => el.innerText)
+	const scrapedData = events.length ? { events } : null
+	cb(null, scrapedData)
+}
+
+const forgeUrl = (url, section) => {
+	if (url.includes("profile.php?id=")) {
+		return url + "&sk=about&section=" + section
+	} else {
+		return url + "/about?section=" + section
+	}
+}
+
+const checkUnavailable = (arg, cb) => {
+	cb(null, (document.querySelector(".UIFullPage_Container img") && document.querySelector(".UIFullPage_Container img").src.startsWith("https://static.xx.fbcdn.net")))
+}
+
+
 const loadFacebookProfile = async (tab, url) => {
-	console.log("opening ", url)
-	await tab.open(url)
-	await tab.waitUntilVisible("#fbProfileCover")
-	let result = await tab.evaluate(scrapeFirstPage, { url })
-	console.log("opening ", url + "/about?section=overview")
+	await tab.open(forgeUrl(url, "education"))
+	let selector
+	try {
+		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
+	} catch (err) {
+		if (await tab.evaluate(checkUnavailable)) {
+			await tab.screenshot(`error${new Date()}.png`)
+			utils.log(`${url} page is not available.`, "error")
+			return { url, error: "The profile page isn't available"}
+		}
+	}
+	if (selector === "#content > div.uiBoxWhite") {
+		blocked = true
+		return null
+	}
 
-	await tab.open(url + "/about")
-
-	Object.assign(result, await tab.evaluate(scrapeAboutPage))
-	console.log("opening ", url + "/about?section=education")
-	await tab.open(url + "/about?section=education")
-
-	Object.assign(result, await tab.evaluate(scrapeWorkPage))
-
-	console.log("opening ", url + "/about?section=living")
-	await tab.open(url + "/about?section=living")
-
-	Object.assign(result, await tab.evaluate(scrapeLivingPage))
-
+	let result = {}
+	const aboutList = [ 
+		{ selector: "#pagelet_eduwork", function: scrapeWorkPage, name: "Work and Education", click: "" },
+		{ selector: "#pagelet_hometown", function: scrapeLivingPage, name: "Places", click: "._Interaction__ProfileSectionPlaces" },
+		{ selector: "#pagelet_basic", function: scrapeContactInfoPage, name: "Contact and basic info", click: "._Interaction__ProfileSectionContactBasic" },
+		{ selector: "#pagelet_relationships", function: scrapeRelationshipPage, name: "Family and relationships", click: "._Interaction__ProfileSectionAllRelationships" },
+		{ selector: "#pagelet_bio", function: scrapeBioPage, name: "Details", click: "._Interaction__ProfileSectionAbout" },
+		{ selector: "", function: scrapeLifeEventsPage, name: "Life events", click: "._Interaction__ProfileSectionYearOverviews" },
+	]
+	for (const pagelet of aboutList) {
+		utils.log(`Opening ${pagelet.name} section of ${url}`, "done")
+		if (pagelet.click) { await tab.click(pagelet.click) }
+		if (pagelet.selector) {
+			await tab.waitUntilVisible(pagelet.selector)
+		} else {
+			await tab.wait(500)
+		}
+		Object.assign(result, await tab.evaluate(pagelet.function, { url }))
+		await tab.wait(2000 + 2 * Math.random())
+	}
 	return result
 }
 
@@ -164,18 +276,33 @@ nick.newTab().then(async (tab) => {
 		profilesToScrape = [ spreadsheetUrl ]
 	} else {
 		profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-		profilesToScrape = profilesToScrape.filter(str => str) // removing empty lines
 	}
-	utils.log(`Profiles to scrape: ${JSON.stringify(spreadsheetUrl, null, 2)}`, "done")
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
+	profilesToScrape = profilesToScrape.map(cleanFacebookProfileUrl)
+	profilesToScrape = profilesToScrape.filter(str => str) // removing empty lines
+	profilesToScrape = profilesToScrape.filter(str => checkDb(str, result)) // checking if already processed
+	profilesToScrape = profilesToScrape.slice(0, profilesPerLaunch) // only doing 
+	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
+	if (profilesToScrape.length < 1) {
+		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
+		nick.exit()
+	}
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+	let profileCount = 1
 	for (let url of profilesToScrape) {
-		if (isFacebookProfileUrl(url)) { // Facebook Group URL
+		buster.progressHint(profileCount / profilesToScrape.length, )
+		if (isFacebookProfileUrl(url)) { // Facebook Profile URL
 			utils.log(`Scraping profile of ${url}...`, "loading")
 			try {
 				result = result.concat(await loadFacebookProfile(tab, url))
+				if (blocked) {
+					utils.log("Temporarily blocked by Facebook!", "error")
+					break
+				}
 			} catch (err) {
 				utils.log(`Could not connect to ${url}  ${err}`, "error")
+				await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
+
 			}
 		} else {  
 			utils.log(`${url} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
