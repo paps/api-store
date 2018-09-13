@@ -35,7 +35,7 @@ const checkDb = (str, db) => {
 		if (str === line.query) {
 			return false
 		}
-	}   
+	}
 	return true
 }
 
@@ -66,7 +66,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 								.replace("]", "")
 								.replace(",","")
 								.split("\"")
-								.filter(el => (el !== "" && el !== ",") )
+								.filter(el => (el !== "" && el !== ","))
 								.join(",")
 	}
 	// "View in Sales Navigator" link, only present for LI premium users
@@ -110,13 +110,16 @@ const scrapeCompanyInfo = (arg, callback) => {
 	callback(null, result)
 }
 
-
 const getCompanyInfo = async (tab, link, query) => {
 	await tab.open(link)
 	try {
-		await tab.waitUntilVisible("div.organization-outlet")
+		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {
-			await tab.waitUntilVisible("section.org-similar-orgs > ul", 7500)
+			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
+		}
+		// Some pages are slow to load content
+		if (await tab.isVisible("div.org-screen-loader")) {
+			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
 		return tab.evaluate(scrapeCompanyInfo, { link, query })
 	} catch (err) {
@@ -182,7 +185,7 @@ const isLinkedUrl = target => {
 						await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
 						await tab.waitUntilVisible("div.search-results-container")
 						link = await tab.evaluate(scrapeCompanyLink)
-						if (!link) { 
+						if (!link) {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."
 						}
