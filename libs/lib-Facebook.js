@@ -57,14 +57,10 @@ class Facebook {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			let httpCode
 			try {
-				 [httpCode] = await tab.open(url || "https://www.facebook.com")
+				await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
 				//
-			}
-			if (httpCode !== 200) {
-				return `Facebook responded with http ${httpCode}`
 			}
 			let sel
 			try {
