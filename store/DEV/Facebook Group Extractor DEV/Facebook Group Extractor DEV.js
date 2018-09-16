@@ -116,14 +116,6 @@ const firstScrape = (arg, callback) => {
 	callback(null, data)
 }
 
-const getFirstMembers = async (tab, url) => {
-	await tab.open(url + "recently_joined")
-	await tab.waitUntilVisible(".uiList.clearfix")
-	const result = await tab.evaluate(scrapeFirstMembers, { url })
-	await tab.scrollToBottom()
-	await tab.wait(2000)
-	return result
-}
 const scrapeFirstMembers = (arg, callback) => {
 	const groupName = document.querySelector("#seo_h1_tag a").textContent
 	const results = document.querySelectorAll(".uiList.clearfix > div")
@@ -264,7 +256,14 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 	if (resuming) {
 		totalProfileCount = alreadyScraped
 	} else {
-		result = await getFirstMembers(tab, groupUrl)
+		await tab.open(groupUrl + "recently_joined")
+		await tab.waitUntilVisible(".uiList.clearfix")
+		const timeInit = new Date()
+		do {
+			await tab.scrollToBottom()
+			await tab.wait(3000)
+		} while (!interceptedUrl && new Date() - timeInit < 10000)
+		result = await tab.evaluate(scrapeFirstMembers, { groupUrl })
 		totalProfileCount = result.length
 		ajaxUrl = interceptedUrl
 	}
@@ -325,10 +324,12 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 				continue
 			}
 		}
-		result = result.concat(res)
-		const resLength = res.length
-		totalProfileCount += resLength
-		scrapeCount += resLength
+		if (res) {
+			result = result.concat(res)
+			const resLength = res.length
+			totalProfileCount += resLength
+			scrapeCount += resLength
+		}
 		utils.log(`Got ${totalProfileCount} members.`, "info")
 		buster.progressHint(scrapeCount / membersToScrape, `Loading members... ${scrapeCount}/${membersToScrape}`)
 		if (!keepScraping && !error) { utils.log(`All members of ${groupUrl} scraped.`, "done") }
