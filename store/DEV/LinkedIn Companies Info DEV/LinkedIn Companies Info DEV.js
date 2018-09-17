@@ -144,19 +144,18 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let [sessionCookie, companies] = utils.checkArguments([
-		{ name: "sessionCookie", type: "string", length: 10 },
-		{ many: [
-			{ name: "companies", type: "object", length: 1 },
-			{ name: "spreadsheetUrl", type: "string", length: 10 },
-		]}
-	])
-	if (typeof companies === "string") {
-		companies = await utils.getDataFromCsv(companies)
+	let companies
+	let { sessionCookie, spreadsheetUrl, companiesPerLaunch } = utils.validateArguments()
+	if (typeof spreadsheetUrl === "string") {
+		companies = await utils.getDataFromCsv(spreadsheetUrl, null, false)
+	} else {
+		companies = [ spreadsheetUrl ]
 	}
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb("result.csv")
-	companies = companies.filter(el => checkDb(el, result))
+	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
+	companies = companies.filter(el => checkDb(el, result)).slice(0, companiesPerLaunch)
+	utils.log(`Processing ${companies.length} lines...`, "info")
 	if (companies.length < 1) {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
