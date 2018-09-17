@@ -54,7 +54,7 @@
 					"companiesPerLaunch": {
 						"type": "number",
 						"inputType": "number",
-						"label": "Number of lines to process per launch (all if left empty)" 
+						"label": "Number of lines to process per launch (all if left empty)"
 					}
 				}
 			}

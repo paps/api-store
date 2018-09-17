@@ -144,12 +144,12 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let companies
-	let { sessionCookie, spreadsheetUrl, companiesPerLaunch } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, companiesPerLaunch } = utils.validateArguments()
 	if (typeof spreadsheetUrl === "string") {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, null, false)
-	} else {
-		companies = [ spreadsheetUrl ]
+	}
+	if (!companies) {
+		companies = []
 	}
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb("result.csv")

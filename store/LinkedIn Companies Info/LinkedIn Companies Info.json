@@ -8,7 +8,8 @@
 	"gradientEnd": "#64f38c",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/10s_woxByzUMc3kGB2RI6KcQb1Aazs8_LmkY4pDSr4Mo"
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/10s_woxByzUMc3kGB2RI6KcQb1Aazs8_LmkY4pDSr4Mo",
+		"companiesPerLaunch": 250
 	},
 	"outputDescription": {
 		"link": "Company LinkedIn profile link",
@@ -49,6 +50,11 @@
 							"We'll use the first column of your file (column A)"
 						],
 						"label": "Spreadsheet URL of companies to scrape <a href=\"/api-store/3296/linkedin-companies-info#section_spreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"companiesPerLaunch": {
+						"type": "number",
+						"inputType": "number",
+						"label": "Number of lines to process per launch (all if left empty)"
 					}
 				}
 			}
@@ -64,6 +70,11 @@
 			},
 			"spreadsheetUrl": {
 				"type": "string"
+			},
+			"companiesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 500
 			}
 		},
 		"oneOf": [
