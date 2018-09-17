@@ -57,6 +57,44 @@ const updateUrlParam = (url, field, value) => {
 }
 
 /**
+ * @param {Object} profile - raw voyager AJAX call response
+ * @return {{ skillX: String, region: string, industry: string, school: string, groupX: String, groupUrlX: String }|null} - profile data needed for LGM script otherwise null
+ */
+ const extractProfileViewData = res => {
+	let ret = {}
+
+	if (res.profile) {
+		if (res.profile.locationName) {
+			ret.region = res.profile.locationName
+		}
+		if (res.profile.industryName) {
+			ret.industry = res.profile.industryName
+		}
+		if (res.skillView) {
+			if (Array.isArray(res.skillView.elements) && res.skillView.elements.length > 0) {
+				let i = 0
+				for (const skill of res.skillView.elements) {
+					// Top skills returned
+					if (i < 3) {
+						ret[`skill${i + 1}`] = skill.name
+					}
+					i++
+				}
+			}
+		}
+		if (res.educationView) {
+			if (Array.isArray(res.educationView.elements) && res.educationView.elements.length > 0) {
+				ret["school"] = res.educationView.elements[0].schoolName;
+			}
+		}
+	} else {
+		ret = null
+	}
+
+	return ret
+}
+
+/**
  * @description Browser context function used to return if possible skills, groups & localization of a group member
  * The function only returns 3 groups & skills see #94 for more informations (scraping data which are visible from a mouse hover)
  * @param {*} arg - Browser context arguments (LinkedIn member ID, and intercepted headers to make the AJAX calls)
@@ -179,7 +217,7 @@ const getGroupMembers = async (tab, patternNumber) => {
 				response.data = response.included.filter(el => el["$type"] && el["$type"] === "com.linkedin.voyager.identity.shared.MiniProfile")
 			}
 			for (const item of response.data) {
-				const newMember = {}
+				let newMember = {}
 				if (item.mini) {
 					const mini = item.mini
 
@@ -204,6 +242,14 @@ const getGroupMembers = async (tab, patternNumber) => {
 					newMember.lastName = item.lastName
 					newMember.fullName = `${item.firstName} ${item.lastName}`
 					newMember.headline = item.occupation
+					/**
+					 * publicIdentifier is mandatory to get all LPS API data in LGM
+					 */
+					let headers = Object.assign({}, gl.headers)
+					headers["Accept"] = "application/json"
+					let moreInfos = await tab.evaluate(ajaxCall, { url: `https://www.linkedin.com/voyager/api/identity/profiles/${item.publicIdentifier}/profileView`, headers })
+					moreInfos = extractProfileViewData(moreInfos)
+					newMember = Object.assign(newMember, moreInfos)
 				}
 				if (item.currentPosition) {
 					const currentPosition = item.currentPosition
@@ -231,7 +277,11 @@ const getGroupMembers = async (tab, patternNumber) => {
 			lastIndex = lastIndex ? parseInt(lastIndex, 10) : null
 			lastCount = lastCount ? parseInt(lastCount, 10) : null
 			lastIndex += (lastCount + 1)
-			lastCount = 100
+			/**
+			 * Max value is 100
+			 * This AJAX call is limited 50 people, in order to not randomly fails
+			 */
+			lastCount = 50
 			gl.url = updateUrlParam(gl.url, "start", lastIndex)
 			gl.url = updateUrlParam(gl.url, "count", lastCount)
 			gl.url = decodeURIComponent(gl.url)
