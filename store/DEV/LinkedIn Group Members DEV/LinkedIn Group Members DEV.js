@@ -279,9 +279,9 @@ const getGroupMembers = async (tab, patternNumber) => {
 			lastIndex += (lastCount + 1)
 			/**
 			 * Max value is 100
-			 * This AJAX call is limited 50 people, in order to not randomly fails
+			 * This AJAX call is limited 20 people, in order to not randomly fails
 			 */
-			lastCount = 50
+			lastCount = 20
 			gl.url = updateUrlParam(gl.url, "start", lastIndex)
 			gl.url = updateUrlParam(gl.url, "count", lastCount)
 			gl.url = decodeURIComponent(gl.url)
