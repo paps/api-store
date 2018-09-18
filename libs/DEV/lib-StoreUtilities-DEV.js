@@ -268,6 +268,7 @@ class StoreUtilities {
 	 * @param {String|Array<String>} columnName
 	 * When columnName is an array, the first field is assumed to represents the column to fetch profileURLs
 	 * @param {Boolean} [printLogs] - verbose / quiet mode
+	 * @throws when url can't be downloaded / when the Google Spreadsheet isn't shareable / when the data isn't representing a CSV content
 	 * @return {Promise<Array<String>>|Promise<Array<Any>>} CSV content
 	 */
 	async getDataFromCsv(url, columnName, printLogs = true) {
@@ -314,8 +315,8 @@ class StoreUtilities {
 					}
 					fieldsPositions.push({ name: field, position: index })
 				}
-				// Guessing if the first row represents an URL, if so remove the first line
-				if (isUrl(data[0][0])) {
+				// Guessing if the first row represents an URL, if not remove the first line
+				if (!isUrl(data[0][0])) {
 					data.shift()
 				}
 				result = data.map(el => {
@@ -435,7 +436,7 @@ class StoreUtilities {
 
 	/**
 	 * @async
-	 * @param {String} filename - Agent DB filename to retrieve
+	 * @param {String} filename - Agent DB filename to retrieve (csv file)
 	 * @return {Promise<Array<String>>|Promise<String>} an array representing a CSV othersiwe file content into a string
 	 */
 	async getDb(filename) {

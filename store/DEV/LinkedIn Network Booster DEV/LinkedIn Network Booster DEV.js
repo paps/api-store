@@ -242,7 +242,7 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 /**
  * @async
  * @description Function used to send someone in LinkedIn
- * @param {String} baseUrl - Profile URL found in CSV
+ * @param {String|Object} baseUrl - Profile URL found in CSV or
  * @param {String} url - Profile URL converted if needed
  * @param {Object} tab - Nickjs tab
  * @param {String} message - Message to send
@@ -255,7 +255,13 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	 * - invitations will hold all successfull invitations
 	 * - errors will hold all failures
 	 */
-	let invitation = { baseUrl, url }
+	let invitation = { url }
+	if (typeof baseUrl === "string") {
+		invitation["baseUrl"] = baseUrl
+	} else {
+		invitation = Object.assign(invitation, baseUrl)
+	}
+	// let invitation = { baseUrl, url }
 	// Handle different cases: button connect, send inmail, accept, message, follow or invitation pending
 	let selector
 	const selectors = [
@@ -371,6 +377,15 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	return invitation
 }
 
+const cleanUpInvitations = (invitations, msg) => {
+	const tags = getMessageTags(msg)
+	for (const invit of invitations) {
+		for (const tag of tags) {
+			delete invit[tag]
+		}
+	}
+}
+
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	let { sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
@@ -393,24 +408,31 @@ nick.newTab().then(async (tab) => {
 	db = await utils.getDb(DB_NAME)
 
 	// TODO: filter fields scraped during the API execution to not make the lib-StoreUtilities throw an exception
-	// let columns = [ columnName, ...getMessageTags(message) ]
-	// if (disableScraping) {
-	// 	columns = columns.filter(el => el !== "firstName")
-	// }
+	let columns = [ columnName, ...getMessageTags(message) ]
+	if (disableScraping) {
+		columns = columns.filter(el => el !== "firstName")
+	}
 
-	let rows = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	rows = rows.filter(el => db.findIndex(line => el === line.baseUrl || el.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
+	// let rows = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let rows = await utils.getDataFromCsv(spreadsheetUrl, columns)
+	// if columnName isn't defined, lib-StoreUtilities will return a field "0" by default with the first column in the CSV
+	if (!columnName) {
+		columnName = "0"
+	}
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
+	// rows = rows.filter(el => db.findIndex(line => el === line.baseUrl || el.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
 	}
 	let invitations = []
 	await linkedIn.login(tab, sessionCookie)
-	utils.log(`Urls to add: ${JSON.stringify(rows, null, 2)}`, "done")
+	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 	for (const row of rows) {
+		row.baseUrl = row[columnName]
 		try {
-			utils.log(`Adding ${row}...`, "loading")
-			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(row)
+			utils.log(`Adding ${row[columnName]}...`, "loading")
+			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
 			let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping)
 			if (invitationResult) {
 				if (invitationResult.error) {
@@ -420,7 +442,7 @@ nick.newTab().then(async (tab) => {
 				}
 			}
 		} catch (error) {
-			// TODO: use a better log
+			// TODO: use a better log, remove stacktrace logs
 			utils.log(`Unhandled error: ${error.message || error}`, "error")
 			console.log(error.stack || "no stack")
 		}
@@ -434,7 +456,7 @@ nick.newTab().then(async (tab) => {
 		utils.log(`Checking LinkedIn shadow ban for ${invitations.length} invitation${invitations.length === 1 ? "" : "s"} ...`, "info")
 		await tab.wait(15000)	// Watiting 15 seconds
 		let foundInvitations = await validateInvitations(invitations)
-		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length + 1} invitations successfully sent`, "done")
+		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
 		for (const invit of invitations) {
 			let index = foundInvitations.findIndex(el => el.url === invit.url)
 			if (index < 0) {
@@ -443,7 +465,9 @@ nick.newTab().then(async (tab) => {
 			db.push(invit)
 		}
 	}
-	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
+	cleanUpInvitations(invitations, message)
+	// JSON output will only return the current scraping result
+	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null, false)
 	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
