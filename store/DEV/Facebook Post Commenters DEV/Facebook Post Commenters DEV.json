@@ -9,15 +9,15 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls",
-		"numberofProfilesperLaunch": 10
+		"spreadsheetUrl": "facebook_posts_urls",
+		"numberofProfilesperLaunch": 10,
+		"expandAllComments": false
 	},
 	"outputDescription": {
-		"profileUrl": "Instagram profile URL",
+		"profileUrl": "Facebook profile URL",
 		"imageUrl": "Profile picture URL",
-		"profileName ": "Instagram username",
-		"fullName": "Full name of the person",
-		"followedByUser": "If you follow that account"
+		"name": "Full name of the person",
+		"linkCount": "Number of likes on this post"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -46,14 +46,20 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberofPostsperLaunch": {
-						"label": "Number of posts to process per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
+						"label": "Number of posts to process per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a> (all of them if empty)",
+						"inputType": "number"
+					},
+					"numberOfCommentsPerPost": {
+						"label": "Number of comments to scrape per post <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a> (all of them if empty)",
 						"inputType": "number"
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
-					}
+					},
+					"expandAllComments": {
+                        "rightLabel": "<b>Expand all comment chains</b> (takes longer)"
+                    }
 				}
 			}
 		}
@@ -82,10 +88,18 @@
 				"type": "number",
 				"minimum": 1
 			},
+			"numberOfCommentsPerPost": {
+				"type": "number",
+				"minimum": 1
+			},
             "csvName": {
 				"type": "string",
 				"required": false
-			}
+			},
+			"expandAllComments": {
+				"type": "boolean",
+				"default": "false"
+            }
 		}
 	}
 }

@@ -25,9 +25,6 @@ const facebook = new Facebook(nick, buster, utils)
 
 // }
 
-
-const { URL } = require("url")
-
 const getUrlsToScrape = (data, numberofPostsperLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
@@ -48,111 +45,113 @@ const checkDb = (str, db) => {
 	return true
 }
 
-const getLikeType = number => {
-	switch (number) {
-		case 0:
-			return "Like"
-		case 1:
-			return "Haha"
-		case 2:
-			return "Love"
-		case 3:
-			return "Sad"
-		case 4:
-			return "Angry"
-		case 5:
-			return "Wow"
+const getCommentsCount = (arg, cb) => {
+	let comments = []
+	try {
+		comments = Array.from(document.querySelector(".userContentWrapper").querySelectorAll("div")).filter(el => el.id.startsWith("comment_js_"))
+	} catch (err) {
+		//
 	}
+	cb(null, comments.length)
 }
 
-const scrapeAllLikers = async (tab, query) => {
-	let likesScraped = await tab.evaluate(scrapeLikers, { query })
-	utils.log(`We got ${likesScraped.length} likes.`, "info")
-	let limit = 4000
-	for (let buttonNb = 0; buttonNb < 6; buttonNb++) {
-		try {
-			const skip = await tab.evaluate(clickExpandButtons, { buttonNb, limit })
-			if (!skip) {
-				await tab.waitUntilVisible(".uiList li .uiList li", 30000)
-				const newScrapedLikes = await tab.evaluate(scrapeLikers, { query })
-				utils.log(`We got ${newScrapedLikes.length} likes of type ${getLikeType(buttonNb)}.`, "info")
-				likesScraped = likesScraped.concat(newScrapedLikes)
+const scrapeComments = (arg, cb) => {
+	const comments = Array.from(document.querySelector(".userContentWrapper").querySelectorAll("div")).filter(el => el.id.startsWith("comment_js_"))
+	const result = []
+	for (const comment of comments) {
+		const scrapedData = { query:arg.query }
+		if (comment.querySelector("span.UFICommentActorAndBody > div > span a")) {
+			scrapedData.name = comment.querySelector("span.UFICommentActorAndBody > div > span a").textContent
+			scrapedData.profileUrl = comment.querySelector("span.UFICommentActorAndBody > div > span a").href
+			if (comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody")) {
+				scrapedData.comment = comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody").textContent
 			}
-		} catch (err) {
-			utils.log(`No like of type ${getLikeType(buttonNb)}.`, "info")
-			await buster.saveText(await tab.getContent(), `notVisibleat${Date.now()}.html`)
-			continue
+			if (comment.querySelector("a > img")) {
+				scrapedData.imageUrl = comment.querySelector("a > img").src
+			}
+			let likeCount = 0
+			try {
+				likeCount = comment.querySelector(".UFICommentContent > div > div > div > a > div > span:last-of-type").textContent
+				if (likeCount.includes("K")) {
+					likeCount = parseFloat(likeCount.replace(",", ".")) * 1000
+				}
+			} catch (err) {
+				//
+			}
+			scrapedData.likeCount = likeCount
 		}
-
-		await buster.saveText(await tab.getContent(), `AfterButton${buttonNb}at${Date.now()}.html`)
-
-		
+		result.push(scrapedData)
 	}
-	utils.log(`Scraped ${likesScraped.length} likes for ${query}`, "done")
-	return likesScraped
+	cb(null, result)
 }
 
-
-const clickExpandButtons = (arg, cb) => {
-	const buttonToClic = document.querySelectorAll(".uiList li .uiList")[arg.buttonNb].parentElement.querySelector(".uiMorePager")
-	let skip
-	if (buttonToClic) {
-		const urlObject = new URL(buttonToClic.querySelector("a"))
-		const maxCount = urlObject.searchParams.get("total_count")
-		const limit = Math.min(maxCount, arg.limit)
-		urlObject.searchParams.set("limit", limit)
-
-		buttonToClic.querySelector("a").href = urlObject.href
-		buttonToClic.querySelector("a").click()
-	} else {
-		skip = true
+// function 
+const expandComments = (arg, cb) => {
+	const expandLinks = Array.from(document.querySelectorAll("a.UFICommentLink, a.UFIPagerLink"))
+	for (let i = 0; i < expandLinks.length; i++) {
+		setTimeout(function timer(){
+			expandLinks[i].click()
+		}, i * 2000 + 1000 * Math.random())
 	}
-	cb(null, skip)
+	cb(null, Array.from(expandLinks).length)
 }
 
-const scrapeLikers = (arg, cb) => {
-	const results = document.querySelectorAll(".uiList li .uiList li")
-	const data = []
-	for (const result of results){
-		const newData = { query: arg.query }
-		if (result.querySelector("a")) { 
-			const url = result.querySelector("a").href
-			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
-			newData.profileUrl = profileUrl
+const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, expandAllComments) => {
+	let commentsCount = 0
+	console.log("numberOfCommentsPerPost", numberOfCommentsPerPost)
+	
+	let lastDate = new Date()
+	let newCommentsCount
+	do {
+		newCommentsCount = await tab.evaluate(getCommentsCount)
+		console.log("newCommentsCount", newCommentsCount)
+		if (newCommentsCount > commentsCount) {
+			commentsCount = newCommentsCount
+			lastDate = new Date()
+			utils.log(`${commentsCount} comments loaded.`, "info")
+			await buster.saveText(await tab.getContent(), `Loaded ${commentsCount} comments.html`)
+			if (await tab.isVisible(".UFIPagerRow a")) { 
+				console.log("boutonclick")
+				await tab.click(".UFIPagerRow a")
+			}
 		}
-		if (result.querySelectorAll("a")[1]) { newData.name = result.querySelectorAll("a")[1].textContent }
-		if (result.querySelector("img")) { newData.imageUrl = result.querySelector("img").src }
-		const reactionType = result.parentElement.getAttribute("id")
-		switch (reactionType){
-			case "reaction_profile_browser1":
-				newData.reactionType = "Like"
-				break
-			case "reaction_profile_browser2":
-				newData.reactionType = "Love"
-				break
-			case "reaction_profile_browser3":
-				newData.reactionType = "Wow"
-				break
-			case "reaction_profile_browser4":
-				newData.reactionType = "Haha"
-				break
-			case "reaction_profile_browser7":
-				newData.reactionType = "Sad"
-				break
-			case "reaction_profile_browser8":
-				newData.reactionType = "Grrr"
-				break
-		}
-		data.push(newData)
-		result.parentElement.removeChild(result)
+		await tab.wait(500)
+	} while ((!numberOfCommentsPerPost || commentsCount < numberOfCommentsPerPost) && new Date() - lastDate < 5000)
+
+	if (expandAllComments) {
+		await buster.saveText(await tab.getContent(), `avantExpand ${commentsCount} comments.html`)
+		utils.log("Expanding all comments.", "loading")
+		const expandedCount = await tab.evaluate(expandComments)
+		await tab.wait((expandedCount + 5) * 2000)
+		utils.log(`${expandedCount} comments expanded`, "done")
 	}
-	cb(null, data)
+	await buster.saveText(await tab.getContent(), `apresExpand ${commentsCount} comments.html`)
+
+	const result = await tab.evaluate(scrapeComments, { query })
+	utils.log(`${result} comments scraped.`, "done")
+	return result
+}
+
+const getTotalCommentsCount = (arg, cb) => {
+	let totalCount
+	try {
+		totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(",",".")
+		// we're converting 56.3K to 56300
+		if (totalCount.includes("K")) {
+			totalCount = parseFloat(totalCount.replace("K", "")) * 1000
+		} else {
+			totalCount = parseInt(totalCount, 10)
+		}
+	} catch (err) {
+		//
+	}
+	cb(null, totalCount)
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberofPostsperLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberofPostsperLaunch, numberOfCommentsPerPost, csvName, expandAllComments } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let postsToScrape, result = []
 	result = await utils.getDb(csvName + ".csv")
@@ -181,9 +180,14 @@ const scrapeLikers = (arg, cb) => {
 	let urlCount = 0
 
 	for (let postUrl of postsToScrape) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		try {
 			
-			utils.log(`Scraping likes from ${postUrl}`, "loading")
+			utils.log(`Scraping comments from ${postUrl}`, "loading")
 			
 			urlCount++
 			buster.progressHint(urlCount / postsToScrape.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
@@ -198,17 +202,40 @@ const scrapeLikers = (arg, cb) => {
 				}
 			}
 			try {
-				 await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
-				 let urlToGo = await tab.evaluate((arg, cb) => {
-					cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
-				})
-				utils.log(`urlToGo is ${urlToGo}`, "done")
-				await tab.open(urlToGo)
-				await tab.waitUntilVisible(".fb_content")
-				result = result.concat(await scrapeAllLikers(tab , postUrl))
+				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
+
+				const totalCount = await tab.evaluate(getTotalCommentsCount)
+				if (totalCount) {
+					utils.log(`There's ${totalCount} comments in total`, "info")
+					if (!numberOfCommentsPerPost || numberOfCommentsPerPost > totalCount) { numberOfCommentsPerPost = totalCount }
+				} else {
+					utils.log("Couldn't get comments count", "warning")
+				}
+				const currentUrl = await tab.evaluate((arg, cb) => cb(null, document.location.href))
+				console.log("URL:", currentUrl)
+				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) { // a faire avec les autres types de posts
+					await buster.saveText(await tab.getContent(), "avant clickts.html")
+					
+					console.log("on click X")
+					await tab.click("#photos_snowlift a")
+					await tab.wait(100)
+					await buster.saveText(await tab.getContent(), "apres clickts.html")
+
+				}
+				if (currentUrl.includes("/videos")) { // if it's a video, we need to access comments by clicking on comment link
+					try {
+						await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].click()))
+					} catch (err) {
+						utils.log(`Couldn't access comments to this video: ${err}`, "error")
+						continue
+					}
+				}
+				result = result.concat(await loadAllCommentersAndScrape(tab , postUrl, numberOfCommentsPerPost, expandAllComments))
 
 			} catch (err) {
-				utils.log("Error accessing like page", "error")
+				utils.log(`Error accessing comment page ${err}`, "error")
+				await buster.saveText(await tab.getContent(), "Error accessing comment comments.html")
+
 			}			
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${postUrl} due to: ${err.message || err}`, "warning")
