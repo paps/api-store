@@ -8,6 +8,15 @@ const needle = require("needle")
 const { URL, parse } = require("url")
 // }
 
+const isUrl = url => {
+	try {
+		new URL(url)
+		return true
+	} catch (err) {
+		return false
+	}
+}
+
 /**
  * @async
  * @internal
@@ -184,8 +193,14 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
-	// Function to get data from a google spreadsheet or from a csv
-	async getDataFromCsv2 (url, columnName, printLogs = true) {
+	/**
+	 * @description getDataFromCsv clone, it aims to support Google URLs patterns
+	 * @param {String} url
+	 * @param {String} columnName
+	 * @param {Boolean} [printLogs] - verbose / quiet logs
+	 * @return {Promise<Array<String>>} CSV content
+	 */
+	async getDataFromCsv2(url, columnName, printLogs = true) {
 		// TODO: handle multiple columns with columnName as array
 		let urlObj = null
 		if (printLogs) {
@@ -193,7 +208,7 @@ class StoreUtilities {
 		}
 
 		/**
-		 * NOTE: no need to continue, if the url input is malformatted
+		 * no need to continue, if the url input is malformatted
 		 */
 		try {
 			urlObj = new URL(url)
@@ -204,7 +219,7 @@ class StoreUtilities {
 		let httpContent = null
 
 		/**
-		 * NOTE: The function can for now handle
+		 * The function can for now handle
 		 * - docs.google.com domain
 		 * - drive.google.com domain
 		 * - Phantombuster S3 / direct CSV links
@@ -251,11 +266,11 @@ class StoreUtilities {
 	 * @description Function to get data from a google spreadsheet or from a csv
 	 * @param {String} url - Spreadsheet / CSV URL
 	 * @param {String|Array<String>} columnName
+	 * When columnName is an array, the first field is assumed to represents the column to fetch profileURLs
 	 * @param {Boolean} [printLogs] - verbose / quiet mode
-	 * @return {Promise<Array<String>>|Promise<Array<Any>>}
+	 * @return {Promise<Array<String>>|Promise<Array<Any>>} CSV content
 	 */
 	async getDataFromCsv(url, columnName, printLogs = true) {
-		// TODO: handle multiple columns with columnName as array
 		const buster = this.buster
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -285,13 +300,23 @@ class StoreUtilities {
 				}
 				result = data.map(line => line[column])
 			} else if (Array.isArray(columnName)) {
-				let fieldsPositions
-				for (const field of columnName) {
+				let columns = Object.assign([], columnName)
+				let fieldsPositions = []
+				// Does the columnName exist ?
+				if (!columns[0]) {
+					fieldsPositions.push({ name: "0", position: 0 })
+					columns.shift()
+				}
+				for (const field of columns) {
 					let index = data[0].findIndex(cell => cell === field)
 					if (index < 0) {
-						throw `No title ${columnName} in csv file.`
+						throw `No title ${field} in csv file.`
 					}
 					fieldsPositions.push({ name: field, position: index })
+				}
+				// Guessing if the first row represents an URL, if so remove the first line
+				if (isUrl(data[0][0])) {
+					data.shift()
 				}
 				result = data.map(el => {
 					let cell = {}
