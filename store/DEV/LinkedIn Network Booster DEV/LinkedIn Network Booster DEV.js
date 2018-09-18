@@ -28,6 +28,7 @@ const UNREACHABLE_PROFILE = "https://www.linkedin.com/in/unavailable/"
 const UNREACHABLE_ID = "unavailable"
 const EMAIL_NEEDED = "Email needed to add this person"
 const TOGGLE_ACTIONS_SELECTOR = ".pv-top-card-overflow__trigger, .pv-s-profile-actions__overflow-toggle"
+const INVITATIONS_MANAGER_URL = "https://www.linkedin.com/mynetwork/invitation-manager/sent/"
 // }
 
 
@@ -48,19 +49,21 @@ const getInviteesUrls = (arg, cb) => cb(null, Array.from(document.querySelectorA
  * @async
  * @description Returns all invitations successfully sent by LinkedIn
  * @param {Array<Object>} invitations
+ * @param {Number} sentCount
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
-const validateInvitations = async invitations => {
-	const INVITATIONS_MANAGER_URL = "https://www.linkedin.com/mynetwork/invitation-manager/sent/"
+const validateInvitations = async (invitations, sentCount) => {
 	let matches = []
 	const withdrawTab = await nick.newTab()
 	try {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
-		const urls = await withdrawTab.evaluate(getInviteesUrls)
+		const urls = await withdrawTab.evaluate(getInviteesUrls).slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.url))
 	} catch (err) {
 		/* ... */
+		console.log(err.message || err)
+		console.log(err.stack || "no stack")
 	}
 	await withdrawTab.close()
 	return matches
@@ -194,7 +197,7 @@ const connectTo = async (selector, tab, message) => {
  * @param {Object} tab - Nickjs tab object
  * @param {Stiring} url - Profile URL to open
  * @param {Boolean} [noScraping] - scrape the profile if exists
- * @return {Promise<Object|null>} Scrape the profile, otherwise null
+ * @return {Promise<Object>|Promise<null>} Scrape the profile, otherwise null
  */
 const openProfile = async (tab, url, noScraping = true) => {
 	let retData = null
@@ -210,12 +213,14 @@ const openProfile = async (tab, url, noScraping = true) => {
 
 /**
  * @async
+ * @description Function used to check if the API can connect the profile
+ * (function invoked when the connection is in the 3dots dropdown)
  * @throws on scraping error or impossible connection
  * @param {Object} tab - Nickjs tab
  * @param {String} url - Profile URL
  * @param {String} selector
  * @param {Boolean} onlySecondCircle
- * @return {Promise<Boolean|null>} true, if it can connect
+ * @return {Promise<Boolean>|Promise<null>} true, if it can connect
  */
 const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 	if (!onlySecondCircle) {
@@ -248,7 +253,7 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
  * @param {String} message - Message to send
  * @param {Boolean} onlySecondCircle
  * @param {Boolean} disableScraping
- * @return {Promise<Object|null>} a null return means that the URL was processed earlier
+ * @return {Promise<Object>|Promise<null>} a null return means that the URL was processed earlier
  */
 const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping) => {
 	/**
@@ -290,8 +295,15 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 			invitation.error = `${UNREACHABLE_ID} profile`
 			utils.log(`${url} is not a valid LinkedIn URL.`, "error")
 		} else {
-			invitation.error = err.message || err
-			utils.log(`Error while loading ${url}:\n${err}`, "error")
+			/**
+			 * Nickjs errors can occur here
+			 * examples:
+			 * Timeout error
+			 * The profile should be reprocess in another launch
+			 */
+			// invitation.error = err.message || err
+			utils.log(`Error while loading ${url}: ${err.message || err}`, "error")
+			invitation = null
 		}
 		return invitation
 	}
@@ -377,6 +389,11 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	return invitation
 }
 
+/**
+ * @description Removing all tags stored in the invitation object
+ * @param {Array<Object>} invitations - Invitations representations
+ * @param {String} msg - message
+ */
 const cleanUpInvitations = (invitations, msg) => {
 	const tags = getMessageTags(msg)
 	for (const invit of invitations) {
@@ -455,7 +472,7 @@ nick.newTab().then(async (tab) => {
 	if (invitations.length > 0) {
 		utils.log(`Checking LinkedIn shadow ban for ${invitations.length} invitation${invitations.length === 1 ? "" : "s"} ...`, "info")
 		await tab.wait(15000)	// Watiting 15 seconds
-		let foundInvitations = await validateInvitations(invitations)
+		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
 		for (const invit of invitations) {
 			let index = foundInvitations.findIndex(el => el.url === invit.url)
