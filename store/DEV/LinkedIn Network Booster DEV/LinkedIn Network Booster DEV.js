@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,7 +15,7 @@ const nick = new Nick({
 	printAborts: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -103,10 +103,10 @@ const getFirstName = (arg, callback) => {
  * @param {String} msg - message
  * @return {Array<Strign>} all tags
  */
-// const getMessageTags = msg => {
-// 	const matches = msg.match(/#[a-zA-Z0-9]+#/gm)
-// 	return matches.map(tag => tag.replace(/#/g, "").trim())
-// }
+const getMessageTags = msg => {
+	const matches = msg.match(/#[a-zA-Z0-9]+#/gm)
+	return matches.map(tag => tag.replace(/#/g, "").trim())
+}
 
 /**
  * @async
@@ -392,16 +392,11 @@ nick.newTab().then(async (tab) => {
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
 
-	// TODO: customTags
-	// let columns = [ columnName ]
-	// if (message) {
-	// 	let tags = getMessageTags(message)
-	// 	columns = columns.concat(Array.isArray(tags) ? tags : [])
+	// TODO: filter fields scraped during the API execution to not make the lib-StoreUtilities throw an exception
+	// let columns = [ columnName, ...getMessageTags(message) ]
+	// if (disableScraping) {
+	// 	columns = columns.filter(el => el !== "firstName")
 	// }
-	// const rows = await utils.getDataFromCsv(spreadsheetUrl, columns)
-	// const toScrape = rows.filter(el => db.findIndex(line => el.url === line.baseUrl || el.url.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
-	// utils.log(`Urls to add: ${JSON.stringify(toScrape.map(el => el.url), null, 2)}`, "done")
-	// await addLinkedinFriend(scrapeElement.url, newUrl, tab, message, onlySecondCircle, disableScraping, invitations)
 
 	let rows = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	rows = rows.filter(el => db.findIndex(line => el === line.baseUrl || el.match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
@@ -425,7 +420,7 @@ nick.newTab().then(async (tab) => {
 				}
 			}
 		} catch (error) {
-			// TODO: use different logs
+			// TODO: use a better log
 			utils.log(`Unhandled error: ${error.message || error}`, "error")
 			console.log(error.stack || "no stack")
 		}
@@ -455,5 +450,6 @@ nick.newTab().then(async (tab) => {
 })
 .catch((err) => {
 	utils.log(err, "error")
+	console.log(err.stack || err)
 	nick.exit(1)
 })
