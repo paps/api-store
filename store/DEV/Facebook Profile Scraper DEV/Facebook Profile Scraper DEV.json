@@ -1,6 +1,6 @@
 {
     "slug": "facebook-profile-scraper",
-    "description": "Extract data from Facebook profiles",
+    "description": "Collect valuable information you need from Facebook profiles",
     "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/facebook_group_extractor/Facebook+Group+Extractor.png",
     "gradientBegin": "#4267B2",
     "gradientEnd": "#19A3D1",
@@ -12,8 +12,14 @@
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie",
         "spreadsheetUrl": "facebook_group_url",
-        "checkInCommon": true,
-        "checkLocal": true,
+        "pagesToScrape": {
+			"workAndEducation": false,
+			"placesLived": false,
+			"contactAndBasicInfo": false,
+			"familyAndRelationships": false,
+			"detailsAbout": false,
+			"lifeEvents": false
+		},
         "csvName": "result"
     },
     "outputDescription": {
@@ -54,6 +60,29 @@
                         "placeholder": "Facebook Group Column",
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
+					"pagesToScrape": {
+                        "helper" : "<b>Additional pages to scrape</b>",
+                        "fields": {
+							"workAndEducation": {
+								"rightLabel": "<b>Work and Education</b>"
+							},
+							"placesLived": {
+								"rightLabel": "<b> Places they've Lived</b>"
+							},
+							"contactAndBasicInfo": {
+								"rightLabel": "<b>Contact and Basic Info</b>"
+							},
+							"familyAndRelationships": {
+								"rightLabel": "<b>Family and Relationships</b>"
+							},
+							"detailsAbout": {
+								"rightLabel": "<b>Details About Mark Antony</b>"
+							},
+							"lifeEvents": {
+								"rightLabel": "<b>Life Events</b>"
+                            }
+                        }  
+					},	
                     "profilesPerLaunch": {
 						"label": "Number of profiles to process per launch - if none will try to scrape all of them",
 						"inputType": "number"
@@ -86,8 +115,38 @@
             "columnName": {
                 "type": "string"
             },
+			"pagesToScrape": {
+                "type": "object",
+				"properties": {
+					"workAndEducation": {
+						"type": "boolean",
+						"required": true
+					},
+					"placesLived": {
+						"type": "boolean",
+						"required": true
+					},
+					"contactAndBasicInfo": {
+						"type": "boolean",
+						"required": true
+					},
+					"familyAndRelationships": {
+						"type": "boolean",
+						"required": true
+					},
+					"detailsAbout": {
+						"type": "boolean",
+						"required": true
+					},
+					"lifeEvents": {
+						"type": "boolean",
+						"required": true
+					}
+				}
+			},
             "profilesPerLaunch": {
-				"type": "number"
+                "type": "number",
+                "minimum": 1
 			},
             "csvName": {
 				"type": "string",

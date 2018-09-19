@@ -1,18 +1,16 @@
-# Collect information from any Facebook group
+# Extract info from Facebook profiles
 
-Get to know any Facebook member that shares the same interests as you. Use any Facebook group you have access to and gather:
+You have a list of Facebook profiles and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Facebook profiles you're targeting in a CSV file.
 
-1. Facebook profile links
-2. Names
-3. Profile pictures
-4. Current job/location
-5. Things in common
+# Our Solution
+
+Launch an automated agent that will connect as yourself on Facebook. It will then browse and collect data from the designated profiles.
 
 # What will you need? ⚙️ 
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook groups URLs in it, OR the direct link of a Facebook group (unless they're public, you **must** be a member of these groups).
-- **Scrape data from Things in common/Local members**: Facebook displays additionnal data from members you're not friends with but share mutual friends or other groups. This API can gather these information, but can take longer for groups with thousands of members. 
+- **Number of profiles per launch**: You need to spread your scraping into multiple launches to bypass Facebook limitations. 
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
