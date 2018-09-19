@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -21,7 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 
 // }
@@ -96,7 +97,7 @@ const scrapeResults = (arg, callback) => {
 }
 
 const scrapeResultsLeads = (arg, callback) => {
-	const results = document.querySelectorAll("ol.search-results__result-list li .search-results__result-container")
+	const results = document.querySelectorAll(".search-results__result-container")
 	const data = []
 	let profilesScraped = 0
 	for (const result of results) {
@@ -104,13 +105,17 @@ const scrapeResultsLeads = (arg, callback) => {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
 			let newData = { profileUrl }
 			newData.name = result.querySelector(".result-lockup__name").textContent.trim()
-			if (result.querySelector(".result-lockup__highlight-keyword")) {
-				newData.title = result.querySelector(".result-lockup__highlight-keyword").innerText
-				newData.companyName = result.querySelector(".result-lockup__position-company").innerText
+			if (result.querySelector(".result-lockup__highlight-keyword > span")) {
+				newData.title = result.querySelector(".result-lockup__highlight-keyword > span").innerText
+				if (result.querySelector(".result-lockup__position-company > a > span")) {
+					newData.companyName = result.querySelector(".result-lockup__position-company > a > span").innerText
+				}
 			}
 			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newData.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
 			if (result.querySelector("span[data-entity-hovercard-id]")) {
-				newData.companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+				const companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+				newData.companyId = companyId
+				newData.companyUrl = "https://www.linkedin.com/company/" + companyId
 			}
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
@@ -198,6 +203,8 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
 		utils.log(`Could not get total results count. ${err}`, "warning")
+		await buster.saveText(await tab.getContent(), `notVisibleat${Date.now()}.html`)
+
 	}
 	for (let i = 1; i <= pageCount; i++) {
 		try {
@@ -224,6 +231,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 				utils.log(timeLeft.message, "warning")
 				break
 			}
+			await buster.saveText(await tab.getContent(), `letsscrapes${Date.now()}.html`)
 			try {
 				if (containerSelector === "section.search-results__container") { // Lead Search
 					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))		

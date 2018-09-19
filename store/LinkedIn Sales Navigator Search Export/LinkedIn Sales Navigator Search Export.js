@@ -104,13 +104,17 @@ const scrapeResultsLeads = (arg, callback) => {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
 			let newData = { profileUrl }
 			newData.name = result.querySelector(".result-lockup__name").textContent.trim()
-			if (result.querySelector(".result-lockup__highlight-keyword")) {
-				newData.title = result.querySelector(".result-lockup__highlight-keyword").innerText
-				newData.companyName = result.querySelector(".result-lockup__position-company").innerText
+			if (result.querySelector(".result-lockup__highlight-keyword > span")) {
+				newData.title = result.querySelector(".result-lockup__highlight-keyword > span").innerText
+				if (result.querySelector(".result-lockup__position-company > a > span")) {
+					newData.companyName = result.querySelector(".result-lockup__position-company > a > span").innerText
+				}
 			}
 			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newData.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
 			if (result.querySelector("span[data-entity-hovercard-id]")) {
-				newData.companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+				const companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+				newData.companyId = companyId
+				newData.companyUrl = "https://www.linkedin.com/company/" + companyId
 			}
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
