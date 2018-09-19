@@ -41,8 +41,10 @@ const scrapeResultsAll = (arg, callback) => {
 	let selectorAll
 	if (arg.searchCat === "jobs") {
 		selectorAll = "ul.jobs-search-results__list > li"
-	} else {
-		selectorAll = "div.search-results ul > li"
+	} else if (!document.querySelectorAll("ul.search-results__list > li").length) {
+			selectorAll = "div.search-results ul > li"
+		} else {
+			selectorAll = "ul.search-results__list > li"
 	}
 	const results = document.querySelectorAll(selectorAll)
 	const data = []
@@ -116,9 +118,13 @@ const scrapeResultsAll = (arg, callback) => {
 						if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 							newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
 						}
-					} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
-						newInfos.name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
-						newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
+					} else {
+						if (result.querySelector(".name")) {
+							newInfos.name = result.querySelector(".name").textContent
+						}
+						if (result.querySelector("figure.search-result__image div[aria-label]")) {
+							newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
+						}					
 					}
 				} else {
 					newInfos.error = "Profile out of your network."
@@ -281,11 +287,11 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 	if (urlObject && urlObject.hostname) {
 		if (urlObject.hostname === "www.linkedin.com" && (urlObject.pathname.startsWith("/search/results/") || urlObject.pathname.startsWith("/jobs/search/"))) {
-			if (urlObject.pathname.includes("people")) { return "people" } // People search
 			if (urlObject.pathname.includes("companies")) { return "companies" } // Companies search
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
 			if (urlObject.pathname.includes("schools")) { return "schools" } // Schools search
 			if (urlObject.pathname.includes("jobs")) { return "jobs" } // Jobs search
+			if (urlObject.pathname.includes("people") || urlObject.pathname.includes("all")) { return "people" } // People search
 		}
 	}
 	return 0
