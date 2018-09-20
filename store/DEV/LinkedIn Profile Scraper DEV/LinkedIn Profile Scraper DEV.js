@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,7 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const { URL } = require("url")
 
 const DB_NAME = "result"
@@ -69,14 +69,14 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 				break
 			}
 			if (infos.skills[i] && infos.skills[i].name) {
-				csv[`skill${i+1}`] = infos.skills[i].name
+				csv[`skill${i + 1}`] = infos.skills[i].name
 			} else {
-				csv[`skill${i+1}`] = null
+				csv[`skill${i + 1}`] = null
 			}
 			if (infos.skills[i] && infos.skills[i].endorsements) {
-				csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+				csv[`endorsement${i + 1}`] = infos.skills[i].endorsements
 			} else {
-				csv[`endorsement${i+1}`] = null
+				csv[`endorsement${i + 1}`] = null
 			}
 		}
 	}
@@ -109,10 +109,8 @@ const removeLinkedinSubdomains = url => {
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else {
-		if (typeof profileUrls === "string") {
-			urls = [profileUrls]
-		}
+	} else if (typeof profileUrls === "string") {
+		urls = [profileUrls]
 	}
 
 	if (!numberOfAddsPerLaunch) {
@@ -170,7 +168,6 @@ const removeLinkedinSubdomains = url => {
 	}
 	if (noDatabase) {
 		nick.exit()
-		//
 	} else {
 		await utils.saveResults(result, db, DB_NAME, null, true)
 		nick.exit(0)

@@ -69,14 +69,14 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 				break
 			}
 			if (infos.skills[i] && infos.skills[i].name) {
-				csv[`skill${i+1}`] = infos.skills[i].name
+				csv[`skill${i + 1}`] = infos.skills[i].name
 			} else {
-				csv[`skill${i+1}`] = null
+				csv[`skill${i + 1}`] = null
 			}
 			if (infos.skills[i] && infos.skills[i].endorsements) {
-				csv[`endorsement${i+1}`] = infos.skills[i].endorsements
+				csv[`endorsement${i + 1}`] = infos.skills[i].endorsements
 			} else {
-				csv[`endorsement${i+1}`] = null
+				csv[`endorsement${i + 1}`] = null
 			}
 		}
 	}
@@ -109,10 +109,8 @@ const removeLinkedinSubdomains = url => {
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else {
-		if (typeof profileUrls === "string") {
-			urls = [profileUrls]
-		}
+	} else if (typeof profileUrls === "string") {
+		urls = [profileUrls]
 	}
 
 	if (!numberOfAddsPerLaunch) {
@@ -122,7 +120,6 @@ const removeLinkedinSubdomains = url => {
 	}
 
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
-
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
@@ -138,9 +135,9 @@ const removeLinkedinSubdomains = url => {
 			break
 		}
 		try {
-			url = await linkedInScraper.salesNavigatorUrlConverter(url)
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
 			utils.log(`Opening page ${url}`, "loading")
-			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(url))
+			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl))
 			/**
 			 * the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
@@ -152,6 +149,12 @@ const removeLinkedinSubdomains = url => {
 			db.push(finalCsv)
 			result.push(infos.json)
 		} catch (err) {
+			/**
+			 * Issue #119
+			 * We should have more precise errors coming from lib-LinkedInScraper
+			 * to let know a fatal error occured
+			 */
+			db.push({ baseUrl: url })
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
