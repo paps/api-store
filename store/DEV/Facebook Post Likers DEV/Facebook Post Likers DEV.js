@@ -22,7 +22,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
-// const { parse } = require("url")
 
 // }
 
@@ -66,6 +65,7 @@ const getLikeType = number => {
 	}
 }
 
+// handle loading and scraping function
 const scrapeAllLikers = async (tab, query) => {
 	let likesScraped = await tab.evaluate(scrapeLikers, { query })
 	utils.log(`We got ${likesScraped.length} likes.`, "info")
@@ -94,6 +94,7 @@ const scrapeAllLikers = async (tab, query) => {
 }
 
 
+// click function to load more likes
 const clickExpandButtons = (arg, cb) => {
 	const buttonToClic = document.querySelectorAll(".uiList li .uiList")[arg.buttonNb].parentElement.querySelector(".uiMorePager")
 	let skip
@@ -111,6 +112,8 @@ const clickExpandButtons = (arg, cb) => {
 	cb(null, skip)
 }
 
+
+// retrieve all likes and remove them from the page
 const scrapeLikers = (arg, cb) => {
 	const results = document.querySelectorAll(".uiList li .uiList li")
 	const data = []
@@ -122,7 +125,7 @@ const scrapeLikers = (arg, cb) => {
 			newData.profileUrl = profileUrl
 		}
 		if (result.querySelectorAll("a")[1]) { newData.name = result.querySelectorAll("a")[1].textContent }
-		if (result.querySelector("img")) { newData.imageUrl = result.querySelector("img").src }
+		if (result.querySelector("img")) { newData.profilePictureUrl = result.querySelector("img").src }
 		const reactionType = result.parentElement.getAttribute("id")
 		switch (reactionType){
 			case "reaction_profile_browser1":
@@ -180,12 +183,14 @@ const scrapeLikers = (arg, cb) => {
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
 	let urlCount = 0
-
 	for (let postUrl of postsToScrape) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		try {
-			
 			utils.log(`Scraping likes from ${postUrl}`, "loading")
-			
 			urlCount++
 			buster.progressHint(urlCount / postsToScrape.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
 			try {
@@ -199,17 +204,16 @@ const scrapeLikers = (arg, cb) => {
 				}
 			}
 			try {
-				 await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
-				 let urlToGo = await tab.evaluate((arg, cb) => {
+				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
+				let urlToGo = await tab.evaluate((arg, cb) => {
 					cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 				})
 				utils.log(`urlToGo is ${urlToGo}`, "done")
 				await tab.open(urlToGo)
 				await tab.waitUntilVisible(".fb_content")
 				result = result.concat(await scrapeAllLikers(tab , postUrl))
-
 			} catch (err) {
-				utils.log("Error accessing like page", "error")
+				utils.log("Error accessing like page!", "error")
 			}			
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${postUrl} due to: ${err.message || err}`, "warning")

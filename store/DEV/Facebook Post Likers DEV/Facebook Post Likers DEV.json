@@ -1,23 +1,22 @@
 {
 	"slug": "facebook-post-likers",
-	"description": "Extract a list of all the profiles that follow any Instagram account",
+	"description": "Extract a list of all the profiles that liked any Facebook post",
 	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
 	"hidden": true,
 	"new": true,
-	"gradientBegin": "#fcb045",
-	"gradientEnd": "#DA2E82",
+	"gradientBegin": "#373B44",
+	"gradientEnd": "#4286f4",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls",
-		"numberofProfilesperLaunch": 10
+        "sessionCookieCUser": "your_c-user_session_cookie",
+        "sessionCookieXs": "your_xs_session_cookie",
+		"numberofPostsperLaunch": 10
 	},
 	"outputDescription": {
-		"profileUrl": "Instagram profile URL",
-		"imageUrl": "Profile picture URL",
-		"profileName ": "Instagram username",
-		"fullName": "Full name of the person",
-		"followedByUser": "If you follow that account"
+		"profileUrl": "Facebook profile URL",
+		"name": "Full name",
+		"profilePictureUrl ": "Profile picture URL",
+		"reactionType": "Which of the reaction like (Like/WoW/Love/etc.)"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -26,27 +25,27 @@
 			"options": {
 				"fields": {
                     "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your c_user session cookie here"
                     },
                     "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/6987/facebook-group-extractor#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your xs session cookie here"
                     },
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Instagram URL"
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook post URL"
 						],
-						"label": "Instagram account or Spreadsheet URL <a href=\"/api-store/7175/instagram-follower-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook post or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
-						"placeholder": "Instagram Profile Link",
+						"placeholder": "Facebook Post link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberofPostsperLaunch": {
-						"label": "Number of posts to process per launch <a href=\"/api-store/7175/instagram-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of posts to process per launch <a href=\"/api-store/8368/facebook-post-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},
