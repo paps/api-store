@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -129,14 +128,11 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	if (postType === "video") { selector = ".UFIContainer" }
 	do {
 		newCommentsCount = await tab.evaluate(getCommentsCount, { selector })
-		console.log("newCommentsCount", newCommentsCount)
 		if (newCommentsCount > commentsCount) {
 			commentsCount = newCommentsCount
 			lastDate = new Date()
 			utils.log(`${commentsCount} comments loaded.`, "info")
-			await buster.saveText(await tab.getContent(), `Loaded ${commentsCount} comments.html`)
 			if (await tab.isVisible(".UFIPagerRow a")) { 
-				console.log("boutonclick")
 				await tab.click(".UFIPagerRow a")
 			}
 		}
@@ -144,16 +140,12 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	} while ((!numberOfCommentsPerPost || commentsCount < numberOfCommentsPerPost) && new Date() - lastDate < 5000)
 
 	if (expandAllComments) {
-		await buster.saveText(await tab.getContent(), `avantExpand ${commentsCount} comments.html`)
 		utils.log("Expanding all comments.", "loading")
 		const expandedCount = await tab.evaluate(expandComments)
 		await tab.wait((expandedCount + 5) * 2000)
 		utils.log(`${expandedCount} comments expanded`, "done")
 	}
-	await buster.saveText(await tab.getContent(), `apresExpand ${commentsCount} comments.html`)
-
 	let result = await tab.evaluate(scrapeComments, { query, selector })
-	console.log("result", result)
 	if (result.length) {
 		result = result.slice(0, numberOfCommentsPerPost)
 		utils.log(`${result} comments scraped.`, "done")
@@ -246,15 +238,9 @@ const getTotalCommentsCount = (arg, cb) => {
 					utils.log("Couldn't get comments count", "warning")
 				}
 				const currentUrl = await tab.evaluate((arg, cb) => cb(null, document.location.href))
-				console.log("URL:", currentUrl)
-				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {
-					await buster.saveText(await tab.getContent(), "avant clickts.html")
-					
-					console.log("on click X")
+				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {					
 					await tab.click("#photos_snowlift a")
 					await tab.wait(500)
-					await buster.saveText(await tab.getContent(), "apres clickts.html")
-
 				}
 				if (currentUrl.includes("/videos")) { // if it's a video, we need to access comments by clicking on comment link
 					postType = "video"
@@ -269,7 +255,6 @@ const getTotalCommentsCount = (arg, cb) => {
 
 			} catch (err) {
 				utils.log(`Error accessing comment page ${err}`, "error")
-				// await buster.saveText(await tab.getContent(), "Error accessing comment comments.html")
 				result.push({ query: postUrl, error: "Error accessing comment page"})
 			}			
 		} catch (err) {
