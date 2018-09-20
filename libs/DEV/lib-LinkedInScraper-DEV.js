@@ -4,7 +4,7 @@
 const { parse } = require ("url")
 
 /**
- * NOTE: Slowly but surely loading all sections of the profile
+ * Slowly but surely loading all sections of the profile
  */
 const fullScroll = async tab => {
 	for (let i = 1000; i < 4000; i += 1000) {
@@ -81,7 +81,7 @@ const getDetails = (arg, callback) => {
 				result[info.key] = selector.querySelector(info.selector).getAttribute(info.attribute).trim()
 			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).style[info.style]) {
 				/**
-				 * NOTE: this workflow is used to get CSS styles values
+				 * this workflow is used to get CSS styles values
 				 * For now it's used when we need to scrape background-image
 				 * we remove those parts of the result string: url(" & ")
 				 */
@@ -122,7 +122,7 @@ const scrapeInfos = (arg, callback) => {
 				result[info.key] = selector.querySelector(info.selector).getAttribute(info.attribute).trim()
 			} else if (selector.querySelector(info.selector) && selector.querySelector(info.selector).style[info.style]) {
 				/**
-				 * NOTE: this workflow is used to get CSS styles values
+				 * this workflow is used to get CSS styles values
 				 * For now it's used when we need to scrape background-image
 				 * we remove those parts of the result string: url(" & ")
 				 */
@@ -170,13 +170,13 @@ const scrapeInfos = (arg, callback) => {
 		// Get primary infos
 		infos.general = getInfos([
 			/**
-			 * NOTE: we need to pass an array for the imgUrl, because
+			 * we need to pass an array for the imgUrl, because
 			 * CSS selectors changes depending of 2 followed situations:
 			 * 1 - if you look YOUR linkedIn profile with YOUR li_at cookie: it will be .pv-top-card-section__profile-photo-container img
 			 * 2 - if you look SOMEONE ELSE linkedIn profile with YOUR li_at cookie: it will be .presence-entity__image
 			 */
 			/**
-			 * NOTE: various field is an object depending what you need to get
+			 * various field is an object depending what you need to get
 			 */
 			{ key: "imgUrl", style: "backgroundImage", selector: ".presence-entity__image" },
 			{ key: "imgUrl", attribute: "src", selector: ".profile-photo-edit__preview" },
@@ -399,7 +399,7 @@ const scrapingProcess = async (tab, url, utils) => {
 	}
 	try {
 		/**
-		 * NOTE: Using 7500ms timeout to make sure that the page is loaded
+		 * Using 7500ms timeout to make sure that the page is loaded
 		 */
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
 		utils.log("Profile loaded.", "done")
@@ -521,6 +521,54 @@ const craftCsvObject = infos => {
 }
 
 /**
+ * CSV output description
+ */
+const defaultCsvResult = {
+	linkedinProfile: null,
+	description: null,
+	imgUrl: null,
+	firstName: null,
+	lastName: null,
+	fullName: null,
+	subscribers: null,
+	company: null,
+	companyUrl: null,
+	jobTitle:  null,
+	jobDescription: null,
+	location: null,
+	company2: null,
+	companyUrl2: null,
+	jobTitle2: null,
+	jobDescription2: null,
+	location2: null,
+	school: null,
+	schoolUrl: null,
+	schoolDegree: null,
+	schoolDescription: null,
+	schoolDegreeSpec: null,
+	schoolDateRange: null,
+	school2: null,
+	schoolUrl2: null,
+	schoolDegree2: null,
+	schoolDescription2: null,
+	schoolDegreeSpec2: null,
+	schoolDateRange2: null,
+	mail: null,
+	mailFromHunter: null,
+	scoreFromHunter: null,
+	positionFromHunter:  null,
+	twitterFromHunter: null,
+	phoneNumberFromHunter:  null,
+	phoneNumber: null,
+	twitter: null,
+	companyWebsite: null,
+	skill1:  null,
+	skill2: null,
+	skill3:  null,
+	allSkills: null
+}
+
+/**
  * @description Function used to scrape the company website from it own LinkedIn comapny page
  * @throws if there were an error during the scraping process
  * @param {Object} tab - Nick.js tab
@@ -566,9 +614,18 @@ class LinkedInScraper {
 	}
 
 	/**
+	 * @static
+	 * @description Method returning all CSV fields name
+	 * @return {Array<String>}
+	 */
+	static csvFields() {
+		return Object.keys(defaultCsvResult)
+	}
+
+	/**
 	 * @async
 	 * @description Profile scraper Method
-	 * NOTE: if HunterApiKey was passed to the constructor, this method will also look for professional email
+	 * if HunterApiKey was passed to the constructor, this method will also look for professional email
 	 * @param {Tab} tab -- Nick tab logged as a LinkedIn user}
 	 * @param {String} url -- LinkedIn Profile URL}
 	 * @return {Promise<Object>} JSON and CSV formatted result
@@ -579,7 +636,7 @@ class LinkedInScraper {
 		try {
 			result = await scrapingProcess(tab, url, this.utils)
 			/**
-			 * NOTE: If the linkedIn profile is not fill during the scraping
+			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser
 			 */
 			if (!result.details.linkedinProfile) {
@@ -632,7 +689,7 @@ class LinkedInScraper {
 	/**
 	 * @async
 	 * @description Profile visitor Method
-	 * NOTE: this method will open, load all section from a given LinkedIn profile URL
+	 * this method will open, load all section from a given LinkedIn profile URL
 	 * @param {Tab} tab -- Nick.js tab, with a LinkedIn session }
 	 * @param {String} url -- LinkedIn Profile URL }
 	 * @return {Promise<void>} no data returned
@@ -644,7 +701,7 @@ class LinkedInScraper {
 		}
 		try {
 			/**
-			 * NOTE: Using 7500ms timeout to make sure that the page is loaded
+			 * Using 7500ms timeout to make sure that the page is loaded
 			 */
 			await tab.waitUntilVisible("#profile-wrapper", 15000)
 			this.utils.log("Profile loaded.", "done")
@@ -685,7 +742,7 @@ class LinkedInScraper {
 				await tab.wait(2000)
 				try {
 					const location = await tab.evaluate((arg, cb) => cb(null, document.location.href))
-					if (location !== newUrl) { 
+					if (location !== newUrl) {
 						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
 						await tab.close()
 						return location
