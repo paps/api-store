@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -23,12 +23,18 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedin = new LinkedIn(nick, buster, utils)
 
+const LinkedInScraper = require("./lib-LinkedInScraper")
+const linkedInScraper = new LinkedInScraper(utils, null, nick)
+
 const DB_NAME = "linkedin-chat-extractor.csv"
 const SHORT_DB_NAME = DB_NAME.split(".").shift()
 
 const SELECTORS = {
-	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions",
-	chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite"
+	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button",
+	chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
+	closeChatButton: "button[data-control-name=\"overlay.close_conversation_window\"]",
+	messages: "ul.msg-s-message-list",
+	spinners: "li-icon > .artdeco-spinner"
 }
 // }
 
@@ -42,8 +48,7 @@ const SELECTORS = {
  */
 const isRealProfile = async (tab, url) => {
 	try {
-		await tab.open(url)
-		await tab.waitUntilVisible("#profile-wrapper", 15000)
+		await linkedInScraper.visitProfile(tab, url)
 	} catch (err) {
 		if (await tab.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			return false
@@ -54,16 +59,42 @@ const isRealProfile = async (tab, url) => {
 	return true
 }
 
+const extractMessages = (arg, cb) => {
+	const messages = Array.from(document.querySelectorAll(`${arg.baseSelector} > li.msg-s-message-list__event`)).map(msg => {
+		let data = {}
+		let messageMetaData = msg.querySelector(".msg-s-message-group__meta")
+		let messageContent = msg.querySelector(".msg-s-event-listitem__message-bubble")
+
+		if (messageMetaData) {
+			if (messageMetaData.querySelector("a[data-control-name=\"view_profile\"]")) {
+				data.profileUrl = messageMetaData.querySelector("a[data-control-name=\"view_profile\"]").href
+				data.name = messageMetaData.querySelector("a[data-control-name=\"view_profile\"]").textContent.trim()
+			}
+			if (messageMetaData.querySelector("time.msg-s-message-group__timestamp ")) {
+				data.sentTime = messageMetaData.querySelector("time.msg-s-message-group__timestamp ").textContent.trim()
+			}
+		}
+
+		if (messageContent) {
+			data.message = messageContent.textContent.trim()
+		}
+		return data
+	})
+	cb(null, messages)
+}
 
 const loadConversation = async (tab, messagesPerExtract) => {
 	(() => 1 === 1)(messagesPerExtract) // eslint suppress
-	// TODO: wait the widget to be open
 	await tab.click(SELECTORS.conversationTrigger)
+	await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
+	await tab.waitUntilVisible(SELECTORS.messages, 15000)
+	await tab.waitWhileVisible(SELECTORS.spinners, 15000)
+	const data = await tab.evaluate(extractMessages, { baseSelector: SELECTORS.messages })
+	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	await tab.screenshot(`widget-opening-${Date.now()}.jpg`)
 	await buster.saveText(await tab.getContent(), `widget-opening-${Date.now()}.html`)
+	console.log(JSON.stringify(data, null, 4))
 }
-
-// const extractMessages = async (tab, messagesPerExtract) => {}
 
 ;(async () => {
 	const tab = await nick.newTab()
@@ -82,7 +113,7 @@ const loadConversation = async (tab, messagesPerExtract) => {
 	for (const convUrl of queries) {
 		let convRes = { profileUrl: convUrl }
 		let tmp = await isRealProfile(tab, convUrl)
-		if (typeof tmp === "string" || (typeof  tmp === "boolean" && !tmp)) {
+		if (typeof tmp === "string" || (typeof tmp === "boolean" && !tmp)) {
 			convRes.error = typeof tmp === "string" ? tmp : "Unavailable profile"
 			currentScraping.push(convRes)
 			continue
