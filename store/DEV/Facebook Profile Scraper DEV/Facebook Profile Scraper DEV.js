@@ -4,8 +4,6 @@
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
-const { parse } = require("url")
-
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -27,19 +25,17 @@ let blocked
 const { URL } = require("url")
 
 
-
-
 // Checks if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
-		if (str === line.url) {
+		if (str === line.profileUrl) {
 			return false
 		}
 	}
 	return true
 }
 
-
+// only keep the slug or id
 const cleanFacebookProfileUrl = url => {
 	try {
 		const urlObject = new URL(url)
@@ -58,12 +54,10 @@ const cleanFacebookProfileUrl = url => {
 	}
 }
 
-// Function to format the data for the csv file
+//  format the data for the csv file
 const craftCsvObject = data => {
-	console.log("DATA", data)
-
 	const csvResult = {
-		url: data.url,
+		profileUrl: data.profileUrl,
 		profilePictureUrl: data.profilePictureUrl,
 		coverPictureUrl: data.coverPictureUrl,
 		name: data.name,
@@ -120,19 +114,27 @@ const craftCsvObject = data => {
 			csvResult[Object.keys(data.basicInfo[i])] = Object.values(data.basicInfo[i])
 		}
 	}
-	console.log("CSVRESULT", csvResult)
+
+	if (data.lifeEvents) {
+		for (let i = 0 ; i < data.lifeEvents.length ; i++) {
+			csvResult["lifeEvent" + (i ? i + 1 : "")] = data.lifeEvents[i]
+		}
+	}
+	if (data.bio) {	csvResult.bio = data.bio }
+	if (data.quotes) { csvResult.quotes = data.quotes }
 	return csvResult
 }
 
 // Checks if a url is a facebook group url
 const isFacebookProfileUrl = url => {
-	let urlObject = parse(url.toLowerCase())
+	let urlObject = new URL(url.toLowerCase())
 	if (urlObject.hostname.includes("facebook.com")) { return true }
 	return false
 }
 
+
 const scrapeOverviewPage = (arg, cb) => {
-	const scrapedData = { url:arg.url }
+	const scrapedData = { profileUrl:arg.profileUrl }
 	if (document.querySelector(".photoContainer a > img")) {
 		scrapedData.profilePictureUrl = document.querySelector(".photoContainer a > img").src
 	}
@@ -153,7 +155,7 @@ const scrapeOverviewPage = (arg, cb) => {
 		scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
 	}
 
-	if (!arg.pagesToScrape.familyAndRelationships) {
+	if (!arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
 		const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
 		if (educationDiv.length) {
 			const educations = educationDiv.map(el => {
@@ -186,7 +188,7 @@ const scrapeOverviewPage = (arg, cb) => {
 			} catch (err) {
 				//
 			}
-			scrapedData.cities = [ cities ]
+			if (cities) { scrapedData.cities = [ cities ] }
 		}
 	}
 	
@@ -258,12 +260,13 @@ const scrapeLivingPage = (arg, cb) => {
 		}
 		return data
 	})
+	const scrapedData = {}
 
 	const citiesLi = Array.from(document.querySelector("#pagelet_hometown").querySelectorAll("li"))
 	const cities = extractData(citiesLi)
-	
-	const result = cities.length ? { cities } : null
-	cb(null, result)
+	if (Object.keys(cities[0]).length) { scrapedData.cities = cities } // if cities isn't [{}]
+
+	cb(null, scrapedData)
 }
 
 const scrapeContactInfoPage = (arg, cb) => {
@@ -284,30 +287,12 @@ const scrapeContactInfoPage = (arg, cb) => {
 		})
 	}
 	const scrapedData = {}
-	// const contactInfo = document.querySelectorAll(".fbProfileEditExperiences")
-	// if (contactInfo[0] && contactInfo[0].querySelector("div > div > div > :last-of-type")) {
-	// 	scrapedData.contactInfo = contactInfo[0].querySelector("div > div > div > :last-of-type").textContent
-	// }
 
-	// const infoLi = Array.from(document.querySelectorAll(".fbProfileEditExperiences")[1].querySelectorAll("li  > div")).map(el => {
-	// 	const data = {}
-	// 	let property
-	// 	if (el.querySelector("div span")) { 
-	// 		property = el.querySelector("div span").textContent
-	// 		const value = el.querySelector("div:last-of-type")
-	// 		if (value) {
-	// 			data[camelCaser(property)] = el.querySelector("div:last-of-type").textContent
-	// 		}
-	// 	}
-	// 	return data
-	// })
 	const contactInfo = extractData("#pagelet_contact")
 	const basicInfo = extractData("#pagelet_basic")
-	// for (const obj of infoLi) {
-	// 	scrapedData[(Object.keys(obj)[0])] = Object.values(obj)[0]
-	// }
-	scrapedData.contactInfo = contactInfo
-	scrapedData.basicInfo = basicInfo
+
+	if (Object.keys(contactInfo[0]).length) { scrapedData.contactInfo = contactInfo }
+	if (Object.keys(basicInfo[0]).length) { scrapedData.basicInfo = basicInfo }
 
 	cb(null, scrapedData)
 }
@@ -363,8 +348,9 @@ const scrapeBioPage = (arg, cb) => {
 }
 
 const scrapeLifeEventsPage = (arg, cb) => {
-	const events = Array.from(document.querySelectorAll(".fbProfileEditExperiences > li")).map(el => el.innerText)
-	const scrapedData = events.length ? { events } : null
+	let lifeEvents = Array.from(document.querySelectorAll(".fbProfileEditExperiences > li")).map(el => el.innerText)
+	lifeEvents = lifeEvents.map(el => el.replace(/\n/g, " ").trim())
+	const scrapedData = lifeEvents.length ? { lifeEvents } : null
 	cb(null, scrapedData)
 }
 
@@ -376,32 +362,51 @@ const forgeUrl = (url, section) => {
 	}
 }
 
+
 const checkUnavailable = (arg, cb) => {
 	cb(null, (document.querySelector(".UIFullPage_Container img") && document.querySelector(".UIFullPage_Container img").src.startsWith("https://static.xx.fbcdn.net")))
 }
 
+// check if Facebook has blocked profile viewing (1 <a> tag) or it's just the profile that blocked us (3 <a> tags)
+const checkIfBlockedOrSoloBlocked = (arg, cb) => {
+	try {
+		const aTags = document.querySelector(".uiInterstitialContent").querySelectorAll("a").length
+		if (aTags === 3) { cb(null, false) }
+	} catch (err) {
+		//
+	}
+	cb(null, true)
+}
 
-const loadFacebookProfile = async (tab, url, pagesToScrape) => {
-	await tab.open(forgeUrl(url, ""))
+// load profile page and handle tabs switching
+const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
+	await tab.open(forgeUrl(profileUrl, ""))
 	let selector
 	try {
 		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
 			await tab.screenshot(`error${new Date()}.png`)
-			utils.log(`${url} page is not available.`, "error")
-			return { url, error: "The profile page isn't available"}
+			utils.log(`${profileUrl} page is not available.`, "error")
+			return { profileUrl, error: "The profile page isn't available"}
 		}
 	}
 	if (selector === "#content > div.uiBoxWhite") {
-		blocked = true
-		return null
+		const isBlocked = await tab.evaluate(checkIfBlockedOrSoloBlocked)
+		if (isBlocked) { // temporarily blocked by facebook
+			blocked = true
+			return null
+		} else { // profile has blocked us
+			utils.log("Profile page isn't visible!", "warning")
+			return { profileUrl, error: "The profile page isn't visible" }
+		}
+
 	}
 	// await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
 	try {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
-		utils.log("About Page still not visible", "error")*
+		utils.log("About Page still not visible", "error")
 		await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
 
 		return null
@@ -416,7 +421,9 @@ const loadFacebookProfile = async (tab, url, pagesToScrape) => {
 	]
 	let result
 	try {
-		result = await tab.evaluate(scrapeOverviewPage, { url, pagesToScrape })
+		result = await tab.evaluate(scrapeOverviewPage, { profileUrl, pagesToScrape })
+		// console.log("firstTEMPI", result)
+
 	} catch (err) {
 		console.log("error scraping first page", err)
 		await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
@@ -424,17 +431,23 @@ const loadFacebookProfile = async (tab, url, pagesToScrape) => {
 	}
 
 	for (const pagelet of aboutList) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		if (pagesToScrape[pagelet.boolean]) {	
-			utils.log(`Opening ${pagelet.name} section of ${url}`, "done")
+			utils.log(`Opening ${pagelet.name} section of ${profileUrl}`, "done")
 			try {
 				if (pagelet.click) { await tab.click(pagelet.click) }
 				if (pagelet.selector) {
 					await tab.waitUntilVisible(pagelet.selector, 15000)
 				} else {
-					await tab.wait(500)
+					await tab.wait(2000)
 				}
 				try {
 					const tempResult = await tab.evaluate(pagelet.function)
+					// console.log("TEPMI", tempResult)
 					Object.assign(result, tempResult)
 				} catch (tempErr) {
 					await buster.saveText(await tab.getContent(), `tempErr${Date.now()}.html`)
@@ -461,19 +474,17 @@ nick.newTab().then(async (tab) => {
 	if (!csvName) { csvName = "result" }
 	let db = await utils.getDb(csvName + ".csv")
 	let result = []
-	let csvResult = db
 	let profilesToScrape
 	if (isFacebookProfileUrl(spreadsheetUrl)) {
 		profilesToScrape = [ spreadsheetUrl ]
 	} else {
 		profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
-	console.log("pagesToScrape", pagesToScrape)
 	profilesToScrape = profilesToScrape.map(cleanFacebookProfileUrl)
 	profilesToScrape = profilesToScrape.filter(str => str) // removing empty lines
-	profilesToScrape = profilesToScrape.filter(str => checkDb(str, result)) // checking if already processed
+	profilesToScrape = profilesToScrape.filter(str => checkDb(str, db)) // checking if already processed
 	profilesToScrape = profilesToScrape.slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
-	console.log("resultAVANT", result)
+	// console.log("resultAVANT", db)
 	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
@@ -481,7 +492,7 @@ nick.newTab().then(async (tab) => {
 	}
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
-	for (let url of profilesToScrape) {
+	for (let profileUrl of profilesToScrape) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -489,34 +500,37 @@ nick.newTab().then(async (tab) => {
 		}
 		profileCount++
 		buster.progressHint(profileCount / profilesToScrape.length, `Scraping profile ${profileCount} out of ${profilesToScrape.length}`)
-		if (isFacebookProfileUrl(url)) { // Facebook Profile URL
-			utils.log(`Scraping profile of ${url}...`, "loading")
+		if (isFacebookProfileUrl(profileUrl)) { // Facebook Profile URL
+			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
 			try {
-				const tempResult = await loadFacebookProfile(tab, url, pagesToScrape)
-				if (tempResult && tempResult.url) {
-					console.log("TempResultAvant:", tempResult)
+				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)
+				if (tempResult && tempResult.profileUrl) {
+					// console.log("TempResultAvant:", tempResult)
 					const tempCsvResult = craftCsvObject(tempResult)
-					console.log("TempResultApres:", tempResult)
+					// console.log("TempResultApres:", tempResult)
 
 					result.push(tempResult)
-					csvResult.push(tempCsvResult)
+					db.push(tempCsvResult)
 				}
 				if (blocked) {
 					utils.log("Temporarily blocked by Facebook!", "error")
 					break
 				}
 			} catch (err) {
-				utils.log(`Could not connect to ${url}  ${err}`, "error")
+				utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
 				await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
 
 			}
 		} else {  
-			utils.log(`${url} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
+			utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
+		}
+		if (profileCount < profilesToScrape.length) { // waiting before each page
+			await tab.wait(3000  + 2000 * Math.random())
 		}
 	}
-	console.log("res, ", result)
+	// console.log("res, ", result)
 	utils.log(`${profileCount} profiles scraped, ${result.length} in total, exiting.`, "info")
-	await utils.saveResults(result, csvResult, csvName)
+	await utils.saveResults(result, db, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
