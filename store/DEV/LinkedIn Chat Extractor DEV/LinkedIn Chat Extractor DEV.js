@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -36,6 +35,8 @@ const SELECTORS = {
 	messages: "ul.msg-s-message-list",
 	spinners: "li-icon > .artdeco-spinner"
 }
+
+const DEFAULT_MESSAGES_PER_CONV = 5
 // }
 
 /**
@@ -48,7 +49,7 @@ const SELECTORS = {
  */
 const isRealProfile = async (tab, url) => {
 	try {
-		await linkedInScraper.visitProfile(tab, url)
+		await linkedInScraper.visitProfile(tab, url, true)
 	} catch (err) {
 		if (await tab.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			return false
@@ -58,6 +59,10 @@ const isRealProfile = async (tab, url) => {
 	}
 	return true
 }
+
+const getMessagesCount = (arg, cb) => cb(null, document.querySelectorAll("ul.msg-s-message-list > li.msg-s-message-list__event").length)
+
+const scrollUp = (arg, cb) => cb(null, document.querySelector(arg.sel).scroll(0, 0))
 
 const extractMessages = (arg, cb) => {
 	const messages = Array.from(document.querySelectorAll(`${arg.baseSelector} > li.msg-s-message-list__event`)).map(msg => {
@@ -83,17 +88,52 @@ const extractMessages = (arg, cb) => {
 	cb(null, messages)
 }
 
+/**
+ * @async
+ * @description Function used to load and scrape messages from a conversation
+ * @param {Object} tab - Nickjs Tab instance with a loaded profile
+ * @param {Number} messagesPerExtract - Amount of messages to scrape for the current conversation
+ * @return {Promise<Array<Object>>} all messages
+ */
 const loadConversation = async (tab, messagesPerExtract) => {
-	(() => 1 === 1)(messagesPerExtract) // eslint suppress
+	let messagesLoaded = 0
 	await tab.click(SELECTORS.conversationTrigger)
 	await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
 	await tab.waitUntilVisible(SELECTORS.messages, 15000)
 	await tab.waitWhileVisible(SELECTORS.spinners, 15000)
-	const data = await tab.evaluate(extractMessages, { baseSelector: SELECTORS.messages })
+
+	messagesLoaded = await tab.evaluate(getMessagesCount)
+	utils.log(`${messagesLoaded} messages loaded`, "info")
+	while (messagesLoaded < messagesPerExtract) {
+		await tab.evaluate(scrollUp, { sel: `${SELECTORS.messages } > li.msg-s-message-list__event` })
+		await tab.waitWhileVisible(SELECTORS.spinners, 15000)
+		messagesLoaded = await tab.evaluate(getMessagesCount)
+		utils.log(`${messagesLoaded} messages loaded`, "info")
+	}
+
+	let messages = await tab.evaluate(extractMessages, { baseSelector: SELECTORS.messages })
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	messages = messages.slice(0, messagesPerExtract)
+	utils.log(`${messages.length} messages scraped`, "done")
 	await tab.screenshot(`widget-opening-${Date.now()}.jpg`)
-	await buster.saveText(await tab.getContent(), `widget-opening-${Date.now()}.html`)
-	console.log(JSON.stringify(data, null, 4))
+	return messages
+}
+
+/**
+ * @description Common wrapper used to create the CSV output from the JSON output
+ * @param {Array<Object>} json - JSON output
+ * @return {Array<Object>} CSV output
+ */
+const jsonToCsvOutput = json => {
+	const csv = []
+	for (const conv of json) {
+		let tmp = conv.messages.map(el => {
+			el.url = conv.url
+			return el
+		})
+		csv.push(...tmp)
+	}
+	return csv
 }
 
 ;(async () => {
@@ -102,8 +142,12 @@ const loadConversation = async (tab, messagesPerExtract) => {
 	let db = await utils.getDb(DB_NAME)
 	const currentScraping = []
 
+	if (!messagesPerExtract) {
+		messagesPerExtract = DEFAULT_MESSAGES_PER_CONV
+	}
+
 	queries = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName.trim())
-	queries = queries.filter(el => db.findIndex(line => line.profileUrl === el) < 0).slice(0, profilesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, profilesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Spreadsheet is empty or every conversations are  dscraped", "warning")
 		nick.exit(0)
@@ -118,17 +162,14 @@ const loadConversation = async (tab, messagesPerExtract) => {
 			currentScraping.push(convRes)
 			continue
 		}
-		await loadConversation(tab, messagesPerExtract)
+		utils.log(`Loading conversation in ${convUrl} ...`, "loading")
+		const messages = await loadConversation(tab, messagesPerExtract)
+		currentScraping.push({ url: convUrl, messages })
 	}
-	utils.saveResults(db, db, SHORT_DB_NAME, null, false)
+	db.push(...jsonToCsvOutput(currentScraping))
+	await utils.saveResults(currentScraping, db, SHORT_DB_NAME, null, false)
 	nick.exit()
 })().catch(err => {
-	nick.tabs["1"].screenshot(`unhandled-error-${Date.now()}.jpg`).then(() => {
-		nick.tabs["1"].getContent().then(data => {
-			buster.saveText(data, `pagedump-${Date.now()}.html`).then(() => {
-				utils.log(`Error during the API execution: ${err.message || err}` ,"error")
-				nick.exit(1)
-			})
-		})
-	})
+	utils.log(`Error during the API execution: ${err.message || err}` ,"error")
+	nick.exit(1)
 })
