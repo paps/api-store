@@ -247,9 +247,14 @@ const getGroupMembers = async (tab, patternNumber) => {
 					 */
 					let headers = Object.assign({}, gl.headers)
 					headers["Accept"] = "application/json"
-					let moreInfos = await tab.evaluate(ajaxCall, { url: `https://www.linkedin.com/voyager/api/identity/profiles/${item.publicIdentifier}/profileView`, headers })
-					moreInfos = extractProfileViewData(moreInfos)
-					newMember = Object.assign(newMember, moreInfos)
+					let moreInfos = null
+					try {
+						moreInfos = await tab.evaluate(ajaxCall, { url: `https://www.linkedin.com/voyager/api/identity/profiles/${item.publicIdentifier}/profileView`, headers })
+						moreInfos = extractProfileViewData(moreInfos)
+						newMember = Object.assign(newMember, moreInfos)
+					} catch (err) {
+						/* ... */
+					}
 				}
 				if (item.currentPosition) {
 					const currentPosition = item.currentPosition
