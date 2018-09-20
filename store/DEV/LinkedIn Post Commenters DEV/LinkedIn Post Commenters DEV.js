@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -24,14 +23,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 let voyagerHeadersFound = false
 
 /* global $ */
-
-const VOYAGER_PATTERN = 0
-const PULSE_V1_PATTERN = 1
-
-const VOYAGER_ENDPOINT = "https://www.linkedin.com/voyager/api/feed/comments"
-const PULSE_V1_ENPOINT = "https://www.linkedin.com/pulse-fe/v1/comments"
-
-let patternUsed = VOYAGER_PATTERN
 
 // }
 
@@ -101,11 +92,10 @@ const getAllComments = async (tab, headers, search, max) => {
 			search.count = max - search.start
 		}
 		try {
-			const response = await tab.evaluate(callComments, {url: gl.url, headers, search})
-			console.log(JSON.stringify(response, null, 4))
+			const response = await tab.evaluate(callComments, {url: "https://www.linkedin.com/voyager/api/feed/comments", headers, search})
 			result = result.concat(linkedinObjectToResult(response))
 			utils.log(`Got ${result.length} comments.`, "info")
-			buster.progressHint((result.length / max), "Getting comments...")
+			buster.progressHint((result.length/max), "Getting comments...")
 			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
@@ -122,15 +112,6 @@ const getAllComments = async (tab, headers, search, max) => {
 }
 
 const onHttpRequest = (e) => {
-	// if (!voyagerHeadersFound) {
-	// 	gl.headers = e.request.headers
-	// 	gl.headers.Accept = "application/json"
-	// 	if (e.request.url.indexOf("https://www.linkedin.com/voyager") > -1) {
-	// 		gl.search = { count: 100, start: 0, sortOrder: "CHRON", updateId: null }
-	// 		gl.url = VOYAGER_ENDPOINT
-	// 		voyagerHeadersFound = true
-	// 	}
-	// }
 	if (!voyagerHeadersFound && (e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1)) {
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
@@ -185,26 +166,6 @@ const searchUrnArticle = (arg, cb) => {
 	cb(null, null)
 }
 
-/**
- * @description Browser context function used to retrieve the current LinkedIn pulse article URN
- * @param {Object} arg
- * @param {Function} cb
- * @return {Promise<String>|Promise<null>} Pulse article URN
- */
-const searchUrnPulseArticle = (arg, cb) => {
-	const domElement = document.querySelector("article.pulse-article section#comments div.comments-container")
-	let urn = null
-	if (domElement) {
-		urn = domElement.id.split(":")
-		urn.shift()
-		urn.unshift("urn")
-		urn = urn.join(":")
-	}
-	cb(null, urn)
-}
-
-const isPulseArticle = (arg, cb) => cb(null, document.querySelector("article.pulse-article") !== null)
-
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
@@ -226,27 +187,13 @@ const isPulseArticle = (arg, cb) => cb(null, document.querySelector("article.pul
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (const url of postUrl) {
 		await tab.open(url)
-		await tab.waitUntilVisible([".comment", "section#comments"], 10000, "or")
-		let urn = null
-		if (await tab.evaluate(isPulseArticle)) {
-			try {
-				urn = await tab.evaluate(searchUrnPulseArticle)
-				gl.url = PULSE_V1_ENPOINT
-				gl.search = { count: 100, start: 0, sort: "REV_CHRON", urn } // Taking all comments from the recent to the oldest
-				patternUsed = PULSE_V1_PATTERN
-				voyagerHeadersFound = true
-			} catch (err) {
-				/* ... */
-			}
-			} else {
-				urn = await tab.evaluate(searchUrnArticle)
-				gl.search.updateId = urn
-				await tab.wait(3000)
-				if (!gl.search.updateId) {
-					throw "Could not get comments on this page."
-				}
-				patternUsed = VOYAGER_PATTERN
-			}
+		await tab.waitUntilVisible(".comment", 10000)
+		const urn = await tab.evaluate(searchUrnArticle)
+		gl.search.updateId = urn
+		await tab.wait(3000)
+		if (!gl.search.updateId) {
+			throw "Could not get comments on this page."
+		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
 		commenters.map(el => {
@@ -260,6 +207,5 @@ const isPulseArticle = (arg, cb) => cb(null, document.querySelector("article.pul
 })()
 	.catch(err => {
 		utils.log(err, "error")
-		console.log(err.stack || "no stack")
 		nick.exit(1)
 	})
