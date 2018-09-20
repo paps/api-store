@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -109,8 +108,6 @@ const loadProfileAndLike = async (tab, profile, likesCount) => {
 					break
 				}
 			}
-			// await tab.screenshot(`${likeCount} posts ${Date.now()}.png`)
-			// await buster.saveText(await tab.getContent(), `${likeCount} posts ${Date.now()}.html`)
 			await tab.scrollToBottom()
 			await tab.wait(1000)
 			if (new Date() - lastDate > 15000) {
@@ -160,37 +157,28 @@ const isFacebookUrl = target => {
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch} = utils.validateArguments()
+	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, likesCountPerProfile, numberOfProfilesPerLaunch} = utils.validateArguments()
 
-	if (spreadsheetUrl) {
-		if (isUrl(spreadsheetUrl)) {
-			if (isFacebookUrl(spreadsheetUrl)) {
-				queries = [ spreadsheetUrl ]
-			} else {
-				queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-			}
-		} else {
-			queries = spreadsheetUrl
-		}
-	}
-
-	if (typeof queries === "string") {
-		queries = [ queries ]
+	let profilesToLike
+	if (isFacebookUrl(spreadsheetUrl)) {
+		profilesToLike = [ spreadsheetUrl ]
+	} else {
+		profilesToLike = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
 
 	if (!numberOfProfilesPerLaunch) {
-		numberOfProfilesPerLaunch = queries.length
+		numberOfProfilesPerLaunch = profilesToLike.length
 	}
 
 	let result = []
-	queries = queries.filter(str => str) // removing empty lines
+	profilesToLike = profilesToLike.filter(str => str) // removing empty lines
 
-	queries = getProfilesToLike(queries, numberOfProfilesPerLaunch)
-	console.log(`URLs to process: ${JSON.stringify(queries, null, 4)}`)
+	profilesToLike = getProfilesToLike(profilesToLike, numberOfProfilesPerLaunch)
+	console.log(`URLs to process: ${JSON.stringify(profilesToLike, null, 4)}`)
 
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
-	for (const profile of queries) {
+	for (const profile of profilesToLike) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
