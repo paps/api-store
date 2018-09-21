@@ -147,8 +147,10 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	}
 	let result = await tab.evaluate(scrapeComments, { query, selector })
 	if (result.length) {
-		result = result.slice(0, numberOfCommentsPerPost)
-		utils.log(`${result} comments scraped.`, "done")
+		if (numberOfCommentsPerPost) {
+			result = result.slice(0, numberOfCommentsPerPost)
+		}
+		utils.log(`${result.length} comments scraped.`, "done")
 	} else {
 		utils.log("No comments found!", "warning")
 	}
@@ -205,7 +207,6 @@ const getTotalCommentsCount = (arg, cb) => {
 
 	for (let postUrl of postsToScrape) {
 		let postType
-		let numberToScrape = numberOfCommentsPerPost
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -233,7 +234,6 @@ const getTotalCommentsCount = (arg, cb) => {
 				const totalCount = await tab.evaluate(getTotalCommentsCount)
 				if (totalCount) {
 					utils.log(`There's ${totalCount} comments in total`, "info")
-					if (!numberToScrape || numberToScrape > totalCount) { numberToScrape = totalCount }
 				} else {
 					utils.log("Couldn't get comments count", "warning")
 				}
@@ -251,7 +251,7 @@ const getTotalCommentsCount = (arg, cb) => {
 						continue
 					}
 				}
-				result = result.concat(await loadAllCommentersAndScrape(tab , postUrl, numberToScrape, expandAllComments, postType))
+				result = result.concat(await loadAllCommentersAndScrape(tab , postUrl, numberOfCommentsPerPost, expandAllComments, postType))
 
 			} catch (err) {
 				utils.log(`Error accessing comment page ${err}`, "error")

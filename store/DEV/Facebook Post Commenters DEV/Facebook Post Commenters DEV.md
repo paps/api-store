@@ -1,18 +1,10 @@
-# Collect information from any Facebook group
-
-Get to know any Facebook member that shares the same interests as you. Use any Facebook group you have access to and gather:
-
-1. Facebook profile links
-2. Names
-3. Profile pictures
-4. Current job/location
+# Get highly qualified active Facebook members
+Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about all the commenters (name, Facebook Profile URL).
 
 # What will you need? ⚙️ 
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook groups URLs in it, OR the direct link of a Facebook group (unless they're public, you **must** be a member of these groups).
-- **Number of members per group**: The number of members you want to collect per group. If left empty, the API will scrape all group members.
-- **Number of members per launch**: If you want to scrape all members from a huge single group, you can choose to retrieve the data in several short launches instead of a long one. 
+- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook post URLs in it, OR the direct link of a single Facebook post.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
@@ -67,13 +59,12 @@ _// How to access your cookies with <a href="https://developer.mozilla.org/en-US
 ## 5. Add a Google Spreadsheet 📑
 Below your session cookies you’ll find Spreadsheet URL.
 
-Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**:
-<center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/spreadsheet-2.png)</center>
+Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**.
 
-Your spreadsheet should contain a list of Facebook Group URLs (**one link per row**).
+Your spreadsheet should contain a list of Facebook Post URLs (**one link per row**).
 
 You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
-You can also enter a single Facebook group URL directly in the field.
+You can also enter a single Facebook post URL directly in the field.
 
 
 # Click on Launch & Enjoy!
