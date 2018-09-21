@@ -36,14 +36,15 @@ const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 
 // clicking function
 const clickAllPosts = (arg, cb) => {
-	let postToLike = Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink")
-	postToLike = postToLike.slice(0, arg.likesCount)
+	const allPosts = Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink" || el.getAttribute("data-testid") === "fb-ufi-unlikelink").slice(0, arg.postLimit)
+	let postToLike = allPosts.filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink")
+	postToLike = postToLike.slice(0, arg.likesCountPerProfile)
 	for (let i = 0; i < postToLike.length; i++) {
 		setTimeout(function timer(){
 			postToLike[i].click()
 		}, i * 2000 + 1000 * Math.random())
 	}
-	cb(null, null)
+	setTimeout(function wait(){ cb(null, null) } , (1 + postToLike.length) * 2000)
 }
 
 // check if facebook has blocked like action
@@ -59,19 +60,28 @@ const getName = (arg, cb) => {
 	cb(null, name)
 }
 
-// get current number of liked posts on the page
+// get current number of liked posts on the page up to postLimit
 const getLikeCount = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink").length)
+	// cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink").length)
+	cb(null, Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink" || el.getAttribute("data-testid") === "fb-ufi-likelink").slice(0, arg.postLimit).filter(el => el.getAttribute("data-testid") === "fb-ufi-unlikelink").length)
 }
 
+// get current number of posts loaded on the page, up to postLimit
 const getPostCount = (arg, cb) => {
-	const allPosts = Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink" || el.getAttribute("data-testid") === "fb-ufi-unlikelink")
+	const allPosts = Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink" || el.getAttribute("data-testid") === "fb-ufi-unlikelink").slice(0, arg.postLimit)
+	// const unlikedPosts = allPosts.filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink")
+	cb(null, allPosts.length)
+}
+
+// get current number of unliked posts loaded on the page, up to postLimit
+const getUnlikePostCount = (arg, cb) => {
+	const allPosts = Array.from(document.querySelectorAll(".userContentWrapper a")).filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink" || el.getAttribute("data-testid") === "fb-ufi-unlikelink").slice(0, arg.postLimit)
 	const unlikedPosts = allPosts.filter(el => el.getAttribute("data-testid") === "fb-ufi-likelink")
-	cb(null, { all: allPosts.length, unliked: unlikedPosts.length })
+	cb(null, unlikedPosts.length)
 }
 
 // handling loading and clicking
-const loadProfileAndLike = async (tab, profile, likesCount) => {
+const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit) => {
 	let name = "unknown"
 	let totalLikedCount = "unknown"
 	const url = isUrl(profile) ? profile : `https://facebook.com/${profile}`
@@ -93,41 +103,41 @@ const loadProfileAndLike = async (tab, profile, likesCount) => {
 		} catch (err) {
 			utils.log("Couldn't access profile name!", "error")
 		}
-		let likeCount = 0
-		let postToLikeCount = 0
 		let lastDate = new Date()
-		let allLikes
+		let postCount = 0
+		let newPostCount
 		do {
-			postToLikeCount 
-			allLikes = await tab.evaluate(getPostCount)
-			postToLikeCount = allLikes.unliked
-			if (postToLikeCount > likeCount) {
-				likeCount = postToLikeCount
+			newPostCount = await tab.evaluate(getPostCount, { postLimit })
+			if (newPostCount > postCount) {
+				postCount = newPostCount
 				lastDate = new Date()
-				utils.log(`Last ${likeCount} unliked posts loaded.`, "loading")
-				if (postToLikeCount > likesCount) {
-					break
-				}
+				utils.log(`Last ${postCount} posts loaded.`, "loading")
 			}
 			// await tab.screenshot(`${likeCount} posts ${Date.now()}.png`)
 			// await buster.saveText(await tab.getContent(), `${likeCount} posts ${Date.now()}.html`)
 			await tab.scrollToBottom()
 			await tab.wait(1000)
 			if (new Date() - lastDate > 15000) {
-				utils.log("No new post to like found", "warning")
+				utils.log("No new post to load.", "warning")
 				break
 			}
-		} while (postToLikeCount === 0)
-		let alreadyLikedCount = await tab.evaluate(getLikeCount)
-		utils.log(`Already ${alreadyLikedCount} posts liked, over last ${allLikes.all}.`, "done")
-		await tab.evaluate(clickAllPosts, { likesCount })
-		await tab.wait(2000)
-		if (await tab.evaluate(isBlocked)) {
-			utils.log("Blocked by Facebook because of too many Like attempts, you should try later.", "warning")
-			rateLimited = true
-		}
-		totalLikedCount = await tab.evaluate(getLikeCount)
-		const newLikedCount = totalLikedCount - alreadyLikedCount
+		} while (postCount < postLimit)
+		let alreadyLikedCount = await tab.evaluate(getLikeCount, { postLimit })
+
+		const unlikedPostCount = await tab.evaluate(getUnlikePostCount, { postLimit })
+		utils.log(`Over last ${newPostCount} posts, already ${alreadyLikedCount} liked, ${unlikedPostCount} still unliked.`, "done")
+		let newLikedCount = 0
+		if (unlikedPostCount) {
+			await buster.saveText(await tab.getContent(), `CLIK ${Date.now()}.html`)
+			await tab.evaluate(clickAllPosts, { likesCountPerProfile, postLimit })
+			await tab.wait(2000)
+			if (await tab.evaluate(isBlocked)) {
+				utils.log("Blocked by Facebook because of too many Like attempts, you should try later.", "warning")
+				rateLimited = true
+			}
+			totalLikedCount = await tab.evaluate(getLikeCount, { postLimit })
+			newLikedCount = totalLikedCount - alreadyLikedCount
+		}		
 		if (newLikedCount) {
 			utils.log(`${newLikedCount} new post${newLikedCount > 1 ? "s have" : " has"} been liked.`, "done")
 		} else {
@@ -160,7 +170,7 @@ const isFacebookUrl = target => {
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch} = utils.validateArguments()
+	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch, postLimit} = utils.validateArguments()
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
@@ -182,6 +192,8 @@ const isFacebookUrl = target => {
 		numberOfProfilesPerLaunch = queries.length
 	}
 
+	if (!postLimit) { postLimit = 10 }
+
 	let result = []
 	queries = queries.filter(str => str) // removing empty lines
 
@@ -198,7 +210,7 @@ const isFacebookUrl = target => {
 		}
 		try {
 			utils.log(`Loading profile for ${profile}`, "loading")
-			result.push(await loadProfileAndLike(tab, profile, likesCountPerProfile))
+			result.push(await loadProfileAndLike(tab, profile, likesCountPerProfile, postLimit))
 			if (rateLimited) { break }
 		} catch (err) {
 			utils.log(`Cannot like ${profile} due to: ${err.message || err}`, "error")

@@ -10,7 +10,9 @@
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",
 		"sessionCookieXs": "your_xs_session_cookie",
-        "spreadsheetUrl": "facebook_profile_urls"
+		"spreadsheetUrl": "facebook_profile_urls",
+		"numberOfProfilesPerLaunch": 10,
+		"postsToLoad": 10
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -35,24 +37,30 @@
                     },
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
 					},
 					"columnName": {
 						"label": "Column name from which Twitter profile URLs",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
-						"placeholder": "Twitter Profile"
-					},
-					"numberOfProfilesPerLaunch": {
-						"label": "Number of profiles to process per launch <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
-						"helper": "By default the API will open 10 profile per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"placeholder": "Facebook Profile"
 					},
 					"likesCountPerProfile": {
 						"label": "Number of likes to send per profile per launch <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "By default the API will like 1 post per profile per launch",
 						"inputType": "number",
 						"placeholder": 1
+					},
+					"postLimit": {
+						"label": "Number of posts to load per profile <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "By default the API will only load the last 10 posts",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"numberOfProfilesPerLaunch": {
+						"label": "Number of profiles to process per launch <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
 					}
 				}
 			}
@@ -78,16 +86,22 @@
 			"columnName": {
 				"type": "string"
 			},
-			"numberOfProfilesPerLaunch": {
+			"likesCountPerProfile": {
 				"type": "number",
 				"minimum": 1,
 				"maximum": 10,
 				"default": 1
 			},
-			"likesCountPerProfile": {
+			"postLimit": {
 				"type": "number",
 				"minimum": 1,
-				"maximum": 1000,
+				"maximum": 20,
+				"default": 10
+			},
+			"numberOfProfilesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
 				"default": 1
 			}
 		}
