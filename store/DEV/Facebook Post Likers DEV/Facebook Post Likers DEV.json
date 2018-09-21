@@ -16,7 +16,7 @@
 		"profileUrl": "Facebook profile URL",
 		"name": "Full name",
 		"profilePictureUrl ": "Profile picture URL",
-		"reactionType": "Which of the reaction like (Like/WoW/Love/etc.)"
+		"reactionType": "Which of the reaction like used (Like/WoW/Love/etc.)"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

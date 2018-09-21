@@ -205,15 +205,26 @@ const scrapeLikers = (arg, cb) => {
 			}
 			try {
 				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
-				let urlToGo = await tab.evaluate((arg, cb) => {
+				let urlToGo
+				try {
+					urlToGo = await tab.evaluate((arg, cb) => {
 					cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 				})
+				} catch (err) {
+					await tab.wait(5000)
+					console.log("try again")
+					urlToGo = await tab.evaluate((arg, cb) => {
+						cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
+					})
+				}
 				utils.log(`urlToGo is ${urlToGo}`, "done")
 				await tab.open(urlToGo)
 				await tab.waitUntilVisible(".fb_content")
 				result = result.concat(await scrapeAllLikers(tab , postUrl))
 			} catch (err) {
-				utils.log("Error accessing like page!", "error")
+				utils.log(`Error accessing like page!: ${err}`, "error")
+				await buster.saveText(await tab.getContent(), `Error accessing like page!${Date.now()}.html`)
+
 			}			
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${postUrl} due to: ${err.message || err}`, "warning")
