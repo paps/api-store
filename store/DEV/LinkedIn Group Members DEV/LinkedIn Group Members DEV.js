@@ -363,7 +363,7 @@ const onHttpRequest = (e) => {
 	if (endpointPattern === VOYAGER_ENDPOINT_PATTERN) {
 		await tab.scroll(0, 0)
 		gl.url = updateUrlParam(gl.url, "start", 0)
-		gl.url = decodeURIComponent(updateUrlParam(gl.url, "count", 100))
+		gl.url = decodeURIComponent(updateUrlParam(gl.url, "count", 20))
 	}
 	utils.log(`Getting members for group ${groupName}...`, "loading")
 	const members = await getGroupMembers(tab, endpointPattern)
