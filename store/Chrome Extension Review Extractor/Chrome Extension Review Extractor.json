@@ -5,7 +5,7 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Chrome_Extension_Review_Extractor/chrome_extension_review_extractor_2.png",
 	"gradientBegin": "#ACB6E5",
 	"gradientEnd": "#74EBD5",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(....)",

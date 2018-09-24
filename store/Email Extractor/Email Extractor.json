@@ -7,7 +7,7 @@
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": true,
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
 		"urls": [ "https://phantombuster.com" ],
