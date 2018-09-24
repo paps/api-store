@@ -62,9 +62,15 @@ const isRealProfile = async (tab, url) => {
 
 const getMessagesCount = (arg, cb) => cb(null, document.querySelectorAll("ul.msg-s-message-list > li.msg-s-message-list__event").length)
 
+/**
+ * @description Simple wrapper used to scroll up for a specific CSS selector
+ * @param { { sel: String } } arg - Argument from script context (contains the selector used to scroll up)
+ * @param {Function} cb - callback used to exit the browser context
+ */
 const scrollUp = (arg, cb) => cb(null, document.querySelector(arg.sel).scroll(0, 0))
 
 const extractMessages = (arg, cb) => {
+	const isEmptyObject = obj => Object.keys(obj).length === 0
 	const messages = Array.from(document.querySelectorAll(`${arg.baseSelector} > li.msg-s-message-list__event`)).map(msg => {
 		let data = {}
 		let messageMetaData = msg.querySelector(".msg-s-message-group__meta")
@@ -84,7 +90,7 @@ const extractMessages = (arg, cb) => {
 			data.message = messageContent.textContent.trim()
 		}
 		return data
-	})
+	}).filter(el => !isEmptyObject(el))
 	cb(null, messages)
 }
 
@@ -105,15 +111,21 @@ const loadConversation = async (tab, messagesPerExtract) => {
 	messagesLoaded = await tab.evaluate(getMessagesCount)
 	utils.log(`${messagesLoaded} messages loaded`, "info")
 	while (messagesLoaded < messagesPerExtract) {
+		let lastCount = messagesLoaded
 		await tab.evaluate(scrollUp, { sel: `${SELECTORS.messages } > li.msg-s-message-list__event` })
 		await tab.waitWhileVisible(SELECTORS.spinners, 15000)
 		messagesLoaded = await tab.evaluate(getMessagesCount)
 		utils.log(`${messagesLoaded} messages loaded`, "info")
+		// No need to continue if we got the same count, probably no more messages can't be loaded
+		if (lastCount === messagesLoaded) {
+			break
+		}
 	}
 
 	let messages = await tab.evaluate(extractMessages, { baseSelector: SELECTORS.messages })
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	messages = messages.slice(0, messagesPerExtract)
+
 	utils.log(`${messages.length} messages scraped`, "done")
 	await tab.screenshot(`widget-opening-${Date.now()}.jpg`)
 	return messages
@@ -138,7 +150,7 @@ const jsonToCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, messagesPerExtract, queries } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, messagesPerExtract, queries, chronOrder } = utils.validateArguments()
 	let db = await utils.getDb(DB_NAME)
 	const currentScraping = []
 
@@ -163,7 +175,8 @@ const jsonToCsvOutput = json => {
 			continue
 		}
 		utils.log(`Loading conversation in ${convUrl} ...`, "loading")
-		const messages = await loadConversation(tab, messagesPerExtract)
+		let messages = await loadConversation(tab, messagesPerExtract)
+		chronOrder && (messages = messages.reverse())
 		currentScraping.push({ url: convUrl, messages })
 	}
 	db.push(...jsonToCsvOutput(currentScraping))

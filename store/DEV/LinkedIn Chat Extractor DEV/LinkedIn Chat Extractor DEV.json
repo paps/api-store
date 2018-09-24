@@ -13,7 +13,8 @@
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"profilesPerLaunch": 5,
-		"messagesPerExtract": 5
+		"messagesPerExtract": 5,
+		"chronOrder": false
 	},
 	"argumentForm": {
 		"enabled": true,
@@ -49,6 +50,9 @@
 						"label": "Number of messages to extract for each conversation",
 						"placeholder": 5,
 						"inputType": "number"
+					},
+					"chronOrder": {
+						"rightLabel": "Get messages from <b>oldest to newest</b>"
 					}
 				}
 			}
@@ -78,7 +82,9 @@
 				"type": "number",
 				"minimum": 1,
 				"maximum": 10
-
+			},
+			"chronOrder": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [
