@@ -309,6 +309,7 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
  * @param {String} message - Message to send
  * @param {Boolean} onlySecondCircle
  * @param {Boolean} disableScraping
+ * @param {LinkedInScraper} libScraper - LinkedInScraper instance
  * @return {Promise<Object>|Promise<null>} a null return means that the URL was processed earlier
  */
 const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, disableScraping, libScraper) => {
@@ -485,7 +486,6 @@ nick.newTab().then(async (tab) => {
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
-	// TODO: filter fields scraped during the API execution to not make the lib-StoreUtilities throw an exception
 	let csvHeader = await getCsvHeaders(spreadsheetUrl)
 	let columns = [ columnName, ...getMessageTags(message).filter(el => csvHeader.includes(el)) ]
 	let rows = await utils.getDataFromCsv(spreadsheetUrl, columns)
