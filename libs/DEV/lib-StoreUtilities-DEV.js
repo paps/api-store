@@ -293,7 +293,7 @@ class StoreUtilities {
 			}
 			let data = (Papa.parse(file)).data
 			let column = 0
-			let result
+			let result = []
 			if (typeof columnName === "string") {
 				column = data[0].findIndex(el => el === columnName)
 				if (columnName < 0) {
@@ -324,6 +324,8 @@ class StoreUtilities {
 					fieldsPositions.forEach(field => cell[field.name] = el[field.position])
 					return cell
 				})
+			} else {
+				result = data.map(line => line[column])
 			}
 			if (printLogs) {
 				this.log(`Got ${result.length} lines from csv.`, "done")
