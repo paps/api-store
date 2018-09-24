@@ -49,7 +49,7 @@ const getCompaniesInfos = (arg, callback) => {
 
 	let results = []
 	if ($(arg.selectors.SCRAPING_ITEM_COMPANY).length) {
-		results = $(arg.selectors.SCRAPING_ITEM_COMPANY).slice(1).map(function () {
+		results = $(arg.selectors.SCRAPING_ITEM_COMPANY).slice(1).map(function() {
 
 			let scraped = {}
 
@@ -63,8 +63,8 @@ const getCompaniesInfos = (arg, callback) => {
 					blurb: $(".blurb", this).text().trim(),
 					angelListUrl: $(".startup-link", this).attr("href"),
 					logo: $(".angel_image", this).attr("src"),
-					location: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[0],
-					type: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
+					location: $(".tags", this).text().split("·").map(function(el) { return el.trim() })[0],
+					type: $(".tags", this).text().split("·").map(function(el) { return el.trim() })[1],
 					joined: $(".joined > .value", this).text().trim(),
 					followers: parseInt($(".followers > .value", this).text(), 10),
 					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)-/)[1], 10) + 1,
@@ -75,8 +75,8 @@ const getCompaniesInfos = (arg, callback) => {
 					blurb: $(".blurb", this).text().trim(),
 					angelListUrl: $(".startup-link", this).attr("href"),
 					logo: $(".angel_image", this).attr("src"),
-					location: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[0],
-					startups: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
+					location: $(".tags", this).text().split("·").map(function(el) { return el.trim() })[0],
+					startups: $(".tags", this).text().split("·").map(function(el) { return el.trim() })[1],
 					investments: parseInt($(".investments > .value", this).text().trim(), 10),
 					followers: parseInt($(".followers > .value", this).text(), 10),
 					signal: parseInt($(".signal > .value > img", this).attr("src").match(/icons\/signal(\d)-/)[1], 10) + 1,
@@ -86,7 +86,7 @@ const getCompaniesInfos = (arg, callback) => {
 			return scraped
 		})
 	} else {
-		results = $(arg.selectors.SCRAPING_ITEM_MARKET).slice(1).map(function () {
+		results = $(arg.selectors.SCRAPING_ITEM_MARKET).slice(1).map(function() {
 			return {
 				name: $(".name", this).text().trim(),
 				blurb: $(".pitch", this).text().trim(),
@@ -94,7 +94,7 @@ const getCompaniesInfos = (arg, callback) => {
 				logo: $(".angel_image", this).attr("src"),
 				location: $(".location > .value", this).text().trim(),
 				market: $(".market > .value > .tag", this).text().trim(),
-				type: $(".tags", this).text().split("·").map(function (el) { return el.trim() })[1],
+				type: $(".tags", this).text().split("·").map(function(el) { return el.trim() })[1],
 				joined: $(".joined > .value", this).text().trim(),
 				website: $(".website > .value a", this).attr("href"),
 				employees: $(".company_size > .value", this).text().trim(),
