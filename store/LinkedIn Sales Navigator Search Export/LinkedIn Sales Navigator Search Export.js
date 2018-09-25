@@ -187,7 +187,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
-		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 7500, "or")
+		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		if (selector === ".artdeco-tab-primary-text") { 
 			isLeadSearch = true
@@ -217,13 +217,13 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			utils.log(`Getting results from page ${i}...`, "loading")
 			let containerSelector
 			try {
-				containerSelector = await tab.waitUntilVisible(selectors, 7500, "or")
+				containerSelector = await tab.waitUntilVisible(selectors, 15000, "or")
 			} catch (err) {
 				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
 				return result
 			}
-			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 7500, "or")
+			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 15000, "or")
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
@@ -335,7 +335,8 @@ const isLinkedInSearchURL = (url) => {
 		}
 	}
 	utils.log(`${result.length} profiles found.`, "done")
-	utils.saveResult(result)
+	await utils.saveResults(result, result, csvName)
+	nick.exit(0)
 })()
 	.catch(err => {
 		utils.log(err, "error")
