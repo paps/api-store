@@ -348,7 +348,7 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 	try {
 		let profileScraping = await openProfile(tab, url, disableScraping, libScraper)
 		if (disableScraping === false) {
-			invitation = Object.assign({}, profileScraping, invitation)
+			invitation = Object.assign({}, profileScraping, invitation) // Custom tags aren't overwritten by the scraping result
 		}
 	} catch (err) {
 		await tab.wait(5000)
@@ -364,7 +364,6 @@ const addLinkedinFriend = async (baseUrl, url, tab, message, onlySecondCircle, d
 			 * Timeout error
 			 * The profile should be reprocess in another launch
 			 */
-			// invitation.error = err.message || err
 			utils.log(`Error while loading ${url}: ${err.message || err}`, "error")
 			invitation = null
 		}

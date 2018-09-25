@@ -92,6 +92,8 @@ In the message textbox you can write a private note (**Total: 300 characters MAX
 
 Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
+You can also use your own tags, you can add a column **greetings** in your Google Spreadsheet and then add **\#greetings\#** in your message.
+
 Click on 💾 <span style="color:blue">Save</span>
 
 
@@ -122,7 +124,6 @@ Now that this is set, click 💾 <span style="color:blue">Save</span> at the bot
 
 
 There you go, you only have to wait for connections to be made for you!
-
 
 # Email discovery (optional) { email_discovery }
 
