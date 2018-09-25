@@ -299,6 +299,7 @@ class StoreUtilities {
 				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
+				data.shift()
 				result = data.map(line => line[column])
 			} else if (Array.isArray(columnName)) {
 				let columns = Object.assign([], columnName)
