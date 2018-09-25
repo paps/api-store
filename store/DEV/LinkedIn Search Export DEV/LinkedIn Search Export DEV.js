@@ -187,18 +187,49 @@ const extractPageIndex = url => {
  * @param {Number} index - Page index
  * @return {String} URL with the new page index
  */
-const overridePageIndex = (url, index, searchCat) => {
+const overridePageIndex = (url, index) => {
 	try {
 		let parsedUrl = new URL(url)
-		if (searchCat === "jobs") {
-			parsedUrl.searchParams.set("start", (index - 1) * 25)
-			return parsedUrl.toString()
-		} else {
-			parsedUrl.searchParams.set("page", index)
-			return parsedUrl.toString()
-		}
+		parsedUrl.searchParams.set("start", (index - 1) * 25)
+		return parsedUrl.toString()
 	} catch (err) {
 		return url
+	}
+}
+
+const getLocationUrl = (arg, cb) => cb(null, document.location.href)
+
+const getPageNumber = url => {
+	try {
+		const urlObject = new URL(url)
+		const pageValue = urlObject.searchParams.get("page")
+		if (pageValue) { return pageValue }
+	} catch (err) {
+		//
+	} 
+	return 1
+}
+
+const clickNextPage = async (tab, lastLoc) => {
+	try {
+		await tab.waitUntilVisible(".next")
+	} catch (err) {
+		await tab.wait(3000)
+		if (!await tab.isVisible(".next")){
+			return "noMorePages"
+		}
+	}
+	try {
+		await tab.click(".next")
+		const lastDate = new Date()
+		do {
+			if (lastDate - new Date() > 10000) {
+				throw "Error loading next page!"
+			}
+			await tab.wait(500)
+		} while (lastLoc === await tab.evaluate(getLocationUrl))
+	} catch (err) {
+		throw "Can't click on Next Page button!"
 	}
 }
 
@@ -208,76 +239,111 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	let searchCat = isSearchURL
 	if (isSearchURL === 0) { searchCat = category.toLowerCase() }
 	const selectors = ["div.search-no-results__container", "div.search-results-container", ".jobs-search-no-results", ".jobs-search-results__list"]
-	let stepCounter = 1
-	let i
-	try {
-		i = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
-	} catch (err) {
-		utils.log(`Can't scrape ${searchUrl} due to: ${err.message || err}`, "error")
-		return result
-	}
-	for (; stepCounter <= numberOfPage; i++, stepCounter++) {
-		utils.log(`Getting data from page ${i}...`, "loading")
+	let jobPageCounter
+	if (searchCat === "jobs") {
 		try {
-			await tab.open(overridePageIndex(searchUrl, i, searchCat))
-			let selector
-			try {
-				selector = await tab.waitUntilVisible(selectors, 15000, "or")
-			} catch (err) {
-				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
-				utils.log(err.message || err, "warning")
-				return result
-			}
-			if (selector === selectors[0] || selector === selectors[2]) {
-				utils.log("No result on that page.", "done")
-				break
-			} else {
-				let selectorList
-				if (searchCat === "jobs") { 
-					selectorList = "ul.jobs-search-results__list > li"
-				} else {
-					selectorList = "ul.search-results__list > li, ul.results-list > li"
-				}
-				const resultCount = await tab.evaluate((arg, callback) => { 
-					callback(null, document.querySelectorAll(arg.selectorList).length)
-				}, { selectorList })
-				let canScroll = true
-				for (let i = 1; i <= resultCount; i++) {
-					try {
-						await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
-							if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
-							callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
-							}
-						}, { i, selectorList })
-						await tab.wait(100)
-					} catch (err) {
-						utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
-						canScroll = false
-						break
-					}
-				}
-				if (canScroll) { 
-					result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
-				} else {
-					break
-				}
-				let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
-				if (hasReachedLimit) {
-					utils.log(hasReachedLimit, "warning")
-					break
-				} else {
-					utils.log(`Got URLs for page ${i}`, "done")
-				}
-			}
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				return result
-			}
+			jobPageCounter = extractPageIndex(searchUrl)	// Starting to a given index otherwise first page
 		} catch (err) {
-			utils.log(`Couldn't load page ${i}: ${err}`, "error")
+			utils.log(`Can't scrape ${searchUrl} due to: ${err.message || err}`, "error")
+			return result
 		}
 	}
+
+	await tab.open(searchUrl)
+	let lastLoc
+
+	// for (; stepCounter <= numberOfPage; i++, stepCounter++) {
+	let pageCounter = 0
+	let nextButtonIsClicked
+	do {
+		let newLoc = await tab.evaluate(getLocationUrl)
+		if (newLoc !== lastLoc) {
+			nextButtonIsClicked = false
+			lastLoc = newLoc
+			let pageNumber
+			if (searchCat === "jobs") {
+				pageNumber = jobPageCounter
+			} else {
+				pageNumber = getPageNumber(lastLoc)
+			}
+			pageCounter++
+			utils.log(`Getting data from page ${pageNumber}...`, "loading")
+			try {
+				// await tab.open(overridePageIndex(searchUrl, i, searchCat))
+				let selector
+				try {
+					selector = await tab.waitUntilVisible(selectors, 15000, "or")
+				} catch (err) {
+					// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+					utils.log(err.message || err, "warning")
+					return result
+				}
+	
+				if (selector === selectors[0] || selector === selectors[2]) {
+					utils.log("No result on that page.", "done")	
+					break
+				} else {
+					let selectorList
+					if (searchCat === "jobs") { 
+						selectorList = "ul.jobs-search-results__list > li"
+					} else {
+						selectorList = "ul.search-results__list > li, ul.results-list > li"
+					}
+					const resultCount = await tab.evaluate((arg, callback) => { 
+						callback(null, document.querySelectorAll(arg.selectorList).length)
+					}, { selectorList })
+					let canScroll = true
+					for (let i = 1; i <= resultCount; i++) {
+						try {
+							await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+								if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
+								callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+								}
+							}, { i, selectorList })
+							await tab.wait(100)
+						} catch (err) {
+							utils.log("Can't scroll into the page, it seems you've reached LinkedIn commercial search limit.", "warning")
+							canScroll = false
+							break
+						}
+					}	
+					if (canScroll) { 
+						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
+					} else {
+						break
+					}
+					let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+					if (hasReachedLimit) {
+						utils.log(hasReachedLimit, "warning")
+						break
+					} else {
+						utils.log(`Got URLs for page ${pageNumber}.`, "done")
+					}
+				}
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(timeLeft.message, "warning")
+					return result
+				}
+				if (pageCounter < numberOfPage && !nextButtonIsClicked) {
+					if (searchCat === "jobs") {
+						jobPageCounter++
+						await tab.open(overridePageIndex(searchUrl, jobPageCounter))
+					} else {
+						nextButtonIsClicked = true
+						const hasPages = await clickNextPage(tab, lastLoc)
+						if (hasPages === "noMorePages") {
+							break
+						}
+					}
+				}
+			} catch (err) {
+				utils.log(`Couldn't load page ${pageNumber}: ${err}`, "error")
+			}
+		} else {
+			await tab.wait(1000)
+		}		
+	} while (pageCounter < numberOfPage)
 	utils.log("All pages with result scrapped.", "done")
 	return result
 }
