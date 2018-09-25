@@ -294,7 +294,8 @@ class StoreUtilities {
 			let data = (Papa.parse(file)).data
 			let column = 0
 			let result = []
-			if (typeof columnName === "string") {
+			// columnName must be a string & must be non empty
+			if (typeof columnName === "string" && columnName) {
 				column = data[0].findIndex(el => el === columnName)
 				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
