@@ -10,11 +10,6 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"searches": "SpaceX engineer",
-		"circles": {
-			"first": false,
-			"second": true,
-			"third": true
-		},
 		"numberOfProfiles": 25,
 		"extractDefaultUrl": false
 	},
@@ -49,19 +44,6 @@
 						"label": "LinkedIn search terms <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
 						"placeholder": "iOS developer"
 					},
-					"circles": {
-						"fields": {
-							"first": {
-								"rightLabel": "<b>Search in your 1st degree connections</b>"
-							},
-							"second": {
-								"rightLabel": "<b>Search in your 2nd degree connections</b>"
-							},
-							"third": {
-								"rightLabel": "<b>Search in your 3rd+ degree connections</b>"
-							}
-						}
-					},
 					"numberOfProfiles": {
 						"label": "Number of profiles to scrape <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_7howmanyprofiles\" target=\"_blank\">(?)</a>",
 						"placeholder": 25,
@@ -90,22 +72,6 @@
 			"searches": {
 				"type": "string",
 				"required": true
-			},
-			"circles": {
-				"properties": {
-					"first": {
-						"type": "boolean",
-						"required": true
-					},
-					"second": {
-						"type": "boolean",
-						"required": true
-					},
-					"third": {
-						"type": "boolean",
-						"required": true
-					}
-				}
 			},
 			"numberOfProfiles": {
 				"type": "number",
