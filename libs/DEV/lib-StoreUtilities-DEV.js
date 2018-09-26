@@ -193,6 +193,27 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
+	async getRawCsv(url, printLogs = true) {
+		let csvURL = null
+		let content = null
+		if (printLogs) {
+			this.log(`Getting data from ${url}...`, "loading")
+		}
+
+		try {
+			csvURL = new URL(url)
+		} catch (err) {
+			throw `${url} is not a valid URL.`
+		}
+
+		if (csvURL.hostname === "docs.google.com" || csvURL.hostname === "drive.google.com") {
+			content = await _handleGoogle(csvURL)
+		} else {
+			content = await _handleDefault(csvURL)
+		}
+		return content
+	}
+
 	/**
 	 * @description getDataFromCsv clone, it aims to support Google URLs patterns
 	 * @param {String} url
