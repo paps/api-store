@@ -196,6 +196,7 @@ class StoreUtilities {
 	async getRawCsv(url, printLogs = true) {
 		let csvURL = null
 		let content = null
+		let parsedContent = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
 		}
@@ -210,6 +211,10 @@ class StoreUtilities {
 			content = await _handleGoogle(csvURL)
 		} else {
 			content = await _handleDefault(csvURL)
+		}
+		parsedContent = Papa.parse(content)
+		if (parsedContent.error.find(el => el.code === "MissingQuotes")) {
+			throw `${url} doesn't represent a CSV file`
 		}
 		return content
 	}
