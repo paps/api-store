@@ -43,11 +43,13 @@ const scrapeResults = (args, callback) => {
 	const linkedInUrls = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
+			const scrapedEmployee = {}
 			const url = result.querySelector(".search-result__result-link").href
 			let currentJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
 				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
+				scrapedEmployee.currentJob = currentJob
 			}
 			if (url !== window.location.href + "#") {
 				let name
@@ -56,16 +58,16 @@ const scrapeResults = (args, callback) => {
 				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
 					name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
 				} else {
-					name = "no name found"
+					name = "No name found"
 				}
-				linkedInUrls.push({
-					url: url,
-					name: name,
-					job: (result.querySelector("div.search-result__info > p.subline-level-1")) ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found",
-					location: (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "no location found",
-					currentJob
-				})
+				scrapedEmployee.name = name
+				scrapedEmployee.url = url
+			} else {
+				scrapedEmployee.name = "No name found"
 			}
+			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
+			scrapedEmployee.job = result.querySelector("div.search-result__info > p.subline-level-1") ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found"
+			linkedInUrls.push(scrapedEmployee)
 		}
 	}
 	callback(null, linkedInUrls)
@@ -150,13 +152,14 @@ const getIdFromUrl = async (url, tab) => {
 
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			url = handleSubdomains(url) // Removing the subdomain (if present) from the given URL
+			console.log("url is", url)
 			const [httpCode] = await tab.open(url)
 			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}
 			try {
 				await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
-			} catch(err) {
+			} catch (err) {
 				throw "no employees found from the LinkedIn company page"
 			}
 			let tmp = await tab.evaluate((argv, cb) => {

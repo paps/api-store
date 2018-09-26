@@ -43,11 +43,13 @@ const scrapeResults = (args, callback) => {
 	const linkedInUrls = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
+			const scrapedEmployee = {}
 			const url = result.querySelector(".search-result__result-link").href
 			let currentJob = "none"
 			if (result.querySelector("p.search-result__snippets")) {
 				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
 				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
+				scrapedEmployee.currentJob = currentJob
 			}
 			if (url !== window.location.href + "#") {
 				let name
@@ -56,16 +58,16 @@ const scrapeResults = (args, callback) => {
 				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
 					name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
 				} else {
-					name = "no name found"
+					name = "No name found"
 				}
-				linkedInUrls.push({
-					url: url,
-					name: name,
-					job: (result.querySelector("div.search-result__info > p.subline-level-1")) ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found",
-					location: (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "no location found",
-					currentJob
-				})
+				scrapedEmployee.name = name
+				scrapedEmployee.url = url
+			} else {
+				scrapedEmployee.name = "No name found"
 			}
+			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
+			scrapedEmployee.job = result.querySelector("div.search-result__info > p.subline-level-1") ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found"
+			linkedInUrls.push(scrapedEmployee)
 		}
 	}
 	callback(null, linkedInUrls)
