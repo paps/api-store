@@ -193,6 +193,14 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
+	/**
+	 * @async
+	 * @description Download the entire CSV
+	 * @param {String} url - URL to download
+	 * @param {Boolean} [printLogs] - set verbose or quiet mode (default: verbose)
+	 * @throws when the URL isn't accessible / when the content doesn't represent a CSV
+	 * @return {Promise<Array<Object>>} CSV content
+	 */
 	async getRawCsv(url, printLogs = true) {
 		let csvURL = null
 		let content = null
@@ -213,10 +221,54 @@ class StoreUtilities {
 			content = await _handleDefault(csvURL)
 		}
 		parsedContent = Papa.parse(content)
-		if (parsedContent.error.find(el => el.code === "MissingQuotes")) {
+		if (parsedContent.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
-		return content
+		return parsedContent.data
+	}
+
+	/**
+	 * @param {Array<Object>} csv - CSV content
+	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
+	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @return {Array<String>|Array<Object>} CSV rows with the columns
+	 */
+	extractCsvRows(csv, columnName) {
+		let column = 0
+		let rows = []
+		if (typeof columnName === "string" && columnName) {
+			column = csv[0].findIndex(el => el === columnName)
+			if (column < 0) {
+				throw `No title ${columnName} in csv file.`
+			}
+			csv.shift()
+			rows = csv.map(line => line[column])
+		} else if (Array.isArray(columnName)) {
+			let columns = Object.assign([], columnName)
+			let fieldsPositions = []
+			if (!columns[0]) {
+				fieldsPositions.push({ name: "0", position: 0 })
+				columns.shift()
+			}
+			for (const field of columns) {
+				let index = csv[0].findIndex(cell => cell === field)
+				if (index < 0) {
+					throw `No title ${field} in csv file.`
+				}
+				fieldsPositions.push({ name: field, position: index })
+			}
+			if (!isUrl(csv[0][0])) {
+				csv.shift()
+			}
+			rows = csv.map(el => {
+				let cell = {}
+				fieldsPositions.forEach(field => cell[field.name] = el[field.position])
+				return cell
+			})
+		} else {
+			rows = csv.map(line => line[column])
+		}
+		return rows
 	}
 
 	/**
