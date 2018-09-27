@@ -194,6 +194,84 @@ class StoreUtilities {
 	}
 
 	/**
+	 * @async
+	 * @description Download the entire CSV
+	 * @param {String} url - URL to download
+	 * @param {Boolean} [printLogs] - set verbose or quiet mode (default: verbose)
+	 * @throws when the URL isn't accessible / when the content doesn't represent a CSV
+	 * @return {Promise<Array<Object>>} CSV content
+	 */
+	async getRawCsv(url, printLogs = true) {
+		let csvURL = null
+		let content = null
+		let parsedContent = null
+		if (printLogs) {
+			this.log(`Getting data from ${url}...`, "loading")
+		}
+
+		try {
+			csvURL = new URL(url)
+		} catch (err) {
+			throw `${url} is not a valid URL.`
+		}
+
+		if (csvURL.hostname === "docs.google.com" || csvURL.hostname === "drive.google.com") {
+			content = await _handleGoogle(csvURL)
+		} else {
+			content = await _handleDefault(csvURL)
+		}
+		parsedContent = Papa.parse(content)
+		if (parsedContent.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
+			throw `${url} doesn't represent a CSV file`
+		}
+		return parsedContent.data
+	}
+
+	/**
+	 * @param {Array<Object>} csv - CSV content
+	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
+	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @return {Array<String>|Array<Object>} CSV rows with the columns
+	 */
+	extractCsvRows(csv, columnName) {
+		let column = 0
+		let rows = []
+		if (typeof columnName === "string" && columnName) {
+			column = csv[0].findIndex(el => el === columnName)
+			if (column < 0) {
+				throw `No title ${columnName} in csv file.`
+			}
+			csv.shift()
+			rows = csv.map(line => line[column])
+		} else if (Array.isArray(columnName)) {
+			let columns = Object.assign([], columnName)
+			let fieldsPositions = []
+			if (!columns[0]) {
+				fieldsPositions.push({ name: "0", position: 0 })
+				columns.shift()
+			}
+			for (const field of columns) {
+				let index = csv[0].findIndex(cell => cell === field)
+				if (index < 0) {
+					throw `No title ${field} in csv file.`
+				}
+				fieldsPositions.push({ name: field, position: index })
+			}
+			if (!isUrl(csv[0][0])) {
+				csv.shift()
+			}
+			rows = csv.map(el => {
+				let cell = {}
+				fieldsPositions.forEach(field => cell[field.name] = el[field.position])
+				return cell
+			})
+		} else {
+			rows = csv.map(line => line[column])
+		}
+		return rows
+	}
+
+	/**
 	 * @description getDataFromCsv clone, it aims to support Google URLs patterns
 	 * @param {String} url
 	 * @param {String} columnName
@@ -294,11 +372,13 @@ class StoreUtilities {
 			let data = (Papa.parse(file)).data
 			let column = 0
 			let result = []
-			if (typeof columnName === "string") {
+			// columnName must be a string & must be non empty
+			if (typeof columnName === "string" && columnName) {
 				column = data[0].findIndex(el => el === columnName)
 				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
+				data.shift()
 				result = data.map(line => line[column])
 			} else if (Array.isArray(columnName)) {
 				let columns = Object.assign([], columnName)
@@ -594,6 +674,16 @@ class StoreUtilities {
 			urlObject = parse("https://" + url)
 		}
 		return urlObject.href
+	}
+
+	// Checks if a url is already in the csv, by matching with property
+	checkDb(str, db, property) {
+		for (const line of db) {
+			if (str === line[property]) {
+				return false
+			}
+		}
+		return true
 	}
 
 }

@@ -1,8 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse, URL } = require("url")
 
@@ -22,7 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 
 // }
@@ -39,9 +39,8 @@ const checkDb = (str, db) => {
 }
 
 
-const createUrl = (search, circles) => {
-	const circlesOpt = `facet=N${circles.first ? "&facet.N=F" : ""}${circles.second ? "&facet.N=S" : ""}${circles.third ? "&facet.N=O" : ""}`
-	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}&count=100&${circlesOpt}`) 
+const createUrl = (search) => {
+	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`) 
 }
 
 // forces the search to display up to 100 profiles per page
@@ -97,7 +96,7 @@ const scrapeResults = (arg, callback) => {
 }
 
 const scrapeResultsLeads = (arg, callback) => {
-	const results = document.querySelectorAll(".search-results__result-container")
+	const results = document.querySelectorAll("ol.search-results__result-list li .search-results__result-container")
 	const data = []
 	let profilesScraped = 0
 	for (const result of results) {
@@ -157,18 +156,22 @@ const overridePageIndexLead = (url, page) => {
 	}
 }
 
+const getLocationUrl = (arg, cb) => cb(null, document.location.href)
+
 const extractDefaultUrls = async results => {
 	utils.log("Converting all Sales Navigator URLs to Default URLs...", "loading")
 	for (let i = 0; i < results.length; i++) {
-		try {
-			results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
-		} catch (err) {
-			utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
-		}
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			break
+		if (results[i].profileUrl) {
+			try {
+				results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
+			} catch (err) {
+				utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
+			}
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
 		}
 	}
 	return results
@@ -185,7 +188,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
-		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 7500, "or")
+		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		if (selector === ".artdeco-tab-primary-text") { 
 			isLeadSearch = true
@@ -203,20 +206,19 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
 		utils.log(`Could not get total results count. ${err}`, "warning")
-		await buster.saveText(await tab.getContent(), `notVisibleat${Date.now()}.html`)
-
 	}
+	const redirectedUrl = await tab.evaluate(getLocationUrl)
 	for (let i = 1; i <= pageCount; i++) {
 		try {
 			if (isLeadSearch) {
-				await tab.open(overridePageIndexLead(searchUrl, i))
+				await tab.open(overridePageIndexLead(redirectedUrl, i))
 			} else {
-				await tab.open(overridePageIndex(searchUrl, i))
+				await tab.open(overridePageIndex(redirectedUrl, i))
 			}
 			utils.log(`Getting results from page ${i}...`, "loading")
 			let containerSelector
 			try {
-				containerSelector = await tab.waitUntilVisible(selectors, 7500, "or")
+				containerSelector = await tab.waitUntilVisible(selectors, 15000, "or")
 			} catch (err) {
 				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
@@ -231,17 +233,15 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 				utils.log(timeLeft.message, "warning")
 				break
 			}
-			await buster.saveText(await tab.getContent(), `letsscrapes${Date.now()}.html`)
-			try {
-				if (containerSelector === "section.search-results__container") { // Lead Search
+			if (containerSelector === "section.search-results__container") { // Lead Search
+				try {
 					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))		
-				} else {
-					result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
+				} catch (err) {
+					//
 				}
-			} catch (err) {
-				//
+			} else {
+				result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
 			}
-		
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
@@ -281,7 +281,7 @@ const isLinkedInSearchURL = (url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, circles, numberOfProfiles, csvName, extractDefaultUrl } = utils.validateArguments()
+	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = []
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
@@ -316,7 +316,7 @@ const isLinkedInSearchURL = (url) => {
 			if (isSearchURL === 0) { // LinkedIn Sales Navigator Search
 				searchUrl = forceCount(search)
 			} else if (isSearchURL === 1) { // Not a URL -> Simple search
-				searchUrl = createUrl(search, circles)
+				searchUrl = createUrl(search)
 			} else {  
 				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
 				continue
@@ -335,7 +335,9 @@ const isLinkedInSearchURL = (url) => {
 			break
 		}
 	}
-	utils.saveResult(result)
+	utils.log(`${result.length} profiles found.`, "done")
+	await utils.saveResults(result, result, csvName)
+	nick.exit(0)
 })()
 	.catch(err => {
 		utils.log(err, "error")

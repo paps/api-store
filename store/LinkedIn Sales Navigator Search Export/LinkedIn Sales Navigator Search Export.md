@@ -17,7 +17,6 @@ You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch th
 
 - **Session cookie**: Your session Cookie from LinkedIn
 - **Search**: What terms to search on the LinkedIn search engine
-- **circles**: Do you want to search in your 1st, 2nd, or 3rd+ degree connections? 
 - **Number of profiles**: How many profiles should the bot try to scrape?
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
@@ -73,11 +72,7 @@ You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) cont
 
 **Even more advanced:** You can also paste into the _search_ field a LinkedIn Sales Navigator search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field. Be careful not to use a regular LinkedIn search though.
 
-## 6. Which circles 💫?
-
-The three checkboxes allow you to target specific degrees of connections. If you want to scrape your connections, only enable the _1st_ checkbox. If you want to only find people that are close to you but not yet connected, enable the _2nd_ checkbox. And for the _3rd+_ checkbox, well... You get the picture.
-
-## 7. How many profiles?
+## 6. How many profiles?
 
 Define here the number of profiles you want the bot to scrape.
 

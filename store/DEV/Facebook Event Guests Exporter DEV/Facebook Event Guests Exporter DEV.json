@@ -1,0 +1,90 @@
+{
+	"slug": "facebook-event-guests-exporter",
+	"description": "Extract a list of all guests of any Facebook event",
+	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#373B44",
+	"gradientEnd": "#4286f4",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+        "sessionCookieCUser": "your_c-user_session_cookie",
+        "sessionCookieXs": "your_xs_session_cookie",
+		"numberofPostsperLaunch": 10
+	},
+	"outputDescription": {
+		"profileUrl": "Facebook profile URL",
+		"name": "Full name",
+		"profilePictureUrl": "Profile picture URL",
+		"guestStatus": ""
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+                    "sessionCookieCUser": {
+                        "label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook event URL"
+						],
+						"label": "Facebook event or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "Facebook Event link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberofEventsperLaunch": {
+						"label": "Number of events to process per launch <a href=\"/api-store/8368/facebook-post-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+            "sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 8
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberofEventsperLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}

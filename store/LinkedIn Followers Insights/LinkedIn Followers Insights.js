@@ -140,6 +140,12 @@ const onHttpRequest = (e) => {
 			}
 		}
 		tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+		if (gl.search && gl.search.count) {
+			// Sometimes headers has count with a negative number
+			if (gl.search.count < 0) {
+				gl.search.count = 20
+			}
+		}
 		const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
 		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
 		result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
