@@ -60,24 +60,10 @@ const removeDuplicates = (arr) => {
 	return resultArray
 }
 
-const getUrlsToScrape = (data, numberofGuestsperLaunch) => {
+const getUrlsToScrape = (data, numberofEventsperLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
-	if (maxLength === 0) {
-		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-		nick.exit()
-	}
-	return data.slice(0, Math.min(numberofGuestsperLaunch, maxLength)) // return the first elements
-}
-
-// Checks if a url is already in the csv
-const checkDb = (str, db, property) => {
-	for (const line of db) {
-		if (str === line[property]) {
-			return false
-		}
-	}
-	return true
+	return data.slice(0, Math.min(numberofEventsperLaunch, maxLength)) // return the first elements
 }
 
 const getJsonResponse = async (tab, url) => {
@@ -103,41 +89,59 @@ const extractGuestsFromArray = (array, eventUrl, eventName, eventStatus) => {
 	return result
 }
 
+// delete all parameters from urlObject that are not for ptams
+const deleteParams = (urlObject, params) => {
+	const allParams = ["tabs[0]", "tabs[1]", "tabs[2]", "tabs[3]"]
+	for (const param of allParams) {
+		if (urlObject.searchParams.get(param) === params) {
+			urlObject.searchParams.delete(param)
+			console.log("deleting ", params, " for ", param)
+		}
+	}
+	return urlObject
+}
 
 // load Guests of a single status type (Watched/Invited/Maybe/...)
 const loadGuests = async (tab, url, cursor, eventUrl, eventName, eventStatus) => {
-	const urlObject = new URL(url)
+	let urlObject = new URL(url)
+	console.log("OLD URL", url)
 
 	if (eventStatus !== "Watched") {
-		urlObject.searchParams.delete("tabs[0]")
+		// urlObject.searchParams.delete("tabs[0]")
+		urlObject = deleteParams(urlObject, "watched")
 	} else {
 		urlObject.searchParams.set("cursor[watched]", cursor)
 	}
 	
 	if (eventStatus !== "Going") {
-		urlObject.searchParams.delete("tabs[1]")
+		// urlObject.searchParams.delete("tabs[1]")
+		urlObject = deleteParams(urlObject, "going")
 		urlObject.searchParams.delete("bucket_schema[going]")
 	} else {
 		urlObject.searchParams.set("cursor[going]", cursor)
 	}
 	if (eventStatus !== "Invited") {
-		urlObject.searchParams.delete("tabs[2]")
+		// urlObject.searchParams.delete("tabs[2]")
+		urlObject = deleteParams(urlObject, "invited")
 		urlObject.searchParams.delete("bucket_schema[invited]")
 		urlObject.searchParams.delete("order[invited]")	
 	} else {
 		urlObject.searchParams.set("cursor[invited]", cursor)
 	}
 	if (eventStatus !== "Declined") {
-		urlObject.searchParams.delete("tabs[3]")
+		// urlObject.searchParams.delete("tabs[3]")
+		urlObject = deleteParams(urlObject, "declined")
+
 		urlObject.searchParams.delete("order[declined]")
 	} else {
 		urlObject.searchParams.set("cursor[declined]", cursor)
 	}
 	urlObject.searchParams.delete("order[maybe]")
 	const newUrl = decodeURIComponent(urlObject.href)
-	
+	console.log("newUrl", newUrl)
 	const newJsonData = await getJsonResponse(tab, newUrl)
-	console.log("SS1", newJsonData.payload[eventStatus.toLowerCase()].sections)
+	console.log("sections", newJsonData.payload[eventStatus.toLowerCase()])
+
 	const sections = newJsonData.payload[eventStatus.toLowerCase()].sections
 	let results = []
 	results = results.concat(extractGuestsFromArray(sections[1][1], eventUrl, eventName, "Interested"))
@@ -147,83 +151,48 @@ const loadGuests = async (tab, url, cursor, eventUrl, eventName, eventStatus) =>
 }
 
 
-const extractGuests = async (tab, url, eventUrl, eventName) => {
+const extractGuests = async (tab, url, eventUrl, eventName, isPublic) => {
 
 	
 	const jsonData = await getJsonResponse(tab, url)
 	let results = []
-	try {
-		console.log("S1", jsonData.payload)
-		// console.log("S", jsonData.payload.watched.sections)
-		// const eventStatuses = ["Watched", "Going", "Invited"]
-		const eventStatuses = ["Watched"]
-		for (let status of eventStatuses) {
-			console.log("status", status)
+	let eventStatuses
+	if (isPublic) {
+		eventStatuses = ["Watched", "Going", "Invited"]
+	} else {
+		eventStatuses = ["Going", "Maybe", "Invited", "Declined"]
+	}
+	for (const status of eventStatuses) {
+		console.log("status", status)
+		if (jsonData.payload[status.toLowerCase()]) { // only if the section exists (f.i. empty for going if none is going yet)
 			const sections = jsonData.payload[status.toLowerCase()].sections
-			let eventStatus = status
-			if (status === "Watched") { eventStatus = "Interested" } // Interested status is called Watched in the json
-			results = results.concat(extractGuestsFromArray(sections[1][1], eventUrl, eventName, eventStatus))
-			results = results.concat(extractGuestsFromArray(sections[2][1], eventUrl, eventName, eventStatus))
-			let nextCursor = jsonData.payload.watched.cursor
-			if (nextCursor) {
-				do {
-					const newResults = await loadGuests(tab, url, nextCursor, eventUrl, eventName, status)
-					results = results.concat(newResults.results)
-					nextCursor = newResults.cursor
-					console.log("status", status, " resultsLength", results.length)	
-					console.log("reNextCursor", nextCursor)	
-				} while (nextCursor)
-			}			
-		}
-		// console.log("LENGTH", jsonData.payload.watched.sections[2][1].length)
-		// // results.push(extractGuestsFromArray(sections[1][1]))
-		// // public event
-		// console.log("oldUrl", url)
-		// console.log("nextCursor", nextCursor)
-		// // for (const status of eventStatuses) {
-		// // 	console.log("Status=", status)
-		// 	do {
-		// 		const newResults = await loadGuests(tab, url, nextCursor, eventUrl, eventName, status)
-		// 		results = results.concat(newResults.results)
-		// 		nextCursor = newResults.cursor
-		// 		console.log("resultsLength", results.length)	
-		// 		console.log("reNextCursor", nextCursor)	
-		// 	} while (nextCursor)
-		// // }
-		
-		
-		// const urlObject = new URL(url)
-		// urlObject.searchParams.set("cursor[watched]", nextCursor)
-		// urlObject.searchParams.delete("tabs[1]")
-		// urlObject.searchParams.delete("tabs[2]")
-		// urlObject.searchParams.delete("order[declined]")
-		// urlObject.searchParams.delete("order[invited]")
-		// urlObject.searchParams.delete("order[maybe]")
-		// urlObject.searchParams.delete("bucket_schema[invited]")
-		// urlObject.searchParams.delete("bucket_schema[going]")
-		// const newUrl = decodeURIComponent(urlObject.href)
-		// console.log("newUrl", newUrl)
-		// const newJsonData = await getJsonResponse(tab, newUrl)
-		// console.log("SS1", newJsonData.payload.watched.sections)
-		// const sections = newJsonData.payload.watched.sections
-		// results = results.concat(extractGuestsFromArray(sections[1][1], eventUrl, eventName, "Interested"))
-		// results = results.concat(extractGuestsFromArray(sections[2][1], eventUrl, eventName, "Interested"))
-		// for (let status of eventStatuses) {
-		// 	const sections = newJsonData.payload[status.toLowerCase()].sections
-		// 	if (status === "Watched") { status = "Interested" } // Interested status is called Watched in the json
-		// 	results = results.concat(extractGuestsFromArray(sections[1][1], status))
-		// 	results = results.concat(extractGuestsFromArray(sections[2][1], status))
-		// }
-
-	} catch (err) {
-		console.log("ERRICI", err)
-		console.log("S2", jsonData.payload)
-		console.log("S2", jsonData.payload.going.sections)
-		const eventStatuses = ["Going", "Maybe", "Invited", "Declined"] // private event
-		for (const status of eventStatuses) {
-			results = results.concat(extractGuestsFromArray(jsonData.payload[status.toLowerCase()].sections[1][1], eventUrl, eventName, status))
-			results = results.concat(extractGuestsFromArray(jsonData.payload[status.toLowerCase()].sections[2][1], eventUrl, eventName, status))
-		}
+			let statusType = status
+			if (status === "Watched") { // Interested status is called Watched in the json
+				statusType = "Interested"
+			}
+			results = results.concat(extractGuestsFromArray(sections[1][1], eventUrl, eventName, statusType)) // friends as guests
+			results = results.concat(extractGuestsFromArray(sections[2][1], eventUrl, eventName, statusType)) // non-friends as guests
+			try {
+				let nextCursor = jsonData.payload[status.toLowerCase()].cursor
+				if (nextCursor) {
+					do {
+						console.log("CURS", nextCursor)
+						const newResults = await loadGuests(tab, url, nextCursor, eventUrl, eventName, status)
+						results = results.concat(newResults.results)
+						nextCursor = newResults.cursor
+						console.log("status", status, " resultsLength", results.length)	
+						console.log("reNextCursor", nextCursor)	
+						const timeLeft = await utils.checkTimeLeft()
+						if (!timeLeft.timeLeft) {
+							utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+							break
+						}
+					} while (nextCursor)
+				}	
+			} catch (err) {
+				utils.log(`Error getting the full list of attendees: ${err}`, "error")
+			}	
+		}	
 	}
 	results = removeDuplicates(results)
 	return results
@@ -235,6 +204,23 @@ const getEventFirstInfo = (arg, cb) => {
 	const date = document.querySelector("#title_subtitle > span").getAttribute("aria-label")
 	const name = document.querySelector("#title_subtitle h1").textContent
 	cb(null, { date, name})
+}
+
+// checks if the event is public (true) or private (false)
+const eventIsPublic = (arg, cb) => {
+	const link = document.querySelector("#event_guest_list a").href
+	cb(null, link.includes("public_guest_list"))
+}
+
+// check if Facebook has blocked profile viewing (1 <a> tag) or it's just the profile that blocked us (3 <a> tags)
+const checkUnavailable = (arg, cb) => {
+	try {
+		const aTags = document.querySelector(".uiInterstitialContent").querySelectorAll("a").length
+		if (aTags === 3) { cb(null, true) }
+	} catch (err) {
+		//
+	}
+	cb(null, false)
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -252,7 +238,7 @@ const getEventFirstInfo = (arg, cb) => {
 		}
 	}
 	const tab = await nick.newTab()
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberofGuestsperLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberofEventsperLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let eventsToScrape, result = []
 	let interceptedUrl
@@ -271,11 +257,21 @@ const getEventFirstInfo = (arg, cb) => {
 			eventsToScrape[i] = utils.adjustUrl(eventsToScrape[i], "facebook")
 		}
 		eventsToScrape = eventsToScrape.filter(str => str) // removing empty lines
-		if (!numberofGuestsperLaunch) {
-			numberofGuestsperLaunch = eventsToScrape.length
+		if (!numberofEventsperLaunch) {
+			numberofEventsperLaunch = eventsToScrape.length
 		}
-		eventsToScrape = getUrlsToScrape(eventsToScrape.filter(el => checkDb(el, result, "query")), numberofGuestsperLaunch)
-	}	
+	}
+	const lastUrl = eventsToScrape[eventsToScrape.length - 1]
+	eventsToScrape = getUrlsToScrape(eventsToScrape.filter(el => utils.checkDb(el, result, "eventUrl")), numberofEventsperLaunch)
+	if (eventsToScrape.length === 0) {
+		if (lastUrl) {
+			utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
+			eventsToScrape = [lastUrl]  // if every group's already been scraped, we're scraping the last one
+		} else {
+			utils.log("Input spreadsheet is empty.", "error")
+			nick.exit(1)
+		}
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(eventsToScrape, null, 4)}`)
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
@@ -283,15 +279,10 @@ const getEventFirstInfo = (arg, cb) => {
 	let urlCount = 0
 	for (let eventUrl of eventsToScrape) {
 		interceptedUrl = null
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-			break
-		}
 		try {
 			utils.log(`Scraping events from ${eventUrl}`, "loading")
 			urlCount++
-			buster.progressHint(urlCount / eventsToScrape.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
+			buster.progressHint(urlCount / eventsToScrape.length, `${urlCount} event${urlCount > 1 ? "s" : ""} processed`)
 			try {
 				await tab.open(eventUrl)
 			} catch (err1) {
@@ -310,8 +301,11 @@ const getEventFirstInfo = (arg, cb) => {
 				if (firstInfo.date && firstInfo.name) {
 					utils.log(`${firstInfo.name} event of ${firstInfo.date}.`, "info")
 				}
+				const isPublic = await tab.evaluate(eventIsPublic)
 				console.log("Clicking")
+
 				await tab.click("#event_guest_list a")
+				
 				const initDate = new Date()
 				do {
 					if (new Date() - initDate > 10000) {
@@ -320,13 +314,29 @@ const getEventFirstInfo = (arg, cb) => {
 					}	
 					await tab.wait(1000)
 				} while (!interceptedUrl)
-				result = result.concat(await extractGuests(tab, interceptedUrl, eventUrl, firstInfo.name))
+				const extractedGuests = await extractGuests(tab, interceptedUrl, eventUrl, firstInfo.name, isPublic)
+				utils.log(`${extractedGuests.length} guests have been scraped.`, "done")
+				result = result.concat(extractedGuests)
+
+
 			} catch (err) {
-				utils.log(`Error accessing page!: ${err}`, "error")
+				await buster.saveText(await tab.getContent(), `Notvisible${Date.now()}.html`)
+
+				const isUnavailable = await tab.evaluate(checkUnavailable)
+				if (isUnavailable) {
+					utils.log("Event isn't available", "warning")
+				} else {
+					utils.log(`Error accessing page!: ${err}`, "error")
+				}
 			}			
 		} catch (err) {
-			utils.log(`Can't scrape the profile at ${eventUrl} due to: ${err.message || err}`, "warning")
+			utils.log(`Can't scrape event at ${eventUrl} due to: ${err.message || err}`, "warning")
 			continue
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)

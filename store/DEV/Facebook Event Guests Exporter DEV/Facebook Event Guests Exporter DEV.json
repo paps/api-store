@@ -44,7 +44,7 @@
 						"placeholder": "Facebook Event link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
-					"numberofPostsperLaunch": {
+					"numberofEventsperLaunch": {
 						"label": "Number of events to process per launch <a href=\"/api-store/8368/facebook-post-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
