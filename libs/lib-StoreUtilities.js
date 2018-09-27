@@ -150,7 +150,7 @@ class StoreUtilities {
 	log(message, type) {
 		if (this.test) {
 			this.output += `${type}:>${message}\n`
-			if (type === "error" || (type === "warning" && !this.testRunObject.keepGoingOnWarning)) {
+			if (type === "error" || (type === "warning" && !this.testRunObject.ignoreWarning)) {
 				console.log(`Test failed, got error of type ${type}: ${message}`)
 				this.nick.exit(1)
 			}
@@ -542,16 +542,28 @@ class StoreUtilities {
 
 	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
 	adjustUrl(url, domain) {
-		let urlObject = parse(url.toLowerCase())
-		if (urlObject.pathname.startsWith(domain)) {
-			urlObject = parse("https://www." + url)
+		if (url){
+			let urlObject = parse(url.toLowerCase())
+			if (urlObject.pathname.startsWith(domain)) {
+				urlObject = parse("https://www." + url)
+			}
+			if (urlObject.pathname.startsWith("www." + domain)) {
+				urlObject = parse("https://" + url)
+			}
+			return urlObject.href
 		}
-		if (urlObject.pathname.startsWith("www." + domain)) {
-			urlObject = parse("https://" + url)
-		}
-		return urlObject.href
+		return null
 	}
 
+	// Checks if a url is already in the csv, by matching with property
+	checkDb(str, db, property) {
+		for (const line of db) {
+			if (str === line[property]) {
+				return false
+			}
+		}
+		return true
+	}
 }
 
 module.exports = StoreUtilities

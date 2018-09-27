@@ -676,6 +676,16 @@ class StoreUtilities {
 		return urlObject.href
 	}
 
+	// Checks if a url is already in the csv, by matching with property
+	checkDb(str, db, property) {
+		for (const line of db) {
+			if (str === line[property]) {
+				return false
+			}
+		}
+		return true
+	}
+
 }
 
 module.exports = StoreUtilities
