@@ -69,7 +69,7 @@ class Facebook {
 				return e.toString()
 			}
 			if (sel === "#mainContainer") {
-				await tab.untilVisible("div#userNav .linkWrap.noCount", 15000)
+				await tab.untilVisible("div#userNav .linkWrap.noCount", 30000)
 				const name = await tab.evaluate((arg, callback) => {
 					callback(null, document.querySelector("div#userNav .linkWrap.noCount").textContent)
 				})

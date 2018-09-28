@@ -205,6 +205,9 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
+		await buster.saveText(await tab.getContent(), `Could not get total results count${new Date()}.html`)
+		await tab.screenshot(`${Date.now()}.png`)
+
 		utils.log(`Could not get total results count. ${err}`, "warning")
 	}
 	const redirectedUrl = await tab.evaluate(getLocationUrl)
@@ -224,7 +227,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
 				return result
 			}
-			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 7500, "or")
+			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 15000, "or")
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)

@@ -6,7 +6,7 @@
 	"gradientBegin": "#ACB6E5",
 	"gradientEnd": "#74EBD5",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(....)",
 		"extensionsPerLaunch": 2

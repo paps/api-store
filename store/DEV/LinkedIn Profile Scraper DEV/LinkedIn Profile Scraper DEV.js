@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -136,7 +137,7 @@ const removeLinkedinSubdomains = url => {
 		}
 		try {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
-			utils.log(`Opening page ${url}`, "loading")
+			utils.log(`Opening page ${scrapingUrl}`, "loading")
 			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl))
 			/**
 			 * the csv output from the lib is no more used in this API,

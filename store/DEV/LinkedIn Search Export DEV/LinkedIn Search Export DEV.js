@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -278,7 +279,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(err.message || err, "warning")
 					return result
 				}
-	
+				await buster.saveText(await tab.getContent(), `Firs's Scrape${Date.now()}.html`)
+
 				if (selector === selectors[0] || selector === selectors[2]) {
 					utils.log("No result on that page.", "done")	
 					break
@@ -306,7 +308,9 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 							canScroll = false
 							break
 						}
-					}	
+					}
+					await buster.saveText(await tab.getContent(), `Let's Scrape${Date.now()}.html`)
+
 					if (canScroll) { 
 						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
 					} else {
