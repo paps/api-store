@@ -33,7 +33,7 @@ const EMOJI_PATTERN = /\u{1F3F4}(?:\u{E0067}\u{E0062}(?:\u{E0065}\u{E006E}\u{E00
  * @description Accept all profiles visible on the page and returns an Array of added profiles.
  */
 const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
-	return tab.evaluate(function (arg, done) {
+	return tab.evaluate(function(arg, done) {
 		jQuery.noConflict()
 		let invites = jQuery("ul.mn-invitation-list > li")
 
@@ -63,9 +63,23 @@ const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
 			if (i < arg.nbProfiles) {
 				const toRet = {}
 				toRet.url = this.querySelector("a[data-control-name=\"profile\"]").href
-				toRet.fullName = this.querySelector("span.invitation-card__name").textContent.trim()
+
+				if (this.querySelector("span.invitation-card__name")) {
+					toRet.fullName = this.querySelector("span.invitation-card__name").textContent.trim()
+				} else if (this.querySelector("span.invitation-card__title")) {
+					toRet.fullName = this.querySelector("span.invitation-card__title").textContent.trim()
+				} else {
+					toRet.fullName = null
+				}
 				toRet.firstName = toRet.fullName ? toRet.fullName.split(" ")[0] : null
-				toRet.job = this.querySelector("span.invitation-card__occupation").textContent.trim()
+
+				if (this.querySelector("span.invitation-card__occupation")) {
+					toRet.job = this.querySelector("span.invitation-card__occupation").textContent.trim()
+				} else if (this.querySelector("span.invitation-card__subtitle")) {
+					toRet.job = this.querySelector("span.invitation-card__subtitle").textContent.trim()
+				} else {
+					toRet.job = null
+				}
 				toRet.messageLink = this.querySelector("a[data-control-name=\"personalized_message\"]").href
 				jQuery(this).find("input[type=\"checkbox\"]").click()
 				return toRet
