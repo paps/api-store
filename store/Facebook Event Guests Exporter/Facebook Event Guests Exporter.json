@@ -28,11 +28,11 @@
 			"options": {
 				"fields": {
                     "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie c_user <a href=\"/api-store/8674/facebook-event-guests-exporter#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your c_user session cookie here"
                     },
                     "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie xs <a href=\"/api-store/8674/facebook-event-guests-exporter#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your xs session cookie here"
                     },
 					"inputUrl": {
@@ -40,7 +40,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook event URL"
 						],
-						"label": "Facebook event or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook event or Spreadsheet URL <a href=\"/api-store/8674/facebook-event-guests-exporter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
