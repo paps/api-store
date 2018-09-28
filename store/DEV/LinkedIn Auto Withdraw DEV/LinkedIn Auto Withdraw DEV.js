@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -146,6 +147,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	await tab.untilVisible(_selectors.pageWaitAnchor)
 	await tab.wait(10000)
 	await tab.scrollToBottom()
+	await tab.screenshot(`${Date.now()}.png`)
 
 	/**
 	 * withdraw until we get the same value of peopleCountToKeep

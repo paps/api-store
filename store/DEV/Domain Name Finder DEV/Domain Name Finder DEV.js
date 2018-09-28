@@ -1,12 +1,13 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -192,6 +193,10 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		try {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
+			if (res.domain === "yahoo.com") { 
+				await tab.screenshot(`${Date.now()}.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
+			}
 			delete res.codename
 			result.push(res)
 		} catch (error) {
@@ -200,6 +205,11 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		i++
 	}
 	db.push(...result)
+	try { 
+		await buster.saveText(await tab.getContent(), "page.html")
+	} catch (err) {
+		utils.log("err", "warning")
+	}
 	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
 	nick.exit()
 })()

@@ -6,7 +6,7 @@
 
 When you follow someone on LinkedIn, a notification is sent to him/her. This is a chance for you to make them visit your profile or, even better, make them follow you back!
 
-Even if they don't, you'll have access to there publications and will be able to extract the list of people who commented and/or liked them.
+Even if they don't, you'll have access to their publications and will be able to extract the list of people who commented and/or liked them.
 
 # Our solution: Make people following you by following them.
 
@@ -84,13 +84,13 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn follow requests.
+This will launch the API and, if you didn't already change the spreadsheet URL, follow Phantombuster's team.
 
 # ⚙️️Repetition setup ⚙️
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the API is launched, it will send 10 follow requests and stop. (You can lower this value in the API's configuration.)
+Every time the API is launched, it will send follow 10 profiles and stop. (You can lower this value in the API's configuration.)
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 

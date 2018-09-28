@@ -346,8 +346,9 @@ class WebSearch {
 				codenameList += this.engines[this.engineUsed].codename
 				this.engineUsed = _switchEngine.call(this)
 				// slow down a little
-				await this.tab.wait(this.enginesDown.length * (1500 + (Math.random() * 500)))
-			}
+				const waitTime = this.enginesDown.length * (1500 + (Math.random() * 500))
+				console.log("waitTime=", waitTime)
+				await this.tab.wait(waitTime)			}
 		}
 		results.codename = codenameList
 		this.verbose && console.log(`-->> returning an array of ${results.results.length} results from engine ${results.engine} (engines used: ${codenameList})`)

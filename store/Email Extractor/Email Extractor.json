@@ -8,7 +8,7 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": true,
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"defaultArgument": {
 		"urls": [ "https://phantombuster.com" ],
 		"timeToWait": 5000,

@@ -157,6 +157,8 @@ class Instagram {
 		// Waiting Instagram results
 		await tab.waitUntilVisible("nav div[role=button]", 7500)
 		await tab.wait(1000)
+		
+
 		const found = await tab.evaluate((arg, cb) => {
 			const urls =
 						Array

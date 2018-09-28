@@ -6,7 +6,6 @@
     "gradientEnd": "#5D26C1",
     "argumentDescription": "",
     "hidden": false,
-    "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
         "sessionCookie": "your_session_cookie",
