@@ -161,7 +161,7 @@ const jsonToCsvOutput = json => {
 	queries = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName.trim())
 	queries = queries.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, profilesPerLaunch)
 	if (queries.length < 1) {
-		utils.log("Spreadsheet is empty or every conversations are  dscraped", "warning")
+		utils.log("Spreadsheet is empty or every conversations are scraped", "warning")
 		nick.exit(0)
 	}
 	utils.log(`Urls to scrape ${JSON.stringify(queries, null, 2)}`, "info")
