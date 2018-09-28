@@ -45,6 +45,10 @@
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
+					},
+				    "maxLikers": {
+						"label": "Maximum number of likers to extract",
+						"helper": "By default, there is no limit"
 					}
 				}
 			}
@@ -72,6 +76,10 @@
 			},
             "csvName": {
 				"type": "string",
+				"required": false
+	   	 	},
+			"maxLikers": {
+				"type": "number",
 				"required": false
 			}
 		}

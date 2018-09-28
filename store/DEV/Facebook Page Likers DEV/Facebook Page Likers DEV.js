@@ -32,7 +32,7 @@ const facebook = new Facebook(nick, buster, utils)
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, csvName, maxNumber } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 
 	let pageUrls = [], result = []
@@ -46,7 +46,6 @@ const facebook = new Facebook(nick, buster, utils)
 	}
 
 	const inputUrl = new URL(spreadsheetUrl)
-
 	if (inputUrl.hostname.toLowerCase().includes("facebook.com")) { // facebook page
 		let pageUrl = utils.adjustUrl(spreadsheetUrl, "facebook")
 			if (!pageUrl) {	
@@ -54,7 +53,24 @@ const facebook = new Facebook(nick, buster, utils)
 			}
 			pageUrls.push(pageUrl)	
 	} else { // CSV
-		// TODO
+		
+		let csvUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		csvUrls = csvUrls.filter(str => str) // removing empty lines
+		for (let i = 0; i < csvUrls.length; i++) { // cleaning all group entries
+			csvUrls[i] = utils.adjustUrl(csvUrls[i], "facebook")
+		}
+		csvUrls = csvUrls.filter(query => {
+			if (agentObject.lastQuery && (query === agentObject.lastQuery)) {
+				return true
+			}
+			for (const line of result) {
+				if (query === line.query) {
+					return false
+				}
+			}
+			return true
+		})
+		pageUrls = csvUrls
 	}
 
 	let currentResult = []
@@ -130,75 +146,100 @@ const facebook = new Facebook(nick, buster, utils)
 
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
 
-		const urlTemplate = new URL(firstRequestUrl)
-		let urlTemplateDataJson = urlTemplate.searchParams.get("data")
-
-		let urlTemplateData = JSON.parse(urlTemplateDataJson)
+		let urlTemplate
+		let urlTemplateData
 		let firstCursor = ""
 		let firstPageNumber = 1
 
-		if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
+		if (firstRequestUrl) {
 
-			firstCursor = agentObject.resumeCursor
-			firstPageNumber = agentObject.resumePageNumber
+			urlTemplate = new URL(firstRequestUrl)
+			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
+
+			urlTemplateData = JSON.parse(urlTemplateDataJson)
+
+			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
+
+				firstCursor = agentObject.resumeCursor
+				firstPageNumber = agentObject.resumePageNumber
+			}
+
+			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+
 		}
-
-		utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
-
 		// Main loop to retrieve user infos
 		let nextCursor = firstCursor
 		let nextPageNumber = firstPageNumber
 		let isEndOfPage = false
-		while (!isEndOfPage/* && (currentResult.length < 24)*/)	{
+		console.log(`MaxNumber : ${maxNumber}`)
+		while (!isEndOfPage && (!maxNumber || (currentResult.length < maxNumber)))	{
 
-			urlTemplateData["cursor"] = nextCursor
-			urlTemplateData["page_number"] = nextPageNumber
-			urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
+			let chr
+			let responseResult
+			let response
 
-			utils.log(`Requesting ${urlTemplate.toString()}`, "info")
+			if (urlTemplate) {
+				urlTemplateData["cursor"] = nextCursor
+				urlTemplateData["page_number"] = nextPageNumber
+				urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
 
-			let responseContent
+				utils.log(`Requesting ${urlTemplate.toString()}`, "info")
 
-			const onResponse = async (e) => {
-				if (e.type === "Document") {
-					let response = await tab.driver.client.Network.getResponseBody({requestId : e.requestId})
-					responseContent = response.body
-			}}
-		
-			tab.driver.client.on("Network.responseReceived", onResponse)
-		
-			await tab.open(urlTemplate.toString())
-			await tab.wait(1)
+				let responseContent
 
-			tab.driver.client.removeListener("Network.responseReceived", onResponse)
+				const onResponse = async (e) => {
+					if (e.type === "Document") {
+						let response = await tab.driver.client.Network.getResponseBody({requestId : e.requestId})
+						responseContent = response.body
+				}}
+			
+				tab.driver.client.on("Network.responseReceived", onResponse)
+			
+				await tab.open(urlTemplate.toString())
+				await tab.wait(1)
 
-			const initDate = new Date() 
-			while (!responseContent) {
-				await new Promise((resolve) => { 
-					setTimeout(() => {
-						resolve()
-					}, 50)
-				})
-				if ((new Date() - initDate) > 10000) {
-					break
+				tab.driver.client.removeListener("Network.responseReceived", onResponse)
+
+				const initDate = new Date() 
+				while (!responseContent) {
+					await new Promise((resolve) => { 
+						setTimeout(() => {
+							resolve()
+						}, 50)
+					})
+					if ((new Date() - initDate) > 10000) {
+						break
+					}
 				}
+
+				let jsonPos = responseContent.indexOf("{")
+				let jsonEndPos = responseContent.lastIndexOf("}")
+				let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
+				response = JSON.parse(responseJson)
+
+				let payload = response["payload"]
+
+				chr = cheerio.load(payload)
+				responseResult = chr("div[data-testid=\"results\"]")
+			} else {
+
+				let html = await tab.evaluate((arg, cb) => {
+					cb(null, document.querySelector("div#initial_browse_result").innerHTML)
+				})
+
+				chr = cheerio.load(html)
+				responseResult = chr("div#BrowseResultsContainer")
 			}
-
-			let jsonPos = responseContent.indexOf("{")
-			let jsonEndPos = responseContent.lastIndexOf("}")
-			let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
-			let response = JSON.parse(responseJson)
-
-			let payload = response["payload"]
-
-			const chr = cheerio.load(payload)
-			let responseResult = chr("div[data-testid=\"results\"]")
 
 			responseResult.children().each((userIndex, divUser) =>{
 
 				let name = chr("a[data-testid]", divUser).children("span").text()
 				
 				utils.log(`Exporting ${name}...`, "loading")
+
+				let imageUrl = chr("div > a > img", divUser).attr("src")
+
+				let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
 
 				let userInfos = []
 
@@ -212,6 +253,8 @@ const facebook = new Facebook(nick, buster, utils)
 				let userInfo = {}
 				userInfo.query = pageUrl
 				userInfo.name = name
+				userInfo.imageUrl = imageUrl
+				userInfo.isFriend = isFriend
 				userInfo.highlight = userInfos[1]
 				for (let i = 2; i < userInfos.length; ++i) {
 
@@ -221,29 +264,34 @@ const facebook = new Facebook(nick, buster, utils)
 				currentResult.push(userInfo)
 			})
 
-			let requests = response["jsmods"]["require"]
+			if (urlTemplate) {
 
-			for (let request of requests) {
+				let requests = response["jsmods"]["require"]
 
-				if (request.indexOf("BrowseScrollingPager") !== -1){
+				for (let request of requests) {
 
-					for (let param of request) {
+					if (request.indexOf("BrowseScrollingPager") !== -1){
 
-						let firstChild = param[0]
-						if (_.isObject(firstChild) && (!_.isUndefined(firstChild.cursor))) {
+						for (let param of request) {
 
-							nextCursor = firstChild.cursor;
-							break
-						} else if (_.isNull(firstChild)) {
-							isEndOfPage = true
-							break
+							let firstChild = param[0]
+							if (_.isObject(firstChild) && (!_.isUndefined(firstChild.cursor))) {
+
+								nextCursor = firstChild.cursor;
+								break
+							} else if (_.isNull(firstChild)) {
+								isEndOfPage = true
+								break
+							}
 						}
+						break
 					}
-					break
 				}
-			}
 
-			++nextPageNumber
+				++nextPageNumber
+			} else {
+				isEndOfPage = true
+			}
 
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
