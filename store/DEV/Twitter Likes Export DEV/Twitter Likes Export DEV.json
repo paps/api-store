@@ -1,0 +1,89 @@
+{
+	"slug": "twitter-likes-export",
+	"description": "",
+	"image": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": true,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)/",
+		"columnName": ""
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter session cookie",
+						"helper": "Twitter <b>auth_token</b> cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a tweet URL",
+						"type": "url"
+					},
+					"columnName": {
+						"label": "Column name where tweets URLs are stored",
+						"helper": "The API willl take the first column, if the field is blank",
+						"placeholder": "Tweets"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
