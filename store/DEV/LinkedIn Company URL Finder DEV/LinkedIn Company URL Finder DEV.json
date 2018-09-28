@@ -41,6 +41,10 @@
 					"csvName": {
 						"label": "Output CSV name",
 						"placeholder": "result"
+					},
+					"numberOfLinesToProcess": {
+						"label": "Number of lines to process per launch (all of them if empty)",
+						"inputType": "number"
 					}
 				}
 			}
@@ -57,6 +61,9 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"numberOfLinesToProcess": {
+				"type": "number"
 			}
 		},
 		"oneOf": [

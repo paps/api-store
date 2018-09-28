@@ -243,6 +243,8 @@ const getTotalCommentsCount = (arg, cb) => {
 				if (totalCount) {
 					utils.log(`There's ${totalCount} comments in total`, "info")
 				} else {
+					await buster.saveText(await tab.getContent(), "aCouldn't get comments count.html")
+
 					utils.log("Couldn't get comments count", "warning")
 				}
 				const currentUrl = await tab.evaluate((arg, cb) => cb(null, document.location.href))
