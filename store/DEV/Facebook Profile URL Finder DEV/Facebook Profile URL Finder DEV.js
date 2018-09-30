@@ -31,6 +31,7 @@ let db
 	const {spreadsheetUrl, csvName, columnName} = utils.validateArguments()
 	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const result = []
+	let i = 1
 
 	db = await utils.getDb(DB_NAME)
 
@@ -42,6 +43,7 @@ let db
 	}
 
 	for (const one of queries) {
+		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -64,6 +66,7 @@ let db
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		result.push({ facebookUrl: link, query: one })
+		i++
 	}
 
 	db.push(...result)

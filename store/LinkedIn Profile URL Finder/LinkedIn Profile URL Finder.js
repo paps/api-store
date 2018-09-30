@@ -55,11 +55,11 @@ const normalizeLinkedInURL = url => {
 	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName, numberOfLinesToProcess} = utils.validateArguments()
 	const toReturn = []
+	let i = 1
 
 	if (!csvName) {
 		csvName = DEFAULT_DB_NAME
 	}
-
 	if (spreadsheetUrl) {
 		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(queries) === "string") {
@@ -67,7 +67,6 @@ const normalizeLinkedInURL = url => {
 	}
 
 	db = await utils.getDb(`${csvName}.csv`)
-
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
 	queries = queries.filter(str => str) // removing empty lines
 	if (numberOfLinesToProcess) { queries = queries.slice(0, numberOfLinesToProcess) }
@@ -78,6 +77,7 @@ const normalizeLinkedInURL = url => {
 	console.log(`Lines to process: ${JSON.stringify(queries, null, 4)}`)
 
 	for (const one of queries) {
+		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -99,6 +99,7 @@ const normalizeLinkedInURL = url => {
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ linkedinUrl: link, query: one })
+		i++
 	}
 
 	db.push(...toReturn)

@@ -30,6 +30,7 @@ let db
 	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
 	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let i = 1
 	const toReturn = []
 
 	db = await utils.getDb(DB_NAME)
@@ -40,6 +41,7 @@ let db
 	}
 
 	for (const one of queries) {
+		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -62,6 +64,7 @@ let db
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ twitterUrl: link, query: one })
+		i++
 	}
 
 	db.push(...toReturn)

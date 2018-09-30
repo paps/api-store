@@ -55,6 +55,7 @@ const normalizeLinkedInURL = url => {
 	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName, numberOfLinesToProcess} = utils.validateArguments()
 	const toReturn = []
+	let i = 1
 
 	if (!csvName) {
 		csvName = DEFAULT_DB_NAME
@@ -76,6 +77,7 @@ const normalizeLinkedInURL = url => {
 	console.log(`Lines to process: ${JSON.stringify(queries, null, 4)}`)
 
 	for (const one of queries) {
+		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -97,6 +99,7 @@ const normalizeLinkedInURL = url => {
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ linkedinUrl: link, query: one })
+		i++
 	}
 
 	db.push(...toReturn)

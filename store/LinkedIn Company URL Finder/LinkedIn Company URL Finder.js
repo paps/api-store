@@ -36,6 +36,7 @@ let db
 	const webSearch = new WebSearch(tab, buster)
 	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
 	const toReturn = []
+	let i = 1
 
 	if (!csvName) {
 		csvName = DEFAULT_DB_NAME
@@ -56,6 +57,7 @@ let db
 	}
 
 	for (const one of queries) {
+		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -77,6 +79,7 @@ let db
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
 		toReturn.push({ linkedinUrl: link, query: one })
+		i++
 	}
 
 	await tab.close()
