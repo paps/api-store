@@ -32,6 +32,11 @@ const DB_SHORT_NAME = DB_NAME.split(".").shift()
 
 // }
 
+/**
+ *
+ * @param {String} url
+ * @return {Boolean}
+ */
 const isUrl = url => {
 	try {
 		return (new URL(url)) !== null
@@ -40,6 +45,10 @@ const isUrl = url => {
 	}
 }
 
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
 const isTweetUrl = url => {
 	try {
 		let tmp = new URL(url)
@@ -151,6 +160,14 @@ const closePopUp = async (tab, closeSelector, waitSelector) => {
 	await tab.waitWhileVisible(waitSelector, 15000)
 }
 
+/**
+ * @async
+ * @description Function used to load & scrape all likes / RTs found in a tweet
+ * @param {Object} tab
+ * @param {String} url - Tweet URL
+ * @throws on scraping failure
+ * @return {Promise<Object>>}
+ */
 const getTweetsMetadata = async (tab, url) => {
 	let res = { url }
 	const infosToExtract = {
@@ -186,6 +203,11 @@ const getTweetsMetadata = async (tab, url) => {
 	return res
 }
 
+/**
+ * @description Create CSV output from the JSON output
+ * @param {Array<Object>} json - JSON output
+ * @return {Array<Object>} CSV output
+ */
 const createCsvOutput = json => {
 	const csv = []
 	for (const element of json) {
@@ -211,7 +233,7 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, queries, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, tweetsPerLaunch, queries,noDatabase } = utils.validateArguments()
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
 	const execResult = []
 
@@ -232,11 +254,17 @@ const createCsvOutput = json => {
 		}
 	}
 
-	queries = queries.filter(el => db.findIndex(line => line.url === el) < 0)
+	queries = queries.filter(el => db.findIndex(line => line.tweetUrl === el) < 0)
+	if (typeof tweetsPerLaunch === "number") {
+		queries = queries.slice(0, tweetsPerLaunch)
+	}
+
 	if (queries.length < 1) {
 		utils.log("Spreadsheet is empty or every tweets are scraped", "warning")
 		nick.exit()
 	}
+
+	utils.log(JSON.stringify(queries, null, 2), "info")
 
 	await twitter.login(tab, sessionCookie)
 	for (const query of queries) {
@@ -253,6 +281,5 @@ const createCsvOutput = json => {
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}` ,"error")
-	console.log(err.stack || "no stack")
 	nick.exit(1)
 })

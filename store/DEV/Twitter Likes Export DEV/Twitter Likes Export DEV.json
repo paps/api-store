@@ -38,6 +38,12 @@
 						"label": "Column name where tweets URLs are stored",
 						"helper": "The API willl take the first column, if the field is blank",
 						"placeholder": "Tweets"
+					},
+					"tweetsPerLaunch": {
+						"label": "Count of tweets to scrape per launch",
+						"helper": "By default the API will process every tweets",
+						"placeholder": 2,
+						"inputType": "number"
 					}
 				}
 			}
@@ -55,6 +61,11 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"tweetsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 1
 			}
 		},
 		"oneOf": [
