@@ -4,7 +4,7 @@ Wether you have found a post or have your own post that is creating engagement w
 # What will you need? ⚙️ 
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook post URLs in it, OR the direct link of a single Facebook post.
+- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook post URLs in it, OR the direct link of a single Facebook post. To get the URL of a Facebook post, just click on its timestamp.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 

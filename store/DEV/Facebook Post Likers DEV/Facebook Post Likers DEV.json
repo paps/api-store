@@ -1,7 +1,7 @@
 {
 	"slug": "facebook-post-likers",
-	"description": "Extract a list of all the profiles that liked any Facebook post",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Likers/Facebook+Post+Likers.png",
+	"description": "Extract a list of all the people who liked Facebook posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Likers/Facebook+Post+Likers_nobg.png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#373B44",

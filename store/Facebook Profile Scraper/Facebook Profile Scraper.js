@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,7 +18,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 const { URL } = require("url")

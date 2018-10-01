@@ -1,6 +1,6 @@
 # Collect information from Facebook profiles
 
-You have a list of Instagram profiles and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Facebook profiles you're targeting in a CSV file, like:
+You have a list of Facebook profiles and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Facebook profiles you're targeting in a CSV file, like:
 
 1. Facebook profile URLs
 2. Names
@@ -115,5 +115,5 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
 
-Facebook tends to notice when too many profiles viewings are done in a short period of time. We recommend spreading your scraping (like 5 profiles every 30min rather than 100 profiles in one go). Also if you're scraping more pages for additionnal data (like the Workd and Education or Places tabs), you should reduce that amount even further. 
-If too many viewing actions are done, Facebook will warn you and temporarily block profile viewing (only that) on your account for about one hour. If that happens, you should be careful and reduce your scraping frequency the next time.
+Facebook tends to notice when too many profiles viewings are done in a short period of time. We recommend spreading your scraping (like 5 profiles every 30min rather than 100 profiles in one go). Also if you're scraping more pages for additionnal data (like the Work and Education or Places tabs), you should reduce that amount even further. 
+If too many viewing actions are done, Facebook will warn you and temporarily block profile viewing on your account for about one hour. If that happens, you should be careful and reduce your scraping frequency the next time.

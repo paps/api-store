@@ -1,11 +1,11 @@
 {
 	"slug": "facebook-event-guests-exporter",
 	"description": "Extract a list of all guests of any Facebook event",
-	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Event+Guests+Exporter/Facebook+Event+Guests+Exporter.png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#373B44",
-	"gradientEnd": "#4286f4",
+	"gradientEnd": "#2F80ED",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",
