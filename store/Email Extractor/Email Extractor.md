@@ -1,6 +1,6 @@
 # Find email addresses in seconds
 
-Your prospects emails' are everywhere the problem is: how to find and collect them?
+Your prospects' emails are everywhere the problem is: how to find and collect them?
 
 The powerful Email Extractor API helps you to discover and extract emails automatically from a list of web pages and export all of them to a CSV file.
 

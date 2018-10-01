@@ -308,7 +308,7 @@ nick.newTab().then(async (tab) => {
 	 */
 	if (invitations.length > 0) {
 		let failedInvitations = Object.assign([], invitations)
-		utils.log(`Checking LinkedIn shadow ban for the ${invitations.length} invitations "sent"...`, "info")
+		utils.log("Double checking invitations...", "info")
 		await tab.wait(15000) // 15 seconds Time to let LinkedIn synchronize data on invitations managers if invitations weren't "shadow ban"
 		invitations = await validateInvitations(invitations)
 		let successInvitations = invitations.map(el => el.url)
@@ -318,7 +318,7 @@ nick.newTab().then(async (tab) => {
 		if (invitations.length < 1) {
 			utils.log("0 invitations sent", "warning")
 		} else {
-			failedInvitations.map(el => utils.log(`Invitation for ${el.baseUrl} is shadow banned`, "warning"))
+			failedInvitations.map(el => utils.log(`${el.baseUrl} can't be invited, don't worry you'll be able to retry in a few days`, "warning"))
 			utils.log(`${successInvitations.length} of the ${numberOfAddsPerLaunch} invitations were successfully sent`, "info")
 		}
 		failedInvitations.map(el => db.push({ baseUrl: el.baseUrl, error: "Shadow banned invitation" }))
