@@ -14,11 +14,12 @@ const nick = new Nick({
 	printPageErrors: false,
 	printRessourceErrors: false,
 	printNavigation: false,
-	printAborts: false
+	printAborts: false,
+	width: 1920,
+	height: 1080
 })
 
 const { URL } = require("url")
-const cheerio = require("cheerio")
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -28,8 +29,6 @@ const twitter = new Twitter(nick, buster, utils)
 
 const DB_NAME = "twitter-likes-export.csv"
 const DB_SHORT_NAME = DB_NAME.split(".").shift()
-
-/* global $ */
 
 // }
 
@@ -50,45 +49,164 @@ const isTweetUrl = url => {
 	}
 }
 
-const scrapeInfos = (arg, cb) => {
+const scrapeMetadata = (arg, cb) => {
 	const res = {};
 	if (document.querySelector("li.js-stat-favorites strong")) {
-		res.likes = parseInt(document.querySelector("li.js-stat-favorites strong").textContent.trim().replace(/\s/g, ""), 10)
+		res.likesCount = parseInt(document.querySelector("li.js-stat-favorites strong").textContent.trim().replace(/\s/g, ""), 10)
 	} else {
-		res.likes = -1
+		res.likesCount = -1
 	}
 
 	if (document.querySelector("li.js-stat-retweets strong")) {
-		res.retweets = parseInt(document.querySelector("li.js-stat-retweets strong").textContent.trim().replace(/\s/g, ""), 10)
+		res.retweetsCount = parseInt(document.querySelector("li.js-stat-retweets strong").textContent.trim().replace(/\s/g, ""), 10)
 	} else {
-		res.retweets = -1
+		res.retweetsCount = -1
 	}
 
 	cb(null, res)
 }
 
-const getUsersByAction = (arg, cb) => {
-	$.ajax({ type: "GET", url: `https://twitter.com/i/activity/${arg.action}_popup?id=${arg.id}`})
-	.done(raw => cb(null, JSON.parse(raw)))
-	.fail(err => cb(err.toString()))
+const scrapePopUp = (arg, cb) => {
+	const res = Array.from(document.querySelectorAll(arg.baseSelector)).map(user => {
+		const ret = {}
+
+		if (user.querySelector(arg.itemSelector)) {
+			ret.handle = user.querySelector(arg.itemSelector).dataset[arg.datasetHandle] || null
+			ret.name = user.querySelector(arg.itemSelector).dataset[arg.dataSetName] || null
+			ret.profileUrl = ret.handle ? `https://twitter.com/${ret.handle}` : null
+		}
+		ret.description = user.querySelector(arg.descriptionSelector) ? user.querySelector(arg.descriptionSelector).textContent.trim() : null
+		return ret
+	})
+	cb(null, res)
+}
+
+/**
+ * @async
+ * @param {Object} tab -
+ * @param {String} selector - CSS selector to click on
+ * @param {Number} [timeBeforeRelease] - time to wait between mousePressed & mouseReleased events (default no wait)
+ */
+const emulateHumanClick = async (tab, selector, timeBeforeRelease = 0) => {
+
+	const selectorPosition = await tab.evaluate((arg, cb) => {
+		const tmp = document.querySelector(arg.selector).getBoundingClientRect()
+		let res = {
+			top: tmp.top,
+			right: tmp.right,
+			bottom: tmp.bottom,
+			left: tmp.left,
+			width: tmp.width,
+			height: tmp.height,
+			x: tmp.x,
+			y: tmp.y
+		}
+		cb(null, res)
+	}, { selector })
+
+	// Using Nickjs click mechanism to get coordinates in order to click at the center of the element
+	let posX = 0.5
+	let posY = 0.5
+
+	posX = Math.floor(selectorPosition.width * (posX - (posX ^ 0)).toFixed(10)) + (posX ^ 0) + selectorPosition.left
+	posY = Math.floor(selectorPosition.height * (posY - (posY ^ 0)).toFixed(10)) + (posY ^ 0) + selectorPosition.top
+
+	const opts = {
+		x: posX,
+		y: posY,
+		button: "left",
+		clickCount: 1
+	}
+
+	opts.type = "mousePressed"
+	await tab.driver.client.Input.dispatchMouseEvent(opts)
+	if (timeBeforeRelease > 0) {
+		await tab.wait(timeBeforeRelease)
+	}
+	opts.type = "mouseReleased"
+	await tab.driver.client.Input.dispatchMouseEvent(opts)
+}
+
+/**
+ * @async
+ * @param {Object} tab - Nickjs Tab
+ * @param {String} openSelector - CSS selector used to open the popup
+ * @param {String} waitSelector - CSS selector present when the popup is loaded
+ * @throws when click or waitUntilVisible fails
+ */
+const openPopUp = async (tab, openSelector, waitSelector) => {
+	await emulateHumanClick(tab, openSelector, 500)
+	await tab.waitUntilVisible(waitSelector, 15000)
+}
+
+/**
+ * @async
+ * @param {Object} tab - Nickjs Tab
+ * @param {String} openSelector - CSS selector used to close the popup
+ * @param {String} waitSelector - CSS selector present when the popup is loaded
+ * @throws when click or waitWhileVisible fails
+ */
+const closePopUp = async (tab, closeSelector, waitSelector) => {
+	await emulateHumanClick(tab, closeSelector, 500)
+	await tab.waitWhileVisible(waitSelector, 15000)
 }
 
 const getTweetsMetadata = async (tab, url) => {
-	let tweetUrl = new URL(url)
-	let tweetId = tweetUrl.pathname.split("/").pop()
+	let res = { url }
+	const infosToExtract = {
+		baseSelector: "ol.activity-popup-users > li.js-stream-item",
+		itemSelector: "div.account",
+		datasetHandle: "screenName",
+		dataSetName:  "name",
+		descriptionSelector: "p.bio.u-dir"
+	}
+	const likers = []
+	const retweets = []
 	await tab.open(url)
 	await tab.waitUntilVisible("div#permalink-overlay", 15000)
-	const metadata = await tab.evaluate(scrapeInfos)
-	const likersHTML = await tab.evaluate(getUsersByAction, { id: tweetId, action: "favorited" })
-	const rtHTML = await tab.evaluate(getUsersByAction, { id: tweetId, action: "retweeted" })
+	const metadata = await tab.evaluate(scrapeMetadata)
 
-	const $likers = cheerio.load(likersHTML.htmlContent)
-	const $rt = cheerio.load(rtHTML.htmlContent)
+	res = Object.assign({}, res, metadata)
 
-	console.log($likers("div.account").html())
+	// Get likers
+	utils.log(`Scraping likers on ${url}...`, "loading")
+	await openPopUp(tab, "li.js-stat-count > a.request-favorited-popup", infosToExtract.baseSelector)
+	likers.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+	res.likers = likers
+	await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
 
-	await tab.screenshot(`likes-${Date.now()}.jpg`)
-	return Object.assign({ url }, metadata)
+	// Get retweets
+	utils.log(`Scraping retweeters on ${url}...`, "loading")
+	await openPopUp(tab, "li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup", infosToExtract.baseSelector)
+	retweets.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+	res.retweets = retweets
+	await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+
+	utils.log(`${url} scraped`, "done")
+	return res
+}
+
+const createCsvOutput = json => {
+	const csv = []
+	for (const element of json) {
+		let csvLikers = element.likers.map(user => {
+			let ret = Object.assign({}, user)
+			ret.likesCount = element.likesCount
+			ret.tweetUrl = element.url
+			ret.action = "liked"
+			return ret
+		})
+		let csvRt = element.retweets.map(user => {
+			let ret = Object.assign({}, user)
+			ret.rtCount = element.retweetsCount
+			ret.tweetUrl = element.url
+			ret.action = "RT"
+			return ret
+		})
+		csv.push(...csvLikers)
+		csv.push(...csvRt)
+	}
+	return csv
 }
 
 ;(async () => {
@@ -130,8 +248,7 @@ const getTweetsMetadata = async (tab, url) => {
 		const data = await getTweetsMetadata(tab, query)
 		execResult.push(data)
 	}
-	// await tab.wait(1000)
-	db.push(...execResult)
+	db.push(...createCsvOutput(execResult))
 	await utils.saveResults(noDatabase ? [] : execResult, noDatabase ? [] : db, DB_SHORT_NAME, null, false)
 	nick.exit()
 })().catch(err => {
