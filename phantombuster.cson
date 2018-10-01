@@ -12,6 +12,7 @@
 		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
 		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
 		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
+		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
 
 		# API store DEV
 		# -------------
