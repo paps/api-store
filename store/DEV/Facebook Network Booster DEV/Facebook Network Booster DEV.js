@@ -215,7 +215,6 @@ nick.newTab().then(async (tab) => {
 				} catch (err) {
 					utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
 					await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
-	
 				}
 			} else {  
 				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
