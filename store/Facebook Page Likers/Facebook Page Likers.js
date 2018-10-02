@@ -87,7 +87,7 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 	return { pageId, likeNumber}
 }
 
-const interceptRequestTemplate = async (agentObject, tab, pageUrl) => {
+const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 	let firstRequestUrl
 	let urlTemplate
 	let urlTemplateData
@@ -128,8 +128,9 @@ const interceptRequestTemplate = async (agentObject, tab, pageUrl) => {
 			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
 
 			urlTemplateData = JSON.parse(urlTemplateDataJson)
-
-			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
+			
+			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)
+				&& (result.filter(query => query === pageUrl).length > 0)) {
 
 				firstCursor = agentObject.resumeCursor
 				firstPageNumber = agentObject.resumePageNumber
@@ -310,7 +311,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 		//utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
 
-		let { urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(agentObject, tab, pageUrl)
+		let { urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
 
 		// Main loop to retrieve user infos
 		let nextCursor = firstCursor
