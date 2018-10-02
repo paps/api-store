@@ -3,8 +3,8 @@ class Messaging {
 		this.nick = nick
 		this.buster = buster
 		this.utils = utils
-    }
-    
+	}
+
 	/**
 	* @param {String} message - message
 	* @return {Array<Strign>} all tags
@@ -20,7 +20,6 @@ class Messaging {
 	 * @return {Promise<String>} - inflated message
 	 */
 	forgeMessage(message, tags) {
-	// Do not override the existing firstName: spreadsheetUrl input is mandatory
 		const matches = message.match(/#[a-zA-Z0-9]+#/gm)
 		if (Array.isArray(matches)) {
 			for (const one of matches) {
@@ -34,7 +33,7 @@ class Messaging {
 			}
 		}
 		return message
-	}	
+	}
 
 }
 
