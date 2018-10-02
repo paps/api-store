@@ -375,6 +375,9 @@ const isLinkedInSearchURL = (targetUrl) => {
 	if (!category) { category = "People" }
 	// 							//
 	if (typeof search === "string") {
+		if (search.includes("mynetwork/invite-connect/connections")) { // if it's the first connections list page, we replace it by the equivalent search URL
+			search = "https://www.linkedin.com/search/results/people/v2/?facetNetwork=%5B%22F%22%5D&origin=FACETED_SEARCH"
+		}
 		if (typeof isLinkedInSearchURL(search) === "string") {
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
