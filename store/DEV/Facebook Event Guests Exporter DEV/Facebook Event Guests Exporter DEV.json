@@ -2,7 +2,7 @@
 	"slug": "facebook-event-guests-exporter",
 	"description": "Extract a list of all guests of any Facebook event",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Event+Guests+Exporter/Facebook+Event+Guests+Exporter.png",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#373B44",
 	"gradientEnd": "#2F80ED",
