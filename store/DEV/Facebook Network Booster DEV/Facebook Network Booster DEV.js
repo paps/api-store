@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js, lib-Messaging-DEV.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -16,113 +16,23 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
+const Messaging = require("./lib-Messaging-DEV")
+const inflater = new Messaging(nick, buster, utils)
 let blocked
 const { URL } = require("url")
 
-
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.profileUrl) {
-			return false
-		}
-	}
-	return true
-}
-
-// only keep the slug or id
-const cleanFacebookProfileUrl = url => {
+const isUrl = url => {
 	try {
-		const urlObject = new URL(url)
-		if (urlObject) {
-			if (url.includes("profile.php?id=")) {
-				const id = urlObject.searchParams.get("id")
-				return "https://facebook.com/profile.php?id=" + id
-			} else {
-				let path = urlObject.pathname.slice(1)
-				if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
-				return "https://facebook.com/" + path
-			}
-		}
+		let tmp = new URL(url)
+		return tmp !== null
 	} catch (err) {
-		return null
+		return false
 	}
-}
-
-//  format the data for the csv file
-const craftCsvObject = data => {
-	const csvResult = {
-		profileUrl: data.profileUrl,
-		profilePictureUrl: data.profilePictureUrl,
-		coverPictureUrl: data.coverPictureUrl,
-		name: data.name,
-		status: data.status,
-	}
-
-	if (data.work) {
-		for (let i = 0 ; i < data.work.length ; i++) {
-			csvResult["workName" + (i ? i + 1 : "")] = data.work[i].name
-			if (data.work[i].url) {
-				csvResult["workUrl" + (i ? i + 1 : "")] = data.work[i].url
-			}
-			csvResult["workDescription" + (i ? i + 1 : "")] = data.work[i].description
-		}
-	}
-
-	if (data.educations) {
-		for (let i = 0 ; i < data.educations.length ; i++) {
-			csvResult["educationName" + (i ? i + 1 : "")] = data.educations[i].name
-			if (data.educations[i].url) {
-				csvResult["educationUrl" + (i ? i + 1 : "")] = data.educations[i].url
-			}
-			csvResult["educationDescription" + (i ? i + 1 : "")] = data.educations[i].description
-		}
-	}
-
-	if (data.cities) {
-		for (let i = 0 ; i < data.cities.length ; i++) {
-			csvResult["cityName" + (i ? i + 1 : "")] = data.cities[i].name
-			if (data.cities[i].url) {
-				csvResult["cityUrl" + (i ? i + 1 : "")] = data.cities[i].url
-			}
-			csvResult["citiesDescription" + (i ? i + 1 : "")] = data.cities[i].description
-		}
-	}
-
-	if (data.familyMembers) {
-		for (let i = 0 ; i < data.familyMembers.length ; i++) {
-			csvResult["familyMemberName" + (i ? i + 1 : "")] = data.familyMembers[i].name
-			if (data.familyMembers[i].profileUrl) {
-				csvResult["familyProfileUrl" + (i ? i + 1 : "")] = data.familyMembers[i].profileUrl
-			}
-			csvResult["familyLink" + (i ? i + 1 : "")] = data.familyMembers[i].link
-		}
-	}
-
-	if (data.contactInfo) {
-		for (let i = 0 ; i < data.contactInfo.length ; i++){
-			csvResult[Object.keys(data.contactInfo[i])] = Object.values(data.contactInfo[i])
-		}
-	}
-	if (data.basicInfo) {
-		for (let i = 0 ; i < data.basicInfo.length ; i++){
-			csvResult[Object.keys(data.basicInfo[i])] = Object.values(data.basicInfo[i])
-		}
-	}
-
-	if (data.lifeEvents) {
-		for (let i = 0 ; i < data.lifeEvents.length ; i++) {
-			csvResult["lifeEvent" + (i ? i + 1 : "")] = data.lifeEvents[i]
-		}
-	}
-	if (data.bio) {	csvResult.bio = data.bio }
-	if (data.quotes) { csvResult.quotes = data.quotes }
-	return csvResult
 }
 
 // Checks if a url is a facebook group url
@@ -151,18 +61,41 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 	cb(null, true)
 }
 
-// load profile page and handle tabs switching
-const loadFacebookProfile = async (tab, profileUrl) => {
+
+const getNameFromMainPage = (arg, cb) => {
+	cb(null, document.querySelector("#fb-timeline-cover-name").textContent)
+}
+
+// click on Add Friend Button if available
+const checkFriendButtonAndSend = (arg, cb) => {
+	if (document.querySelector("button.FriendRequestAdd")) {
+		if (!document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem")) { // if button to Add Friend is visible
+			document.querySelector("button.FriendRequestAdd").click()
+			cb(null, "Request sent")
+		} else if (document.querySelector("button.FriendRequestOutgoing") && !document.querySelector("button.FriendRequestOutgoing").classList.contains("hidden_elem")) { // if button Request Sent is visible
+			cb(null, "Request already pending")
+		}
+	} else {
+		cb(null, "No friend button available")
+	}
+	if (document.querySelector("div.FriendButton")) {
+		cb(null, "Already Friend")
+	}
+	cb(null, "Weird")
+}
+
+const openProfilePage = async (tab, profileUrl) => {
 	await tab.open(profileUrl)
 	let selector
 	try {
-		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
+		selector = await tab.waitUntilVisible("#content") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
 			await tab.screenshot(`error${new Date()}.png`)
 			utils.log(`${profileUrl} page is not available.`, "error")
 			return { profileUrl, error: "The profile page isn't available"}
 		}
+		
 	}
 	if (selector === "#content > div.uiBoxWhite") {
 		const isBlocked = await tab.evaluate(checkIfBlockedOrSoloBlocked)
@@ -174,72 +107,122 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 			return { profileUrl, error: "The profile page isn't visible" }
 		}
 	}
-	await tab.evaluate(openChat)
-	await tab.wait(1000)
-	await buster.saveText(await tab.getContent(), `openChat ${new Date()}.html`)
-	await tab.screenshot(`openChat${new Date()}.png`)
-
-
+	try {
+		const name = await tab.evaluate(getNameFromMainPage)
+		utils.log(`Opened profile of ${name}.`, "done")
+		return { profileUrl, name }
+	} catch (err) {
+		utils.log(`${profileUrl} chat page is not available.`, "error")
+	 	return { profileUrl, error: "The profile page isn't available"}
+	}
 }
 
+const sendMessage = async (tab, message) => {
+	await tab.evaluate(openChat)
+	await tab.wait(1000)
+	await tab.sendKeys(".fbNubFlyoutFooter > div > div", message)
+	await buster.saveText(await tab.getContent(), `openChat ${new Date()}.html`)
+	await tab.screenshot(`openChat${new Date()}.png`)
+	// await tab.click("[label=send]")
+}
+
+const addFriend = async (tab, name) => {
+	const status = await tab.evaluate(checkFriendButtonAndSend)
+	switch (status) {
+		case "Request sent":
+			utils.log(`Friend request sent for ${name}.`, "done")
+			break
+		case "Request already pending":
+			utils.log(`Friend request for ${name} was already sent, still pending.`, "warning")
+			break
+		case "Already Friend":
+			utils.log(`We're already friend with ${name}.`, "done")
+			break
+		case "No friend button available":
+			utils.log(`Can't find Add Friend Button for ${name}, they may have declined previous invitations.`, "warning")
+			break
+		case "Weird":
+			await buster.saveText(await tab.getContent(), `Werid ${new Date()}.html`)
+			console.log("Dunno what happened")
+	}
+	return status
+}
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, message, doNotAdd, profilesPerLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let db = await utils.getDb(csvName + ".csv")
-	let result = []
+	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
 	if (isFacebookProfileUrl(spreadsheetUrl)) {
 		profilesToScrape = [ spreadsheetUrl ]
 	} else {
-		profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
+		let csvHeader = profilesToScrape[0].filter(cell => !isUrl(cell))
+		let messagesTags = inflater.getMessageTags(message).filter(el => csvHeader.includes(el))
+		let columns = [ columnName, ...messagesTags ]
+		profilesToScrape = utils.extractCsvRows(profilesToScrape, columns)
+		utils.log(`Got ${profilesToScrape.length} lines from csv.`, "done")
 	}
-	profilesToScrape = profilesToScrape.map(cleanFacebookProfileUrl)
-	profilesToScrape = profilesToScrape.filter(str => str) // removing empty lines
-	profilesToScrape = profilesToScrape.filter(str => checkDb(str, db)) // checking if already processed
-	profilesToScrape = profilesToScrape.slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
-	// console.log("resultAVANT", db)
-	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
+	if (!columnName) {
+		columnName = "0"
+	}
+	profilesToScrape = profilesToScrape.filter(el => result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
 	}
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
-	for (let profileUrl of profilesToScrape) {
+	for (let profileObject of profilesToScrape) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
-		profileCount++
-		buster.progressHint(profileCount / profilesToScrape.length, `Processing profile ${profileCount} out of ${profilesToScrape.length}`)
-		if (isFacebookProfileUrl(profileUrl)) { // Facebook Profile URL
-			utils.log(`Processing profile of ${profileUrl}...`, "loading")
-			try {
-				const tempResult = await loadFacebookProfile(tab, profileUrl)
-				if (tempResult && tempResult.profileUrl) {
-					const tempCsvResult = craftCsvObject(tempResult)
-					result.push(tempResult)
-					db.push(tempCsvResult)
+		if (profileObject[columnName]) {
+			const profileUrl = profileObject[columnName]
+			profileCount++
+			buster.progressHint(profileCount / profilesToScrape.length, `Processing profile ${profileCount} out of ${profilesToScrape.length}`)
+			if (isFacebookProfileUrl(profileUrl)) { // Facebook Profile URL
+				utils.log(`Processing profile of ${profileUrl}...`, "loading")
+				try {
+					const tempResult = await openProfilePage(tab, profileUrl)
+					if (tempResult.name) {
+						if (message) {
+							try {
+								const forgeMessage = inflater.forgeMessage(message, profileObject)
+								await sendMessage(tab, forgeMessage)
+								tempResult.message = forgeMessage
+							} catch (err) {
+								utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
+							}
+						}
+						if (!doNotAdd) {
+							try {
+								const status = await addFriend(tab, tempResult.name)
+								tempResult.status = status
+							} catch (err) {
+								utils.log(`Error sending friend request to ${tempResult.name}: ${err}`, "error")
+							}
+						}
+						result.push(tempResult)
+					}		
+					if (blocked) {
+						utils.log("Temporarily blocked by Facebook!", "error")
+						break
+					}
+				} catch (err) {
+					utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
+					await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
 				}
-				if (blocked) {
-					utils.log("Temporarily blocked by Facebook!", "error")
-					break
-				}
-			} catch (err) {
-				utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
-				await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
-
+			} else {  
+				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 			}
-		} else {  
-			utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 		}
+	
 	}
-	// console.log("res, ", result)
-	utils.log(`${profileCount} profiles scraped, ${result.length} in total, exiting.`, "info")
-	await utils.saveResults(result, db, csvName)
+	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

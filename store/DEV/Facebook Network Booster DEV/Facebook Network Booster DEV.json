@@ -12,14 +12,7 @@
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie",
         "spreadsheetUrl": "facebook_profile_urls",
-        "pagesToScrape": {
-			"workAndEducation": false,
-			"placesLived": false,
-			"contactAndBasicInfo": false,
-			"familyAndRelationships": false,
-			"detailsAbout": false,
-			"lifeEvents": false
-		},
+        "message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
         "csvName": "result"
     },
     "outputDescription": {
@@ -34,7 +27,7 @@
         "familyMembers": "",
         "lifeEvents": ""
 	},
-    "defaultArgumentAllowed": true,
+    "defaultArgumentAllowed": false,
     "argumentForm": {
         "enabled": true,
         "alpaca": {
@@ -60,29 +53,17 @@
                         "placeholder": "Facebook Profile URLs",
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
-					"pagesToScrape": {
-                        "helper" : "<b>Additional pages to scrape</b> <a href=\"/api-store/8369/facebook-profile-scraper#section_6additionalpagestoscrape\" target=\"_blank\">(?)</a>",
-                        "fields": {
-							"workAndEducation": {
-								"rightLabel": "<b>Work and Education</b>"
-							},
-							"placesLived": {
-								"rightLabel": "<b> Places they've Lived</b>"
-							},
-							"contactAndBasicInfo": {
-								"rightLabel": "<b>Contact and Basic Info</b>"
-							},
-							"familyAndRelationships": {
-								"rightLabel": "<b>Family and Relationships</b>"
-							},
-							"detailsAbout": {
-								"rightLabel": "<b>Details</b>"
-							},
-							"lifeEvents": {
-								"rightLabel": "<b>Life Events</b>"
-                            }
-                        }  
-					},	
+                    "message": {
+						"label": "Message <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
+						"type": "textarea",
+						"helpers": [
+							"Use #firstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Many more tags are available.</a>",
+							"Leave empty to send invites without message"
+						]
+                    },
+                    "doNotAdd": {
+						"rightLabel": "<b>Disable Friend Request</b> (only send a message)"
+                    },
                     "profilesPerLaunch": {
 						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
@@ -90,7 +71,7 @@
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
-					}
+                    }
                 }
             }
         }
@@ -115,34 +96,12 @@
             "columnName": {
                 "type": "string"
             },
-			"pagesToScrape": {
-                "type": "object",
-				"properties": {
-					"workAndEducation": {
-						"type": "boolean",
-						"required": true
-					},
-					"placesLived": {
-						"type": "boolean",
-						"required": true
-					},
-					"contactAndBasicInfo": {
-						"type": "boolean",
-						"required": true
-					},
-					"familyAndRelationships": {
-						"type": "boolean",
-						"required": true
-					},
-					"detailsAbout": {
-						"type": "boolean",
-						"required": true
-					},
-					"lifeEvents": {
-						"type": "boolean",
-						"required": true
-					}
-				}
+            "message": {
+				"type": "string",
+				"maxLength": 1000
+            },
+            "doNotAdd": {
+				"type": "boolean"
 			},
             "profilesPerLaunch": {
                 "type": "number",
@@ -151,7 +110,7 @@
             "csvName": {
 				"type": "string",
 				"required": false
-			}
+            }
         }
     }
 }
