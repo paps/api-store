@@ -4,8 +4,8 @@
     "image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
     "hidden": true,
     "new": true,
-    "gradientBegin": "#373B44",
-    "gradientEnd": "#4286f4",
+    "gradientBegin": "#353040",
+    "gradientEnd": "#4589f9",
     "argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",

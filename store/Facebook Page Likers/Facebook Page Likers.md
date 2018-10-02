@@ -1,12 +1,10 @@
-# TODO
-
 # Get highly qualified active Facebook members
-Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about all the likers (name, Facebook Profile URL).
+Wether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about all the likers.
 
 # What will you need? ⚙️ 
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook post URLs in it, OR the direct link of a single Facebook post.
+- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook page URLs in it, OR the direct link of a single Facebook page.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
@@ -63,10 +61,10 @@ Below your session cookies you’ll find Spreadsheet URL.
 
 Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**.
 
-Your spreadsheet should contain a list of Facebook Post URLs (**one link per row**).
+Your spreadsheet should contain a list of Facebook Pages URLs (**one link per row**).
 
-You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
-You can also enter a single Facebook post URL directly in the field.
+You can specify the name of the column that contains the pages links. Simply enter the column name in the next text field.
+You can also enter a single Facebook page URL directly in the field.
 
 
 # Click on Launch & Enjoy!

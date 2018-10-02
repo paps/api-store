@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -24,7 +24,7 @@ const URL = require("url").URL
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)    
 
 // }
@@ -135,7 +135,7 @@ const interceptRequestTemplate = async (agentObject, tab, pageUrl) => {
 				firstPageNumber = agentObject.resumePageNumber
 			}
 
-			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+			//utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
 		}
 	}
 
@@ -308,7 +308,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 		}
 
-		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
+		//utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
 
 		let { urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(agentObject, tab, pageUrl)
 
