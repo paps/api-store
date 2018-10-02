@@ -89,41 +89,54 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 
 const interceptRequestTemplate = async (agentObject, tab, pageUrl) => {
 	let firstRequestUrl
-
-	const onAjaxRequest = (e) => {
-		let url = e.request.url
-		if (!firstRequestUrl && url.includes("BrowseScrollingSetPagelet")) {
-			firstRequestUrl = e.request.url
-		}
-	}
-
-	tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
-
-	await tab.scrollToBottom()
-	await tab.wait(1000)
-	await tab.scrollToBottom()
-	await tab.wait(3000)
-
-	tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
-
 	let urlTemplate
 	let urlTemplateData
 	let firstCursor = ""
 	let firstPageNumber = 1
 
-	if (firstRequestUrl) {
-		urlTemplate = new URL(firstRequestUrl)
-		let urlTemplateDataJson = urlTemplate.searchParams.get("data")
+	const hasOnlyOnePage = await tab.isPresent("#browse_end_of_results_footer")
 
-		urlTemplateData = JSON.parse(urlTemplateDataJson)
+	if (!hasOnlyOnePage) {
 
-		if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
-
-			firstCursor = agentObject.resumeCursor
-			firstPageNumber = agentObject.resumePageNumber
+		const onAjaxRequest = (e) => {
+			let url = e.request.url
+			if (!firstRequestUrl && url.includes("BrowseScrollingSetPagelet")) {
+				firstRequestUrl = e.request.url
+			}
 		}
 
-		utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
+
+		await tab.scrollToBottom()
+
+		const initDate = new Date() 
+		while (!firstRequestUrl) {
+			await new Promise((resolve) => { 
+				setTimeout(() => {
+					resolve()
+				}, 50)
+			})
+			if ((new Date() - initDate) > 10000) {
+				break
+			}
+		}
+
+		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
+
+		if (firstRequestUrl) {
+			urlTemplate = new URL(firstRequestUrl)
+			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
+
+			urlTemplateData = JSON.parse(urlTemplateDataJson)
+
+			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
+
+				firstCursor = agentObject.resumeCursor
+				firstPageNumber = agentObject.resumePageNumber
+			}
+
+			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+		}
 	}
 
 	return { urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
