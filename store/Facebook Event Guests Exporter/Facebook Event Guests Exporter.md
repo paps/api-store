@@ -1,6 +1,6 @@
-# Collect information from any Facebook group
+# Collect information from any Facebook event
 
-Get to know any Facebook member that shares the same interests as you. Use any Facebook group you have access to and gather:
+Get to know any Facebook member that shares the same interests as you. Use any Facebook event you have access to and gather:
 
 1. Facebook profile links
 2. Names

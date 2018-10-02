@@ -8,6 +8,10 @@ const needle = require("needle")
 const { URL, parse } = require("url")
 // }
 
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
 const isUrl = url => {
 	try {
 		new URL(url)
@@ -221,6 +225,7 @@ class StoreUtilities {
 			content = await _handleDefault(csvURL)
 		}
 		parsedContent = Papa.parse(content)
+		/* Most of the time the 2 errors below are relevant to make the parsed content as an invalid CSV (https://www.papaparse.com/docs#errors) */
 		if (parsedContent.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
@@ -343,7 +348,7 @@ class StoreUtilities {
 	/**
 	 * @description Function to get data from a google spreadsheet or from a csv
 	 * @param {String} url - Spreadsheet / CSV URL
-	 * @param {String|Array<String>} columnName
+	 * @param {String} columnName - CSV column name
 	 * When columnName is an array, the first field is assumed to represents the column to fetch profileURLs
 	 * @param {Boolean} [printLogs] - verbose / quiet mode
 	 * @throws when url can't be downloaded / when the Google Spreadsheet isn't shareable / when the data isn't representing a CSV content
@@ -371,42 +376,14 @@ class StoreUtilities {
 			}
 			let data = (Papa.parse(file)).data
 			let column = 0
-			let result = []
-			// columnName must be a string & must be non empty
-			if (typeof columnName === "string" && columnName) {
+			if (columnName) {
 				column = data[0].findIndex(el => el === columnName)
 				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
 				data.shift()
-				result = data.map(line => line[column])
-			} else if (Array.isArray(columnName)) {
-				let columns = Object.assign([], columnName)
-				let fieldsPositions = []
-				// Does the columnName exist ?
-				if (!columns[0]) {
-					fieldsPositions.push({ name: "0", position: 0 })
-					columns.shift()
-				}
-				for (const field of columns) {
-					let index = data[0].findIndex(cell => cell === field)
-					if (index < 0) {
-						throw `No title ${field} in csv file.`
-					}
-					fieldsPositions.push({ name: field, position: index })
-				}
-				// Guessing if the first row represents an URL, if not remove the first line
-				if (!isUrl(data[0][0])) {
-					data.shift()
-				}
-				result = data.map(el => {
-					let cell = {}
-					fieldsPositions.forEach(field => cell[field.name] = el[field.position])
-					return cell
-				})
-			} else {
-				result = data.map(line => line[column])
 			}
+			const result = data.map(line => line[column])
 			if (printLogs) {
 				this.log(`Got ${result.length} lines from csv.`, "done")
 			}

@@ -18,6 +18,7 @@
 		'lib-Instagram.js': 'libs/lib-Instagram.js'
 		'lib-Twitter.js': 'libs/lib-Twitter.js'
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
+		'lib-Messaging.js': 'libs/lib-Messaging.js'
 
 
 		# API store

@@ -1,11 +1,11 @@
 {
 	"slug": "facebook-auto-liker",
-	"description": "Automatically like the last posts of a list of Facebook profiles",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Auto_Liker/Facebook+Auto+Liker.png",
+	"description": "Automatically like posts of people you're close to",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Auto_Liker/Facebook+Auto+Liker_nobg.png",
 	"argumentDescription": "",
 	"gradientBegin": "#00B4DB",
 	"gradientEnd": "#0083B0",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",

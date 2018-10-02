@@ -1,8 +1,8 @@
 {
 	"slug": "facebook-post-likers",
-	"description": "Extract a list of all the profiles that liked any Facebook post",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Likers/Facebook+Post+Likers.png",
-	"hidden": true,
+	"description": "Extract a list of all the people who liked Facebook posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Likers/Facebook+Post+Likers_nobg.png",
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#373B44",
 	"gradientEnd": "#4286f4",
@@ -37,7 +37,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook post URL"
 						],
-						"label": "Facebook post or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook post or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a> Click on its timestamp to get a post URL"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",

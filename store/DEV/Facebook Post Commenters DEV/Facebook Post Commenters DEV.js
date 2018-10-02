@@ -167,17 +167,12 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 
 // get the total comment count that is displayed by the page
 const getTotalCommentsCount = (arg, cb) => {
-	let totalCount
-	try {
-		totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(",",".")
-		// we're converting 56.3K to 56300
-		if (totalCount.includes("K")) {
-			totalCount = parseFloat(totalCount.replace("K", "")) * 1000
-		} else {
-			totalCount = parseInt(totalCount, 10)
-		}
-	} catch (err) {
-		//
+	let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(",",".")
+	// we're converting 56.3K to 56300
+	if (totalCount.includes("K")) {
+		totalCount = parseFloat(totalCount.replace("K", "")) * 1000
+	} else {
+		totalCount = parseInt(totalCount, 10)
 	}
 	cb(null, totalCount)
 }
@@ -239,14 +234,14 @@ const getTotalCommentsCount = (arg, cb) => {
 			try {
 				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
 
-				const totalCount = await tab.evaluate(getTotalCommentsCount)
-				if (totalCount) {
+				try {
+					const totalCount = await tab.evaluate(getTotalCommentsCount)
 					utils.log(`There's ${totalCount} comments in total`, "info")
-				} else {
+				} catch (err) {
 					await buster.saveText(await tab.getContent(), "aCouldn't get comments count.html")
-
-					utils.log("Couldn't get comments count", "warning")
+					utils.log(`Couldn't get comments count: ${err}`, "warning")
 				}
+				await tab.wait(2000) // waiting for the &theater parameter to come up
 				const currentUrl = await tab.evaluate((arg, cb) => cb(null, document.location.href))
 				console.log("URL:", currentUrl)
 				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {

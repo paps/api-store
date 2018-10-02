@@ -1,11 +1,11 @@
 {
     "slug": "facebook-profile-scraper",
     "description": "Collect valuable information you need from Facebook profiles",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper.png",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
     "gradientBegin": "#4e54c8",
     "gradientEnd": "#8f94fb",
     "argumentDescription": "",
-    "hidden": true,
+    "hidden": false,
     "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {

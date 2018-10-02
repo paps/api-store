@@ -1,8 +1,8 @@
 {
 	"slug": "facebook-post-commenters",
-	"description": "Extract a list of all the profiles that commented any Facebook post",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Commenters/Facebook+Post+Commenters.png",
-	"hidden": true,
+	"description": "Extract a list of all the people who commented Facebook posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Commenters/Facebook+Post+Commenters_nobg.png",
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#91EAE4",
 	"gradientEnd": "#7F7FD5",
@@ -40,7 +40,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook post URL"
 						],
-						"label": "Facebook post or Spreadsheet URL <a href=\"/api-store/8464/facebook-post-commenters#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook post or Spreadsheet URL <a href=\"/api-store/8464/facebook-post-commenters#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a> Click on its timestamp to get a post URL"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",

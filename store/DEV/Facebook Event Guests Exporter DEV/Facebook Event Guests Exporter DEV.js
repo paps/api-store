@@ -59,7 +59,7 @@ const removeDuplicates = (arr) => {
 	return resultArray
 }
 
-// Checks if a url is a facebook group url
+// Checks if a url is a facebook event url
 const isFacebookEventUrl = (url) => {
 	try {
 		let urlObject = new URL(url.toLowerCase())
@@ -279,20 +279,20 @@ const checkUnavailable = (arg, cb) => {
 	if (eventsToScrape.length === 0) {
 		if (lastUrl) {
 			utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
-			eventsToScrape = [lastUrl]  // if every group's already been scraped, we're scraping the last one
+			eventsToScrape = [lastUrl]  // if every event's already been scraped, we're scraping the last one
 		} else {
 			utils.log("Input spreadsheet is empty.", "error")
 			nick.exit(1)
 		}
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(eventsToScrape, null, 4)}`)
+	console.log(`URLs to process: ${JSON.stringify(eventsToScrape, null, 4)}`)
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	let urlCount = 0
 	for (let eventUrl of eventsToScrape) {
 		interceptedUrl = null
-		if (isFacebookEventUrl(eventUrl)) { // Facebook Group URL
+		if (isFacebookEventUrl(eventUrl)) { // Facebook Event URL
 			try {
 				utils.log(`Scraping guests from ${eventUrl}`, "loading")
 				urlCount++
