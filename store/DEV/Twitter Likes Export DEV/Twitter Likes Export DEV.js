@@ -168,7 +168,7 @@ const closePopUp = async (tab, closeSelector, waitSelector) => {
  * @throws on scraping failure
  * @return {Promise<Object>>}
  */
-const getTweetsMetadata = async (tab, url) => {
+const getTweetsInfos = async (tab, url) => {
 	let res = { url }
 	const infosToExtract = {
 		baseSelector: "ol.activity-popup-users > li.js-stream-item",
@@ -273,7 +273,7 @@ const createCsvOutput = json => {
 			utils.logs(timeLeft.message)
 			break
 		}
-		const data = await getTweetsMetadata(tab, query)
+		const data = await getTweetsInfos(tab, query)
 		execResult.push(data)
 	}
 	db.push(...createCsvOutput(execResult))

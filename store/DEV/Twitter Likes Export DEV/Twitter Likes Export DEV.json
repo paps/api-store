@@ -12,7 +12,8 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)/",
-		"columnName": ""
+		"columnName": "",
+		"tweetsPerLaunch": 2
 	},
 	"argumentForm": {
 		"enabled": true,
