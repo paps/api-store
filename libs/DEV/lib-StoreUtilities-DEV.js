@@ -225,6 +225,7 @@ class StoreUtilities {
 			content = await _handleDefault(csvURL)
 		}
 		parsedContent = Papa.parse(content)
+		/* Most of the time the 2 errors below are relevant to make the parsed content as an invalid CSV (https://www.papaparse.com/docs#errors) */
 		if (parsedContent.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
