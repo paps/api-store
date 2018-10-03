@@ -60,6 +60,7 @@ const craftCsvObject = data => {
 		profilePictureUrl: data.profilePictureUrl,
 		coverPictureUrl: data.coverPictureUrl,
 		name: data.name,
+		firstName: data.firstName,
 		status: data.status,
 	}
 
@@ -142,6 +143,17 @@ const scrapeOverviewPage = (arg, cb) => {
 	}
 	if (document.querySelector("#fb-timeline-cover-name")) {
 		scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
+		if (document.querySelector("._Interaction__ProfileSectionAbout")) {
+			let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
+			let name = scrapedData.name.split(/\s+/g)
+			for (let i = 0; i < details.length; i++) {
+				for (let j = 0; j < name.length; j++) {
+					if (details[i] === name[j]) {
+						scrapedData.firstName = details[i]
+					}
+				}
+			}
+		}
 	}
 	if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
 		let friendsCount = document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type").textContent
