@@ -72,7 +72,7 @@
 			"sessionCookieCUser": {
                 "type": "string",
                 "required": true,
-                "minLength": 8
+                "minLength": 6
             },
             "sessionCookieXs": {
                 "type": "string",
