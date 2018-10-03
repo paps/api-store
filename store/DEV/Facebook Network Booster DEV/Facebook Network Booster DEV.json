@@ -61,9 +61,6 @@
 							"Leave empty to send invites without message"
 						]
                     },
-                    "doNotAdd": {
-						"rightLabel": "<b>Disable Friend Request</b> (only send a message)"
-                    },
                     "profilesPerLaunch": {
 						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
@@ -82,7 +79,7 @@
             "sessionCookieCUser": {
                 "type": "string",
                 "required": true,
-                "minLength": 8
+                "minLength": 6
             },
             "sessionCookieXs": {
                 "type": "string",
@@ -100,9 +97,6 @@
 				"type": "string",
 				"maxLength": 1000
             },
-            "doNotAdd": {
-				"type": "boolean"
-			},
             "profilesPerLaunch": {
                 "type": "number",
                 "minimum": 1

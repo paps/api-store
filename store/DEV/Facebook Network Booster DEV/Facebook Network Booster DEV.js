@@ -22,7 +22,7 @@ const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 const Messaging = require("./lib-Messaging-DEV")
-const inflater = new Messaging(nick, buster, utils)
+const inflater = new Messaging(nick, utils)
 let blocked
 const { URL } = require("url")
 
@@ -61,16 +61,96 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 	cb(null, true)
 }
 
+const scrapeAboutPage = (arg, cb) => {
+	const scrapedData = { profileUrl:arg.profileUrl }
+	if (document.querySelector(".photoContainer a > img")) {
+		scrapedData.profilePictureUrl = document.querySelector(".photoContainer a > img").src
+	}
+	if (document.querySelector(".cover img")) {
+		scrapedData.coverPictureUrl = document.querySelector(".cover img").src
+	}
+	if (document.querySelector("#fb-timeline-cover-name")) {
+		scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
+		if (document.querySelector("._Interaction__ProfileSectionAbout")) {
+			let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
+			let name = scrapedData.name.split(/\s+/g)
+			for (let i = 0; i < details.length; i++) {
+				for (let j = 0; j < name.length; j++) {
+					if (details[i] === name[j]) {
+						scrapedData.firstName = details[i]
+					}
+				}
+			}
+		}
+	}
+	if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
+		let friendsCount = document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type").textContent
+		friendsCount = parseInt(friendsCount.replace(/[, ]/g, ""), 10)
+		scrapedData.friendsCount = friendsCount
+	}
 
-const getNameFromMainPage = (arg, cb) => {
-	cb(null, document.querySelector("#fb-timeline-cover-name").textContent)
+	// if Add friend button is hidden, we're already friend
+	if (document.querySelector(".FriendRequestAdd")) {
+		scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
+	}
+
+	const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
+	if (educationDiv.length) {
+		const educations = educationDiv.map(el => {
+			const data = {}
+			if (el.querySelector("a")) { 
+				data.url = el.querySelector("a").href
+				if (el.querySelectorAll("a")[1] && el.querySelectorAll("a")[1].parentElement) {
+					data.name = el.querySelectorAll("a")[1].parentElement.textContent
+				}
+				try {
+					data.description = el.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
+				} catch (err) {
+					//
+				}
+			}
+			return data
+		})
+		scrapedData.educations = educations
+	}
+
+	const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
+	if (citiesDiv) {
+		const cities = {}
+		cities.name = citiesDiv.querySelectorAll("a")[1].parentElement.textContent
+		cities.url = citiesDiv.querySelectorAll("a")[1].href
+		try {
+			cities.description = citiesDiv.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
+		} catch (err) {
+			//
+		}
+		if (cities) { scrapedData.cities = [ cities ] }
+	}
+	
+	const relationshipDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")[0]
+	if (relationshipDiv) {
+		const relationship = {}
+		if (relationshipDiv.querySelectorAll("a")[1] && relationshipDiv.querySelectorAll("a")[1].textContent) {
+			relationship.relationshipWith = relationshipDiv.querySelectorAll("a")[1].textContent
+			relationship.profileUrl = relationshipDiv.querySelectorAll("a")[1].href
+			if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
+				relationship.description = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
+			}
+		} else if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
+			relationship.familyMembers = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
+		}
+		scrapedData.relationship = relationship
+	}
+
+
+	cb(null, scrapedData)
 }
 
 // click on Add Friend Button if available
 const checkFriendButtonAndSend = (arg, cb) => {
 	if (document.querySelector("button.FriendRequestAdd")) {
 		if (!document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem")) { // if button to Add Friend is visible
-			document.querySelector("button.FriendRequestAdd").click()
+			// document.querySelector("button.FriendRequestAdd").click()
 			cb(null, "Request sent")
 		} else if (document.querySelector("button.FriendRequestOutgoing") && !document.querySelector("button.FriendRequestOutgoing").classList.contains("hidden_elem")) { // if button Request Sent is visible
 			cb(null, "Request already pending")
@@ -85,7 +165,13 @@ const checkFriendButtonAndSend = (arg, cb) => {
 }
 
 const openProfilePage = async (tab, profileUrl) => {
-	await tab.open(profileUrl)
+	let aboutUrl
+	if (profileUrl.includes("profile.php?id=")) {
+		aboutUrl = profileUrl + "&sk=about"
+	} else {
+		aboutUrl = profileUrl + "/about"
+	}
+	await tab.open(aboutUrl)
 	let selector
 	try {
 		selector = await tab.waitUntilVisible("#content") // fb profile or Block window
@@ -108,9 +194,10 @@ const openProfilePage = async (tab, profileUrl) => {
 		}
 	}
 	try {
-		const name = await tab.evaluate(getNameFromMainPage)
-		utils.log(`Opened profile of ${name}.`, "done")
-		return { profileUrl, name }
+		// const name = await tab.evaluate(getNameFromMainPage)
+		const scrapedData = await tab.evaluate(scrapeAboutPage, { profileUrl })
+		utils.log(`Opened profile of ${scrapedData.name}.`, "done")
+		return scrapedData
 	} catch (err) {
 		utils.log(`${profileUrl} chat page is not available.`, "error")
 	 	return { profileUrl, error: "The profile page isn't available"}
@@ -120,9 +207,13 @@ const openProfilePage = async (tab, profileUrl) => {
 const sendMessage = async (tab, message) => {
 	await tab.evaluate(openChat)
 	await tab.wait(1000)
+	
 	await tab.sendKeys(".fbNubFlyoutFooter > div > div", message)
+	await tab.sendKeys(".notranslate", message)
+	await tab.wait(2000)
 	await buster.saveText(await tab.getContent(), `openChat ${new Date()}.html`)
 	await tab.screenshot(`openChat${new Date()}.png`)
+	utils.log(`Sending message : ${message}`, "done")
 	// await tab.click("[label=send]")
 }
 
@@ -150,7 +241,7 @@ const addFriend = async (tab, name) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, message, doNotAdd, profilesPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, message, profilesPerLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
@@ -191,20 +282,18 @@ nick.newTab().then(async (tab) => {
 					if (tempResult.name) {
 						if (message) {
 							try {
-								const forgeMessage = inflater.forgeMessage(message, profileObject)
-								await sendMessage(tab, forgeMessage)
-								tempResult.message = forgeMessage
+								const forgedMessage = inflater.forgeMessage(message, profileObject)
+								await sendMessage(tab, forgedMessage)
+								tempResult.message = forgedMessage
 							} catch (err) {
 								utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 							}
 						}
-						if (!doNotAdd) {
-							try {
-								const status = await addFriend(tab, tempResult.name)
-								tempResult.status = status
-							} catch (err) {
-								utils.log(`Error sending friend request to ${tempResult.name}: ${err}`, "error")
-							}
+						try {
+							const status = await addFriend(tab, tempResult.name)
+							tempResult.status = status
+						} catch (err) {
+							utils.log(`Error sending friend request to ${tempResult.name}: ${err}`, "error")
 						}
 						result.push(tempResult)
 					}		
@@ -222,7 +311,7 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
-	await utils.saveResults(result, result, csvName)
+ 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
