@@ -197,8 +197,6 @@ const overridePageIndex = (url, index) => {
 	}
 }
 
-const getLocationUrl = (arg, cb) => cb(null, document.location.href)
-
 const getPageNumber = url => {
 	try {
 		const urlObject = new URL(url)
@@ -227,7 +225,7 @@ const clickNextPage = async (tab, lastLoc) => {
 				throw "Error loading next page!"
 			}
 			await tab.wait(500)
-		} while (lastLoc === await tab.evaluate(getLocationUrl))
+		} while (lastLoc === await tab.getUrl())
 	} catch (err) {
 		throw "Can't click on Next Page button!"
 	}
@@ -256,7 +254,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	let pageCounter = 0
 	let nextButtonIsClicked
 	do {
-		let newLoc = await tab.evaluate(getLocationUrl)
+		let newLoc = await tab.getUrl()
 		if (newLoc !== lastLoc) {
 			nextButtonIsClicked = false
 			lastLoc = newLoc

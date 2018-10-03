@@ -233,7 +233,7 @@ const getTotalCommentsCount = (arg, cb) => {
 					utils.log(`Couldn't get comments count: ${err}`, "warning")
 				}
 				await tab.wait(5000) // waiting for the &theater parameter to come up
-				const currentUrl = await tab.evaluate((arg, cb) => cb(null, document.location.href))
+				const currentUrl = await tab.getUrl()
 				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {					
 					await tab.click("#photos_snowlift a")
 					await tab.wait(500)

@@ -742,14 +742,14 @@ class LinkedInScraper {
 				await tab.open(newUrl)
 				await tab.wait(2000)
 				try {
-					let location = await tab.evaluate((arg, cb) => cb(null, document.location.href))
+					let location = await tab.getUrl()
 					if (location !== newUrl) {
 						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
 						await tab.close()
 						return location
 					} else {
 						await tab.wait(10000)
-						location = await tab.evaluate((arg, cb) => cb(null, document.location.href))
+						location = await tab.getUrl()
 						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
 						await tab.close()
 						return location
