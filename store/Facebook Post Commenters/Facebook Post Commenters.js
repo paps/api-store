@@ -186,10 +186,10 @@ const getTotalCommentsCount = (arg, cb) => {
 		}
 	} else { // CSV
 		postsToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-		for (let i = 0; i < postsToScrape.length; i++) { // cleaning all instagram entries
+		postsToScrape = postsToScrape.filter(str => str) // removing empty lines
+		for (let i = 0; i < postsToScrape.length; i++) { // cleaning all facebook entries
 			postsToScrape[i] = utils.adjustUrl(postsToScrape[i], "facebook")
 		}
-		postsToScrape = postsToScrape.filter(str => str) // removing empty lines
 		if (!numberofPostsperLaunch) {
 			numberofPostsperLaunch = postsToScrape.length
 		}

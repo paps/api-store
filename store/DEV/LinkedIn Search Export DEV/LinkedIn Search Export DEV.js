@@ -210,16 +210,14 @@ const getPageNumber = url => {
 }
 
 const clickNextPage = async (tab, lastLoc) => {
+	let selector
 	try {
-		await tab.waitUntilVisible(".next")
+		selector = await tab.waitUntilVisible([".next", ".artdeco-pagination__button--next"], "or", 15000)
 	} catch (err) {
-		await tab.wait(3000)
-		if (!await tab.isVisible(".next")){
-			return "noMorePages"
-		}
+		return "noMorePages"
 	}
 	try {
-		await tab.click(".next")
+		await tab.click(selector)
 		const lastDate = new Date()
 		do {
 			if (lastDate - new Date() > 10000) {
@@ -346,6 +344,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			await tab.wait(1000)
 		}		
 	} while (pageCounter < numberOfPage)
+	console.log("pageCounter", pageCounter)
+	console.log("numberOfPage", numberOfPage)
 	utils.log("All pages with result scrapped.", "done")
 	return result
 }

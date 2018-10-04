@@ -269,6 +269,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 	} else { // CSV
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			if (urls[i].startsWith("@")) { // converting @profile_name to https://www.instagram/profile_name
 				urls[i] = "https://www.instagram.com/" + urls[i].slice(1)
@@ -277,7 +278,6 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				urls[i] = cleanInstagramUrl(urls[i])
 			}
 		}
-		urls = urls.filter(str => str) // removing empty lines
 		if (!numberofProfilesperLaunch) {
 			numberofProfilesperLaunch = urls.length
 		}

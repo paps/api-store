@@ -209,16 +209,14 @@ const getPageNumber = url => {
 }
 
 const clickNextPage = async (tab, lastLoc) => {
+	let selector
 	try {
-		await tab.waitUntilVisible(".next")
+		selector = await tab.waitUntilVisible([".next", ".artdeco-pagination__button--next"], "or", 15000)
 	} catch (err) {
-		await tab.wait(3000)
-		if (!await tab.isVisible(".next")){
-			return "noMorePages"
-		}
+		return "noMorePages"
 	}
 	try {
-		await tab.click(".next")
+		await tab.click(selector)
 		const lastDate = new Date()
 		do {
 			if (lastDate - new Date() > 10000) {
