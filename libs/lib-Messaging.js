@@ -1,7 +1,5 @@
 class Messaging {
-	constructor(nick, buster, utils) {
-		this.nick = nick
-		this.buster = buster
+	constructor(utils) {
 		this.utils = utils
 	}
 
