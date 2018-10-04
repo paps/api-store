@@ -9,6 +9,19 @@ const { URL, parse } = require("url")
 // }
 
 /**
+ * @param {String} url
+ * @return {Boolean}
+ */
+const isUrl = url => {
+	try {
+		new URL(url)
+		return true
+	} catch (err) {
+		return false
+	}
+}
+
+/**
  * @async
  * @internal
  * @description Function used to download a CSV file from a given url
@@ -150,7 +163,7 @@ class StoreUtilities {
 	log(message, type) {
 		if (this.test) {
 			this.output += `${type}:>${message}\n`
-			if (type === "error" || (type === "warning" && !this.testRunObject.ignoreWarning)) {
+			if (type === "error" || (type === "warning" && !this.testRunObject.keepGoingOnWarning)) {
 				console.log(`Test failed, got error of type ${type}: ${message}`)
 				this.nick.exit(1)
 			}
@@ -184,15 +197,101 @@ class StoreUtilities {
 		return this.buster.arguments
 	}
 
-	// Function to get data from a google spreadsheet or from a csv
-	async getDataFromCsv2 (url, columnName, printLogs = true) {
+	/**
+	 * @async
+	 * @description Download the entire CSV
+	 * @param {String} url - URL to download
+	 * @param {Boolean} [printLogs] - set verbose or quiet mode (default: verbose)
+	 * @throws when the URL isn't accessible / when the content doesn't represent a CSV
+	 * @return {Promise<Array<Object>>} CSV content
+	 */
+	async getRawCsv(url, printLogs = true) {
+		let csvURL = null
+		let content = null
+		let parsedContent = null
+		if (printLogs) {
+			this.log(`Getting data from ${url}...`, "loading")
+		}
+
+		try {
+			csvURL = new URL(url)
+		} catch (err) {
+			throw `${url} is not a valid URL.`
+		}
+
+		if (csvURL.hostname === "docs.google.com" || csvURL.hostname === "drive.google.com") {
+			content = await _handleGoogle(csvURL)
+		} else {
+			content = await _handleDefault(csvURL)
+		}
+		parsedContent = Papa.parse(content)
+		/* Most of the time the 2 errors below are relevant to make the parsed content as an invalid CSV (https://www.papaparse.com/docs#errors) */
+		if (parsedContent.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
+			throw `${url} doesn't represent a CSV file`
+		}
+		return parsedContent.data
+	}
+
+	/**
+	 * @param {Array<Object>} csv - CSV content
+	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
+	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @return {Array<String>|Array<Object>} CSV rows with the columns
+	 */
+	extractCsvRows(csv, columnName) {
+		let column = 0
+		let rows = []
+		if (typeof columnName === "string" && columnName) {
+			column = csv[0].findIndex(el => el === columnName)
+			if (column < 0) {
+				throw `No title ${columnName} in csv file.`
+			}
+			csv.shift()
+			rows = csv.map(line => line[column])
+		} else if (Array.isArray(columnName)) {
+			let columns = Object.assign([], columnName)
+			let fieldsPositions = []
+			if (!columns[0]) {
+				fieldsPositions.push({ name: "0", position: 0 })
+				columns.shift()
+			}
+			for (const field of columns) {
+				let index = csv[0].findIndex(cell => cell === field)
+				if (index < 0) {
+					throw `No title ${field} in csv file.`
+				}
+				fieldsPositions.push({ name: field, position: index })
+			}
+			if (!isUrl(csv[0][0])) {
+				csv.shift()
+			}
+			rows = csv.map(el => {
+				let cell = {}
+				fieldsPositions.forEach(field => cell[field.name] = el[field.position])
+				return cell
+			})
+		} else {
+			rows = csv.map(line => line[column])
+		}
+		return rows
+	}
+
+	/**
+	 * @description getDataFromCsv clone, it aims to support Google URLs patterns
+	 * @param {String} url
+	 * @param {String} columnName
+	 * @param {Boolean} [printLogs] - verbose / quiet logs
+	 * @return {Promise<Array<String>>} CSV content
+	 */
+	async getDataFromCsv2(url, columnName, printLogs = true) {
+		// TODO: handle multiple columns with columnName as array
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
 		}
 
 		/**
-		 * NOTE: no need to continue, if the url input is malformatted
+		 * no need to continue, if the url input is malformatted
 		 */
 		try {
 			urlObj = new URL(url)
@@ -203,7 +302,7 @@ class StoreUtilities {
 		let httpContent = null
 
 		/**
-		 * NOTE: The function can for now handle
+		 * The function can for now handle
 		 * - docs.google.com domain
 		 * - drive.google.com domain
 		 * - Phantombuster S3 / direct CSV links
@@ -246,7 +345,15 @@ class StoreUtilities {
 		return result
 	}
 
-	// Function to get data from a google spreadsheet or from a csv
+	/**
+	 * @description Function to get data from a google spreadsheet or from a csv
+	 * @param {String} url - Spreadsheet / CSV URL
+	 * @param {String} columnName - CSV column name
+	 * When columnName is an array, the first field is assumed to represents the column to fetch profileURLs
+	 * @param {Boolean} [printLogs] - verbose / quiet mode
+	 * @throws when url can't be downloaded / when the Google Spreadsheet isn't shareable / when the data isn't representing a CSV content
+	 * @return {Promise<Array<String>>|Promise<Array<Any>>} CSV content
+	 */
 	async getDataFromCsv(url, columnName, printLogs = true) {
 		const buster = this.buster
 		if (printLogs) {
@@ -270,14 +377,8 @@ class StoreUtilities {
 			let data = (Papa.parse(file)).data
 			let column = 0
 			if (columnName) {
-				let i = 0;
-				for (; i < data[0].length; i++) {
-					if (data[0][i] === columnName) {
-						column = i
-						break
-					}
-				}
-				if (column !== i) {
+				column = data[0].findIndex(el => el === columnName)
+				if (columnName < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
 				data.shift()
@@ -394,7 +495,7 @@ class StoreUtilities {
 
 	/**
 	 * @async
-	 * @param {String} filename - Agent DB filename to retrieve
+	 * @param {String} filename - Agent DB filename to retrieve (csv file)
 	 * @return {Promise<Array<String>>|Promise<String>} an array representing a CSV othersiwe file content into a string
 	 */
 	async getDb(filename) {
@@ -542,17 +643,14 @@ class StoreUtilities {
 
 	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
 	adjustUrl(url, domain) {
-		if (url){
-			let urlObject = parse(url.toLowerCase())
-			if (urlObject.pathname.startsWith(domain)) {
-				urlObject = parse("https://www." + url)
-			}
-			if (urlObject.pathname.startsWith("www." + domain)) {
-				urlObject = parse("https://" + url)
-			}
-			return urlObject.href
+		let urlObject = parse(url.toLowerCase())
+		if (urlObject.pathname.startsWith(domain)) {
+			urlObject = parse("https://www." + url)
 		}
-		return null
+		if (urlObject.pathname.startsWith("www." + domain)) {
+			urlObject = parse("https://" + url)
+		}
+		return urlObject.href
 	}
 
 	// Checks if a url is already in the csv, by matching with property
@@ -564,6 +662,7 @@ class StoreUtilities {
 		}
 		return true
 	}
+
 }
 
 module.exports = StoreUtilities

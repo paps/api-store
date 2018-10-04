@@ -92,7 +92,11 @@ In the message textbox you can write a private note (**Total: 300 characters MAX
 
 Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
-You can also use your own tags, you can add a column **greetings** in your Google Spreadsheet and then add **\#greetings\#** in your message.
+How about using your own tags ? <b>Simple.</b>
+Add a column in your Google Spreadsheet with any informations you want to apply.
+
+For instance:
+A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message
 
 Click on 💾 <span style="color:blue">Save</span>
 

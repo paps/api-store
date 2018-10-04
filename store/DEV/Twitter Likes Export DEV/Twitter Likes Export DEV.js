@@ -80,13 +80,8 @@ const getTweetsMetadata = async (tab, url) => {
 	await tab.waitUntilVisible("div#permalink-overlay", 15000)
 	const metadata = await tab.evaluate(scrapeInfos)
 	const likersHTML = await tab.evaluate(getUsersByAction, { id: tweetId, action: "favorited" })
-	const rtHTML = await tab.evaluate(getUsersByAction, { id: tweetId, action: "retweeted" })
-
 	const $likers = cheerio.load(likersHTML.htmlContent)
-	const $rt = cheerio.load(rtHTML.htmlContent)
-
 	console.log($likers("div.account").html())
-
 	await tab.screenshot(`likes-${Date.now()}.jpg`)
 	return Object.assign({ url }, metadata)
 }
