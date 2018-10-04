@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js, lib-Messaging-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,9 +18,9 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
-const Messaging = require("./lib-Messaging-DEV")
+const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let blocked
 const { URL } = require("url")
@@ -135,7 +134,7 @@ const sendMessage = async (tab, message) => {
 		await tab.sendKeys(".notranslate", line)
 	}
 	utils.log(`Sending message : ${message}`, "done")
-	// await tab.click("[label=send]")
+	await tab.click("[label=send]")
 }
 
 
