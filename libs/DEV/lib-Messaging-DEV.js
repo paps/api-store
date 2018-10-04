@@ -9,7 +9,7 @@ class Messaging {
 	*/
 	getMessageTags(message) {
 		const matches = message.match(/#[a-zA-Z0-9]+#/gm)
-		return matches.map(tag => tag.replace(/#/g, "").trim())
+		return Array.isArray(matches) ? matches.map(tag => tag.replace(/#/g, "").trim()) : []
 	}
 	/**
 	 * @description Function used to inflate a template message
