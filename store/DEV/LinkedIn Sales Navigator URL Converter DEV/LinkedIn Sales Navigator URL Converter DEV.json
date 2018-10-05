@@ -1,0 +1,69 @@
+{
+	"slug": "linkedin-sales-navigator-search-export",
+	"description": "Collect LinkedIn Sales Navigator search results",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
+	"hidden": false,
+	"new": true,
+	"gradientBegin": "#7C5BBB",
+	"gradientEnd": "#42327f",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie"
+	},
+	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"url": "LinkedIn Sales Navigator profile URL",
+		"defaultUrl": "LinkedIn default Profile URL"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "LinkedIn session cookie <a href=\"/api-store/6988/linkedin-sales-navigator-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"helpers": [
+							"Enter either a Google Spreadsheet URL <b>OR</b> a CSV URL <b>OR</b> a LinkedIn Sales Navigator Profile URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						],
+						"label": "Spreadsheet URL / Sales Navigator URL<a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Sales Navigator Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}

@@ -110,6 +110,12 @@ class Facebook {
 		return message
 	}
 
+	// to send a messsage we need to reverse it, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
+	reverseMessage(message) {
+		return message.split("\n") // separating by line break
+					  .reverse() // reversing the order
+					  .map(el => el += "\r") // inserting a line break
+	}
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {

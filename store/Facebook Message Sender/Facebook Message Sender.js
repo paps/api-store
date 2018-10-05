@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,7 +15,7 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook")
@@ -43,7 +43,11 @@ const isFacebookProfileUrl = url => {
 
 // extract target's name from chat page
 const getNameFromChat = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0].textContent)
+	if (Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0]) {
+		cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0].textContent)
+	} else {
+		cb(null, document.querySelectorAll("#content div > h2")[1].textContent)
+	}
 }
 
 // click on chat's Send button
@@ -66,6 +70,7 @@ const openChatPage = async (tab, profileUrl) => {
 
 	const currentUrl = await tab.getUrl()
 	if (currentUrl === "https://www.facebook.com/messages") { // if we were redirected, the profile doesn't exist
+		utils.log(`Profile ${profileUrl} doesn't exist!`, "error")
 	 	return { profileUrl, error: "This profile doesn't exist"}
 	}
 	
@@ -76,22 +81,16 @@ const openChatPage = async (tab, profileUrl) => {
 		return { profileUrl, name, firstName }
 	} catch (err) {
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
-	 	return { profileUrl, error: "Not not accessible"}
+		return { profileUrl, error: "Could get profile name"}
 	}
-}
-
-// we need to reverse the message, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
-const reverseMessage = message => {
-	return message.split("\n") // separating by line break
-				  .reverse() // reversing the order
-				  .map(el => el += "\r") // inserting a line break
 }
 
 const sendMessage = async (tab, message) => {
-	const messageArray = reverseMessage(message)
+	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
 	}
+	await tab.wait(1000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.evaluate(clickSendButton)
 }
@@ -100,10 +99,14 @@ const sendMessage = async (tab, message) => {
 nick.newTab().then(async (tab) => {
 	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, message, profilesPerLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
+	if (!message || !message.trim()) {
+		utils.log("No message found!", "error")
+		nick.exit(1)
+	}
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
 	if (isFacebookProfileUrl(spreadsheetUrl)) {
-		profilesToScrape = [ spreadsheetUrl ]
+		profilesToScrape = [ { "0": spreadsheetUrl } ]
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
 		let csvHeader = profilesToScrape[0].filter(cell => !isUrl(cell))
@@ -120,6 +123,7 @@ nick.newTab().then(async (tab) => {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
 	}
+	utils.log(`Lines to process: ${JSON.stringify(profilesToScrape.map(el => el[columnName]), null, 2)}`, "done")
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
 	for (let profileObject of profilesToScrape) {
@@ -136,19 +140,17 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
-					if (tempResult.name) {
-						if (message) {
-							try {
-								let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
-								forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-								await sendMessage(tab, forgedMessage)
-								tempResult.message = forgedMessage
-							} catch (err) {
-								utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
-							}
+					if (tempResult.name && message) {
+						try {
+							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
+							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
+							await sendMessage(tab, forgedMessage)
+							tempResult.message = forgedMessage
+						} catch (err) {
+							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 						}
-						result.push(tempResult)
 					}		
+					result.push(tempResult)
 					if (blocked) {
 						utils.log("Temporarily blocked by Facebook!", "error")
 						break

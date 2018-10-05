@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,7 +15,7 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook")
@@ -31,6 +31,25 @@ const isUrl = url => {
 		return tmp !== null
 	} catch (err) {
 		return false
+	}
+}
+
+// only keep the slug or id
+const cleanFacebookProfileUrl = url => {
+	try {
+		const urlObject = new URL(url)
+		if (urlObject) {
+			if (url.includes("profile.php?id=")) {
+				const id = urlObject.searchParams.get("id")
+				return "https://facebook.com/profile.php?id=" + id
+			} else {
+				let path = urlObject.pathname.slice(1)
+				if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
+				return "https://facebook.com/" + path
+			}
+		}
+	} catch (err) {
+		return null
 	}
 }
 
@@ -81,9 +100,9 @@ const checkFriendButtonAndSend = (arg, cb) => {
 const openProfilePage = async (tab, profileUrl) => {
 	let aboutUrl
 	if (profileUrl.includes("profile.php?id=")) {
-		aboutUrl = profileUrl + "&sk=about"
+		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "&sk=about"
 	} else {
-		aboutUrl = profileUrl + "/about"
+		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "/about"
 	}
 	await tab.open(aboutUrl)
 	let selector
@@ -91,7 +110,6 @@ const openProfilePage = async (tab, profileUrl) => {
 		selector = await tab.waitUntilVisible("#content") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
-			await tab.screenshot(`error${new Date()}.png`)
 			utils.log(`${profileUrl} page is not available.`, "error")
 			return { profileUrl, error: "The profile page isn't available"}
 		}
@@ -108,9 +126,7 @@ const openProfilePage = async (tab, profileUrl) => {
 		}
 	}
 	try {
-		// const name = await tab.evaluate(getNameFromMainPage)
-		// const scrapedData = await tab.evaluate(scrapeAboutPage, { profileUrl })
-		const scrapedData = await facebook.scrapeAboutPage(tab, { arg: profileUrl })
+		const scrapedData = await facebook.scrapeAboutPage(tab, { profileUrl })
 		utils.log(`Opened profile of ${scrapedData.name}.`, "done")
 		return scrapedData
 	} catch (err) {
@@ -119,20 +135,14 @@ const openProfilePage = async (tab, profileUrl) => {
 	}
 }
 
-// we need to reverse the message, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
-const reverseMessage = message => {
-	return message.split("\n") // separating by line break
-				  .reverse() // reversing the order
-				  .map(el => el += "\r") // inserting a line break
-}
-
 const sendMessage = async (tab, message) => {
 	await tab.evaluate(openChat)
 	await tab.wait(1000)
-	const messageArray = reverseMessage(message)
+	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
 	}
+	await tab.wait(1000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.click("[label=send]")
 }
@@ -152,11 +162,8 @@ const addFriend = async (tab, name) => {
 			utils.log(`We're already friend with ${name}.`, "done")
 			break
 		case "No friend button available": // no friend button : they may have refused invitation
-			utils.log(`Can't find Add Friend Button for ${name}, they may have declined previous invitations.`, "warning")
+			utils.log(`Can't find Add Friend Button for ${name}.`, "warning")
 			break
-		default: // other cases
-			await buster.saveText(await tab.getContent(), `Werid ${new Date()}.html`)
-			console.log("Dunno what happened")
 	}
 	return status
 }
@@ -168,7 +175,7 @@ nick.newTab().then(async (tab) => {
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
 	if (isFacebookProfileUrl(spreadsheetUrl)) {
-		profilesToScrape = [ spreadsheetUrl ]
+		profilesToScrape = [ { "0": spreadsheetUrl } ]
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
 		let csvHeader = profilesToScrape[0].filter(cell => !isUrl(cell))
@@ -180,11 +187,14 @@ nick.newTab().then(async (tab) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	profilesToScrape = profilesToScrape.filter(el => result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
+	profilesToScrape = profilesToScrape.filter(el => result.findIndex(line => el[columnName] === line.profileUrl) < 0)
+									   .filter(el => el[columnName].length)
+									   .slice(0, profilesPerLaunch)
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
 	}
+	utils.log(`Lines to process: ${JSON.stringify(profilesToScrape.map(el => el[columnName]), null, 2)}`, "done")
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
 	for (let profileObject of profilesToScrape) {
@@ -226,7 +236,6 @@ nick.newTab().then(async (tab) => {
 					}
 				} catch (err) {
 					utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
-					await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
 				}
 			} else {  
 				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
