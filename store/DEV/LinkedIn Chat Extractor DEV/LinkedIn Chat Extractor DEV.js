@@ -127,8 +127,12 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 	tab.driver.client.addListener("Network.requestWillBeSent", httpSendInterceptor)
 	await tab.click(SELECTORS.conversationTrigger)
 	await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
-	await tab.waitUntilVisible(SELECTORS.messages, 15000)
-	await tab.waitWhileVisible(SELECTORS.spinners, 15000)
+	try {
+		await tab.waitUntilVisible(SELECTORS.messages, 15000)
+		await tab.waitWhileVisible(SELECTORS.spinners, 15000)
+	} catch (err) {
+		throw "No messages send in this conversation"
+	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", httpSendInterceptor)
 
 	if (!interceptSuccess) {
@@ -166,7 +170,7 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 	ajaxBundle.date = Date.now()
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	conversation = messagesPerExtract ? conversation.slice(0, messagesPerExtract) : conversation
-	return { conversationUrl: `https://www.linkedin/messaging/thread/${ajaxBundle.convId}/`, messages: conversation }
+	return { profileUrl: `https://www.linkedin/messaging/thread/${ajaxBundle.convId}/`, messages: conversation, url: await tab.getUrl() }
 }
 
 /**
@@ -179,6 +183,7 @@ const jsonToCsvOutput = json => {
 	for (const conv of json) {
 		let tmp = conv.messages.map(el => {
 			el.conversationUrl = conv.conversationUrl
+			el.url = conv.url
 			return el
 		})
 		csv.push(...tmp)
@@ -191,9 +196,13 @@ const jsonToCsvOutput = json => {
 	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, messagesPerExtract, queries, chronOrder, noDatabase } = utils.validateArguments()
 	let db = noDatabase ? [] : await utils.getDb(DB_NAME)
 	const currentScraping = []
+	let step = 0
 
 	queries = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName.trim())
-	queries = queries.filter(el => db.findIndex(line => line.url === el || line.error) < 0).slice(0, profilesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line.url === el || line.error) < 0)
+	if (profilesPerLaunch) {
+		queries = queries.slice(0, profilesPerLaunch)
+	}
 	if (queries.length < 1) {
 		utils.log("Spreadsheet is empty or every conversations are scraped", "warning")
 		nick.exit(0)
@@ -201,7 +210,13 @@ const jsonToCsvOutput = json => {
 	utils.log(`Urls to scrape ${JSON.stringify(queries, null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
 	for (const convUrl of queries) {
-		let convRes = { profileUrl: convUrl }
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
+		buster.progressHint((step++) + 1 / queries.length, `Conversation: ${convUrl}`)
+		let convRes = { conversationUrl: convUrl }
 		let tmp = await isRealProfile(tab, convUrl)
 		if (typeof tmp === "string" || (typeof tmp === "boolean" && !tmp)) {
 			convRes.error = typeof tmp === "string" ? tmp : "Unavailable profile"
@@ -209,13 +224,21 @@ const jsonToCsvOutput = json => {
 			continue
 		}
 		utils.log(`Loading conversation in ${convUrl} ...`, "loading")
-		let conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder)
+		let conversation
+		try {
+			conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder)
+		} catch (err) {
+			utils.log(`No messages in ${convUrl}`, "warning")
+			currentScraping.push({ url: convUrl, error: `${err.message || err}`, messages: [ { error: `${err.message || err}` } ] })
+			continue
+		}
 		currentScraping.push(conversation)
 	}
 	db.push(...jsonToCsvOutput(currentScraping))
 	await utils.saveResults(noDatabase ? [] : currentScraping, noDatabase ? [] : db, SHORT_DB_NAME, null, false)
 	nick.exit()
 })().catch(err => {
-	utils.log(`Error during the API execution: ${err.message || err}` ,"error")
+	utils.log(`Error during the API execution: ${err.message || err}`, "error")
+	console.log(err.stack || "no stack")
 	nick.exit(1)
 })
