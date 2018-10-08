@@ -350,6 +350,8 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			// Invitation already sent, but still in pending
 			if (await tab.isPresent(selectors[7])) {
 				utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+				invitation.error = "Invitation already sent"
+				return invitation
 			} else {
 				try {
 					await connectTo(selector, tab, message)
