@@ -115,7 +115,15 @@ const scrapeResultsLeads = (arg, callback) => {
 				newData.companyId = companyId
 				newData.companyUrl = "https://www.linkedin.com/company/" + companyId
 			}
-			if (arg.query) { newData.query = arg.query }
+			if (result.querySelector(".result-lockup__misc-item")) {
+				newData.location = result.querySelector(".result-lockup__misc-item").innerText
+			}
+			if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
+				newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
+			}
+			if (arg.query) {
+				newData.query = arg.query
+			}
 			profilesScraped++
 			data.push(newData)
 		}
