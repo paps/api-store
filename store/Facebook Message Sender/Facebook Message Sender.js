@@ -71,14 +71,16 @@ const openChatPage = async (tab, profileUrl) => {
 	const currentUrl = await tab.getUrl()
 	if (currentUrl === "https://www.facebook.com/messages") { // if we were redirected, the profile doesn't exist
 		utils.log(`Profile ${profileUrl} doesn't exist!`, "error")
-	 	return { profileUrl, error: "This profile doesn't exist"}
+			return { profileUrl, error: "This profile doesn't exist"}
 	}
 	
 	try {
 		const name = await tab.evaluate(getNameFromChat)
-		const firstName = name.split(" ")[0]
+		const names = facebook.getFirstAndLastName(name)
+		const firstName = names.firstName
+		const lastName = names.lastName
 		utils.log(`Opened chat with ${name}.`, "done")
-		return { profileUrl, name, firstName }
+		return { profileUrl, name, firstName, lastName }
 	} catch (err) {
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
 		return { profileUrl, error: "Could get profile name"}
@@ -93,6 +95,31 @@ const sendMessage = async (tab, message) => {
 	await tab.wait(1000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.evaluate(clickSendButton)
+	await tab.wait(5000)
+	const isBanned = await tab.evaluate(checkIfBanned)
+	return isBanned
+}
+
+// returns true if we got an error message from Fb, false otherwise
+const checkIfBanned = (arg, cb) => {
+	let aTag
+	try {
+		aTag = Array.from(document.querySelectorAll(".uiScrollableAreaBody")[2].querySelector(".uiScrollableAreaContent").querySelectorAll("a")).filter(el => el.href.includes("/help/contact"))[0]
+	} catch (err) {
+		//
+	}
+	cb(null, typeof aTag !== "undefined")
+}
+
+// returns true if we got a pop-up window from Fb, false otherwise
+const checkIfBlocked = (arg, cb) => {
+	let aTag
+	try {
+		aTag = Array.from(document.querySelector(".captcha").parentElement.querySelectorAll("a")).filter(el => el.href.includes("/help/contact"))[0]
+	} catch (err) {
+		//
+	}
+	cb(null, typeof aTag !== "undefined")
 }
 
 // Main function to launch all the others in the good order and handle some errors
@@ -144,19 +171,31 @@ nick.newTab().then(async (tab) => {
 						try {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-							await sendMessage(tab, forgedMessage)
-							tempResult.message = forgedMessage
+							const isBanned = await sendMessage(tab, forgedMessage)
+							const isBlocked = await tab.evaluate(checkIfBlocked)							
+							if (!isBanned && !isBlocked) {
+								tempResult.message = forgedMessage
+							} else {
+								utils.log("Message didn't go through, blocked by Facebook.", "error")	
+								blocked = true
+							}
+							tempResult.timestamp = new Date().toISOString()
 						} catch (err) {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 						}
 					}		
 					result.push(tempResult)
 					if (blocked) {
-						utils.log("Temporarily blocked by Facebook!", "error")
 						break
 					}
 				} catch (err) {
-					utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
+					const isBlocked = await tab.evaluate(checkIfBlocked)
+					if (isBlocked) {
+						utils.log("Blocked by Facebook, you should try again later!", "error")
+						break
+					} else {
+						utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
+					}
 				}
 			} else {  
 				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
@@ -164,7 +203,7 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
- 	await utils.saveResults(result, result, csvName)
+		await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
