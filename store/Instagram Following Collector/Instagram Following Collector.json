@@ -3,7 +3,7 @@
 	"description": "List all profiles followed by Instagram users",
 	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#833ab4",
 	"argumentHelpAnchor": "#section_argument",

@@ -111,7 +111,7 @@ const scrapeFollowerCount = (arg, callback) => {
 }
 
 const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id")) {
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id") && e.response.url.includes("include_reel")) {
 		requestSingleId = e.requestId
 		graphqlUrl = e.response.url
 	}
@@ -175,61 +175,66 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 
 		if (instagramJson.data.user.edge_followed_by) {
-			if (instagramJson.data.user.edge_followed_by.page_info.end_cursor){
-				let endCursor = instagramJson.data.user.edge_followed_by.page_info.end_cursor
+			if (!resuming) {
 				let nodes = instagramJson.data.user.edge_followed_by.edges
-				nextUrl = forgeNewUrl(endCursor)
-				if (!resuming) {
 					for (const profile of nodes) {
-						const data = {}
-						data.id = profile.node.id
-						data.username = profile.node.username
-						data.profileUrl = "https://www.instagram.com/" + data.username
-						data.fullName = profile.node.full_name
-						data.imgUrl = profile.node.profile_pic_url
-						data.isPrivate = profile.node.is_private ? "Private" : null
-						data.isVerified = profile.node.is_verified ? "Verified" : null
-						data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
-						data.query = url
-						profilesArray.push(data)
-					}
-					profileCount += nodes.length
-					displayResult++
-					if (displayResult % 15 === 14) { utils.log(`Got ${profileCount} followers.`, "info") }
-					buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
-				} else {
-					nextUrl = agentObject.nextUrl
-					resuming = false 
+					const data = {}
+					data.id = profile.node.id
+					data.username = profile.node.username
+					data.profileUrl = "https://www.instagram.com/" + data.username
+					data.fullName = profile.node.full_name
+					data.imgUrl = profile.node.profile_pic_url
+					data.isPrivate = profile.node.is_private ? "Private" : null
+					data.isVerified = profile.node.is_verified ? "Verified" : null
+					data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
+					data.query = url
+					profilesArray.push(data)
 				}
-				try { 
-					await tab.inject("../injectables/jquery-3.0.0.min.js")
-					await tab.evaluate(ajaxCall, { url: nextUrl, headers: gl.headers })
-				} catch (err) {
-					try {
-						await tab.open(nextUrl)
-						let instagramJsonCode = await tab.getContent()
-						instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
-						if (instagramJsonCode && instagramJsonCode.status === "fail" && !instagramJsonCode.message.includes("rate limited")) {
-							utils.log(`Error getting followers :${instagramJsonCode.message}`, "error")
-							utils.log("Restarting follower scraping", "loading")
-							restartAfterError = true
-							continue
-						}
-					} catch (err) {
-						//
-					}
-
-					utils.log(`Rate limit reached, got ${profileCount} profiles, exiting...`, "warning")
-					rateLimited = true
-					interrupted = true
-					lastQuery = url
+				profileCount += nodes.length
+				displayResult++
+				if (displayResult % 15 === 14) {
+					utils.log(`Got ${profileCount} followers.`, "info")
+				}
+				buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
+				if (instagramJson.data.user.edge_followed_by.page_info.end_cursor){
+					let endCursor = instagramJson.data.user.edge_followed_by.page_info.end_cursor
+					nextUrl = forgeNewUrl(endCursor)
+				} else {
+					allCollected = true
 					break
 				}
-				lastDate = new Date()
 			} else {
-				allCollected = true
+				nextUrl = agentObject.nextUrl
+				resuming = false 
+			}
+			try { 
+				await tab.inject("../injectables/jquery-3.0.0.min.js")
+				await tab.evaluate(ajaxCall, { url: nextUrl, headers: gl.headers })
+			} catch (err) {
+				try {
+					await tab.open(nextUrl)
+					let instagramJsonCode = await tab.getContent()
+					instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
+					if (instagramJsonCode && instagramJsonCode.status === "fail" && !instagramJsonCode.message.includes("rate limited")) {
+						utils.log(`Error getting followers :${instagramJsonCode.message}`, "error")
+						utils.log("Restarting follower scraping", "loading")
+						restartAfterError = true
+						continue
+					}
+				} catch (err) {
+					//
+				}
+
+				utils.log(`Rate limit reached, got ${profileCount} profiles, exiting...`, "warning")
+				rateLimited = true
+				interrupted = true
+				lastQuery = url
 				break
 			}
+			lastDate = new Date()
+		} else {
+			allCollected = true
+			break
 		}
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
