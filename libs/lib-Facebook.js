@@ -117,6 +117,14 @@ class Facebook {
 					  .map(el => el += "\r") // inserting a line break
 	}
 
+	// extract first and last name from a full name
+	getFirstAndLastName(name) {
+		const nameArray = name.split(" ")
+		const firstName = nameArray.shift()
+		const lastName = nameArray.join(" ")
+		return { firstName, lastName }
+	}
+
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
