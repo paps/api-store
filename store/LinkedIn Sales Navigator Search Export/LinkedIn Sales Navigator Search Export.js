@@ -129,30 +129,8 @@ const totalResults = (arg, callback) => {
 	callback(null, total)
 }
 
-/**
- * @description Tiny wrapper used to easly change the page index of LinkedIn search results
- * @param {String} url
- * @param {Number} index - Page index
- * @return {String} URL with the new page index
- */
-const overridePageIndex = (url, page) => {
-	try {
-		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.set("start", page === 1 ? "0" : page - 1 + "00")
-		return parsedUrl.toString()
-	} catch (err) {
-		return url
-	}
-}
-
-const overridePageIndexLead = (url, page) => {
-	try {
-		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.set("page", page)
-		return parsedUrl.toString()
-	} catch (err) {
-		return url
-	}
+const clickNextPage = (arg, cb) => {
+	cb(null, document.querySelector(".search-results__pagination-next-button").click())
 }
 
 const extractDefaultUrls = async results => {
@@ -181,17 +159,14 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	const selectors = ["section.search-results-container", "section.search-results__container"]
 	let profilesFoundCount = 0
 	let maxResults = Math.min(1000, numberOfProfiles)
-	let isLeadSearch
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
 		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		if (selector === ".artdeco-tab-primary-text") { 
-			isLeadSearch = true
 			numberPerPage = 25
 		} else {
-			isLeadSearch = false
 			numberPerPage = 100
 		}
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
@@ -204,14 +179,8 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	} catch (err) {
 		utils.log(`Could not get total results count. ${err}`, "warning")
 	}
-	const redirectedUrl = await tab.getUrl()
 	for (let i = 1; i <= pageCount; i++) {
 		try {
-			if (isLeadSearch) {
-				await tab.open(overridePageIndexLead(redirectedUrl, i))
-			} else {
-				await tab.open(overridePageIndex(redirectedUrl, i))
-			}
 			utils.log(`Getting results from page ${i}...`, "loading")
 			let containerSelector
 			try {
@@ -242,6 +211,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
+				await tab.evaluate(clickNextPage)
 			} else {
 				utils.log("No more profiles found on this page", "warning")
 				break
