@@ -81,11 +81,10 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 }
 
 // click on Add Friend Button if available
-const checkFriendButtonAndSend = (arg, cb) => {
+const checkFriendButton = (arg, cb) => {
 	if (document.querySelector("button.FriendRequestAdd")) {
 		if (!document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem")) { // if button to Add Friend is visible
-			document.querySelector("button.FriendRequestAdd").click()
-			setTimeout(function wait() { cb(null, "Request sent") }, 1000)
+			cb(null, "Can Add Friend")
 		} else if (document.querySelector("button.FriendRequestOutgoing") && !document.querySelector("button.FriendRequestOutgoing").classList.contains("hidden_elem")) { // if button Request Sent is visible
 			cb(null, "Request already pending")
 		}
@@ -96,6 +95,10 @@ const checkFriendButtonAndSend = (arg, cb) => {
 		cb(null, "Already Friend")
 	}
 	cb(null, null)
+}
+
+const clickAddFriend = (arg, cb) => {
+	cb(null, document.querySelector("button.FriendRequestAdd").click())
 }
 
 const openProfilePage = async (tab, profileUrl) => {
@@ -137,28 +140,58 @@ const openProfilePage = async (tab, profileUrl) => {
 	 	return { profileUrl, error: "The profile page isn't available"}
 	}
 }
-
+ 
+// try to send a message, returns an error or null if no error
 const sendMessage = async (tab, message) => {
-	await tab.evaluate(openChat)
+	try {
+		await tab.evaluate(openChat)
+	} catch (err) {
+		utils.log("Couldn't open Chat Window!", "error")
+		return "Couldn't open Chat Window"
+	}
 	await tab.wait(1000)
 	const messageArray = facebook.reverseMessage(message)
+	await buster.saveText(await tab.getContent(), `avaMess${Date.now()}.html`)
+	await tab.screenshot(`avaMess${Date.now()}.png`)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
 	}
 	await tab.wait(1000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.click("[label=send]")
+	await tab.wait(3000)
+	const messageError = await tab.evaluate(checkMessageError)
+	if (messageError) {
+		utils.log("Could send message, blocked by Facebook!", "warning")
+		return "Could send message, blocked by Facebook"
+	} else {
+		utils.log(`Sending message : ${message}`, "done")
+	}
+	return null
 }
 
+const checkMessageError = (arg, cb) => {
+	cb(null, document.querySelector("div.fbDockChatTabFlyout div.fbNubFlyoutInner > div:last-of-type > div a").getAttribute("authorfbid"))
+}
+
+const checkConfirmationBox = (arg, cb) => {
+	if (document.querySelector(".confirmation_message")) {
+		cb(null, true)
+	} else {
+		cb(null, null)
+	}
+}
+
+const clickConfirmationBox = (arg, cb) => {
+	cb(null, document.querySelector(".layerConfirm").click())
+}
 
 // different cases depending on which button is visible
 const addFriend = async (tab, name) => {
-	const status = await tab.evaluate(checkFriendButtonAndSend)
-	await buster.saveText(await tab.getContent(), `status${Date.now()}.html`)
+	let status = await tab.evaluate(checkFriendButton)
+	await buster.saveText(await tab.getContent(), `statusAv${Date.now()}.html`)
+	await tab.screenshot(`statusAv${Date.now()}.png`)
 	switch (status) {
-		case "Request sent": // we've just added
-			utils.log(`Friend request sent for ${name}.`, "done")
-			break
 		case "Request already pending": // we had already added 
 			utils.log(`Friend request for ${name} was already sent, still pending.`, "warning")
 			break
@@ -168,6 +201,34 @@ const addFriend = async (tab, name) => {
 		case "No friend button available": // no friend button : they may have refused invitation
 			utils.log(`Can't find Add Friend Button for ${name}.`, "warning")
 			break
+		case "Can Add Friends": { // Friend button available, we're clicking
+			await tab.evaluate(clickAddFriend)
+			await tab.wait(2000)
+			await buster.saveText(await tab.getContent(), `statusjUSTEAPRESs${Date.now()}.html`)
+			await tab.screenshot(`statusjusteapreres${Date.now()}.png`)
+			const confirmationBox = await tab.evaluate(checkConfirmationBox) // checking for confirmation box that may pop
+			if (confirmationBox) {
+				utils.log("Clicking Confirmation Box...", "loading")
+				await tab.evaluate(clickConfirmationBox)
+				await tab.wait(1000)
+			} else {
+				console.log("pasCbox")
+			}
+			await tab.evaluate((arg, cb) => {
+				cb(null, document.location.reload())
+			})
+			await tab.wait(3000)
+			await buster.saveText(await tab.getContent(), `statusApres${Date.now()}.html`)
+			await tab.screenshot(`statusApres${Date.now()}.png`)
+			status = await tab.evaluate(checkFriendButton)
+			if (status === "Request already pending") {
+				utils.log(`Friend request sent for ${name}.`, "done")
+				status = "Friend added"
+			} else {
+				utils.log(`Friend request didn't go through for ${name}.`, "warning")
+				status = "Shadow ban"
+			}
+		}
 	}
 	return status
 }
@@ -225,8 +286,19 @@ nick.newTab().then(async (tab) => {
 							try {
 								let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 								forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-								await sendMessage(tab, forgedMessage)
-								tempResult.message = forgedMessage
+								const errorMessage = await sendMessage(tab, forgedMessage)
+								await tab.wait(2000)
+								await buster.saveText(await tab.getContent(), `statusApres${Date.now()}.html`)
+								await tab.screenshot(`statusApres${Date.now()}.png`)
+								if (errorMessage) {
+									tempResult.error = errorMessage
+									if (errorMessage === "Could send message, blocked by Facebook") {
+										utils.log("Blocked by Facebook, you should slow down the agent.", "warning")
+										break
+									}
+								} else {
+									tempResult.message = forgedMessage
+								}
 							} catch (err) {
 								utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 								await buster.saveText(await tab.getContent(), `Error sending message${Date.now()}.html`)
@@ -237,6 +309,7 @@ nick.newTab().then(async (tab) => {
 							tempResult.status = status
 						} catch (err) {
 							utils.log(`Error sending friend request to ${tempResult.name}: ${err}`, "error")
+							tempResult.error += "Couldn't send friend request "
 						}
 						result.push(tempResult)
 					}		

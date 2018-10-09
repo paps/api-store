@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js, lib-Messaging-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,12 +15,12 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
-const Messaging = require("./lib-Messaging")
+const Messaging = require("./lib-Messaging-DEV")
 const inflater = new Messaging(utils)
 let blocked
 const { URL } = require("url")
@@ -80,11 +80,10 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 }
 
 // click on Add Friend Button if available
-const checkFriendButtonAndSend = (arg, cb) => {
+const checkFriendButton = (arg, cb) => {
 	if (document.querySelector("button.FriendRequestAdd")) {
 		if (!document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem")) { // if button to Add Friend is visible
-			// document.querySelector("button.FriendRequestAdd").click()
-			cb(null, "Request sent")
+			cb(null, "Can Add Friend")
 		} else if (document.querySelector("button.FriendRequestOutgoing") && !document.querySelector("button.FriendRequestOutgoing").classList.contains("hidden_elem")) { // if button Request Sent is visible
 			cb(null, "Request already pending")
 		}
@@ -95,6 +94,10 @@ const checkFriendButtonAndSend = (arg, cb) => {
 		cb(null, "Already Friend")
 	}
 	cb(null, null)
+}
+
+const clickAddFriend = (arg, cb) => {
+	cb(null, document.querySelector("button.FriendRequestAdd").click())
 }
 
 const openProfilePage = async (tab, profileUrl) => {
@@ -131,12 +134,18 @@ const openProfilePage = async (tab, profileUrl) => {
 		return scrapedData
 	} catch (err) {
 		utils.log(`${profileUrl} chat page is not available :${err}`, "error")
-	 	return { profileUrl, error: "The profile page isn't available"}
+		return { profileUrl, error: "The profile page isn't available"}
 	}
 }
-
+	
+// try to send a message, returns an error or null if no error
 const sendMessage = async (tab, message) => {
-	await tab.evaluate(openChat)
+	try {
+		await tab.evaluate(openChat)
+	} catch (err) {
+		utils.log("Couldn't open Chat Window!", "error")
+		return "Couldn't open Chat Window"
+	}
 	await tab.wait(1000)
 	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
@@ -145,16 +154,37 @@ const sendMessage = async (tab, message) => {
 	await tab.wait(1000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.click("[label=send]")
+	await tab.wait(3000)
+	const messageError = await tab.evaluate(checkMessageError)
+	if (messageError) {
+		utils.log("Could send message, blocked by Facebook!", "warning")
+		return "Could send message, blocked by Facebook"
+	} else {
+		utils.log(`Sending message : ${message}`, "done")
+	}
+	return null
 }
 
+const checkMessageError = (arg, cb) => {
+	cb(null, document.querySelector("div.fbDockChatTabFlyout div.fbNubFlyoutInner > div:last-of-type > div a").getAttribute("authorfbid"))
+}
+
+const checkConfirmationBox = (arg, cb) => {
+	if (document.querySelector(".confirmation_message")) {
+		cb(null, true)
+	} else {
+		cb(null, null)
+	}
+}
+
+const clickConfirmationBox = (arg, cb) => {
+	cb(null, document.querySelector(".layerConfirm").click())
+}
 
 // different cases depending on which button is visible
 const addFriend = async (tab, name) => {
-	const status = await tab.evaluate(checkFriendButtonAndSend)
+	let status = await tab.evaluate(checkFriendButton)
 	switch (status) {
-		case "Request sent": // we've just added
-			utils.log(`Friend request sent for ${name}.`, "done")
-			break
 		case "Request already pending": // we had already added 
 			utils.log(`Friend request for ${name} was already sent, still pending.`, "warning")
 			break
@@ -164,6 +194,28 @@ const addFriend = async (tab, name) => {
 		case "No friend button available": // no friend button : they may have refused invitation
 			utils.log(`Can't find Add Friend Button for ${name}.`, "warning")
 			break
+		case "Can Add Friends": { // Friend button available, we're clicking
+			await tab.evaluate(clickAddFriend)
+			await tab.wait(2000)
+			const confirmationBox = await tab.evaluate(checkConfirmationBox) // checking for confirmation box that may pop
+			if (confirmationBox) {
+				utils.log("Clicking Confirmation Box...", "loading")
+				await tab.evaluate(clickConfirmationBox)
+				await tab.wait(1000)
+			}
+			await tab.evaluate((arg, cb) => {
+				cb(null, document.location.reload())
+			})
+			await tab.wait(3000)
+			status = await tab.evaluate(checkFriendButton)
+			if (status === "Request already pending") {
+				utils.log(`Friend request sent for ${name}.`, "done")
+				status = "Friend added"
+			} else {
+				utils.log(`Friend request didn't go through for ${name}.`, "warning")
+				status = "Shadow ban"
+			}
+		}
 	}
 	return status
 }
@@ -174,12 +226,15 @@ nick.newTab().then(async (tab) => {
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
+	if (message) {
+		message = message.trim()
+	}
 	if (isFacebookProfileUrl(spreadsheetUrl)) {
 		profilesToScrape = [ { "0": spreadsheetUrl } ]
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
 		let csvHeader = profilesToScrape[0].filter(cell => !isUrl(cell))
-		let messagesTags = inflater.getMessageTags(message).filter(el => csvHeader.includes(el))
+		let messagesTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
 		let columns = [ columnName, ...messagesTags ]
 		profilesToScrape = utils.extractCsvRows(profilesToScrape, columns)
 		utils.log(`Got ${profilesToScrape.length} lines from csv.`, "done")
@@ -188,8 +243,8 @@ nick.newTab().then(async (tab) => {
 		columnName = "0"
 	}
 	profilesToScrape = profilesToScrape.filter(el => result.findIndex(line => el[columnName] === line.profileUrl) < 0)
-									   .filter(el => el[columnName].length)
-									   .slice(0, profilesPerLaunch)
+										.filter(el => el[columnName].length)
+										.slice(0, profilesPerLaunch)
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
@@ -216,8 +271,17 @@ nick.newTab().then(async (tab) => {
 							try {
 								let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 								forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-								await sendMessage(tab, forgedMessage)
-								tempResult.message = forgedMessage
+								const errorMessage = await sendMessage(tab, forgedMessage)
+								await tab.wait(2000)
+								if (errorMessage) {
+									tempResult.error = errorMessage
+									if (errorMessage === "Could send message, blocked by Facebook") {
+										utils.log("Blocked by Facebook, you should slow down the agent.", "warning")
+										break
+									}
+								} else {
+									tempResult.message = forgedMessage
+								}
 							} catch (err) {
 								utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 							}
@@ -227,6 +291,7 @@ nick.newTab().then(async (tab) => {
 							tempResult.status = status
 						} catch (err) {
 							utils.log(`Error sending friend request to ${tempResult.name}: ${err}`, "error")
+							tempResult.error += "Couldn't send friend request "
 						}
 						result.push(tempResult)
 					}		
@@ -243,7 +308,7 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
- 	await utils.saveResults(result, result, csvName)
+		await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
