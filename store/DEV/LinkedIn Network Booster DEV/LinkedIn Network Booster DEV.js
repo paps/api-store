@@ -239,6 +239,7 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 			// No need to send the invitation if the success button is present for the connect option (means pending OR connected)
 			if (expandedSelectorFound === ".pv-s-profile-actions--connect" && await tab.isPresent(`${expandedSelectorFound} > li-icon[type=success-pebble-icon]`)) {
 				utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+				return false
 			} else {
 				return true
 			}
@@ -246,7 +247,6 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 	} else {
 		throw "Is in third circle and the onlySecondCircle option is set to true"
 	}
-	return null
 }
 
 /**
@@ -376,6 +376,8 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 				if (typeof res === "boolean" && res === true) {
 					await connectTo(selector, tab, message)
 					utils.log(`${url} added`, "done")
+				} else {
+					invitation.error = "Invitation already sent"
 				}
 			} catch (err) {
 				invitation.error = err.message || err

@@ -137,8 +137,14 @@ const totalResults = (arg, callback) => {
 	callback(null, total)
 }
 
+// click on the Next button to switch search pages
 const clickNextPage = (arg, cb) => {
-	cb(null, document.querySelector(".search-results__pagination-next-button").click())
+	if (!document.querySelector(".search-results__pagination-next-button").disabled) {
+		document.querySelector(".search-results__pagination-next-button").click()
+		cb(null, true)
+	} else {
+		cb(null, null)
+	}
 }
 
 const extractDefaultUrls = async results => {
@@ -156,6 +162,7 @@ const extractDefaultUrls = async results => {
 				break
 			}
 		}
+		buster.progressHint(i / results.length, `${i} URLs converted`)
 	}
 	return results
 }
@@ -219,7 +226,16 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
-				await tab.evaluate(clickNextPage)
+				try {
+					const clickDone = await tab.evaluate(clickNextPage)
+					if (!clickDone) {
+						utils.log("No more profiles found on this page", "warning")
+						break
+					}
+				} catch (err) {
+					utils.log("Error click on Next button", "error")
+					break
+				}
 			} else {
 				utils.log("No more profiles found on this page", "warning")
 				break

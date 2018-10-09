@@ -138,8 +138,14 @@ const totalResults = (arg, callback) => {
 	callback(null, total)
 }
 
+// click on the Next button to switch search pages
 const clickNextPage = (arg, cb) => {
-	cb(null, document.querySelector(".search-results__pagination-next-button").click())
+	if (!document.querySelector(".search-results__pagination-next-button").disabled) {
+		document.querySelector(".search-results__pagination-next-button").click()
+		cb(null, true)
+	} else {
+		cb(null, null)
+	}
 }
 
 const extractDefaultUrls = async results => {
@@ -157,7 +163,7 @@ const extractDefaultUrls = async results => {
 				break
 			}
 		}
-		buster.progressHint(i / results.length, `${i} URL converted`)
+		buster.progressHint(i / results.length, `${i} URLs converted`)
 	}
 	return results
 }
@@ -187,19 +193,10 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
-		await buster.saveText(await tab.getContent(), `Could not get total results count${new Date()}.html`)
-		await tab.screenshot(`${Date.now()}.png`)
-
 		utils.log(`Could not get total results count. ${err}`, "warning")
 	}
-	// const redirectedUrl = await tab.getUrl()
 	for (let i = 1; i <= pageCount; i++) {
 		try {
-			// if (isLeadSearch) {
-			// 	await tab.open(overridePageIndexLead(redirectedUrl, i))
-			// } else {
-			// 	await tab.open(overridePageIndex(redirectedUrl, i))
-			// }
 			utils.log(`Getting results from page ${i}...`, "loading")
 			let containerSelector
 			try {
@@ -230,7 +227,16 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
-				await tab.evaluate(clickNextPage)
+				try {
+					const clickDone = await tab.evaluate(clickNextPage)
+					if (!clickDone) {
+						utils.log("No more profiles found on this page", "warning")
+						break
+					}
+				} catch (err) {
+					utils.log("Error click on Next button", "error")
+					break
+				}
 			} else {
 				utils.log("No more profiles found on this page", "warning")
 				break
