@@ -209,7 +209,23 @@ const getGroupMembers = async (tab, patternNumber) => {
 			}
 			utils.log(`(Hmm, LinkedIn did not respond correctly, retrying...) [${errors}/10]`, "info")
 			await tab.wait(3000 + 4000 * errors)
-			continue
+			if (patternNumber === VOYAGER_ENDPOINT_PATTERN) {
+				let lastIndex = extractQueryString(gl.url, "start")
+				let lastCount = extractQueryString(gl.url, "count")
+				lastIndex = lastIndex ? parseInt(lastIndex, 10) : null
+				lastCount = lastCount ? parseInt(lastCount, 10) : null
+				lastIndex += (lastCount + 1)
+				/**
+				 * Max value is 100
+				 * This AJAX call is limited 20 people, in order to not randomly fails
+				 */
+				lastCount = 20
+				gl.url = updateUrlParam(gl.url, "start", lastIndex)
+				gl.url = updateUrlParam(gl.url, "count", lastCount)
+				gl.url = decodeURIComponent(gl.url)
+			}
+				continue
+
 		}
 		errors = 0
 		if (response.data) {
@@ -287,6 +303,9 @@ const getGroupMembers = async (tab, patternNumber) => {
 			 * This AJAX call is limited 20 people, in order to not randomly fails
 			 */
 			lastCount = 20
+			// if (lastIndex > 200) {
+			// 	lastIndex = 500
+			// }
 			gl.url = updateUrlParam(gl.url, "start", lastIndex)
 			gl.url = updateUrlParam(gl.url, "count", lastCount)
 			gl.url = decodeURIComponent(gl.url)
