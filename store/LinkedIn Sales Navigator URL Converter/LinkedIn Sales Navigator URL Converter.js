@@ -76,7 +76,6 @@ const craftObjectFromCsv = (csv, header = true) => {
 	}
 	await linkedIn.login(tab, sessionCookie)
 	csvObject = filterCsvObject(csvObject, result, columnName).slice(0, numberOfLinesPerLaunch)
-	console.log("csvO", csvObject)
 	for (let i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
 			const convertedObject = csvObject[i]
