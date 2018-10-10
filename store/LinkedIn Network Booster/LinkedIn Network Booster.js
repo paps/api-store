@@ -372,6 +372,9 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			try {
 				let res = await threeDotsHandler(tab, url, selector, onlySecondCircle)
 				if (typeof res === "boolean" && res === true) {
+					if (await tab.isVisible(".pv-s-profile-actions--connect")) {
+						selector = ".pv-s-profile-actions--connect"
+					}
 					await connectTo(selector, tab, message)
 					utils.log(`${url} added`, "done")
 				} else {
