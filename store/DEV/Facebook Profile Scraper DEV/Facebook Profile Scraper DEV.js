@@ -65,6 +65,10 @@ const craftCsvObject = data => {
 		status: data.status,
 	}
 
+	if (data.lastName) {
+		csvResult.lastName = data.lastName
+	}
+
 	if (data.work) {
 		for (let i = 0 ; i < data.work.length ; i++) {
 			csvResult["workName" + (i ? i + 1 : "")] = data.work[i].name
@@ -121,8 +125,12 @@ const craftCsvObject = data => {
 			csvResult["lifeEvent" + (i ? i + 1 : "")] = data.lifeEvents[i]
 		}
 	}
-	if (data.bio) {	csvResult.bio = data.bio }
-	if (data.quotes) { csvResult.quotes = data.quotes }
+	if (data.bio) {
+		csvResult.bio = data.bio
+	}
+	if (data.quotes) { 
+		csvResult.quotes = data.quotes
+	}
 	return csvResult
 }
 
