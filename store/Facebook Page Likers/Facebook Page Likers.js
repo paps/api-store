@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -24,8 +24,8 @@ const URL = require("url").URL
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook-DEV")
-const facebook = new Facebook(nick, buster, utils)    
+const Facebook = require("./lib-Facebook")
+const facebook = new Facebook(nick, buster, utils)
 
 // }
 
@@ -34,11 +34,11 @@ const retrieveAllPageUrls = async (result, agentObject, spreadsheetUrl, columnNa
 	const inputUrl = new URL(spreadsheetUrl)
 	if (inputUrl.hostname.toLowerCase().includes("facebook.com")) { // facebook page
 		let pageUrl = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (!pageUrl) {	
+			if (!pageUrl) {
 				utils.log("The given url is not a valid facebook page url.", "error")
 			}
 			pageUrls.push(pageUrl)
-	} else { // CSV		
+	} else { // CSV
 		let csvUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		csvUrls = csvUrls.filter(str => str) // removing empty lines
 		for (let i = 0; i < csvUrls.length; i++) { // cleaning all group entries
@@ -65,13 +65,28 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 	let pageId
 	let likeNumber
 	try {
-		await tab.waitUntilVisible("#entity_sidebar a[aria-label]", 10000)
+		try {
+			await tab.waitUntilVisible("#entity_sidebar a[aria-label]", 10000)
 
-		let profilePictureLink = await tab.evaluate((arg, cb) => {
-			cb(null, document.querySelector("#entity_sidebar a[aria-label]").href)
-		})
-		const profilePictureUrl = new URL(profilePictureLink)
-		pageId = profilePictureUrl.pathname.split("/")[1]
+			let profilePictureLink = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("#entity_sidebar a[aria-label]").href)
+			})
+			const profilePictureUrl = new URL(profilePictureLink)
+			pageId = profilePictureUrl.pathname.split("/")[1]
+		} catch (e) {
+			let coverLink = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("#pagelet_page_cover a[rel=\"theater\"]").href)
+			})
+			let searchStart = "facebook.com/"
+			let brandIndex = coverLink.indexOf(searchStart)
+			if (brandIndex === -1) {
+				searchStart = "/"
+				brandIndex = coverLink.indexOf(searchStart)
+			}
+			let idEndIndex = coverLink.indexOf("/", brandIndex + searchStart.length)
+			pageId = coverLink.substring(brandIndex + searchStart.length, idEndIndex)
+		}
+
 
 		await tab.waitUntilVisible("#pages_side_column", 10000)
 
@@ -82,7 +97,7 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 	} catch (err) {
 		utils.log(`Error accessing page!: ${err}`, "error")
 		await buster.saveText(await tab.getContent(), `Error accessing page!${Date.now()}.html`)
-	}			
+	}
 	return { pageId, likeNumber}
 }
 
@@ -109,9 +124,9 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		await tab.scrollToBottom()
 
-		const initDate = new Date() 
+		const initDate = new Date()
 		while (!firstRequestUrl) {
-			await new Promise((resolve) => { 
+			await new Promise((resolve) => {
 				setTimeout(() => {
 					resolve()
 				}, 50)
@@ -212,7 +227,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 				// 
 			}
 		}
-				
+
 		for (let retryRateLimit = 3, error = true; (error) && (retryRateLimit > 0); --retryRateLimit) {
 			for (let retryNetwork = 5; (!responseContent) && (retryNetwork > 0); --retryNetwork) {
 				tab.driver.client.on("Network.responseReceived", onResponse)
