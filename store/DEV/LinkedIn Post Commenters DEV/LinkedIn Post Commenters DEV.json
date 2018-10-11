@@ -28,7 +28,7 @@
 						"placeholder": "Paste your session cookie here"
 					},
 					"postUrl": {
-						"label": "Post URL <a href=\"/api-store/2823/linkedin-post-commenters#section_posturl\" target=\"_blank\">(?)</a>",
+						"label": "Spreadsheet OR Post URL <a href=\"/api-store/2823/linkedin-post-commenters#section_posturl\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste a LinkedIn post URL here",
 						"helper": "Paste a LinkedIn post URL or a public Google Spreadsheet / CSV URL",
 						"type": "url"

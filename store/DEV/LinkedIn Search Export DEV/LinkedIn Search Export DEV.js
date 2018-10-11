@@ -198,8 +198,6 @@ const overridePageIndex = (url, index) => {
 	}
 }
 
-const getLocationUrl = (arg, cb) => cb(null, document.location.href)
-
 const getPageNumber = url => {
 	try {
 		const urlObject = new URL(url)
@@ -212,23 +210,21 @@ const getPageNumber = url => {
 }
 
 const clickNextPage = async (tab, lastLoc) => {
+	let selector
 	try {
-		await tab.waitUntilVisible(".next")
+		selector = await tab.waitUntilVisible([".next", ".artdeco-pagination__button--next"], "or", 15000)
 	} catch (err) {
-		await tab.wait(3000)
-		if (!await tab.isVisible(".next")){
-			return "noMorePages"
-		}
+		return "noMorePages"
 	}
 	try {
-		await tab.click(".next")
+		await tab.click(selector)
 		const lastDate = new Date()
 		do {
 			if (lastDate - new Date() > 10000) {
 				throw "Error loading next page!"
 			}
 			await tab.wait(500)
-		} while (lastLoc === await tab.evaluate(getLocationUrl))
+		} while (lastLoc === await tab.getUrl())
 	} catch (err) {
 		throw "Can't click on Next Page button!"
 	}
@@ -257,7 +253,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	let pageCounter = 0
 	let nextButtonIsClicked
 	do {
-		let newLoc = await tab.evaluate(getLocationUrl)
+		let newLoc = await tab.getUrl()
 		if (newLoc !== lastLoc) {
 			nextButtonIsClicked = false
 			lastLoc = newLoc
@@ -348,6 +344,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			await tab.wait(1000)
 		}		
 	} while (pageCounter < numberOfPage)
+	console.log("pageCounter", pageCounter)
+	console.log("numberOfPage", numberOfPage)
 	utils.log("All pages with result scrapped.", "done")
 	return result
 }
@@ -379,6 +377,9 @@ const isLinkedInSearchURL = (targetUrl) => {
 	if (!category) { category = "People" }
 	// 							//
 	if (typeof search === "string") {
+		if (search.includes("mynetwork/invite-connect/connections")) { // if it's the first connections list page, we replace it by the equivalent search URL
+			search = "https://www.linkedin.com/search/results/people/v2/?facetNetwork=%5B%22F%22%5D&origin=FACETED_SEARCH"
+		}
 		if (typeof isLinkedInSearchURL(search) === "string") {
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {

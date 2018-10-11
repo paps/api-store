@@ -25,46 +25,31 @@ const URL = require("url").URL
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook-DEV")
-const facebook = new Facebook(nick, buster, utils)    
+const facebook = new Facebook(nick, buster, utils)
 
 // }
 
-// Main function that execute all the steps to launch the scrape and handle errors
-;(async () => {
-	const tab = await nick.newTab()
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, csvName, maxNumber } = utils.validateArguments()
-	if (!csvName) { csvName = "result" }
-
-	let pageUrls = [], result = []
-	result = await utils.getDb(csvName + ".csv")
-
-	let agentObject
-	try {
-		agentObject = await buster.getAgentObject()
-	} catch (err) {
-		utils.log("Could not access agent Object.", "warning")
-	}
-
+const retrieveAllPageUrls = async (result, agentObject, spreadsheetUrl, columnName) => {
+	let pageUrls = []
 	const inputUrl = new URL(spreadsheetUrl)
 	if (inputUrl.hostname.toLowerCase().includes("facebook.com")) { // facebook page
 		let pageUrl = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (!pageUrl) {	
+			if (!pageUrl) {
 				utils.log("The given url is not a valid facebook page url.", "error")
 			}
-			pageUrls.push(pageUrl)	
+			pageUrls.push(pageUrl)
 	} else { // CSV
-		
 		let csvUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		csvUrls = csvUrls.filter(str => str) // removing empty lines
 		for (let i = 0; i < csvUrls.length; i++) { // cleaning all group entries
 			csvUrls[i] = utils.adjustUrl(csvUrls[i], "facebook")
 		}
-		csvUrls = csvUrls.filter(query => {
-			if (agentObject.lastQuery && (query === agentObject.lastQuery)) {
+		csvUrls = csvUrls.filter(record => {
+			if (agentObject.lastQuery && (record.query === agentObject.lastQuery)) {
 				return true
 			}
 			for (const line of result) {
-				if (query === line.query) {
+				if (record.query === line.query) {
 					return false
 				}
 			}
@@ -73,62 +58,59 @@ const facebook = new Facebook(nick, buster, utils)
 		pageUrls = csvUrls
 	}
 
-	let currentResult = []
-	let lastQuery
-	let resumeCursor
-	let resumePageNumber
+	return pageUrls
+}
 
-	for (let pageUrl of pageUrls) {
-
-		utils.log(`Page URL: ${pageUrl}`, "info")
-		utils.log(`Cookie CUser: ${sessionCookieCUser}`, "info")
-		utils.log(`Cookie Xs: ${sessionCookieXs}`, "info")
-		await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
-
+const scrapPageIdAndLikeNumbers = async (tab) => {
+	let pageId
+	let likeNumber
+	try {
 		try {
-			await tab.open(pageUrl)
-		} catch (err1) {
-			try { // trying again
-				await tab.open(pageUrl)
-			} catch (err2) {
-				utils.log(`Couldn't open ${pageUrl}`, "error")
-				nick.exit(1)
-			}
-		}
-
-		// Retrieve the id of the page thanks to the profile picture link
-		let pageId
-		try {
-			await tab.waitUntilVisible("a[aria-label=\"Profile picture\"]", 10000)
+			await tab.waitUntilVisible("#entity_sidebar a[aria-label]", 10000)
 
 			let profilePictureLink = await tab.evaluate((arg, cb) => {
-				cb(null, document.querySelector("a[aria-label=\"Profile picture\"]").href)
+				cb(null, document.querySelector("#entity_sidebar a[aria-label]").href)
 			})
 			const profilePictureUrl = new URL(profilePictureLink)
 			pageId = profilePictureUrl.pathname.split("/")[1]
-		} catch (err) {
-			utils.log(`Error accessing page!: ${err}`, "error")
-			await buster.saveText(await tab.getContent(), `Error accessing page!${Date.now()}.html`)
-			nick.exit(1)
-		}			
-
-		// Get the ajax request template to retrieve people
-		let urlToGo = `https://www.facebook.com/search/${pageId}/likers`
-
-		try {
-			await tab.open(urlToGo)
-		} catch (err1) {
-			try { // trying again
-				await tab.open(urlToGo)
-			} catch (err2) {
-				utils.log(`Couldn't open ${urlToGo}`, "error")
-				nick.exit(1)
+		} catch (e) {
+			let coverLink = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("#pagelet_page_cover a[rel=\"theater\"]").href)
+			})
+			let searchStart = "facebook.com/"
+			let brandIndex = coverLink.indexOf(searchStart)
+			if (brandIndex === -1) {
+				searchStart = "/"
+				brandIndex = coverLink.indexOf(searchStart)
 			}
+			let idEndIndex = coverLink.indexOf("/", brandIndex + searchStart.length)
+			pageId = coverLink.substring(brandIndex + searchStart.length, idEndIndex)
 		}
 
-		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
+		await tab.waitUntilVisible("#pages_side_column", 10000)
 
-		let firstRequestUrl
+		let likeText = await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[2].firstChild.lastChild.firstChild.textContent)
+		})
+		likeNumber = parseInt(likeText.replace(/[^\d]/g, ""), 10)
+	} catch (err) {
+		utils.log(`Error accessing page!: ${err}`, "error")
+		await buster.saveText(await tab.getContent(), `Error accessing page!${Date.now()}.html`)
+	}
+	return { pageId, likeNumber}
+}
+
+const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
+	let requestError = false
+	let firstRequestUrl
+	let urlTemplate
+	let urlTemplateData
+	let firstCursor = ""
+	let firstPageNumber = 1
+
+	const hasOnlyOnePage = await tab.isPresent("#browse_end_of_results_footer")
+
+	if (!hasOnlyOnePage) {
 
 		const onAjaxRequest = (e) => {
 			let url = e.request.url
@@ -140,65 +122,116 @@ const facebook = new Facebook(nick, buster, utils)
 		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
 
 		await tab.scrollToBottom()
-		await tab.wait(1000)
-		await tab.scrollToBottom()
-		await tab.wait(3000)
+
+		const initDate = new Date() 
+		while (!firstRequestUrl) {
+			await new Promise((resolve) => { 
+				setTimeout(() => {
+					resolve()
+				}, 50)
+			})
+			if ((new Date() - initDate) > 10000) {
+				break
+			}
+		}
 
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
 
-		let urlTemplate
-		let urlTemplateData
-		let firstCursor = ""
-		let firstPageNumber = 1
-
 		if (firstRequestUrl) {
-
 			urlTemplate = new URL(firstRequestUrl)
 			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
 
-			urlTemplateData = JSON.parse(urlTemplateDataJson)
+			try {
+				urlTemplateData = JSON.parse(urlTemplateDataJson)
+			} catch (err) {
+				console.log(`Error parsing URL: ${urlTemplateDataJson}`)
+				requestError = true
+				return { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
+			}
 
-			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)) {
+			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)
+				&& (result.filter(record => record.query === pageUrl).length > 0)) {
 
 				firstCursor = agentObject.resumeCursor
 				firstPageNumber = agentObject.resumePageNumber
 			}
 
 			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
-
 		}
-		// Main loop to retrieve user infos
-		let nextCursor = firstCursor
-		let nextPageNumber = firstPageNumber
-		let isEndOfPage = false
-		console.log(`MaxNumber : ${maxNumber}`)
-		while (!isEndOfPage && (!maxNumber || (currentResult.length < maxNumber)))	{
+	}
 
-			let chr
-			let responseResult
-			let response
+	return { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
+}
 
-			if (urlTemplate) {
-				urlTemplateData["cursor"] = nextCursor
-				urlTemplateData["page_number"] = nextPageNumber
-				urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
+const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
+	responseResult.children().each((userIndex, divUser) =>{
 
-				utils.log(`Requesting ${urlTemplate.toString()}`, "info")
+		let profileLink = chr("a[data-testid]", divUser)
 
-				let responseContent
+		let profileUrl = profileLink.attr("href")
 
-				const onResponse = async (e) => {
-					if (e.type === "Document") {
-						let response = await tab.driver.client.Network.getResponseBody({requestId : e.requestId})
-						responseContent = response.body
-				}}
-			
+		let name = profileLink.children("span").text()
+		//utils.log(`Exporting ${name}...`, "loading")
+
+		let imageUrl = chr("div > a > img", divUser).attr("src")
+		let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
+
+		let userInfos = []
+		chr("div > a", divUser).parent().each((infoIndex, infoElem) => {
+
+			userInfos.push(chr(infoElem).text())
+		})
+
+		userInfos = userInfos.splice(userInfos.indexOf(name))
+
+		let userInfo = {}
+		userInfo.query = pageUrl
+		userInfo.name = name
+		userInfo.profileUrl = profileUrl
+		userInfo.imageUrl = imageUrl
+		userInfo.isFriend = isFriend
+		userInfo.highlight = userInfos[1]
+		for (let i = 2; i < userInfos.length; ++i) {
+
+			userInfo["additionalData" + (i - 1)] = userInfos[i]
+		}
+
+		currentResult.push(userInfo)
+	})
+
+	return responseResult.children().length
+}
+
+const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, urlTemplateData, nextCursor, nextPageNumber) => {
+	let chr
+	let response
+	let responseResult
+	let error = false
+	if (urlTemplate) {
+		urlTemplateData["cursor"] = nextCursor
+		urlTemplateData["page_number"] = nextPageNumber
+		urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
+
+		//utils.log(`Requesting ${urlTemplate.toString()}`, "info")
+
+		let responseContent
+
+		const onResponse = async (e) => {
+			try {
+				if (!responseContent && (e.type === "Document")) {
+					let response = await tab.driver.client.Network.getResponseBody({requestId : e.requestId})
+					responseContent = response.body
+				}
+			} catch (err) {
+				// 
+			}
+		}
+				
+		for (let retryRateLimit = 3, error = true; (error) && (retryRateLimit > 0); --retryRateLimit) {
+			for (let retryNetwork = 5; (!responseContent) && (retryNetwork > 0); --retryNetwork) {
 				tab.driver.client.on("Network.responseReceived", onResponse)
-			
-				await tab.open(urlTemplate.toString())
-				await tab.wait(1)
 
-				tab.driver.client.removeListener("Network.responseReceived", onResponse)
+				await tab.open(urlTemplate.toString())
 
 				const initDate = new Date() 
 				while (!responseContent) {
@@ -212,68 +245,145 @@ const facebook = new Facebook(nick, buster, utils)
 					}
 				}
 
-				let jsonPos = responseContent.indexOf("{")
-				let jsonEndPos = responseContent.lastIndexOf("}")
-				let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
-				response = JSON.parse(responseJson)
-
-				let payload = response["payload"]
-
-				chr = cheerio.load(payload)
-				responseResult = chr("div[data-testid=\"results\"]")
-			} else {
-
-				let html = await tab.evaluate((arg, cb) => {
-					cb(null, document.querySelector("div#initial_browse_result").innerHTML)
-				})
-
-				chr = cheerio.load(html)
-				responseResult = chr("div#BrowseResultsContainer")
+				tab.driver.client.removeListener("Network.responseReceived", onResponse)
 			}
 
-			responseResult.children().each((userIndex, divUser) =>{
-
-				let name = chr("a[data-testid]", divUser).children("span").text()
-				
-				utils.log(`Exporting ${name}...`, "loading")
-
-				let imageUrl = chr("div > a > img", divUser).attr("src")
-
-				let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
-
-				let userInfos = []
-
-				chr("div > a", divUser).parent().each((infoIndex, infoElem) => {
-
-					userInfos.push(chr(infoElem).text())
-				})
-
-				userInfos = userInfos.splice(userInfos.indexOf(name))
-
-				let userInfo = {}
-				userInfo.query = pageUrl
-				userInfo.name = name
-				userInfo.imageUrl = imageUrl
-				userInfo.isFriend = isFriend
-				userInfo.highlight = userInfos[1]
-				for (let i = 2; i < userInfos.length; ++i) {
-
-					userInfo["additionalData" + (i - 1)] = userInfos[i]
+			if (responseContent) {
+				try {
+					let jsonPos = responseContent.indexOf("{")
+					let jsonEndPos = responseContent.lastIndexOf("}")
+					let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
+					response = JSON.parse(responseJson)
+					error = false
+				} catch (err) {
+					//
 				}
+			}
+		}
+		if (error) {
+			utils.log("Error on received response, probably due to Facebook rate limits", "error")
+			return {error, response, likesScrapped}
+		}
 
-				currentResult.push(userInfo)
-			})
+		let payload = response["payload"]
+
+		chr = cheerio.load(payload)
+		responseResult = chr("div[data-testid=\"results\"]")
+	} else {
+		let html = await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector("div#initial_browse_result").innerHTML)
+		})
+
+		chr = cheerio.load(html)
+		responseResult = chr("div#BrowseResultsContainer")
+	}
+
+	let likesScrapped = scrapUserData(pageUrl, currentResult, responseResult, chr)
+
+	return { error, response, likesScrapped }
+}
+
+// Main function that execute all the steps to launch the scrape and handle errors
+;(async () => {
+	const tab = await nick.newTab()
+	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, csvName, maxLikers } = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+
+	let result = await utils.getDb(csvName + ".csv")
+
+	let agentObject
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log("Could not access agent Object.", "warning")
+	}
+
+	let pageUrls = await retrieveAllPageUrls(result, agentObject, spreadsheetUrl, columnName)
+
+	utils.log(`Cookie CUser: ${sessionCookieCUser}`, "info")
+	utils.log(`Cookie Xs: ${sessionCookieXs}`, "info")
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+
+	let currentResult = []
+	let lastQuery
+	let resumeCursor
+	let resumePageNumber
+
+	for (let pageUrl of pageUrls) {
+		utils.log(`Page URL: ${pageUrl}`, "info")
+		
+		try {
+			await tab.open(pageUrl)
+		} catch (err1) {
+			try { // trying again
+				await tab.open(pageUrl)
+			} catch (err2) {
+				utils.log(`Couldn't open ${pageUrl}`, "error")
+				currentResult.push({query: pageUrl, error: "Could not open page"})
+				continue
+			}
+		}
+
+		let { pageId, likeNumber } = await scrapPageIdAndLikeNumbers(tab)
+		if (!pageId) {
+			utils.log(`Error: could not open page ${pageUrl}`, "error")
+			continue
+		}
+
+		// Main URL to scrap
+		let urlToGo = `https://www.facebook.com/search/${pageId}/likers`
+
+		try {
+			await tab.open(urlToGo)
+		} catch (err1) {
+			try { // trying again
+				await tab.open(urlToGo)
+			} catch (err2) {
+				utils.log(`Couldn't open ${urlToGo}`, "error")
+				currentResult.push({query: pageUrl, error: "Could not open likers page"})
+				continue
+			}
+		}
+
+		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
+
+		let { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
+		if (requestError) {
+			continue
+		}
+
+		// Main loop to retrieve user infos
+		let nextCursor = firstCursor
+		let nextPageNumber = firstPageNumber
+		let isEndOfPage = false
+		let error = false
+		let alreadyScrapped = result.filter(record => record.query === pageUrl).length
+		let limit
+		if (maxLikers) {
+			limit = maxLikers + ((pageUrls.length === 1) ? alreadyScrapped : 0)
+		}
+		let currentLikesScrapped = 0
+		while (!isEndOfPage && (!maxLikers || (currentLikesScrapped < maxLikers)))	{
+			
+			let processError
+			let response
+			let likesScrapped
+			try {
+				({processError, response, likesScrapped} = await processResponseResult(tab, currentResult, pageUrl, urlTemplate, urlTemplateData, nextCursor, nextPageNumber))
+			} catch (error) {
+				processError = true
+			}
+			if (processError) {
+				error = true
+				break
+			}
+			currentLikesScrapped += likesScrapped
 
 			if (urlTemplate) {
-
 				let requests = response["jsmods"]["require"]
-
 				for (let request of requests) {
-
 					if (request.indexOf("BrowseScrollingPager") !== -1){
-
 						for (let param of request) {
-
 							let firstChild = param[0]
 							if (_.isObject(firstChild) && (!_.isUndefined(firstChild.cursor))) {
 
@@ -287,10 +397,16 @@ const facebook = new Facebook(nick, buster, utils)
 						break
 					}
 				}
-
 				++nextPageNumber
 			} else {
 				isEndOfPage = true
+			}
+
+			if (likesScrapped > 0) {
+				let progress = alreadyScrapped + currentLikesScrapped
+				let progressLimit = ((limit) ? Math.min(limit, likeNumber) : likeNumber)
+				utils.log(`Estimated progress: ${progress} / ${progressLimit}`, "info")
+				buster.progressHint(progress / progressLimit, `${progress} / ${progressLimit}`)
 			}
 
 			const timeLeft = await utils.checkTimeLeft()
@@ -301,20 +417,17 @@ const facebook = new Facebook(nick, buster, utils)
 		}
 
 		lastQuery = pageUrl
-		if (!isEndOfPage) {
+		if (error || !isEndOfPage) {
 
 			resumeCursor = nextCursor
 			resumePageNumber = nextPageNumber
 		}
-
 	}
-
-	console.log(JSON.stringify(currentResult))
 
 	result = result.concat(currentResult)
 
-	await utils.saveResults(result, result)
-	if (resumeCursor) { 
+	await utils.saveResults(result, result, csvName)
+	if (resumeCursor) {  
 		await buster.setAgentObject({ lastQuery, resumeCursor, resumePageNumber })
 	} else {
 		await buster.setAgentObject({})

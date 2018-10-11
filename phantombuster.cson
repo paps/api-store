@@ -12,6 +12,7 @@
 		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
 		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
 		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
+		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -23,6 +24,7 @@
 		'Facebook Event Guests Exporter DEV.js': 'store/DEV/Facebook Event Guests Exporter DEV/Facebook Event Guests Exporter DEV.js'
 		'Facebook Group Extractor DEV.js': 'store/DEV/Facebook Group Extractor DEV/Facebook Group Extractor DEV.js'
 		'Facebook ID Finder DEV.js': 'store/DEV/Facebook ID Finder DEV/Facebook ID Finder DEV.js'
+		'Facebook Message Sender DEV.js': 'store/DEV/Facebook Message Sender DEV/Facebook Message Sender DEV.js'
 		'Facebook Network Booster DEV.js': 'store/DEV/Facebook Network Booster DEV/Facebook Network Booster DEV.js'
 		'Facebook Page Likers DEV.js': 'store/DEV/Facebook Page Likers DEV/Facebook Page Likers DEV.js'
 		'Facebook Post Commenters DEV.js': 'store/DEV/Facebook Post Commenters DEV/Facebook Post Commenters DEV.js'
@@ -51,6 +53,7 @@
 		'LinkedIn Post Likers DEV.js': 'store/DEV/LinkedIn Post Likers DEV/LinkedIn Post Likers DEV.js'
 		'LinkedIn Profile Scraper DEV.js': 'store/DEV/LinkedIn Profile Scraper DEV/LinkedIn Profile Scraper DEV.js'
 		'LinkedIn Profile URL Finder DEV.js': 'store/DEV/LinkedIn Profile URL Finder DEV/LinkedIn Profile URL Finder DEV.js'
+		'LinkedIn Sales Navigator URL Converter DEV.js': 'store/DEV/LinkedIn Sales Navigator URL Converter DEV/LinkedIn Sales Navigator URL Converter DEV.js'
 		'LinkedIn Sales Navigator Search Export DEV.js': 'store/DEV/LinkedIn Sales Navigator Search Export DEV/LinkedIn Sales Navigator Search Export DEV.js'
 		'LinkedIn Search Export DEV.js': 'store/DEV/LinkedIn Search Export DEV/LinkedIn Search Export DEV.js'
 		'Medium Post Clappers DEV.js': 'store/DEV/Medium Post Clappers DEV/Medium Post Clappers DEV.js'

@@ -155,8 +155,6 @@ const overridePageIndexLead = (url, page) => {
 	}
 }
 
-const getLocationUrl = (arg, cb) => cb(null, document.location.href)
-
 const extractDefaultUrls = async results => {
 	utils.log("Converting all Sales Navigator URLs to Default URLs...", "loading")
 	for (let i = 0; i < results.length; i++) {
@@ -206,7 +204,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	} catch (err) {
 		utils.log(`Could not get total results count. ${err}`, "warning")
 	}
-	const redirectedUrl = await tab.evaluate(getLocationUrl)
+	const redirectedUrl = await tab.getUrl()
 	for (let i = 1; i <= pageCount; i++) {
 		try {
 			if (isLeadSearch) {

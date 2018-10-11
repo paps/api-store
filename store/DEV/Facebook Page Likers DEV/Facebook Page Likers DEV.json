@@ -1,12 +1,12 @@
 {
     "slug": "facebook-page-likers",
     "description": "Extract a list of all the profiles that liked any Facebook page",
-    "image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
+    "image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
     "hidden": true,
     "new": true,
     "gradientBegin": "#373B44",
     "gradientEnd": "#4286f4",
-    "argumentHelpAnchor": "#TODO",
+    "argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie"
@@ -14,7 +14,10 @@
 	"outputDescription": {
 		"profileUrl": "Facebook profile URL",
 		"name": "Full name",
-		"profilePictureUrl ": "Profile picture URL"
+		"imageUrl": "Profile picture URL",
+		"isFriend": "Indicates if the user is a friend",
+		"highlight": "Main information about the user selected by Facebook",
+		"additionalData": "Additional information about the user"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -23,11 +26,11 @@
 			"options": {
 				"fields": {
                     "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie c_user <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your c_user session cookie here"
                     },
                     "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie xs <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your xs session cookie here"
                     },
 					"spreadsheetUrl": {
@@ -35,7 +38,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook page URL"
 						],
-						"label": "Facebook page or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook page or Spreadsheet URL <a href=\"/api-store/8772/facebook-page-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
@@ -47,8 +50,8 @@
                         "placeholder": "result"
 					},
 				    "maxLikers": {
-						"label": "Maximum number of likers to extract",
-						"helper": "By default, there is no limit"
+						"label": "Maximum number of likers to extract per page",
+						"helper": "All of them if empty"
 					}
 				}
 			}
@@ -60,7 +63,7 @@
             "sessionCookieCUser": {
                 "type": "string",
                 "required": true,
-                "minLength": 8
+                "minLength": 6
             },
             "sessionCookieXs": {
                 "type": "string",
