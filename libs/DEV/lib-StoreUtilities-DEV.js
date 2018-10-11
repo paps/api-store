@@ -53,8 +53,7 @@ const _downloadCsv = url => {
 			if (resp.statusCode >= 400) {
 				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
 			}
-
-			resolve(resp.body)
+			resolve(resp.raw.toString())
 		})
 
 		httpStream.on("redirect", () => {
