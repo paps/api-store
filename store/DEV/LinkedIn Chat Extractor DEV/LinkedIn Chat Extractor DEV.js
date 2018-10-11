@@ -118,6 +118,7 @@ const formatAjaxResponse = msg => {
  * @param {Object} tab - Nickjs Tab instance with a loaded profile
  * @param {Number} messagesPerExtract - Amount of messages to scrape for the current conversation
  * @param {Boolean} [chronOrder] - determines if messages should be returned from the oldest to the newest or not (default is false)
+ * @throws on CSS selectors failure
  * @return {Promise<Array<Object>>} all messages
  */
 const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false) => {
@@ -131,7 +132,7 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 		await tab.waitUntilVisible(SELECTORS.messages, 15000)
 		await tab.waitWhileVisible(SELECTORS.spinners, 15000)
 	} catch (err) {
-		throw "No messages send in this conversation"
+		throw `Can't open conversation due to: ${err.message || err}`
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", httpSendInterceptor)
 
