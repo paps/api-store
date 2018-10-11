@@ -136,7 +136,8 @@ const scrapeFirstMembers = (arg, callback) => {
 		}
 		newData.groupName = groupName
 		newData.groupUrl = arg.url
-	
+		newData.timestamp = new Date().toISOString()
+
 		data.push(newData)
 	} 
 	callback(null, data)
@@ -184,6 +185,8 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		if (additionalData) { data.additionalData = additionalData }
 		data.groupUrl = groupUrl
 		data.groupName = groupName
+		data.timestamp = new Date().toISOString()
+
 		result.push(data)
 	}
 	const chrHtml = cheerio.load(htmlContent)

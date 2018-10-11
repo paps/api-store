@@ -91,7 +91,7 @@ class Facebook {
 				}
 			}
 		
-		
+			scrapedData.timestamp = new Date().toISOString()
 			cb(null, scrapedData)
 		}
 

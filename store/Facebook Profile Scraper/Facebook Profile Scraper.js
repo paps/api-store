@@ -419,6 +419,7 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
 			try {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)
+				tempResult.timestamp = new Date().toISOString()
 				if (tempResult && tempResult.profileUrl) {
 					const tempCsvResult = craftCsvObject(tempResult)
 					result.push(tempResult)

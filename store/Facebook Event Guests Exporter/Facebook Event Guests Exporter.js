@@ -110,6 +110,7 @@ const extractGuestsFromArray = (array, eventUrl, eventName, eventStatus) => {
 		}
 		guest.profilePictureUrl = item.photo
 		guest.friendStatus = item.auxiliaryData.isFriend ? "Friend" : "Not friend"
+		guest.timestamp = new Date().toISOString()
 		result.push(guest)
 	}
 	return result
@@ -174,8 +175,6 @@ const loadGuests = async (tab, url, cursor, eventUrl, eventName, eventStatus) =>
 
 
 const extractGuests = async (tab, url, eventUrl, eventName, isPublic) => {
-
-	
 	const jsonData = await getJsonResponse(tab, url)
 	let results = []
 	let eventStatuses
@@ -213,7 +212,6 @@ const extractGuests = async (tab, url, eventUrl, eventName, isPublic) => {
 			}	
 		}	
 	}
-	// results = removeDuplicates(results)
 	return results
 }
 

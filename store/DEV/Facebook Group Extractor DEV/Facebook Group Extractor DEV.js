@@ -136,7 +136,8 @@ const scrapeFirstMembers = (arg, callback) => {
 		}
 		newData.groupName = groupName
 		newData.groupUrl = arg.url
-	
+		newData.timestamp = new Date().toISOString()
+
 		data.push(newData)
 	} 
 	callback(null, data)
@@ -184,6 +185,8 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		if (additionalData) { data.additionalData = additionalData }
 		data.groupUrl = groupUrl
 		data.groupName = groupName
+		data.timestamp = new Date().toISOString()
+
 		result.push(data)
 	}
 	const chrHtml = cheerio.load(htmlContent)
@@ -379,6 +382,7 @@ nick.newTab().then(async (tab) => {
 		// Link not from Facebook, trying to get CSV
 		try {
 			groupsUrl = await utils.getDataFromCsv(groupsUrl, columnName)
+			console.log("gr::", groupsUrl)
 			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
 			if (groupsUrl.length === 0) {
 				utils.log("Spreadsheet is empty!", "error")

@@ -266,6 +266,7 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openProfilePage(tab, profileUrl)
+					tempResult.timestamp = new Date().toISOString()
 					if (tempResult.name) {
 						if (message) {
 							try {
