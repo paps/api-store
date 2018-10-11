@@ -67,6 +67,7 @@ const getReviews = (arg, cb) => {
 		review.mark = el.querySelectorAll("div.rsw-starred").length
 		review.review = el.querySelector("div[ga\\:type=Comment]").textContent.trim()
 		review.url = arg.url
+		review.timestamp = (new Date()).toISOString()
 		return review
 	})
 	document.querySelector(arg.selectors.lastReviewInPage).scrollIntoView()

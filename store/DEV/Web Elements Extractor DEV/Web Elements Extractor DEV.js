@@ -70,6 +70,10 @@ const scrapeOnePage = async (tab, scrapingBundle) => {
 			scrapingRes.elements.push({ label: one.label, selector: one.selector, error: err.message || err })
 		}
 	}
+	scrapingRes.elements = scrapingRes.elements.map(el => {
+		el.timestamp = (new Date()).toISOString()
+		return el
+	})
 	return scrapingRes
 }
 

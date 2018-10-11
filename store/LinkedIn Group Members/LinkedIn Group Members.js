@@ -224,7 +224,8 @@ const getGroupMembers = async (tab, patternNumber) => {
 				gl.url = updateUrlParam(gl.url, "count", lastCount)
 				gl.url = decodeURIComponent(gl.url)
 			}
-			continue
+				continue
+
 		}
 		errors = 0
 		if (response.data) {
@@ -279,6 +280,7 @@ const getGroupMembers = async (tab, patternNumber) => {
 						newMember.companyUrl = "https://www.linkedin.com/company/" + currentPosition.companyId
 					}
 				}
+				newMember.timestamp = (new Date()).toISOString()
 				members.push(newMember)
 			}
 		}
@@ -302,6 +304,9 @@ const getGroupMembers = async (tab, patternNumber) => {
 			 * This AJAX call is limited 20 people, in order to not randomly fails
 			 */
 			lastCount = 20
+			// if (lastIndex > 200) {
+			// 	lastIndex = 500
+			// }
 			gl.url = updateUrlParam(gl.url, "start", lastIndex)
 			gl.url = updateUrlParam(gl.url, "count", lastCount)
 			gl.url = decodeURIComponent(gl.url)

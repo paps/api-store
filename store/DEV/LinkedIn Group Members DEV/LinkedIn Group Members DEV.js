@@ -280,6 +280,7 @@ const getGroupMembers = async (tab, patternNumber) => {
 						newMember.companyUrl = "https://www.linkedin.com/company/" + currentPosition.companyId
 					}
 				}
+				newMember.timestamp = (new Date()).toISOString()
 				members.push(newMember)
 			}
 		}

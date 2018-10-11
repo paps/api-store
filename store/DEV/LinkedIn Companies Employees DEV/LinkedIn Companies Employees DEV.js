@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const { URL } = require("url")
 
@@ -21,7 +21,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const DB_NAME = "result.csv"
 // }
@@ -96,6 +96,10 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
+			result.employees = result.employees.map(el => {
+				el.timestamp = (new Date()).toISOString()
+				return el
+			})
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
 				utils.log(hasReachedLimit, "info")
@@ -152,7 +156,6 @@ const getIdFromUrl = async (url, tab) => {
 
 		if (url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/) && url.match(/linkedin\.com\/company\/[a-zA-Z0-9._-]{1,}/)[0]){
 			url = handleSubdomains(url) // Removing the subdomain (if present) from the given URL
-			console.log("url is", url)
 			const [httpCode] = await tab.open(url)
 			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"

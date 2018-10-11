@@ -53,6 +53,7 @@ const findProfile = async (tab, email) => {
 				delete profile.profileUrl
 			}
 		}
+		profile.timestamp = (new Date()).toISOString()
 		return profile
 	} catch (err) {
 		return null

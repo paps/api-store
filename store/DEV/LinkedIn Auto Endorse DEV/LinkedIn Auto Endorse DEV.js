@@ -187,6 +187,7 @@ nick.newTab().then(async (tab) => {
 
 			utils.log("Endorsed " + skills.join(", "), "info")
 			res = Object.assign(res, { skills, url })
+			res.timestamp = (new Date()).toISOString()
 			result.push(res)
 			db.push({ url })
 		} catch (e) {

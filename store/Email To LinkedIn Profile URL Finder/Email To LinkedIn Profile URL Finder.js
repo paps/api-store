@@ -53,6 +53,7 @@ const findProfile = async (tab, email) => {
 				delete profile.profileUrl
 			}
 		}
+		profile.timestamp = (new Date()).toISOString()
 		return profile
 	} catch (err) {
 		return null
@@ -65,7 +66,7 @@ const findProfile = async (tab, email) => {
 	let emails = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const result = await utils.getDb("result.csv")
 	emails = emails.filter(str => utils.checkDb(str, result, "email"))
-				   .slice(0, numberOfLinesPerLaunch)
+					.slice(0, numberOfLinesPerLaunch)
 	if (emails.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()

@@ -97,7 +97,7 @@ const scrapeData = (arg, cb) => {
 				description: result.querySelector("img") ? result.querySelector("img").alt : ""
 			})
 		}
-	} 
+	}
 	cb(null, data)
 }
 
@@ -119,7 +119,7 @@ const forgeAjaxURL = () => {
 	return url.toString()
 }
 
-// Removes any duplicate post 
+// Removes any duplicate post
 const removeDuplicates = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -143,7 +143,7 @@ const scrapeFirstPage = async tab => {
 	}
 	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
 	hashWasFound = false
-	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div", divSelector: "div > div > div > div" })	
+	let data = await tab.evaluate(scrapeData, { rootSelector: "article header ~ div", divSelector: "div > div > div > div" })
 	data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
 	for (let i = 0; i < data.length; i++) { //  checking the post manually if the description isn't available (video posts)
 		if (data[i].postUrl && !data[i].description) {
@@ -154,7 +154,7 @@ const scrapeFirstPage = async tab => {
 			await tabT.close()
 		}
 	}
-	return data	
+	return data
 }
 
 /**
@@ -294,13 +294,13 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
 			} else {
 				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-				try {		
+				try {
 					await tab.waitUntilVisible("nav input", 5000)
 				} catch (err) { // if the previous page had no result, there's no input field
 					await tab.open("https://www.instagram.com")
 					await tab.waitUntilVisible("nav input", 5000)
 				}
-				if (await tab.isVisible("nav input")) { 
+				if (await tab.isVisible("nav input")) {
 					targetUrl = await instagram.searchLocation(tab, term)
 				}
 			}
@@ -331,7 +331,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 
 			//scraping the first page the usual way
 			scrapedResult = await scrapeFirstPage(tab)
-
 			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
 			if (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount)) {
 				await scrapePosts(tab, scrapedResult, maxPosts, term)
@@ -346,6 +345,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 					buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
 					await tab.open(post.postUrl)
 					let scrapingRes = await instagram.scrapePost(tab)
+					scrapingRes.timestamp = (new Date()).toISOString()
 					scrapingRes.postUrl = post.postUrl
 					scrapingRes.matches = post.matches
 					scrapedData.push(scrapingRes)

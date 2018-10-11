@@ -96,6 +96,7 @@ const scrapeMediasMetadata = (arg, cb) => {
 		} else {
 			res = null
 		}
+		res.timestamp = (new Date()).toISOString()
 		return res
 	}).filter(el => el !== null)
 	cb(null, data)

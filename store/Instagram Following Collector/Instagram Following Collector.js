@@ -80,13 +80,13 @@ const cleanInstagramUrl = (url) => {
 		let id = path
 		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
 		if (id !== "p") { // not a picture url
-			return "https://www.instagram.com/" + id 
+			return "https://www.instagram.com/" + id
 		}
 	}
 	return null
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate profile
 const removeDuplicates = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -187,6 +187,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 					data.isVerified = profile.node.is_verified ? "Verified" : null
 					data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
 					data.query = url
+					data.timestamp = (new Date()).toISOString()
 					profilesArray.push(data)
 				}
 				profileCount += nodes.length
@@ -233,6 +234,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			allCollected = true
 			break
 		}
+		
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
 			interrupted = true
@@ -264,7 +266,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	if (!numberMaxOfFollowing) { numberMaxOfFollowing = false }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
-		if (urls) {	
+		if (urls) {
 			urls = [ urls ]
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
@@ -284,7 +286,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			numberofProfilesperLaunch = urls.length
 		}
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
-	}	
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)

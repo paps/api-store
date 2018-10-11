@@ -129,7 +129,11 @@ const getCompaniesInfos = (arg, callback) => {
 		length = await tab.evaluate(getListLength, { selectors: SELECTORS })
 	}
 	utils.log(`Loaded ${length} companies.`, "done")
-	const result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })
+	let result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })
+	result = result.map(el => {
+		el.timestamp = (new Date()).toISOString()
+		return el
+	})
 	await utils.saveResult(result)
 })()
 .catch(err => {

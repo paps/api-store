@@ -63,7 +63,7 @@ let db
 			link = "no url"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ pinterestUrl: link, query: one })
+		toReturn.push({ pinterestUrl: link, query: one, timestamp: (new Date()).toISOString() })
 		i++
 	}
 

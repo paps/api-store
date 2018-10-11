@@ -81,15 +81,18 @@ const createCsvOutput = json => {
 		let csvElement = { url: one.url }
 
 		if (one.error) {
+			csvElement.timestamp = (new Date()).toISOString()
 			csvElement.error = one.error
 		}
 
 		if (one.mails.length < 1) {
 			csvElement.mail = "no mails found"
+			csvElement.timestamp = (new Date()).toISOString()
 			csv.push(csvElement)
 		} else {
 			for (const mail of one.mails) {
 				let tmp = Object.assign({}, csvElement)
+				tmp.timestamp = (new Date()).toISOString()
 				tmp.mail = mail
 				csv.push(tmp)
 			}

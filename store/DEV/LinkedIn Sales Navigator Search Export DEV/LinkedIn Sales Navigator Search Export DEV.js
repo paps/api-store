@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse, URL } = require("url")
 
@@ -34,13 +33,13 @@ const checkDb = (str, db) => {
 		if (str === line.query) {
 			return false
 		}
-	}   
+	}
 	return true
 }
 
 
 const createUrl = (search) => {
-	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`) 
+	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`)
 }
 
 // forces the search to display up to 100 profiles per page
@@ -88,6 +87,7 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
+			newData.timestamp = (new Date()).toISOString()
 			data.push(newData)
 		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
@@ -180,7 +180,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	try {
 		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
-		if (selector === ".artdeco-tab-primary-text") { 
+		if (selector === ".artdeco-tab-primary-text") {
 			numberPerPage = 25
 		} else {
 			numberPerPage = 100
@@ -217,7 +217,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			}
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
-					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))		
+					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
 				} catch (err) {
 					//
 				}
@@ -266,7 +266,7 @@ const isLinkedInSearchURL = (url) => {
 				return -1 // Default LinkedIn search
 			}
 		}
-		return -2 // URL not from LinkedIn	
+		return -2 // URL not from LinkedIn
 	}
 	return 1 // not a URL
 }
@@ -281,8 +281,8 @@ const isLinkedInSearchURL = (url) => {
 		searches = [ searches ]
 	} else {
 		if (isLinkedInSearchSalesURL === -1) { // Regular LinkedIn Search
-			throw "Not a valid Sales Navigator Search Link"  
-		} 
+			throw "Not a valid Sales Navigator Search Link"
+		}
 		try { 		// Link not from LinkedIn, trying to get CSV
 			searches = await utils.getDataFromCsv(searches)
 			searches = searches.filter(str => str) // removing empty lines
@@ -295,7 +295,7 @@ const isLinkedInSearchURL = (url) => {
 				utils.log("Couln't open CSV, make sure it's public", "error")
 				nick.exit(1)
 			}
-			searches = [ searches ] 
+			searches = [ searches ]
 		}
 	}
 	utils.log(`Search : ${JSON.stringify(searches, null, 2)}`, "done")
@@ -309,7 +309,7 @@ const isLinkedInSearchURL = (url) => {
 				searchUrl = forceCount(search)
 			} else if (isSearchURL === 1) { // Not a URL -> Simple search
 				searchUrl = createUrl(search)
-			} else {  
+			} else {
 				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
 				continue
 			}

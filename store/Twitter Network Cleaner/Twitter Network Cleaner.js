@@ -100,7 +100,7 @@ const unfollow = async (tab, twitterHandle) => {
 			} else {
 				try {
 					await unfollow(tab, url)
-					peopleUnfollowed.push({url: await tab.getUrl(), handle: getTwitterHandle(url)})
+					peopleUnfollowed.push({url: await tab.getUrl(), handle: getTwitterHandle(url), timestamp: (new Date()).toISOString()})
 				} catch (error) {
 					utils.log(`Could not unfollow ${url}: ${error}`, "warning")
 				}

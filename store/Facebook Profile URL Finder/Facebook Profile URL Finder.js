@@ -65,7 +65,7 @@ let db
 			link = "no url"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		result.push({ facebookUrl: link, query: one })
+		result.push({ facebookUrl: link, query: one, timestamp: (new Date()).toISOString() })
 		i++
 	}
 

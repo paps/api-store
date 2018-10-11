@@ -80,13 +80,13 @@ const cleanInstagramUrl = (url) => {
 		let id = path
 		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
 		if (id !== "p") { // not a picture url
-			return "https://www.instagram.com/" + id 
+			return "https://www.instagram.com/" + id
 		}
 	}
 	return null
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate profile
 const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -175,6 +175,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 
 		if (instagramJson.data.user.edge_followed_by) {
+			// if (instagramJson.data.user.edge_followed_by.page_info.end_cursor){
 			if (!resuming) {
 				let nodes = instagramJson.data.user.edge_followed_by.edges
 					for (const profile of nodes) {
@@ -188,6 +189,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 					data.isVerified = profile.node.is_verified ? "Verified" : null
 					data.followedByViewer = profile.node.followed_by_viewer ? "Followed By Viewer" : null
 					data.query = url
+					data.timestamp = (new Date()).toISOString()
 					profilesArray.push(data)
 				}
 				profileCount += nodes.length
@@ -205,9 +207,9 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				}
 			} else {
 				nextUrl = agentObject.nextUrl
-				resuming = false 
+				resuming = false
 			}
-			try { 
+			try {
 				await tab.inject("../injectables/jquery-3.0.0.min.js")
 				await tab.evaluate(ajaxCall, { url: nextUrl, headers: gl.headers })
 			} catch (err) {
@@ -236,6 +238,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			allCollected = true
 			break
 		}
+
 		if (new Date() - lastDate > 7500) {
 			utils.log("Request took too long", "warning")
 			interrupted = true
@@ -287,7 +290,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			numberofProfilesperLaunch = urls.length
 		}
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
-	}	
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
@@ -323,7 +326,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
-				result.push({ query: url, error: "Broken link or page has been removed" })				
+				result.push({ query: url, error: "Broken link or page has been removed" })
 				continue
 			} else if (selected === "article h2") {
 				utils.log("Private account, cannot access follower list.", "warning")
@@ -356,7 +359,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	
+
 	nick.exit(0)
 })()
 .catch(err => {

@@ -108,6 +108,7 @@ const getLikes = async (tab, urls) => {
 		let likes = await tab.evaluate(scrapeLikes)
 		likes.map(el => {
 			el.postUrl = url
+			el.timestamp = (new Date()).toISOString()
 			return el
 		})
 		results = results.concat(likes)

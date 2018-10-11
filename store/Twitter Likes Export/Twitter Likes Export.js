@@ -84,6 +84,7 @@ const scrapePopUp = (arg, cb) => {
 			ret.profileUrl = ret.handle ? `https://twitter.com/${ret.handle}` : null
 		}
 		ret.description = user.querySelector(arg.descriptionSelector) ? user.querySelector(arg.descriptionSelector).textContent.trim() : null
+		ret.timestamp = (new Date()).toISOString()
 		return ret
 	})
 	cb(null, res)

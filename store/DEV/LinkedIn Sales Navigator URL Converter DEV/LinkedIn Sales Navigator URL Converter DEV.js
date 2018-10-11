@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,7 +15,7 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -62,7 +62,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let csvObject, csv
-	try { 		
+	try {
 		csv = await utils.getRawCsv(spreadsheetUrl)
 	} catch (err) {
 		utils.log(`Couldn't access the spreadsheet: ${err}`, "error")
@@ -87,6 +87,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 				utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
 				convertedObject.error = "Error converting URL"
 			}
+			convertedObject.timestamp = (new Date()).toISOString()
 			result.push(convertedObject)
 
 			const timeLeft = await utils.checkTimeLeft()
