@@ -196,6 +196,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
+			result.push({ query, domain: "Not found" })
 		}
 		i++
 	}

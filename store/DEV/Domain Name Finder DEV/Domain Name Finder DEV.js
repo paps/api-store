@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -193,14 +192,11 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		try {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
-			if (res.domain === "yahoo.com") { 
-				await tab.screenshot(`${Date.now()}.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
-			}
 			delete res.codename
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
+			result.push({ query, domain: "Not found" })
 		}
 		i++
 	}

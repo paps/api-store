@@ -125,13 +125,19 @@ const scrapeFirstMembers = (arg, callback) => {
 		
 		// a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
 		let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
-		let newInfos = { profileUrl }
-		newInfos.profilePicture = result.querySelector("img").src
-		newInfos.name = result.querySelector("img").getAttribute("aria-label")
-		newInfos.groupName = groupName
-		newInfos.groupUrl = arg.url
+		let newData = { profileUrl }
+		newData.profilePicture = result.querySelector("img").src
+		newData.name = result.querySelector("img").getAttribute("aria-label")
+		const nameArray = newData.name.split(" ")
+		newData.firstName = nameArray.shift()
+		const lastName = nameArray.join(" ")
+		if (lastName) {
+			newData.lastName = lastName
+		}
+		newData.groupName = groupName
+		newData.groupUrl = arg.url
 	
-		data.push(newInfos)
+		data.push(newData)
 	} 
 	callback(null, data)
 }
@@ -163,6 +169,11 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		}
 		const name = chr("img").attr("aria-label")
 		data.name = name
+		const extractedNames = facebook.getFirstAndLastName(name)
+		data.firstName = extractedNames.firstName
+		if (extractedNames.lastName) {
+			data.lastName = extractedNames.lastName
+		}
 		const profilePicture = chr("img").attr("src")
 		data.profilePicture = profilePicture
 		const memberSince = chr(".timestamp").attr("title")
@@ -369,6 +380,10 @@ nick.newTab().then(async (tab) => {
 		try {
 			groupsUrl = await utils.getDataFromCsv(groupsUrl, columnName)
 			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
+			if (groupsUrl.length === 0) {
+				utils.log("Spreadsheet is empty!", "error")
+				nick.exit(1)
+			}
 			if (groupsUrl.length !== 1) { membersPerLaunch = false }
 			for (let i = 0; i < groupsUrl.length; i++) { // cleaning all group entries
 				groupsUrl[i] = utils.adjustUrl(groupsUrl[i], "facebook")
@@ -403,6 +418,12 @@ nick.newTab().then(async (tab) => {
 			}
 		} else {  
 			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			stillMoreToScrape = true
+			break
 		}
 	}
 

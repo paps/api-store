@@ -117,7 +117,15 @@ const scrapeLikers = (arg, cb) => {
 			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			newData.profileUrl = profileUrl
 		}
-		if (result.querySelectorAll("a")[1]) { newData.name = result.querySelectorAll("a")[1].textContent }
+		if (result.querySelectorAll("a")[1]) { 
+			newData.name = result.querySelectorAll("a")[1].textContent
+			const nameArray = newData.name.split(" ")
+			newData.firstName = nameArray.shift()
+			const lastName = nameArray.join(" ")
+			if (lastName) {
+				newData.lastName = lastName
+			}
+		}
 		if (result.querySelector("img")) { newData.profilePictureUrl = result.querySelector("img").src }
 		const reactionType = result.parentElement.getAttribute("id")
 		switch (reactionType){

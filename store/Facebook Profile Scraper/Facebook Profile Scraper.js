@@ -64,6 +64,10 @@ const craftCsvObject = data => {
 		status: data.status,
 	}
 
+	if (data.lastName) {
+		csvResult.lastName = data.lastName
+	}
+
 	if (data.work) {
 		for (let i = 0 ; i < data.work.length ; i++) {
 			csvResult["workName" + (i ? i + 1 : "")] = data.work[i].name
@@ -120,8 +124,12 @@ const craftCsvObject = data => {
 			csvResult["lifeEvent" + (i ? i + 1 : "")] = data.lifeEvents[i]
 		}
 	}
-	if (data.bio) {	csvResult.bio = data.bio }
-	if (data.quotes) { csvResult.quotes = data.quotes }
+	if (data.bio) {
+		csvResult.bio = data.bio
+	}
+	if (data.quotes) {
+		csvResult.quotes = data.quotes
+	}
 	return csvResult
 }
 
@@ -130,98 +138,6 @@ const isFacebookProfileUrl = url => {
 	let urlObject = new URL(url.toLowerCase())
 	if (urlObject.hostname.includes("facebook.com")) { return true }
 	return false
-}
-
-
-const scrapeOverviewPage = (arg, cb) => {
-	const scrapedData = { profileUrl:arg.profileUrl }
-	if (document.querySelector(".photoContainer a > img")) {
-		scrapedData.profilePictureUrl = document.querySelector(".photoContainer a > img").src
-	}
-	if (document.querySelector(".cover img")) {
-		scrapedData.coverPictureUrl = document.querySelector(".cover img").src
-	}
-	if (document.querySelector("#fb-timeline-cover-name")) {
-		scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
-		if (document.querySelector("._Interaction__ProfileSectionAbout")) {
-			let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
-			let name = scrapedData.name.split(/\s+/g)
-			for (let i = 0; i < details.length; i++) {
-				for (let j = 0; j < name.length; j++) {
-					if (details[i] === name[j]) {
-						scrapedData.firstName = details[i]
-					}
-				}
-			}
-		}
-	}
-	if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
-		let friendsCount = document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type").textContent
-		friendsCount = parseInt(friendsCount.replace(/[, ]/g, ""), 10)
-		scrapedData.friendsCount = friendsCount
-	}
-
-	// if Add friend button is hidden, we're already friend
-	if (document.querySelector(".FriendRequestAdd")) {
-		scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
-	}
-
-	if (!arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
-		const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
-		if (educationDiv.length) {
-			const educations = educationDiv.map(el => {
-				const data = {}
-				if (el.querySelector("a")) { 
-					data.url = el.querySelector("a").href
-					if (el.querySelectorAll("a")[1] && el.querySelectorAll("a")[1].parentElement) {
-						data.name = el.querySelectorAll("a")[1].parentElement.textContent
-					}
-					try {
-						data.description = el.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-					} catch (err) {
-						//
-					}
-				}
-				return data
-			})
-			scrapedData.educations = educations
-		}
-	}
-
-	if (!arg.pagesToScrape.placesLived) {
-		const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
-		if (citiesDiv) {
-			const cities = {}
-			cities.name = citiesDiv.querySelectorAll("a")[1].parentElement.textContent
-			cities.url = citiesDiv.querySelectorAll("a")[1].href
-			try {
-				cities.description = citiesDiv.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-			} catch (err) {
-				//
-			}
-			if (cities) { scrapedData.cities = [ cities ] }
-		}
-	}
-	
-	if (!arg.pagesToScrape.familyAndRelationships) {
-		const relationshipDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")[0]
-		if (relationshipDiv) {
-			const relationship = {}
-			if (relationshipDiv.querySelectorAll("a")[1] && relationshipDiv.querySelectorAll("a")[1].textContent) {
-				relationship.relationshipWith = relationshipDiv.querySelectorAll("a")[1].textContent
-				relationship.profileUrl = relationshipDiv.querySelectorAll("a")[1].href
-				if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
-					relationship.description = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
-				}
-			} else if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
-				relationship.familyMembers = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
-			}
-			scrapedData.relationship = relationship
-		}
-	}
-
-
-	cb(null, scrapedData)
 }
 
 const scrapeWorkPage = (arg, cb) => {
@@ -428,7 +344,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	]
 	let result
 	try {
-		result = await tab.evaluate(scrapeOverviewPage, { profileUrl, pagesToScrape })
+		result = await facebook.scrapeAboutPage(tab, { profileUrl, pagesToScrape })
 	} catch (err) {
 		utils.log(`Error scraping first page: ${err}`, "error")
 		return null

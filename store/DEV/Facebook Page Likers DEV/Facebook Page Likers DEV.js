@@ -187,6 +187,11 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 		let userInfo = {}
 		userInfo.query = pageUrl
 		userInfo.name = name
+		const extractedNames = facebook.getFirstAndLastName(name)
+		userInfo.firstName = extractedNames.firstName
+		if (extractedNames.lastName) {
+			userInfo.lastName = extractedNames.lastName
+		}
 		userInfo.profileUrl = profileUrl
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend

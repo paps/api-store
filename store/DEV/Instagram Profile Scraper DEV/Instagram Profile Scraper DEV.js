@@ -131,11 +131,11 @@ const scrapePage = (arg, callback) => {
 		result = []
 	} else { // CSV
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")
 			urls[i] = cleanInstagramUrl(urls[i])
 		}
-		urls = urls.filter(str => str) // removing empty lines
 		if (!numberOfProfilesPerLaunch) {
 			numberOfProfilesPerLaunch = urls.length
 		} 	

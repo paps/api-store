@@ -18,16 +18,23 @@ class Facebook {
 			}
 			if (document.querySelector("#fb-timeline-cover-name")) {
 				scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
-				if (document.querySelector("._Interaction__ProfileSectionAbout")) {
-					let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
-					let name = scrapedData.name.split(/\s+/g)
-					for (let i = 0; i < details.length; i++) {
-						for (let j = 0; j < name.length; j++) {
-							if (details[i] === name[j]) {
-								scrapedData.firstName = details[i]
-							}
-						}
-					}
+				// if (document.querySelector("._Interaction__ProfileSectionAbout")) {
+				// 	let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
+				// 	let name = scrapedData.name.split(/\s+/g)
+				// 	for (let i = 0; i < details.length; i++) {
+				// 		for (let j = 0; j < name.length; j++) {
+				// 			if (details[i] === name[j]) {
+				// 				scrapedData.firstName = details[i]
+				// 			}
+				// 		}
+				// 	}
+				// }
+				const nameArray = scrapedData.name.split(" ")
+				const firstName = nameArray.shift()
+				const lastName = nameArray.join(" ")
+				scrapedData.firstName = firstName
+				if (lastName) {
+					scrapedData.lastName = lastName
 				}
 			}
 			if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
@@ -110,6 +117,20 @@ class Facebook {
 		return message
 	}
 
+	// to send a messsage we need to reverse it, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
+	reverseMessage(message) {
+		return message.split("\n") // separating by line break
+					  .reverse() // reversing the order
+					  .map(el => el += "\r") // inserting a line break
+	}
+
+	// extract first and last name from a full name
+	getFirstAndLastName(name) {
+		const nameArray = name.split(" ")
+		const firstName = nameArray.shift()
+		const lastName = nameArray.join(" ")
+		return { firstName, lastName }
+	}
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {

@@ -103,6 +103,11 @@ const extractGuestsFromArray = (array, eventUrl, eventName, eventStatus) => {
 		guest.facebookID = item.uniqueID
 		guest.profileUrl = item.uri
 		guest.name = item.title
+		const extractedNames = facebook.getFirstAndLastName(guest.name)
+		guest.firstName = extractedNames.firstName
+		if (extractedNames.lastName) {
+			guest.lastName = extractedNames.lastName
+		}
 		guest.profilePictureUrl = item.photo
 		guest.friendStatus = item.auxiliaryData.isFriend ? "Friend" : "Not friend"
 		result.push(guest)
@@ -266,10 +271,10 @@ const checkUnavailable = (arg, cb) => {
 		}
 	} else { // CSV
 		eventsToScrape = await utils.getDataFromCsv(inputUrl, columnName)
+		eventsToScrape = eventsToScrape.filter(str => str) // removing empty lines
 		for (let i = 0; i < eventsToScrape.length; i++) { // cleaning all entries
 			eventsToScrape[i] = utils.adjustUrl(eventsToScrape[i], "facebook")
 		}
-		eventsToScrape = eventsToScrape.filter(str => str) // removing empty lines
 		if (!numberofEventsperLaunch) {
 			numberofEventsperLaunch = eventsToScrape.length
 		}
