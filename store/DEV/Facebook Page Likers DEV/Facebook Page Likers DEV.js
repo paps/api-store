@@ -25,7 +25,7 @@ const URL = require("url").URL
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook-DEV")
-const facebook = new Facebook(nick, buster, utils)    
+const facebook = new Facebook(nick, buster, utils)
 
 // }
 
@@ -34,22 +34,22 @@ const retrieveAllPageUrls = async (result, agentObject, spreadsheetUrl, columnNa
 	const inputUrl = new URL(spreadsheetUrl)
 	if (inputUrl.hostname.toLowerCase().includes("facebook.com")) { // facebook page
 		let pageUrl = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (!pageUrl) {	
+			if (!pageUrl) {
 				utils.log("The given url is not a valid facebook page url.", "error")
 			}
-			pageUrls.push(pageUrl)	
-	} else { // CSV		
+			pageUrls.push(pageUrl)
+	} else { // CSV
 		let csvUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		csvUrls = csvUrls.filter(str => str) // removing empty lines
 		for (let i = 0; i < csvUrls.length; i++) { // cleaning all group entries
 			csvUrls[i] = utils.adjustUrl(csvUrls[i], "facebook")
 		}
-		csvUrls = csvUrls.filter(query => {
-			if (agentObject.lastQuery && (query === agentObject.lastQuery)) {
+		csvUrls = csvUrls.filter(record => {
+			if (agentObject.lastQuery && (record.query === agentObject.lastQuery)) {
 				return true
 			}
 			for (const line of result) {
-				if (query === line.query) {
+				if (record.query === line.query) {
 					return false
 				}
 			}
@@ -65,13 +65,27 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 	let pageId
 	let likeNumber
 	try {
-		await tab.waitUntilVisible("#entity_sidebar a[aria-label]", 10000)
+		try {
+			await tab.waitUntilVisible("#entity_sidebar a[aria-label]", 10000)
 
-		let profilePictureLink = await tab.evaluate((arg, cb) => {
-			cb(null, document.querySelector("#entity_sidebar a[aria-label]").href)
-		})
-		const profilePictureUrl = new URL(profilePictureLink)
-		pageId = profilePictureUrl.pathname.split("/")[1]
+			let profilePictureLink = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("#entity_sidebar a[aria-label]").href)
+			})
+			const profilePictureUrl = new URL(profilePictureLink)
+			pageId = profilePictureUrl.pathname.split("/")[1]
+		} catch (e) {
+			let coverLink = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("#pagelet_page_cover a[rel=\"theater\"]").href)
+			})
+			let searchStart = "facebook.com/"
+			let brandIndex = coverLink.indexOf(searchStart)
+			if (brandIndex === -1) {
+				searchStart = "/"
+				brandIndex = coverLink.indexOf(searchStart)
+			}
+			let idEndIndex = coverLink.indexOf("/", brandIndex + searchStart.length)
+			pageId = coverLink.substring(brandIndex + searchStart.length, idEndIndex)
+		}
 
 		await tab.waitUntilVisible("#pages_side_column", 10000)
 
@@ -82,12 +96,12 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 	} catch (err) {
 		utils.log(`Error accessing page!: ${err}`, "error")
 		await buster.saveText(await tab.getContent(), `Error accessing page!${Date.now()}.html`)
-		nick.exit(1)
-	}			
+	}
 	return { pageId, likeNumber}
 }
 
 const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
+	let requestError = false
 	let firstRequestUrl
 	let urlTemplate
 	let urlTemplateData
@@ -127,10 +141,16 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 			urlTemplate = new URL(firstRequestUrl)
 			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
 
-			urlTemplateData = JSON.parse(urlTemplateDataJson)
+			try {
+				urlTemplateData = JSON.parse(urlTemplateDataJson)
+			} catch (err) {
+				console.log(`Error parsing URL: ${urlTemplateDataJson}`)
+				requestError = true
+				return { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
+			}
 
 			if (agentObject.lastQuery && (agentObject.lastQuery === pageUrl)
-				&& (result.filter(query => query === pageUrl).length > 0)) {
+				&& (result.filter(record => record.query === pageUrl).length > 0)) {
 
 				firstCursor = agentObject.resumeCursor
 				firstPageNumber = agentObject.resumePageNumber
@@ -140,7 +160,7 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 		}
 	}
 
-	return { urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
+	return { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber }
 }
 
 const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
@@ -191,6 +211,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 	let chr
 	let response
 	let responseResult
+	let error = false
 	if (urlTemplate) {
 		urlTemplateData["cursor"] = nextCursor
 		urlTemplateData["page_number"] = nextPageNumber
@@ -208,33 +229,46 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 				}
 			} catch (err) {
 				// 
-			}	
+			}
 		}
 				
-		for (let retryNumber = 5; (!responseContent) && (retryNumber > 0); --retryNumber) {			
-			tab.driver.client.on("Network.responseReceived", onResponse)
+		for (let retryRateLimit = 3, error = true; (error) && (retryRateLimit > 0); --retryRateLimit) {
+			for (let retryNetwork = 5; (!responseContent) && (retryNetwork > 0); --retryNetwork) {
+				tab.driver.client.on("Network.responseReceived", onResponse)
 
-			await tab.open(urlTemplate.toString())
+				await tab.open(urlTemplate.toString())
 
-			const initDate = new Date() 
-			while (!responseContent) {
-				await new Promise((resolve) => { 
-					setTimeout(() => {
-						resolve()
-					}, 50)
-				})
-				if ((new Date() - initDate) > 10000) {
-					break
+				const initDate = new Date() 
+				while (!responseContent) {
+					await new Promise((resolve) => { 
+						setTimeout(() => {
+							resolve()
+						}, 50)
+					})
+					if ((new Date() - initDate) > 10000) {
+						break
+					}
 				}
+
+				tab.driver.client.removeListener("Network.responseReceived", onResponse)
 			}
 
-			tab.driver.client.removeListener("Network.responseReceived", onResponse)
+			if (responseContent) {
+				try {
+					let jsonPos = responseContent.indexOf("{")
+					let jsonEndPos = responseContent.lastIndexOf("}")
+					let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
+					response = JSON.parse(responseJson)
+					error = false
+				} catch (err) {
+					//
+				}
+			}
 		}
-
-		let jsonPos = responseContent.indexOf("{")
-		let jsonEndPos = responseContent.lastIndexOf("}")
-		let responseJson = responseContent.substring(jsonPos, jsonEndPos + "}".length)
-		response = JSON.parse(responseJson)
+		if (error) {
+			utils.log("Error on received response, probably due to Facebook rate limits", "error")
+			return {error, response, likesScrapped}
+		}
 
 		let payload = response["payload"]
 
@@ -251,7 +285,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 	let likesScrapped = scrapUserData(pageUrl, currentResult, responseResult, chr)
 
-	return { response, likesScrapped }
+	return { error, response, likesScrapped }
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -282,8 +316,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 	for (let pageUrl of pageUrls) {
 		utils.log(`Page URL: ${pageUrl}`, "info")
-
-		let pageLikesScrapped = (pageUrls.length === 1) ? 0 : result.filter(query => query === pageUrl).length
 		
 		try {
 			await tab.open(pageUrl)
@@ -298,6 +330,10 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		}
 
 		let { pageId, likeNumber } = await scrapPageIdAndLikeNumbers(tab)
+		if (!pageId) {
+			utils.log(`Error: could not open page ${pageUrl}`, "error")
+			continue
+		}
 
 		// Main URL to scrap
 		let urlToGo = `https://www.facebook.com/search/${pageId}/likers`
@@ -316,16 +352,37 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
 
-		let { urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
+		let { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
+		if (requestError) {
+			continue
+		}
 
 		// Main loop to retrieve user infos
 		let nextCursor = firstCursor
 		let nextPageNumber = firstPageNumber
 		let isEndOfPage = false
-		while (!isEndOfPage && (!maxLikers || (pageLikesScrapped < maxLikers)))	{
+		let error = false
+		let alreadyScrapped = result.filter(record => record.query === pageUrl).length
+		let limit
+		if (maxLikers) {
+			limit = maxLikers + ((pageUrls.length === 1) ? alreadyScrapped : 0)
+		}
+		let currentLikesScrapped = 0
+		while (!isEndOfPage && (!maxLikers || (currentLikesScrapped < maxLikers)))	{
 			
-			let {response, likesScrapped } = await processResponseResult(tab, currentResult, pageUrl, urlTemplate, urlTemplateData, nextCursor, nextPageNumber)
-			pageLikesScrapped += likesScrapped
+			let processError
+			let response
+			let likesScrapped
+			try {
+				({processError, response, likesScrapped} = await processResponseResult(tab, currentResult, pageUrl, urlTemplate, urlTemplateData, nextCursor, nextPageNumber))
+			} catch (error) {
+				processError = true
+			}
+			if (processError) {
+				error = true
+				break
+			}
+			currentLikesScrapped += likesScrapped
 
 			if (urlTemplate) {
 				let requests = response["jsmods"]["require"]
@@ -351,9 +408,10 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 
 			if (likesScrapped > 0) {
-				let progressLimit = ((maxLikers) ? Math.min(maxLikers, likeNumber) : likeNumber)
-				utils.log(`Estimated progress: ${pageLikesScrapped} / ${progressLimit}`, "info")
-				buster.progressHint(pageLikesScrapped / progressLimit, `${pageLikesScrapped} / ${progressLimit}`)
+				let progress = alreadyScrapped + currentLikesScrapped
+				let progressLimit = ((limit) ? Math.min(limit, likeNumber) : likeNumber)
+				utils.log(`Estimated progress: ${progress} / ${progressLimit}`, "info")
+				buster.progressHint(progress / progressLimit, `${progress} / ${progressLimit}`)
 			}
 
 			const timeLeft = await utils.checkTimeLeft()
@@ -364,18 +422,17 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		}
 
 		lastQuery = pageUrl
-		if (!isEndOfPage) {
+		if (error || !isEndOfPage) {
 
 			resumeCursor = nextCursor
 			resumePageNumber = nextPageNumber
 		}
-
 	}
 
 	result = result.concat(currentResult)
 
 	await utils.saveResults(result, result, csvName)
-	if (resumeCursor) { 
+	if (resumeCursor) {  
 		await buster.setAgentObject({ lastQuery, resumeCursor, resumePageNumber })
 	} else {
 		await buster.setAgentObject({})
