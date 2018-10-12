@@ -1,0 +1,95 @@
+{
+	"slug": "linkedin-activities-extractor",
+	"description": "Extract posts from LinkedIn Activity's page",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#6190E8",
+	"gradientEnd": "#A7BFE8",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "linkedin_profile_urls",
+		"numberOfLinesPerLaunch": 10,
+		"numberMaxOfPosts": 20,
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"postUrl": "",
+		"postContent": "",
+		"likeCount": "",
+		"commentCount": ""
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/9136/linkedin-activities-extractor#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/9136/linkedin-activities-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch <a href=\"/api-store/9136/linkedin-activities-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"numberMaxOfPosts": {
+						"label": "Number of posts to extract per profile <a href=\"/api-store/9136/linkedin-activities-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"numberMaxOfPosts": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
