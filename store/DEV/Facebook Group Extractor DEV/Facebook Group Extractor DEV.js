@@ -135,8 +135,8 @@ const scrapeFirstMembers = (arg, callback) => {
 			newData.lastName = lastName
 		}
 		newData.groupName = groupName
-		newData.groupUrl = arg.url
-		newData.timestamp = new Date().toISOString()
+		newData.groupUrl = arg.groupUrl
+		newData.timestamp = (new Date()).toISOString()
 
 		data.push(newData)
 	} 

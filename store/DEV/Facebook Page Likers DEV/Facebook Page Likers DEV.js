@@ -196,7 +196,7 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend
 		userInfo.highlight = userInfos[1]
-		userInfo.timestamp = new Date().toISOString()
+		userInfo.timestamp = (new Date()).toISOString()
 		for (let i = 2; i < userInfos.length; ++i) {
 
 			userInfo["additionalData" + (i - 1)] = userInfos[i]

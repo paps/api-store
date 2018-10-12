@@ -139,7 +139,7 @@ const scrapeActivities = (arg, cb) => {
 			const articleUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
 			scrapedData.postUrl = articleUrl
 		}
-
+		scrapedData.timestamp = (new Date()).toISOString()
 		activityResults.push(scrapedData)
 	}
 
@@ -167,7 +167,6 @@ const getActityIdFromLikes = async (tab, activityResults, postCount) => {
 					activityResults[postNumber].postUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
 					articleId = null
 					await tab.evaluate(clickDismiss)
-					// await tab.wait(1000)
 				}
 			}
 		} catch (err) {

@@ -148,7 +148,7 @@ const scrapeLikers = (arg, cb) => {
 				newData.reactionType = "Grrr"
 				break
 		}
-		newData.timestamp = new Date().toISOString()
+		newData.timestamp = (new Date()).toISOString()
 		data.push(newData)
 		result.parentElement.removeChild(result)
 	}

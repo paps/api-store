@@ -110,7 +110,7 @@ const extractGuestsFromArray = (array, eventUrl, eventName, eventStatus) => {
 		}
 		guest.profilePictureUrl = item.photo
 		guest.friendStatus = item.auxiliaryData.isFriend ? "Friend" : "Not friend"
-		guest.timestamp = new Date().toISOString()
+		guest.timestamp = (new Date()).toISOString()
 		result.push(guest)
 	}
 	return result

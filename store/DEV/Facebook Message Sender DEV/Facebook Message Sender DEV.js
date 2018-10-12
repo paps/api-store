@@ -180,7 +180,7 @@ nick.newTab().then(async (tab) => {
 								utils.log("Message didn't go through, blocked by Facebook.", "error")	
 								blocked = true
 							}
-							tempResult.timestamp = new Date().toISOString()
+							tempResult.timestamp = (new Date()).toISOString()
 						} catch (err) {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 						}

@@ -139,7 +139,7 @@ const scrapeActivities = (arg, cb) => {
 			const articleUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
 			scrapedData.postUrl = articleUrl
 		}
-
+		scrapedData.timestamp = (new Date()).toISOString()
 		activityResults.push(scrapedData)
 	}
 

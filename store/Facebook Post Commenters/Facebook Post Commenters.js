@@ -109,7 +109,7 @@ const scrapeComments = (arg, cb) => {
 			}
 			scrapedData.likeCount = likeCount
 		}
-		scrapedData.timestamp = new Date().toISOString()
+		scrapedData.timestamp = (new Date()).toISOString()
 		result.push(scrapedData)
 	}
 	cb(null, result)
