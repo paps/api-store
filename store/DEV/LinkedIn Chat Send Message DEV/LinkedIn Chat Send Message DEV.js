@@ -74,7 +74,7 @@ const sendMessage = async (tab, message) => {
 	utils.log("Writting message...", "loading")
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
-	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	// await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	utils.log("Message send", "done")
 	return { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
 }
@@ -88,6 +88,7 @@ const sendMessage = async (tab, message) => {
 	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
 	let columns = [ columnName, ...msgTags ]
 	let step = 0
+	const result = []
 	rows = utils.extractCsvRows(rows, columns)
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	if (!columnName) {
@@ -110,9 +111,11 @@ const sendMessage = async (tab, message) => {
 		await linkedInScraper.visitProfile(tab, row[columnName])
 		utils.log(`Sending message to: ${row[columnName]}`, "info")
 		await loadChat(tab)
-		await sendMessage(tab, inflater.forgeMessage(message, row))
+		const payload = await sendMessage(tab, inflater.forgeMessage(message, row))
+		result.push(payload)
 	}
-	await utils.saveResults([], db, DB_SHORT_NAME, null, false)
+	db.push(...result)
+	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
 	await linkedin.saveCookie()
 	nick.exit(0)
 })().catch(err => {
