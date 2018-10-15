@@ -329,10 +329,11 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 				result.push({ query: url, error: "Can't access private account list" })
 				continue
 			}
-			if (!numberMaxOfFollowing) {
-				numberMaxOfFollowing = followingCount
+			let numberToScrape = numberMaxOfFollowing
+			if (!numberToScrape) {
+				numberToScrape = followingCount
 			}
-			result = result.concat(await getFollowing(tab, url, numberMaxOfFollowing, resuming))
+			result = result.concat(await getFollowing(tab, url, numberToScrape, resuming))
 			if (interrupted) { break }
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
