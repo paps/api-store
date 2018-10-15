@@ -1,0 +1,74 @@
+{
+	"slug": "linkedin-chat-send-message",
+	"description": "",
+	"image": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": true,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"message": "Hey #firstName#,\n\nI added you thanks to an awesome Phantombuster script!\n\nNice to connect!\n\nBest regards"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of profiles",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name where profile URLs are stored",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"message": {
+						"label": "Message",
+						"type": "textarea",
+						"helpers": [
+							"You are limited by LinkedIn to 1000 characters"
+						]
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 1000
+			}
+		}
+	}
+}
