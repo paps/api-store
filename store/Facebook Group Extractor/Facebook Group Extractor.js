@@ -136,6 +136,12 @@ const scrapeFirstMembers = (arg, callback) => {
 		}
 		newData.groupName = groupName
 		newData.groupUrl = arg.groupUrl
+		if (result.querySelector(".timestampContent")) {
+			newData.memberSince = result.querySelector(".timestampContent").textContent
+		}
+		if (result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type")) {
+			newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
+		}
 		newData.timestamp = (new Date()).toISOString()
 
 		data.push(newData)

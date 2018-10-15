@@ -134,6 +134,12 @@ const scrapeFirstMembers = (arg, callback) => {
 		if (lastName) {
 			newData.lastName = lastName
 		}
+		if (result.querySelector(".timestampContent")) {
+			newData.memberSince = result.querySelector(".timestampContent").textContent
+		}
+		if (result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type")) {
+			newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
+		}
 		newData.groupName = groupName
 		newData.groupUrl = arg.groupUrl
 		newData.timestamp = (new Date()).toISOString()
@@ -220,7 +226,8 @@ const forgeNewUrl = (cursorUrl, scrapeCount, membersToScrape) => {
 
 const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 	const urlObject = new URL(url)
-	let numberToScrape = 500
+	// let numberToScrape = 500
+	let numberToScrape = 100
 	if (scrapeCount + 500 > membersToScrape) { 
 		numberToScrape = membersToScrape - scrapeCount
 	}
@@ -230,6 +237,7 @@ const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 
 const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape, numberAlreadyScraped) => {
 	let jsonResponse
+	console.log("Ajax, ", ajaxUrl)
 	try {
 		jsonResponse = await getJsonResponse(tab, ajaxUrl)
 		await tab.inject("../injectables/jquery-3.0.0.min.js")

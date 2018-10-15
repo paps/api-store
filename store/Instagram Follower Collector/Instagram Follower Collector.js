@@ -111,7 +111,7 @@ const scrapeFollowerCount = (arg, callback) => {
 }
 
 const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id") && e.response.url.includes("include_reel")) {
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && !e.response.url.includes("user_id") && e.response.url.includes("include_reel") && e.response.url.includes("include_reel") && !e.response.url.includes("fetch_media_count")) {
 		requestSingleId = e.requestId
 		graphqlUrl = e.response.url
 	}
@@ -333,10 +333,11 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				result.push({ query: url, error: "Can't access private account list" })
 				continue
 			}
-			if (!numberMaxOfFollowers) {
-				numberMaxOfFollowers = followerCount
+			let numberToScrape = numberMaxOfFollowers
+			if (!numberToScrape) {
+				numberToScrape = followerCount
 			}
-			let followers = await getFollowers(tab, url, numberMaxOfFollowers, resuming)
+			let followers = await getFollowers(tab, url, numberToScrape, resuming)
 			followers = removeDuplicatesSelf(followers)
 			if (followers.length) { result = result.concat(followers) }
 			if (interrupted) { break }
