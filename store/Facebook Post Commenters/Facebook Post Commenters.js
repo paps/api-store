@@ -134,6 +134,11 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	let selector = ".userContentWrapper"
 	if (postType === "video") { selector = ".UFIContainer" }
 	do {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		newCommentsCount = await tab.evaluate(getCommentsCount, { selector })
 		if (newCommentsCount > commentsCount) {
 			commentsCount = newCommentsCount
@@ -144,7 +149,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 			}
 		}
 		await tab.wait(500)
-	} while ((!numberOfCommentsPerPost || commentsCount < numberOfCommentsPerPost) && new Date() - lastDate < 5000)
+	} while ((!numberOfCommentsPerPost || commentsCount < numberOfCommentsPerPost) && new Date() - lastDate < 60000)
 
 	if (expandAllComments) {
 		utils.log("Expanding all comments.", "loading")
