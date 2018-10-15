@@ -18,7 +18,7 @@ class Messaging {
 	 * @return {Promise<String>} - inflated message
 	 */
 	forgeMessage(message, tags) {
-		const matches = message.match(/#[a-zA-Z0-9]+#/gm)
+		const matches = message.match(/#[a-zA-Z0-9-_]+#/gm)
 		if (Array.isArray(matches)) {
 			for (const one of matches) {
 				let field = one.replace(/#/g, "")
