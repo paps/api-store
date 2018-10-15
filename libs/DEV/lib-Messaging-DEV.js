@@ -8,7 +8,7 @@ class Messaging {
 	* @return {Array<Strign>} all tags
 	*/
 	getMessageTags(message) {
-		const matches = message.match(/#[a-zA-Z0-9]+#/gm)
+		const matches = message.match(/#[a-zA-Z0-9-_]+#/gm)
 		return Array.isArray(matches) ? matches.map(tag => tag.replace(/#/g, "").trim()) : []
 	}
 	/**
