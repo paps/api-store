@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -57,7 +56,10 @@ const retrieveAllPageUrls = async (result, agentObject, spreadsheetUrl, columnNa
 		})
 		pageUrls = csvUrls
 	}
-
+	if (pageUrls.length === 0) {
+		utils.log("Input spreadsheet is empty.", "warning")
+		nick.exit()
+	}
 	return pageUrls
 }
 
@@ -95,7 +97,6 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 		likeNumber = parseInt(likeText.replace(/[^\d]/g, ""), 10)
 	} catch (err) {
 		utils.log(`Error accessing page!: ${err}`, "error")
-		await buster.saveText(await tab.getContent(), `Error accessing page!${Date.now()}.html`)
 	}
 	return { pageId, likeNumber}
 }
