@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Messaging.js, lib-LinkedInScraper-DEV.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Messaging.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,7 +19,7 @@ const StoreUtilites = require("./lib-StoreUtilities")
 const utils = new StoreUtilites(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedin = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
@@ -51,6 +50,12 @@ const isUrl = url => {
 	}
 }
 
+/**
+ * @async
+ * @description Function used to open the chat widget
+ * @param {*} tab - NickJs Tab with the LinkedIn profile opened
+ * @throws on CSS failures
+ */
 const loadChat = async tab => {
 	utils.log("Loading chat widget...", "loading")
 	await tab.click(SELECTORS.conversationTrigger)
@@ -58,11 +63,20 @@ const loadChat = async tab => {
 	await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 15000)
 }
 
+/**
+ * @async
+ * @param {Object} tab - NickJs Tab with the chat widget opened
+ * @param {String} message - Inflated message to send
+ * @throws on CSS selectors failure
+ * @return {Promise<{ profileUrl: String, timestamp: String }>} returns the when the message was send and the profile URL
+ */
 const sendMessage = async (tab, message) => {
 	utils.log("Writting message...", "loading")
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	utils.log("Message send", "done")
+	return { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
 }
 
 ;(async () => {
@@ -94,6 +108,7 @@ const sendMessage = async (tab, message) => {
 		}
 		buster.progressHint((step++) + 1 / rows.length, `Sending message to ${row[columnName]}`)
 		await linkedInScraper.visitProfile(tab, row[columnName])
+		utils.log(`Sending message to: ${row[columnName]}`, "info")
 		await loadChat(tab)
 		await sendMessage(tab, inflater.forgeMessage(message, row))
 	}
