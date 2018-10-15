@@ -79,6 +79,12 @@ const scrapeComments = (arg, cb) => {
 				comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").removeChild(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i"))
 			}
 			scrapedData.name = comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").textContent
+			const nameArray = scrapedData.name.split(" ")
+			scrapedData.firstName = nameArray.shift()
+			const lastName = nameArray.join(" ")
+			if (lastName) {
+				scrapedData.lastName = lastName
+			}
 			scrapedData.profileUrl = cleanFacebookProfileUrl(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").href)
 			if (comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody")) {
 				scrapedData.comment = comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody").textContent
@@ -103,6 +109,7 @@ const scrapeComments = (arg, cb) => {
 			}
 			scrapedData.likeCount = likeCount
 		}
+		scrapedData.timestamp = (new Date()).toISOString()
 		result.push(scrapedData)
 	}
 	cb(null, result)

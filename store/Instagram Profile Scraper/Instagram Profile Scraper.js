@@ -39,7 +39,7 @@ const checkDb = (str, db) => {
 		if (str === line.profileUrl) {
 			return false
 		}
-	}   
+	}
 	return true
 }
 
@@ -50,7 +50,7 @@ const cleanInstagramUrl = (url) => {
 		let id = path
 		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
 		if (id !== "p") { // not a picture url
-			return "https://www.instagram.com/" + id 
+			return "https://www.instagram.com/" + id
 		}
 	}
 	return null
@@ -113,6 +113,7 @@ const scrapePage = (arg, callback) => {
 	data.postsCount = postsCount
 	data.followersCount = followersCount
 	data.followingCount = followingCount
+	data.timestamp = (new Date()).toISOString()
 	callback(null, data)
 }
 
@@ -131,14 +132,14 @@ const scrapePage = (arg, callback) => {
 		result = []
 	} else { // CSV
 		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")
 			urls[i] = cleanInstagramUrl(urls[i])
 		}
-		urls = urls.filter(str => str) // removing empty lines
 		if (!numberOfProfilesPerLaunch) {
 			numberOfProfilesPerLaunch = urls.length
-		} 	
+		}
 		result = await utils.getDb(csvName + ".csv")
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberOfProfilesPerLaunch)
 	}
@@ -175,7 +176,6 @@ const scrapePage = (arg, callback) => {
 
 	await utils.saveResults(result, result, csvName, null, false)
 	nick.exit(0)
-	
 })()
 .catch(err => {
 	utils.log(err, "error")

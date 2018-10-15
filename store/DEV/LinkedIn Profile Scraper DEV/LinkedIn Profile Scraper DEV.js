@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -147,6 +146,7 @@ const removeLinkedinSubdomains = url => {
 			const finalCsv = addSkills(infos.json, infos.csv)
 			finalCsv.baseUrl = url
 			finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
+			finalCsv.timestamp = (new Date()).toISOString()
 			db.push(finalCsv)
 			result.push(infos.json)
 		} catch (err) {

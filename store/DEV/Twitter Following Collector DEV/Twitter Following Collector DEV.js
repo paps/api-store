@@ -63,7 +63,7 @@ const checkDb = (str, db) => {
 	return true
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate profile
 const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -103,7 +103,7 @@ const scrapeFollowingCount = (arg, callback) => {
 
 const scrapeFirstFollowing = async (tab, profileUrl) => {
 	const selector = await tab.waitUntilVisible(["div.GridTimeline-items", ".ProtectedTimeline"], 5000, "or")
-	if (selector === ".ProtectedTimeline") { 
+	if (selector === ".ProtectedTimeline") {
 		isProtected = true
 		return []
 	}
@@ -279,6 +279,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			data.certified = "Certified"
 		}
 		data.query = profileUrl
+		data.timestamp = (new Date()).toISOString()
 		result.push(data)
 	}
 	return result

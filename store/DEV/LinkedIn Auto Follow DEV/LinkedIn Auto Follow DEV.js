@@ -63,7 +63,8 @@ const follow = async (selector, tab, unfollowProfiles) => {
 // Full function to follow someone with different cases
 const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
     let scrapedProfile = {}
-    scrapedProfile.baseUrl = url
+	scrapedProfile.baseUrl = url
+	scrapedProfile.timestamp = (new Date()).toISOString()
     try {
         /**
          * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile

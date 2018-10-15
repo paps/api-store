@@ -3,7 +3,7 @@
 	"description": "List all profiles that follow Instagram influencers",
 	"image": "https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrppr.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#fcb045",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",

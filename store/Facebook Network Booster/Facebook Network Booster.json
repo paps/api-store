@@ -12,7 +12,7 @@
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie",
         "spreadsheetUrl": "facebook_profile_urls",
-        "message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
+        "message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/8851/facebook-network-booster\n\nNice to connect!\n\nBest regards",
         "csvName": "result"
     },
     "outputDescription": {
@@ -34,11 +34,11 @@
             "options": {
                 "fields": {
                     "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie c_user <a href=\"/api-store/8851/facebook-network-booster#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your c_user session cookie here"
                     },
                     "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Session cookie xs <a href=\"/api-store/8851/facebook-network-booster#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your xs session cookie here"
                     },
 					"spreadsheetUrl": {
@@ -46,23 +46,23 @@
 							"Enter either a Facebook Profile URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/8851/facebook-network-booster#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
                     },
                     "columnName": {
-                        "label": "Column name from which to get Profile URLs <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+                        "label": "Column name from which to get Profile URLs <a href=\"/api-store/8851/facebook-network-booster#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
                         "placeholder": "Facebook Profile URLs",
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "message": {
-						"label": "Message <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
+						"label": "Message <a href=\"/api-store/8851/facebook-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
 						"helpers": [
-							"Use #firstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Many more tags are available.</a>",
-							"Leave empty to send invites without message"
+							"Use #firstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8851/facebook-network-booster#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Many more tags are available.</a>",
+							"Leave empty to send invites without a message"
 						]
                     },
                     "profilesPerLaunch": {
-						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8851/facebook-network-booster#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {

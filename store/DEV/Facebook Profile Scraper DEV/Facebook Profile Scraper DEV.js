@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +18,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 const { URL } = require("url")
@@ -63,6 +62,10 @@ const craftCsvObject = data => {
 		name: data.name,
 		firstName: data.firstName,
 		status: data.status,
+	}
+
+	if (data.lastName) {
+		csvResult.lastName = data.lastName
 	}
 
 	if (data.work) {
@@ -121,8 +124,12 @@ const craftCsvObject = data => {
 			csvResult["lifeEvent" + (i ? i + 1 : "")] = data.lifeEvents[i]
 		}
 	}
-	if (data.bio) {	csvResult.bio = data.bio }
-	if (data.quotes) { csvResult.quotes = data.quotes }
+	if (data.bio) {
+		csvResult.bio = data.bio
+	}
+	if (data.quotes) {
+		csvResult.quotes = data.quotes
+	}
 	return csvResult
 }
 
@@ -131,98 +138,6 @@ const isFacebookProfileUrl = url => {
 	let urlObject = new URL(url.toLowerCase())
 	if (urlObject.hostname.includes("facebook.com")) { return true }
 	return false
-}
-
-
-const scrapeOverviewPage = (arg, cb) => {
-	const scrapedData = { profileUrl:arg.profileUrl }
-	if (document.querySelector(".photoContainer a > img")) {
-		scrapedData.profilePictureUrl = document.querySelector(".photoContainer a > img").src
-	}
-	if (document.querySelector(".cover img")) {
-		scrapedData.coverPictureUrl = document.querySelector(".cover img").src
-	}
-	if (document.querySelector("#fb-timeline-cover-name")) {
-		scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
-		if (document.querySelector("._Interaction__ProfileSectionAbout")) {
-			let details = document.querySelector("._Interaction__ProfileSectionAbout").textContent.split(/\s+/g)
-			let name = scrapedData.name.split(/\s+/g)
-			for (let i = 0; i < details.length; i++) {
-				for (let j = 0; j < name.length; j++) {
-					if (details[i] === name[j]) {
-						scrapedData.firstName = details[i]
-					}
-				}
-			}
-		}
-	}
-	if (document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type")) {
-		let friendsCount = document.querySelector("#pagelet_timeline_medley_friends > div > div:last-of-type > div a > span:last-of-type").textContent
-		friendsCount = parseInt(friendsCount.replace(/[, ]/g, ""), 10)
-		scrapedData.friendsCount = friendsCount
-	}
-
-	// if Add friend button is hidden, we're already friend
-	if (document.querySelector(".FriendRequestAdd")) {
-		scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
-	}
-
-	if (!arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
-		const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
-		if (educationDiv.length) {
-			const educations = educationDiv.map(el => {
-				const data = {}
-				if (el.querySelector("a")) { 
-					data.url = el.querySelector("a").href
-					if (el.querySelectorAll("a")[1] && el.querySelectorAll("a")[1].parentElement) {
-						data.name = el.querySelectorAll("a")[1].parentElement.textContent
-					}
-					try {
-						data.description = el.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-					} catch (err) {
-						//
-					}
-				}
-				return data
-			})
-			scrapedData.educations = educations
-		}
-	}
-
-	if (!arg.pagesToScrape.placesLived) {
-		const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
-		if (citiesDiv) {
-			const cities = {}
-			cities.name = citiesDiv.querySelectorAll("a")[1].parentElement.textContent
-			cities.url = citiesDiv.querySelectorAll("a")[1].href
-			try {
-				cities.description = citiesDiv.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-			} catch (err) {
-				//
-			}
-			if (cities) { scrapedData.cities = [ cities ] }
-		}
-	}
-	
-	if (!arg.pagesToScrape.familyAndRelationships) {
-		const relationshipDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")[0]
-		if (relationshipDiv) {
-			const relationship = {}
-			if (relationshipDiv.querySelectorAll("a")[1] && relationshipDiv.querySelectorAll("a")[1].textContent) {
-				relationship.relationshipWith = relationshipDiv.querySelectorAll("a")[1].textContent
-				relationship.profileUrl = relationshipDiv.querySelectorAll("a")[1].href
-				if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
-					relationship.description = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
-				}
-			} else if (relationshipDiv.querySelector("div > div > div > div:last-of-type")) {
-				relationship.familyMembers = relationshipDiv.querySelector("div > div > div > div:last-of-type").textContent
-			}
-			scrapedData.relationship = relationship
-		}
-	}
-
-
-	cb(null, scrapedData)
 }
 
 const scrapeWorkPage = (arg, cb) => {
@@ -398,7 +313,6 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
-			await tab.screenshot(`error${new Date()}.png`)
 			utils.log(`${profileUrl} page is not available.`, "error")
 			return { profileUrl, error: "The profile page isn't available"}
 		}
@@ -414,13 +328,10 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		}
 
 	}
-	// await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
 	try {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
 		utils.log("About Page still not visible", "error")
-		await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
-
 		return null
 	}
 	const aboutList = [ 
@@ -433,12 +344,9 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	]
 	let result
 	try {
-		result = await tab.evaluate(scrapeOverviewPage, { profileUrl, pagesToScrape })
-		// console.log("firstTEMPI", result)
-
+		result = await facebook.scrapeAboutPage(tab, { profileUrl, pagesToScrape })
 	} catch (err) {
-		console.log("error scraping first page", err)
-		await buster.saveText(await tab.getContent(), `aboutList${Date.now()}.html`)
+		utils.log(`Error scraping first page: ${err}`, "error")
 		return null
 	}
 
@@ -459,10 +367,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 				}
 				try {
 					const tempResult = await tab.evaluate(pagelet.function)
-					// console.log("TEPMI", tempResult)
 					Object.assign(result, tempResult)
 				} catch (tempErr) {
-					await buster.saveText(await tab.getContent(), `tempErr${Date.now()}.html`)
 					if (await tab.isVisible("#content > div.uiBoxWhite")) {
 						blocked = true
 						break
@@ -470,9 +376,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 				}
 				await tab.wait(8500 * (.9 + Math.random()))
 			} catch (err) {
-				utils.log(`Error opening ${pagelet.name}`, "error")
-				await buster.saveText(await tab.getContent(), `Err${Date.now()}.html`)
-				console.log("Err: ", err)
+				utils.log(`Error opening ${pagelet.name}: ${err}`, "error")
 			}
 		}
 	}
@@ -496,7 +400,6 @@ nick.newTab().then(async (tab) => {
 	profilesToScrape = profilesToScrape.filter(str => str) // removing empty lines
 	profilesToScrape = profilesToScrape.filter(str => checkDb(str, db)) // checking if already processed
 	profilesToScrape = profilesToScrape.slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
-	// console.log("resultAVANT", db)
 	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
@@ -516,11 +419,9 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
 			try {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)
+				tempResult.timestamp = (new Date()).toISOString()
 				if (tempResult && tempResult.profileUrl) {
-					// console.log("TempResultAvant:", tempResult)
 					const tempCsvResult = craftCsvObject(tempResult)
-					// console.log("TempResultApres:", tempResult)
-
 					result.push(tempResult)
 					db.push(tempCsvResult)
 				}
@@ -530,17 +431,14 @@ nick.newTab().then(async (tab) => {
 				}
 			} catch (err) {
 				utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
-				await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
-
 			}
 		} else {  
 			utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 		}
 		if (profileCount < profilesToScrape.length) { // waiting before each page
-			await tab.wait(3000  + 2000 * Math.random())
+			await tab.wait(3000 + 2000 * Math.random())
 		}
 	}
-	// console.log("res, ", result)
 	utils.log(`${profileCount} profiles scraped, ${result.length} in total, exiting.`, "info")
 	await utils.saveResults(result, db, csvName)
 	utils.log("Job is done!", "done")
@@ -548,6 +446,5 @@ nick.newTab().then(async (tab) => {
 })
 .catch((err) => {
 	utils.log(err, "error")
-	console.log("err,", err.stack || "noStack")
 	nick.exit(1)
 })

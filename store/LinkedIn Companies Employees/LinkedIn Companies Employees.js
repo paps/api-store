@@ -96,6 +96,10 @@ const getEmployees = async (tab, id, numberOfPage, waitTime) => {
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			result.employees = result.employees.concat(await tab.evaluate(scrapeResults))
+			result.employees = result.employees.map(el => {
+				el.timestamp = (new Date()).toISOString()
+				return el
+			})
 			let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
 			if (hasReachedLimit) {
 				utils.log(hasReachedLimit, "info")
@@ -158,7 +162,7 @@ const getIdFromUrl = async (url, tab) => {
 			}
 			try {
 				await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
-			} catch(err) {
+			} catch (err) {
 				throw "no employees found from the LinkedIn company page"
 			}
 			let tmp = await tab.evaluate((argv, cb) => {

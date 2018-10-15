@@ -1,19 +1,14 @@
-# Collect information from Facebook profiles
+# Send messages to a list of Facebook profiles
 
-You have a list of Instagram profiles and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Facebook profiles you're targeting in a CSV file, like:
-
-1. Facebook profile URLs
-2. Names
-3. Profile pictures
-4. Current and previous jobs & location
-5. Contact information
-6. Family members
-7. Life events
+You have want to target a list of Facebook profiles? One way would be to directly talk to them!
+Use our API to automatically send them a customizable message.
 
 # What will you need? ⚙️ 
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook profile URLs in it, or the direct link of a Facebook profile.
+- **Message**: The message you want to send.
+- **Number of profiles per launch**: How many messages to send per launch
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
@@ -75,22 +70,26 @@ Your spreadsheet should contain a list of Facebook Profile URLs (**one link per 
 You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 You can also enter a single Facebook profile URL directly in the field.
 
-## 6. Additional pages to scrape
-Facebook displays various data from the main Overview page of a Facebook profile (like the current job, city, and education background), but there's more detailed information to gather by visiting the other tabs:
-- Work and Education
-- Places they've lived
-- Contact and Basic Info
-- Family and Relationships
-- Details
-- Life Events
-Just tick their checkbox to have these pages also visited. Please note that visiting too many pages on multiple profiles will increase the chance that Facebook may temporarily block profile viewing on your account.
+## 6. Add a private personalized message 🆕 💬
+Below the column name you'll find the **message** configuration.
+
+In the message textbox you can write a private note which will be sent to the profile included in your Google spreadsheet.
+
+**\#fbFirstName\#** will be replaced in your message by the first name of the person you’re adding.
+The other tags available are **\#fbName\#** and **\#fbLastName\#**, replaced by their full name and last name.
+
+How about using your own tags ? <b>Simple.</b>
+Add a column in your Google Spreadsheet with any informations you want to apply.
+
+For instance:
+A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message.
 
 
 # ⚙️️Repetition setup ⚙️
 
 Now that your API is ready, you can customize it to make it work repetitively.
 
-Use to 'Number of profiles to process per launch' field to configure how many profiles you want to scrape per launch (5 for instance will make it 5 profiles each launch then stop). Then set a repetition setup:
+Use to 'Number of profiles to process per launch' field to configure how many profiles you want to scrape per launch (5 for instance will make it send a message to 5 profiles each launch then stop). Then set a repetition setup:
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 
@@ -115,5 +114,5 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
 
-Facebook tends to notice when too many profiles viewings are done in a short period of time. We recommend spreading your scraping (like 5 profiles every 30min rather than 100 profiles in one go). Also if you're scraping more pages for additionnal data (like the Workd and Education or Places tabs), you should reduce that amount even further. 
-If too many viewing actions are done, Facebook will warn you and temporarily block profile viewing (only that) on your account for about one hour. If that happens, you should be careful and reduce your scraping frequency the next time.
+Facebook tends to notice when too many profiles viewings are done in a short period of time. Spamming invitations is probably reprimanded. We recommend spreading your invites (like 1 profile every 15min rather than 10 profiles in one go).
+If too many actions are done, Facebook may temporarily block your profile. If that happens, you should be careful and reduce your API frequency the next time.

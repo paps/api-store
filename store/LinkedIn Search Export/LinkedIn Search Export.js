@@ -56,7 +56,6 @@ const scrapeResultsAll = (arg, callback) => {
 				const jobId = result.querySelector("div").dataset.jobId
 				newInfos.jobId = jobId
 				newInfos.url = "https://www.linkedin.com/jobs/view/" + jobId
-		
 			}
 			if (!result.querySelector("img.job-card-search__logo-image").classList.contains("ghost-company") && result.querySelector("img.job-card-search__logo-image").classList.contains("loaded")) {
 				newInfos.logoUrl = result.querySelector("img.job-card-search__logo-image").src
@@ -124,7 +123,7 @@ const scrapeResultsAll = (arg, callback) => {
 						}
 						if (result.querySelector("figure.search-result__image div[aria-label]")) {
 							newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
-						}					
+						}
 					}
 				} else {
 					newInfos.error = "Profile out of your network."
@@ -135,7 +134,7 @@ const scrapeResultsAll = (arg, callback) => {
 					newInfos.name = result.querySelector("figure.search-result__image > img").alt
 			}
 			if (arg.searchCat === "companies") {
-				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "") 
+				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
 				// .ghost-company class it means that the profile doesnt't contain a logo
 				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-company") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 					newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
@@ -166,6 +165,7 @@ const scrapeResultsAll = (arg, callback) => {
 		}
 		if (arg.query) { newInfos.query = arg.query	}
 		newInfos.category = arg.searchCat.charAt(0).toUpperCase() + arg.searchCat.substr(1)
+		newInfos.timestamp = (new Date()).toISOString()
 		data.push(newInfos)
 	}
 	callback(null, data)
@@ -274,18 +274,17 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(err.message || err, "warning")
 					return result
 				}
-	
 				if (selector === selectors[0] || selector === selectors[2]) {
-					utils.log("No result on that page.", "done")	
+					utils.log("No result on that page.", "done")
 					break
 				} else {
 					let selectorList
-					if (searchCat === "jobs") { 
+					if (searchCat === "jobs") {
 						selectorList = "ul.jobs-search-results__list > li"
 					} else {
 						selectorList = "ul.search-results__list > li, ul.results-list > li"
 					}
-					const resultCount = await tab.evaluate((arg, callback) => { 
+					const resultCount = await tab.evaluate((arg, callback) => {
 						callback(null, document.querySelectorAll(arg.selectorList).length)
 					}, { selectorList })
 					let canScroll = true
@@ -302,8 +301,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 							canScroll = false
 							break
 						}
-					}	
-					if (canScroll) { 
+					}
+					if (canScroll) {
 						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
 					} else {
 						break
@@ -338,7 +337,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			}
 		} else {
 			await tab.wait(1000)
-		}		
+		}
 	} while (pageCounter < numberOfPage)
 	utils.log("All pages with result scrapped.", "done")
 	return result

@@ -239,6 +239,7 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 			// No need to send the invitation if the success button is present for the connect option (means pending OR connected)
 			if (expandedSelectorFound === ".pv-s-profile-actions--connect" && await tab.isPresent(`${expandedSelectorFound} > li-icon[type=success-pebble-icon]`)) {
 				utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+				return false
 			} else {
 				return true
 			}
@@ -246,7 +247,6 @@ const threeDotsHandler = async (tab, url, selector, onlySecondCircle) => {
 	} else {
 		throw "Is in third circle and the onlySecondCircle option is set to true"
 	}
-	return null
 }
 
 /**
@@ -322,8 +322,9 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	try {
 		selector = await tab.waitUntilVisible(selectors, 15000, "or")
 	} catch (err) {
-		invitation.error = err.message || err
+		invitation.error = "Profile didn't load correctly"
 		utils.log(`${url} didn't load correctly`, "error")
+		return invitation
 	}
 
 	let browserUrl = await tab.getUrl()
@@ -349,6 +350,8 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			// Invitation already sent, but still in pending
 			if (await tab.isPresent(selectors[7])) {
 				utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+				invitation.error = "Invitation already sent"
+				return invitation
 			} else {
 				try {
 					await connectTo(selector, tab, message)
@@ -369,8 +372,13 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			try {
 				let res = await threeDotsHandler(tab, url, selector, onlySecondCircle)
 				if (typeof res === "boolean" && res === true) {
+					if (await tab.isVisible(".pv-s-profile-actions--connect")) {
+						selector = ".pv-s-profile-actions--connect"
+					}
 					await connectTo(selector, tab, message)
 					utils.log(`${url} added`, "done")
+				} else {
+					invitation.error = "Invitation already sent"
 				}
 			} catch (err) {
 				invitation.error = err.message || err
@@ -389,6 +397,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		// 4- Case when this people have only the message button visible
 		case selectors[3]: {
 			utils.log(`${url} seems to already be in your network (only message button visible).`, "warning")
+			invitation.error = "Already in network"
 			break
 		}
 		// 5- Case when this people have only the follow button visible
@@ -399,10 +408,12 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		// 6- Case when the "pending" status is present (already added)
 		case selectors[5]: {
 			utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+			invitation.error = "Invitation still pending"
 			break
 		}
 		case selectors[6]: {
 			utils.log("Trying to add your own profile.", "warning")
+			invitation.error = "Own profile"
 			break
 		}
 	}
@@ -466,19 +477,21 @@ nick.newTab().then(async (tab) => {
 	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 	for (const row of rows) {
-		buster.progressHint(step / rows.length, `Connecting ${row[columnName]}`)
-		row.baseUrl = row[columnName]
-		try {
-			utils.log(`Adding ${row[columnName]}...`, "loading")
-			const newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
-			let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
-			if (invitationResult) {
-				invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
+		if (row[columnName]) {
+			buster.progressHint(step / rows.length, `Connecting ${row[columnName]}`)
+			row.baseUrl = row[columnName]
+			try {
+				utils.log(`Adding ${row[columnName]}...`, "loading")
+				const newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
+				if (invitationResult) {
+					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
+				}
+			} catch (error) {
+				utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
 			}
-		} catch (error) {
-			utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
+			step++
 		}
-		step++
 	}
 	/**
 	 * Issue #117

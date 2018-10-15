@@ -198,6 +198,7 @@ const searchUrnArticle = (arg, cb) => {
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
 		commenters.map(el => {
 			el.postUrl = url
+			el.timestamp = (new Date()).toISOString()
 			return el
 		})
 		result = result.concat(commenters)

@@ -46,6 +46,7 @@ const linkedinObjectToResult = response => {
 					newFollower.followers = followingInfo.followerCount
 				}
 			}
+			newFollower.timestamp = (new Date()).toISOString()
 			res.push(newFollower)
 		}
 	}

@@ -64,6 +64,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 			await scrapingTab.open(await tab.getUrl())
 			currentPost = await instagram.scrapePost(scrapingTab)
 			currentPost.hashtag = hashtag
+			currentPost.timestamp = (new Date()).toISOString()
 			utils.log(`${currentPost.postUrl} scraped`, "done")
 			arr.push(currentPost)
 		} catch (err) {
@@ -104,7 +105,7 @@ const loadPosts = async (tab, arr, count, hashtag) => {
 				}
 				waitForNewLoadedPost()
 			}, { selectors, previousPost: currentPost.postUrl })
-		} catch(err) {
+		} catch (err) {
 			utils.log(`Error occured while scrapping: ${err.message || err}`, "error")
 			return false
 		}

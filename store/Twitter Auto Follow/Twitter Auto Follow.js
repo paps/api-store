@@ -187,7 +187,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 			return added
 		}
 		profile = profile.toLowerCase()
-		const newAdd = {}
+		const newAdd = { timestamp: (new Date()).toISOString() }
 		const getUsernameRegex = /twitter\.com\/([A-z0-9_]+)/
 		const pmatch = profile.match(getUsernameRegex) // Get twitter user name (handle)
 		if (pmatch) {
@@ -227,7 +227,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	if (!whiteList) {
 		whiteList = []
 	}
-	if(!numberOfAddsPerLaunch) {
+	if (!numberOfAddsPerLaunch) {
 		numberOfAddsPerLaunch = 20
 	}
 	let db = await utils.getDb(dbFileName)

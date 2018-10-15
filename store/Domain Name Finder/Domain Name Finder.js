@@ -193,9 +193,11 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
 			delete res.codename
+			res.timestamp = (new Date()).toISOString()
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
+			result.push({ query, domain: "Not found", timestamp: (new Date()).toISOString() })
 		}
 		i++
 	}

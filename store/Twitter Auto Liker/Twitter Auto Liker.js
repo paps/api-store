@@ -105,7 +105,7 @@ const likeTweets = (arg, cb) => {
 		one.querySelector(".HeartAnimation").click()
 		tweetURLs.push(`https://twitter.com${one.dataset.permalinkPath}`)
 	}
-	cb(null, { likeCount: tweetsLoaded.length, urls: tweetURLs })
+	cb(null, { likeCount: tweetsLoaded.length, urls: tweetURLs, timestamp: (new Date()).toISOString() })
 }
 
 /**

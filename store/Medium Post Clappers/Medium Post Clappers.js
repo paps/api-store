@@ -56,7 +56,8 @@ const scrapeClappers = (arg, callback) => {
 	const result = []
 	for (const clapper of clappers) {
 		const people = {
-			profileUrl: clapper.querySelector("div.u-flex1 a.link").href
+			profileUrl: clapper.querySelector("div.u-flex1 a.link").href,
+			timestamp: (new Date()).toISOString()
 		}
 		if (clapper.querySelector("div.u-flex1 > p")) {
 			people.name = clapper.querySelector("div.u-flex1 a.link").textContent.trim()

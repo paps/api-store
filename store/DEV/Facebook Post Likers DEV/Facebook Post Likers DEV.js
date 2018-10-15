@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -24,7 +23,6 @@ const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 
 // }
-
 
 const { URL } = require("url")
 
@@ -81,13 +79,8 @@ const scrapeAllLikers = async (tab, query) => {
 			}
 		} catch (err) {
 			utils.log(`No like of type ${getLikeType(buttonNb)}.`, "info")
-			await buster.saveText(await tab.getContent(), `notVisibleat${Date.now()}.html`)
 			continue
-		}
-
-		await buster.saveText(await tab.getContent(), `AfterButton${buttonNb}at${Date.now()}.html`)
-
-		
+		}		
 	}
 	utils.log(`Scraped ${likesScraped.length} likes for ${query}`, "done")
 	return likesScraped
@@ -124,7 +117,15 @@ const scrapeLikers = (arg, cb) => {
 			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			newData.profileUrl = profileUrl
 		}
-		if (result.querySelectorAll("a")[1]) { newData.name = result.querySelectorAll("a")[1].textContent }
+		if (result.querySelectorAll("a")[1]) { 
+			newData.name = result.querySelectorAll("a")[1].textContent
+			const nameArray = newData.name.split(" ")
+			newData.firstName = nameArray.shift()
+			const lastName = nameArray.join(" ")
+			if (lastName) {
+				newData.lastName = lastName
+			}
+		}
 		if (result.querySelector("img")) { newData.profilePictureUrl = result.querySelector("img").src }
 		const reactionType = result.parentElement.getAttribute("id")
 		switch (reactionType){
@@ -147,6 +148,7 @@ const scrapeLikers = (arg, cb) => {
 				newData.reactionType = "Grrr"
 				break
 		}
+		newData.timestamp = (new Date()).toISOString()
 		data.push(newData)
 		result.parentElement.removeChild(result)
 	}
@@ -212,19 +214,15 @@ const scrapeLikers = (arg, cb) => {
 				})
 				} catch (err) {
 					await tab.wait(5000)
-					console.log("try again")
 					urlToGo = await tab.evaluate((arg, cb) => {
 						cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 					})
 				}
-				utils.log(`urlToGo is ${urlToGo}`, "done")
 				await tab.open(urlToGo)
 				await tab.waitUntilVisible(".fb_content")
 				result = result.concat(await scrapeAllLikers(tab , postUrl))
 			} catch (err) {
 				utils.log(`Error accessing like page!: ${err}`, "error")
-				await buster.saveText(await tab.getContent(), `Error accessing like page!${Date.now()}.html`)
-
 			}			
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${postUrl} due to: ${err.message || err}`, "warning")

@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse, URL } = require("url")
 
@@ -34,13 +33,13 @@ const checkDb = (str, db) => {
 		if (str === line.query) {
 			return false
 		}
-	}   
+	}
 	return true
 }
 
 
 const createUrl = (search) => {
-	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`) 
+	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`)
 }
 
 // forces the search to display up to 100 profiles per page
@@ -88,6 +87,7 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
+			newData.timestamp = (new Date()).toISOString()
 			data.push(newData)
 		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
@@ -116,7 +116,15 @@ const scrapeResultsLeads = (arg, callback) => {
 				newData.companyId = companyId
 				newData.companyUrl = "https://www.linkedin.com/company/" + companyId
 			}
-			if (arg.query) { newData.query = arg.query }
+			if (result.querySelector(".result-lockup__misc-item")) {
+				newData.location = result.querySelector(".result-lockup__misc-item").innerText
+			}
+			if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
+				newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
+			}
+			if (arg.query) {
+				newData.query = arg.query
+			}
 			profilesScraped++
 			data.push(newData)
 		}
@@ -130,34 +138,18 @@ const totalResults = (arg, callback) => {
 	callback(null, total)
 }
 
-/**
- * @description Tiny wrapper used to easly change the page index of LinkedIn search results
- * @param {String} url
- * @param {Number} index - Page index
- * @return {String} URL with the new page index
- */
-const overridePageIndex = (url, page) => {
-	try {
-		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.set("start", page === 1 ? "0" : page - 1 + "00")
-		return parsedUrl.toString()
-	} catch (err) {
-		return url
-	}
-}
-
-const overridePageIndexLead = (url, page) => {
-	try {
-		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.set("page", page)
-		return parsedUrl.toString()
-	} catch (err) {
-		return url
+// click on the Next button to switch search pages
+const clickNextPage = (arg, cb) => {
+	if (!document.querySelector(".search-results__pagination-next-button").disabled) {
+		document.querySelector(".search-results__pagination-next-button").click()
+		cb(null, true)
+	} else {
+		cb(null, null)
 	}
 }
 
 const extractDefaultUrls = async results => {
-	utils.log("Converting all Sales Navigator URLs to Default URLs...", "loading")
+	utils.log(`Converting ${results.length} Sales Navigator URLs to Default URLs...`, "loading")
 	for (let i = 0; i < results.length; i++) {
 		if (results[i].profileUrl) {
 			try {
@@ -171,6 +163,7 @@ const extractDefaultUrls = async results => {
 				break
 			}
 		}
+		buster.progressHint(i / results.length, `${i} URLs converted`)
 	}
 	return results
 }
@@ -182,17 +175,14 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	const selectors = ["section.search-results-container", "section.search-results__container"]
 	let profilesFoundCount = 0
 	let maxResults = Math.min(1000, numberOfProfiles)
-	let isLeadSearch
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
 		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
-		if (selector === ".artdeco-tab-primary-text") { 
-			isLeadSearch = true
+		if (selector === ".artdeco-tab-primary-text") {
 			numberPerPage = 25
 		} else {
-			isLeadSearch = false
 			numberPerPage = 100
 		}
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
@@ -203,19 +193,10 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
-		await buster.saveText(await tab.getContent(), `Could not get total results count${new Date()}.html`)
-		await tab.screenshot(`${Date.now()}.png`)
-
 		utils.log(`Could not get total results count. ${err}`, "warning")
 	}
-	const redirectedUrl = await tab.getUrl()
 	for (let i = 1; i <= pageCount; i++) {
 		try {
-			if (isLeadSearch) {
-				await tab.open(overridePageIndexLead(redirectedUrl, i))
-			} else {
-				await tab.open(overridePageIndex(redirectedUrl, i))
-			}
 			utils.log(`Getting results from page ${i}...`, "loading")
 			let containerSelector
 			try {
@@ -236,7 +217,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			}
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
-					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))		
+					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
 				} catch (err) {
 					//
 				}
@@ -246,6 +227,16 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
+				try {
+					const clickDone = await tab.evaluate(clickNextPage)
+					if (!clickDone) {
+						utils.log("No more profiles found on this page", "warning")
+						break
+					}
+				} catch (err) {
+					utils.log("Error click on Next button", "error")
+					break
+				}
 			} else {
 				utils.log("No more profiles found on this page", "warning")
 				break
@@ -275,7 +266,7 @@ const isLinkedInSearchURL = (url) => {
 				return -1 // Default LinkedIn search
 			}
 		}
-		return -2 // URL not from LinkedIn	
+		return -2 // URL not from LinkedIn
 	}
 	return 1 // not a URL
 }
@@ -290,8 +281,8 @@ const isLinkedInSearchURL = (url) => {
 		searches = [ searches ]
 	} else {
 		if (isLinkedInSearchSalesURL === -1) { // Regular LinkedIn Search
-			throw "Not a valid Sales Navigator Search Link"  
-		} 
+			throw "Not a valid Sales Navigator Search Link"
+		}
 		try { 		// Link not from LinkedIn, trying to get CSV
 			searches = await utils.getDataFromCsv(searches)
 			searches = searches.filter(str => str) // removing empty lines
@@ -304,7 +295,7 @@ const isLinkedInSearchURL = (url) => {
 				utils.log("Couln't open CSV, make sure it's public", "error")
 				nick.exit(1)
 			}
-			searches = [ searches ] 
+			searches = [ searches ]
 		}
 	}
 	utils.log(`Search : ${JSON.stringify(searches, null, 2)}`, "done")
@@ -318,7 +309,7 @@ const isLinkedInSearchURL = (url) => {
 				searchUrl = forceCount(search)
 			} else if (isSearchURL === 1) { // Not a URL -> Simple search
 				searchUrl = createUrl(search)
-			} else {  
+			} else {
 				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
 				continue
 			}

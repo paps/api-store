@@ -78,7 +78,7 @@ let db
 			link = "no url"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ linkedinUrl: link, query: one })
+		toReturn.push({ linkedinUrl: link, query: one, timestamp: (new Date()).toISOString() })
 		i++
 	}
 

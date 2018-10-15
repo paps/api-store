@@ -62,7 +62,8 @@ const getWriterInfo = (argv, cb) => {
 		following: safeParseInt($("div.ProfileNavList").find(".FollowingNavItem > a").find("span.list_count").text()),
 		topics: safeParseInt($("div.ProfileNavList").find(".TopicsNavItem > a").find("span.list_count").text()),
 		edits: safeParseInt($("div.ProfileNavList").find(".EditableListItem:last > a").find("span.list_count").text()),
-		quora: argv.quoraUrl
+		quora: argv.quoraUrl,
+		timestamp: (new Date()).toISOString()
 	}
 
 	if ($("div.SocialProofAboutListItem").length) {

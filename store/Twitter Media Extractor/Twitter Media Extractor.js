@@ -85,7 +85,7 @@ const getLoadedMediaCount = (arg, cb) => {
 
 const scrapeMediasMetadata = (arg, cb) => {
 	const data = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).map(el => {
-		let res = {}
+		let res = { timestamp: (new Date()).toISOString() }
 		res.twitterPostUrl = "https://twitter.com" + el.dataset.permalinkPath
 		if (el.querySelector("div.js-adaptive-photo img")) {
 			res.pubImage = Array.from(el.querySelectorAll("div.js-adaptive-photo img")).map(el => el.src)

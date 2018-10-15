@@ -136,7 +136,7 @@ const removeLinkedinSubdomains = url => {
 		}
 		try {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
-			utils.log(`Opening page ${url}`, "loading")
+			utils.log(`Opening page ${scrapingUrl}`, "loading")
 			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl))
 			/**
 			 * the csv output from the lib is no more used in this API,
@@ -146,6 +146,7 @@ const removeLinkedinSubdomains = url => {
 			const finalCsv = addSkills(infos.json, infos.csv)
 			finalCsv.baseUrl = url
 			finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
+			finalCsv.timestamp = (new Date()).toISOString()
 			db.push(finalCsv)
 			result.push(infos.json)
 		} catch (err) {

@@ -142,7 +142,8 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 	} catch (err) {
 		utils.log(`Error in the page: ${err}`, "error")
 	}
-	return { profileUrl: url, totalLikes: totalLikedCount, name }
+	const timestamp = (new Date()).toISOString()
+	return { profileUrl: url, totalLikes: totalLikedCount, name, timestamp }
 }
 
 /**

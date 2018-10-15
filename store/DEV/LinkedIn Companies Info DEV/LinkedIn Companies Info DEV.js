@@ -197,6 +197,7 @@ const isLinkedUrl = target => {
 					}
 				}
 				const newResult = await getCompanyInfo(tab, link, company)
+				newResult.timestamp = (new Date()).toISOString()
 				if (newResult === "invalid") {
 					utils.log("Cookie session invalidated, exiting...", "error")
 					break

@@ -63,7 +63,7 @@ const checkDb = (str, db) => {
 	return true
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate profile
 const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -170,7 +170,6 @@ const getTwitterFollowers = async (tab, twitterHandle, followersPerAccount, resu
 		}
 		followerCount = await tab.evaluate(scrapeFollowerCount)
 		utils.log(`${twitterHandle} has ${followerCount} followers.`, "done")
-		
 	} catch (err) {
 		//
 	}
@@ -251,7 +250,6 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			data.screenName = screenName
 			data.profileUrl = "https://twitter.com/" + screenName
 		}
-		
 		data.name = chr("a.ProfileCard-avatarLink").attr("title")
 		let imgUrl = chr("img.ProfileCard-avatarImage").attr("src")
 		if (imgUrl){
@@ -272,6 +270,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			data.certified = "Certified"
 		}
 		data.query = profileUrl
+		data.timestamp = (new Date()).toISOString()
 		result.push(data)
 	}
 	return result

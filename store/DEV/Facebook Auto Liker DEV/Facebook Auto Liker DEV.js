@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -113,8 +112,6 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 				lastDate = new Date()
 				utils.log(`Last ${postCount} posts loaded.`, "loading")
 			}
-			// await tab.screenshot(`${likeCount} posts ${Date.now()}.png`)
-			// await buster.saveText(await tab.getContent(), `${likeCount} posts ${Date.now()}.html`)
 			await tab.scrollToBottom()
 			await tab.wait(1000)
 			if (new Date() - lastDate > 15000) {
@@ -128,7 +125,6 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 		utils.log(`Over last ${newPostCount} posts, already ${alreadyLikedCount} liked, ${unlikedPostCount} still unliked.`, "done")
 		let newLikedCount = 0
 		if (unlikedPostCount) {
-			await buster.saveText(await tab.getContent(), `CLIK ${Date.now()}.html`)
 			await tab.evaluate(clickAllPosts, { likesCountPerProfile, postLimit })
 			await tab.wait(2000)
 			if (await tab.evaluate(isBlocked)) {
@@ -146,7 +142,8 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 	} catch (err) {
 		utils.log(`Error in the page: ${err}`, "error")
 	}
-	return { profileUrl: url, totalLikes: totalLikedCount, name }
+	const timestamp = (new Date()).toISOString()
+	return { profileUrl: url, totalLikes: totalLikedCount, name, timestamp }
 }
 
 /**
