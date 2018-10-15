@@ -138,6 +138,9 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 
 	if (!interceptSuccess) {
 		utils.log(`Can't find a way to load messages in the conversation (${await tab.getUrl()})`, "error")
+		if (await tab.isVisible(SELECTORS.chatWidget)) {
+			await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+		}
 		return { conversationUrl: null, messages: conversation }
 	}
 
