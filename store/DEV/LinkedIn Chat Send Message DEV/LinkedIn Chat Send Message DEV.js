@@ -53,7 +53,7 @@ const isUrl = url => {
 /**
  * @async
  * @description Function used to open the chat widget
- * @param {*} tab - NickJs Tab with the LinkedIn profile opened
+ * @param {Object} tab - NickJs Tab with the LinkedIn profile opened
  * @throws on CSS failures
  */
 const loadChat = async tab => {
@@ -74,7 +74,7 @@ const sendMessage = async (tab, message) => {
 	utils.log("Writting message...", "loading")
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
-	// await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	utils.log("Message send", "done")
 	return { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
 }
@@ -96,7 +96,7 @@ const sendMessage = async (tab, message) => {
 	}
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
 	if (rows.length < 1) {
-		utils.log("Spreadsheet is empty or everyone is processed", "done")
+		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
 	}
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")

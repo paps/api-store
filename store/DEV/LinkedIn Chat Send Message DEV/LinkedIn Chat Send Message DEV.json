@@ -43,7 +43,7 @@
 						"label": "Message",
 						"type": "textarea",
 						"helpers": [
-							"You are limited by LinkedIn to 8000 characters"
+							"You are limited by LinkedIn to 7000 characters"
 						]
 					}
 				}
@@ -67,7 +67,7 @@
 			},
 			"message": {
 				"type": "string",
-				"maxLength": 8000
+				"maxLength": 7000
 			}
 		}
 	}
