@@ -28,7 +28,7 @@ const DB_NAME = "linkedin-chat-send-message.csv"
 const DB_SHORT_NAME = DB_NAME.split(".").shift()
 
 const SELECTORS = {
-	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button",
+	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
 	chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
 	closeChatButton: "button[data-control-name=\"overlay.close_conversation_window\"]",
 	messages: "ul.msg-s-message-list",
@@ -119,6 +119,9 @@ const isUrl = url => {
  */
 const loadChat = async tab => {
 	utils.log("Loading chat widget...", "loading")
+	if (!await tab.isVisible(SELECTORS.conversationTrigger)) {
+		throw `Can't send a message to ${await tab.getUrl()}: missing send button (or you need a LinkedIn premium account)`
+	}
 	await tab.click(SELECTORS.conversationTrigger)
 	await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
 	await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 15000)
