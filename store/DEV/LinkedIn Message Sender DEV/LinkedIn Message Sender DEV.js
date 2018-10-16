@@ -1,5 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
+"phantombuster flags: save-folder"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Messaging.js, lib-LinkedInScraper.js"
 
@@ -24,8 +25,8 @@ const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 const { URL } = require("url")
-const DB_NAME = "linkedin-chat-send-message.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_SHORT_NAME = "linkedin-chat-send-message"
+const DB_NAME = DB_SHORT_NAME + ".csv"
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
@@ -139,12 +140,20 @@ const loadChat = async tab => {
  */
 const sendMessage = async (tab, message, tags) => {
 	utils.log("Writting message...", "loading")
-	const payload = { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
 	const firstname = await tab.evaluate(getFirstName)
 	tags = Object.assign({}, { firstName: firstname }, tags) // Custom tags are mandatory
 	message = inflater.forgeMessage(message, tags)
+	const payload = { profileUrl: await tab.getUrl(), message, timestamp: (new Date()).toISOString() }
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
-	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
+
+	const sendButtonSelector = `${SELECTORS.chatWidget} ${SELECTORS.sendButton}`
+	// if (await tab.isVisible(sendButtonSelector)) {
+	await tab.click(sendButtonSelector)
+	// }
+	// else {
+	// 	await tab.sendKey("")
+	// }
+
 	try {
 		await tab.evaluate(waitWhileButtonEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
 	} catch (err) {
@@ -161,14 +170,14 @@ const sendMessage = async (tab, message, tags) => {
 	return payload
 }
 
-;(async () => {
+; (async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, noDatabase } = utils.validateArguments()
 	const tab = await nick.newTab()
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
 	let rows = await utils.getRawCsv(spreadsheetUrl)
 	let csvHeader = rows[0].filter(cell => !isUrl(cell))
 	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-	let columns = [ columnName, ...msgTags ]
+	let columns = [columnName, ...msgTags]
 	let step = 0
 	const result = []
 	rows = utils.extractCsvRows(rows, columns)
@@ -192,7 +201,7 @@ const sendMessage = async (tab, message, tags) => {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		buster.progressHint((step++) + 1 / rows.length, `Sending message to ${row[columnName]}`)
+		buster.progressHint((step++) / rows.length, `Sending message to ${row[columnName]}`)
 		utils.log(`Loading ${row[columnName]}...`, "loading")
 		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
 		try {
@@ -204,6 +213,9 @@ const sendMessage = async (tab, message, tags) => {
 			result.push(payload)
 		} catch (err) {
 			utils.log(`Can't load profile: ${url}`, "warning")
+			const errorDate = (new Date()).toISOString()
+			await tab.screenshot(`${errorDate} error.jpg`)
+			await buster.saveText(await tab.getContent(), `${errorDate} error.html`)
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
 		}
 	}

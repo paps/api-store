@@ -12,7 +12,7 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
-		"message": "Hey #firstName#,\n\nI added you thanks to an awesome Phantombuster script!\n\nNice to connect!\n\nBest regards"
+		"message": "Hey #firstName#,\n\nI sent you this message thanks to an awesome Phantombuster API: https://phantombuster.com/api-store/9227/linkedin-message-sender!\n\nCan't wait to know more about you!\n\nBest regards"
 	},
 	"argumentForm": {
 		"enabled": true,
