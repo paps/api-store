@@ -1,6 +1,5 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster flags: save-folder"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Messaging.js, lib-LinkedInScraper.js"
 
@@ -147,17 +146,18 @@ const sendMessage = async (tab, message, tags) => {
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 
 	const sendButtonSelector = `${SELECTORS.chatWidget} ${SELECTORS.sendButton}`
-	// if (await tab.isVisible(sendButtonSelector)) {
+	
+	if (!await tab.isVisible(sendButtonSelector)) { // if send button isn't visible, we use the ... button to make it appear
+		await tab.click(".msg-form__send-toggle")
+		await tab.waitUntilVisible(".msg-form__hovercard label:last-of-type")
+		await tab.click(".msg-form__hovercard label:last-of-type")
+	}
+
 	await tab.click(sendButtonSelector)
-	// }
-	// else {
-	// 	await tab.sendKey("")
-	// }
 
 	try {
 		await tab.evaluate(waitWhileButtonEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
 	} catch (err) {
-		await tab.screenshot(`send-error-${Date.now()}.jpg`)
 		payload.error = err.message || err
 		utils.log(`${payload.error}`, "error")
 	}
@@ -213,9 +213,6 @@ const sendMessage = async (tab, message, tags) => {
 			result.push(payload)
 		} catch (err) {
 			utils.log(`Can't load profile: ${url}`, "warning")
-			const errorDate = (new Date()).toISOString()
-			await tab.screenshot(`${errorDate} error.jpg`)
-			await buster.saveText(await tab.getContent(), `${errorDate} error.html`)
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
 		}
 	}
