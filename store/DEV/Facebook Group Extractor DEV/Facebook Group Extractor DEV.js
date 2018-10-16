@@ -191,7 +191,7 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		if (additionalData) { data.additionalData = additionalData }
 		data.groupUrl = groupUrl
 		data.groupName = groupName
-		data.timestamp = new Date().toISOString()
+		data.timestamp = (new Date()).toISOString()
 
 		result.push(data)
 	}
@@ -226,8 +226,7 @@ const forgeNewUrl = (cursorUrl, scrapeCount, membersToScrape) => {
 
 const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 	const urlObject = new URL(url)
-	// let numberToScrape = 500
-	let numberToScrape = 100
+	let numberToScrape = 500
 	if (scrapeCount + 500 > membersToScrape) { 
 		numberToScrape = membersToScrape - scrapeCount
 	}
@@ -237,7 +236,6 @@ const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 
 const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape, numberAlreadyScraped) => {
 	let jsonResponse
-	console.log("Ajax, ", ajaxUrl)
 	try {
 		jsonResponse = await getJsonResponse(tab, ajaxUrl)
 		await tab.inject("../injectables/jquery-3.0.0.min.js")
@@ -390,7 +388,6 @@ nick.newTab().then(async (tab) => {
 		// Link not from Facebook, trying to get CSV
 		try {
 			groupsUrl = await utils.getDataFromCsv(groupsUrl, columnName)
-			console.log("gr::", groupsUrl)
 			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
 			if (groupsUrl.length === 0) {
 				utils.log("Spreadsheet is empty!", "error")

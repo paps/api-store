@@ -35,25 +35,6 @@ const isUrl = url => {
 	}
 }
 
-// only keep the slug or id
-const cleanFacebookProfileUrl = url => {
-	try {
-		const urlObject = new URL(url)
-		if (urlObject) {
-			if (url.includes("profile.php?id=")) {
-				const id = urlObject.searchParams.get("id")
-				return "https://facebook.com/profile.php?id=" + id
-			} else {
-				let path = urlObject.pathname.slice(1)
-				if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
-				return "https://facebook.com/" + path
-			}
-		}
-	} catch (err) {
-		return null
-	}
-}
-
 // Checks if a url is a facebook group url
 const isFacebookProfileUrl = url => {
 	let urlObject = new URL(url.toLowerCase())
@@ -104,9 +85,9 @@ const clickAddFriend = (arg, cb) => {
 const openProfilePage = async (tab, profileUrl) => {
 	let aboutUrl
 	if (profileUrl.includes("profile.php?id=")) {
-		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "&sk=about"
+		aboutUrl = facebook.cleanProfileUrl(profileUrl) + "&sk=about"
 	} else {
-		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "/about"
+		aboutUrl = facebook.cleanProfileUrl(profileUrl) + "/about"
 	}
 	await tab.open(aboutUrl)
 	let selector

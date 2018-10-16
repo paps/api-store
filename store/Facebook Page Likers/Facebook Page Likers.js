@@ -168,12 +168,9 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 	responseResult.children().each((userIndex, divUser) =>{
 
-		let profileLink = chr("a[data-testid]", divUser)
+		let profileUrl = chr("div[data-testid=\"browse-result-content\"]", divUser).parent().parent().find("a").attr("href")
 
-		let profileUrl = profileLink.attr("href")
-
-		let name = profileLink.children("span").text()
-		//utils.log(`Exporting ${name}...`, "loading")
+        let name = chr("div[data-testid=\"browse-result-content\"]", divUser).find("div.clearfix > div:last-of-type a > span").html()
 
 		let imageUrl = chr("div > a > img", divUser).attr("src")
 		let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
@@ -194,7 +191,7 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 		if (extractedNames.lastName) {
 			userInfo.lastName = extractedNames.lastName
 		}
-		userInfo.profileUrl = profileUrl
+		userInfo.profileUrl = facebook.cleanProfileUrl(profileUrl)
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend
 		userInfo.highlight = userInfos[1]

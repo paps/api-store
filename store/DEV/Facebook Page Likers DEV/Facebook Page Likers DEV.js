@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -23,7 +23,7 @@ const URL = require("url").URL
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 
 // }
@@ -89,6 +89,7 @@ const scrapPageIdAndLikeNumbers = async (tab) => {
 			pageId = coverLink.substring(brandIndex + searchStart.length, idEndIndex)
 		}
 
+
 		await tab.waitUntilVisible("#pages_side_column", 10000)
 
 		let likeText = await tab.evaluate((arg, cb) => {
@@ -124,9 +125,9 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		await tab.scrollToBottom()
 
-		const initDate = new Date() 
+		const initDate = new Date()
 		while (!firstRequestUrl) {
-			await new Promise((resolve) => { 
+			await new Promise((resolve) => {
 				setTimeout(() => {
 					resolve()
 				}, 50)
@@ -167,12 +168,9 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 	responseResult.children().each((userIndex, divUser) =>{
 
-		let profileLink = chr("a[data-testid]", divUser)
+		let profileUrl = chr("div[data-testid=\"browse-result-content\"]", divUser).parent().parent().find("a").attr("href")
 
-		let profileUrl = profileLink.attr("href")
-
-		let name = profileLink.children("span").text()
-		//utils.log(`Exporting ${name}...`, "loading")
+		let name = chr("div[data-testid=\"browse-result-content\"]", divUser).find("div.clearfix > div:last-of-type a > span").html()
 
 		let imageUrl = chr("div > a > img", divUser).attr("src")
 		let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
@@ -193,7 +191,7 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 		if (extractedNames.lastName) {
 			userInfo.lastName = extractedNames.lastName
 		}
-		userInfo.profileUrl = profileUrl
+		userInfo.profileUrl = facebook.cleanProfileUrl(profileUrl)
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend
 		userInfo.highlight = userInfos[1]
@@ -233,7 +231,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 				// 
 			}
 		}
-				
+
 		for (let retryRateLimit = 3, error = true; (error) && (retryRateLimit > 0); --retryRateLimit) {
 			for (let retryNetwork = 5; (!responseContent) && (retryNetwork > 0); --retryNetwork) {
 				tab.driver.client.on("Network.responseReceived", onResponse)
@@ -440,7 +438,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		await buster.setAgentObject({})
 	}
 
-    nick.exit(0)
+	nick.exit(0)
 })()
 .catch(err => {
 	utils.log(err, "error")

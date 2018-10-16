@@ -191,7 +191,7 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		if (additionalData) { data.additionalData = additionalData }
 		data.groupUrl = groupUrl
 		data.groupName = groupName
-		data.timestamp = new Date().toISOString()
+		data.timestamp = (new Date()).toISOString()
 
 		result.push(data)
 	}

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js, lib-Messaging-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,12 +15,12 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
-const Messaging = require("./lib-Messaging-DEV")
+const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let blocked
 const { URL } = require("url")
@@ -31,25 +31,6 @@ const isUrl = url => {
 		return tmp !== null
 	} catch (err) {
 		return false
-	}
-}
-
-// only keep the slug or id
-const cleanFacebookProfileUrl = url => {
-	try {
-		const urlObject = new URL(url)
-		if (urlObject) {
-			if (url.includes("profile.php?id=")) {
-				const id = urlObject.searchParams.get("id")
-				return "https://facebook.com/profile.php?id=" + id
-			} else {
-				let path = urlObject.pathname.slice(1)
-				if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
-				return "https://facebook.com/" + path
-			}
-		}
-	} catch (err) {
-		return null
 	}
 }
 
@@ -103,9 +84,9 @@ const clickAddFriend = (arg, cb) => {
 const openProfilePage = async (tab, profileUrl) => {
 	let aboutUrl
 	if (profileUrl.includes("profile.php?id=")) {
-		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "&sk=about"
+		aboutUrl = facebook.cleanProfileUrl(profileUrl) + "&sk=about"
 	} else {
-		aboutUrl = cleanFacebookProfileUrl(profileUrl) + "/about"
+		aboutUrl = facebook.cleanProfileUrl(profileUrl) + "/about"
 	}
 	await tab.open(aboutUrl)
 	let selector

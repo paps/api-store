@@ -12,7 +12,7 @@
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie",
         "spreadsheetUrl": "facebook_profile_urls",
-        "message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/8852/facebook-message-sender\n\nNice to connect!\n\nBest regards",
+        "message": "Hey #fbFirstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/8852/facebook-message-sender\n\nNice to connect!\n\nBest regards",
         "csvName": "result"
     },
     "outputDescription": {
@@ -57,7 +57,7 @@
 						"label": "Message <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
 						"helpers": [
-							"Use #fbFirstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Many more tags are available.</a>",
+							"Use #fbFirstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Other tags are available.</a>",
 							"Leave empty to send invites without message"
 						]
                     },
