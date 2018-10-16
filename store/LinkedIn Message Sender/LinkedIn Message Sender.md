@@ -1,13 +1,12 @@
-# Automatically send personalized messages on LinkedIn and engage with your network at scale !
+# Automatically send personalized messages on LinkedIn and engage with your network at scale!
 
-Contacting a segment of your LinkedIn contacts through the LinkedIn chat is really tedious - especially when you have grown your network with Phantombuster:). 
+Contacting a segment of your LinkedIn contacts through the LinkedIn chat is really tedious - especially when you have grown your network with Phantombuster.
 
-Let’s automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they will take care of it for you. Each message will be personalized according to your needs, at the rythm that you choose. 
+Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they will take care of it for you. Each message will be personalized according to your needs, at the rythm that you choose.
 
-You’re now free to focus on what really matters : your contacts’ answers.
+You're now free to focus on what really matters : your contacts' answers.
 
-
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with the LinkedIn profile URLs you want to send messages to.
@@ -16,11 +15,9 @@ You’re now free to focus on what really matters : your contacts’ answers.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
-
 # What you need to do.
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
-
 
 ## 2. Use this API on your account.👌
 We cooked up in our lab a script with first-class attention.
@@ -28,19 +25,17 @@ Now that you're connected to Phantombuster, Click on the following button (it wi
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-
 ## 3. Click on Configure me!
 You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/Configure.JPG)</center>
 
-
 ## 4. Linkedin authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
-* Using Chrome, go to your LinkedIn homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your LinkedIn homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab
@@ -59,7 +54,6 @@ or
 
 _// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
-
 ## 5. Add a Google Spreadsheet 📑
 Below your session cookie you’ll find Spreadsheet URL.
 
@@ -73,7 +67,7 @@ You can also specify the name of the column that contains the profile links. Sim
 ## 6. Personalize your message 🆕 💬
 Below the column name you'll find the **message** configuration.
 
-⚠️ Your message has to be **less than 7000 characters**. 
+⚠️ Your message has to be **less than 7000 characters**.
 
 Make sure to taylor your message so it fits perfectly with its recipient. *And you will find a ton of ideas on that topic on our blog* 🤓
 
@@ -88,7 +82,6 @@ For instance:
 A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message
 
 Click on 💾 <span style="color:blue">Save</span>
-
 
 # Click on Launch & Enjoy!
 It’s done! Now click on "launch" to try your script!
@@ -115,7 +108,6 @@ Now that this is set, click 💾 <span style="color:blue">Save</span> at the bot
 
 <center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/welcome+nerd+zone.gif)</center>
 
-
 There you go, you only have to wait for connections to be made for you!
 
 # Email discovery (optional) { email_discovery }
@@ -131,8 +123,6 @@ Paste your API key in the "Hunter.io API key" field in your API configuration. I
 Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
 
 **Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your visits to **40 profiles per day**.
-
-
 
 # Limits
 
