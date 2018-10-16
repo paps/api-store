@@ -111,6 +111,9 @@ const craftCsvObject = data => {
 	if (data.quotes) {
 		csvResult.quotes = data.quotes
 	}
+	if (data.gender) {
+		csvResult.gender = data.gender
+	}
 	return csvResult
 }
 

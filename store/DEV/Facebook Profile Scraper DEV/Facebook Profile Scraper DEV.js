@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,7 +18,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 const { URL } = require("url")
@@ -110,6 +110,12 @@ const craftCsvObject = data => {
 	}
 	if (data.quotes) {
 		csvResult.quotes = data.quotes
+	}
+	if (data.birthday) {
+		csvResult.birthday = data.birthday
+	}
+	if (data.gender) {
+		csvResult.gender = data.gender
 	}
 	return csvResult
 }
@@ -361,6 +367,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 			}
 		}
 	}
+	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 	return result
 }
 
