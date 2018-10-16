@@ -34,9 +34,70 @@ const SELECTORS = {
 	messages: "ul.msg-s-message-list",
 	spinners: "li-icon > .artdeco-spinner",
 	messageEditor: "div.msg-form__contenteditable",
-	sendButton: "button.msg-form__send-button[type=submit]"
+	sendButton: "button.msg-form__send-button[type=submit]",
+	messageSendError: "p.msg-s-event-listitem__error-message"
 }
 // }
+
+/**
+ * @description Browser context function used to scrape the firstname of the current LinkedIn profile
+ * @param {Object} arg - No argument required
+ * @param {Callback} callback - Switch back to script context
+ */
+const getFirstName = (arg, callback) => {
+	let name = ""
+	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+	} else if (document.querySelector("div.presence-entity__image")) {
+		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+	}
+	if (!name.length) {
+		callback(null, "")
+	} else {
+		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
+		let i = true
+		while (i) {
+			if (name.length > 0) {
+				name = name.split(" ")
+				name.pop()
+				name = name.join(" ")
+				if (hasAccount.indexOf(name) >= 0) {
+					i = false
+				}
+			} else {
+				i = false
+			}
+		}
+		if (name.length > 0) {
+			callback(null, name)
+		} else {
+			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
+		}
+	}
+}
+
+/**
+ * @description Browser context function used to wait until the send button message is disabled
+ * disabled DOM preoperty means that there is no text to send on the chat widget
+ * @param {{ sel: String }} arg - Chat widget "send button" CSS selector
+ * @param {Callback} cb - Switch back to script context
+ * @throws if the button isn't present / isn't disabled after 30 seconds
+ */
+const waitWhileButtonEnable = (arg, cb) => {
+	const startTime = Date.now()
+	const idle = () => {
+		const selector = document.querySelector(arg.sel)
+		if ((!selector) || (selector.disabled === false)) {
+			if ((Date.now() - startTime) >= 30000) {
+				cb("Message wasn't send after 30s")
+			}
+			setTimeout(idle, 200)
+		} else {
+			cb(null)
+		}
+	}
+	idle()
+}
 
 /**
  * @param {String} url
@@ -65,24 +126,42 @@ const loadChat = async tab => {
 
 /**
  * @async
+ * @description This function is used to inflate the message with all tags passed and send the message in the LinkedIn chat
  * @param {Object} tab - NickJs Tab with the chat widget opened
- * @param {String} message - Inflated message to send
+ * @param {String} message - Message to send
+ * @param {Object} tags - all tags to apply to the message
+ * @return { profileUrl: String,  timestamp: String }
  * @throws on CSS selectors failure
  * @return {Promise<{ profileUrl: String, timestamp: String }>} returns the when the message was send and the profile URL
  */
-const sendMessage = async (tab, message) => {
+const sendMessage = async (tab, message, tags) => {
 	utils.log("Writting message...", "loading")
+	const payload = { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
+	const firstname = await tab.evaluate(getFirstName)
+	tags = Object.assign({}, { firstName: firstname }, tags) // Custom tags are mandatory
+	message = inflater.forgeMessage(message, tags)
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
+	try {
+		await tab.evaluate(waitWhileButtonEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
+	} catch (err) {
+		await tab.screenshot(`send-error-${Date.now()}.jpg`)
+		payload.error = err.message || err
+		utils.log(`${payload.error}`, "error")
+	}
+	if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageSendError}`)) {
+		payload.error = `LinkedIn internal error while sending message on: ${payload.profileUrl}`
+		utils.log(payload.error, "warning")
+	}
+	utils.log(`Message successfully send on: ${payload.profileUrl}`, "done")
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
-	utils.log("Message send", "done")
-	return { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
+	return payload
 }
 
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, message } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, noDatabase } = utils.validateArguments()
 	const tab = await nick.newTab()
-	const db = await utils.getDb(DB_NAME)
+	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
 	let rows = await utils.getRawCsv(spreadsheetUrl)
 	let csvHeader = rows[0].filter(cell => !isUrl(cell))
 	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
@@ -99,6 +178,9 @@ const sendMessage = async (tab, message) => {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
 	}
+	if (typeof profilesPerLaunch === "number") {
+		rows = rows.slice(0, profilesPerLaunch)
+	}
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
 	for (const row of rows) {
@@ -108,10 +190,12 @@ const sendMessage = async (tab, message) => {
 			break
 		}
 		buster.progressHint((step++) + 1 / rows.length, `Sending message to ${row[columnName]}`)
+		utils.log(`Loading ${row[columnName]}...`, "loading")
 		await linkedInScraper.visitProfile(tab, row[columnName])
+		utils.log(`${row[columnName]} loaded`, "done")
 		utils.log(`Sending message to: ${row[columnName]}`, "info")
 		await loadChat(tab)
-		const payload = await sendMessage(tab, inflater.forgeMessage(message, row))
+		const payload = await sendMessage(tab, message, row)
 		result.push(payload)
 	}
 	db.push(...result)
