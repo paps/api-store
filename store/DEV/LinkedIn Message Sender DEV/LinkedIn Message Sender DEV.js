@@ -191,12 +191,18 @@ const sendMessage = async (tab, message, tags) => {
 		}
 		buster.progressHint((step++) + 1 / rows.length, `Sending message to ${row[columnName]}`)
 		utils.log(`Loading ${row[columnName]}...`, "loading")
-		await linkedInScraper.visitProfile(tab, row[columnName])
-		utils.log(`${row[columnName]} loaded`, "done")
-		utils.log(`Sending message to: ${row[columnName]}`, "info")
-		await loadChat(tab)
-		const payload = await sendMessage(tab, message, row)
-		result.push(payload)
+		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+		try {
+			await linkedInScraper.visitProfile(tab, url)
+			utils.log(`${row[columnName]} loaded`, "done")
+			utils.log(`Sending message to: ${row[columnName]}`, "info")
+			await loadChat(tab)
+			const payload = await sendMessage(tab, message, row)
+			result.push(payload)
+		} catch (err) {
+			utils.log(`Can't load profile: ${url}`, "warning")
+			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
+		}
 	}
 	db.push(...result)
 	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
