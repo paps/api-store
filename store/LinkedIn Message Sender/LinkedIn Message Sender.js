@@ -171,9 +171,12 @@ const sendMessage = async (tab, message, tags) => {
 }
 
 ; (async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message } = utils.validateArguments()
+	if (!message || !message.trim()) {
+		throw "No message found!"
+	}
 	const tab = await nick.newTab()
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	const db = await utils.getDb(DB_NAME)
 	let rows = await utils.getRawCsv(spreadsheetUrl)
 	let csvHeader = rows[0].filter(cell => !isUrl(cell))
 	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
@@ -185,7 +188,7 @@ const sendMessage = async (tab, message, tags) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl && !line.error) < 0)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
