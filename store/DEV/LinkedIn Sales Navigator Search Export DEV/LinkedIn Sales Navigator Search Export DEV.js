@@ -313,11 +313,15 @@ const isLinkedInSearchURL = (url) => {
 				utils.log(`${search} doesn't constitute a LinkedIn Sales Navigator search URL or a LinkedIn search keyword... skipping entry`, "warning")
 				continue
 			}
-			let tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
-			if (extractDefaultUrl) {
-				tempResult = await extractDefaultUrls(tempResult)
+			try {
+				let tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
+				if (extractDefaultUrl) {
+					tempResult = await extractDefaultUrls(tempResult)
+				}
+				result = result.concat(tempResult)
+			} catch (err) {
+				utils.log(`Error : ${err}`, "error")
 			}
-			result = result.concat(tempResult)
 		} else {
 			utils.log("Empty line... skipping entry", "warning")
 		}

@@ -397,7 +397,11 @@ const isLinkedInSearchURL = (targetUrl) => {
 			searchUrl = search
 		}
 		const query = queryColumn ? search : false
-		result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query, isSearchURL, category))
+		try {
+			result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query, isSearchURL, category))
+		} catch (err) {
+			utils.log(`Error : ${err}`, "error")
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
