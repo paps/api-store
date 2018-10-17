@@ -80,14 +80,10 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 		utils.log("About Page still not visible", "error")
 		return null
 	}
-	await tab.screenshot(`${Date.now()}sU.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
-	const gender = await facebook.guessGender(tab)
-	if (gender) {
-		console.log("Gender: ", gender)
-	} else {
-		console.log("Not sure of gender")
-	}
+	await tab.screenshot(`${Date.now()}sU1.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
+	const fbData = await facebook.scrapeAboutPage(tab, { profileUrl })
+	return fbData
 }
 
 const getResultCount = (arg, cb) => {
@@ -125,6 +121,8 @@ const searchProfile = async (tab, profile) => {
 		const selector = await tab.waitUntilVisible(["#BrowseResultsContainer", "#empty_result_error"], "or", 15000)
 		console.log("selector", selector)
 		if (selector === "#BrowseResultsContainer") {
+			await tab.screenshot(`${Date.now()}getResultCount.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}getResultCount.html`)
 			resultCount = await tab.evaluate(getResultCount)
 			allResultsFound = await tab.isPresent("#browse_end_of_results_footer")
 			utils.log(`Getting ${!allResultsFound ? "at least" : "exactly"} ${resultCount} result${resultCount > 1 ? "s" : ""}.`, "done")
@@ -136,7 +134,13 @@ const searchProfile = async (tab, profile) => {
 		utils.log(`Facebook Profile found: ${facebookProfileUrl}`, "done")
 		profile.facebookUrl = facebookProfileUrl
 	}
-	await loadFacebookProfile(tab, facebookProfileUrl)
+	const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
+	if (fbData.gender) {
+		profile.gender = fbData.gender
+	}
+	if (fbData.age) {
+		profile.age = fbData.age
+	}
 	return profile
 }
 
@@ -153,29 +157,30 @@ const extractData = (json, profileUrl) => {
 ;(async () => {
 	let {sessionCookieliAt, sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberOfLinesPerLaunch} = utils.validateArguments()
 	let profileUrls
+	let results = await utils.getDb("result.csv")
+	console.log(`results: ${JSON.stringify(results, null, 4)}`)
+
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} catch (err) {
 		profileUrls = [spreadsheetUrl]
 	}
-	profileUrls = profileUrls.slice(0, numberOfLinesPerLaunch)
-
 	if (!numberOfLinesPerLaunch) {
 		numberOfLinesPerLaunch = profileUrls.length
-	} else if (numberOfLinesPerLaunch > profileUrls.length) {
-		numberOfLinesPerLaunch = profileUrls.length
 	}
+	profileUrls = profileUrls.filter(str => utils.checkDb(str, results, "linkedinUrl"))
+							 .slice(0, numberOfLinesPerLaunch)
+
+
 
 	// const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
 	// urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfLinesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(profileUrls, null, 4)}`)
-
 	const tabLk = await nick.newTab()
 	await linkedIn.login(tabLk, sessionCookieliAt)
 	const tabFb = await nick.newTab()
 	await facebook.login(tabFb, sessionCookieCUser, sessionCookieXs)
 
-	const results = []
 	for (const profileUrl of profileUrls) {
 		utils.log(`Processing ${profileUrl}`, "loading")
 		const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
@@ -183,7 +188,13 @@ const extractData = (json, profileUrl) => {
 		let scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
 		scrapedData = extractData(scrapedData.json, scrapingUrl)
 		console.log("scrapedData", scrapedData)
-		scrapedData = await searchProfile(tabFb, scrapedData)
+		try {
+			scrapedData = await searchProfile(tabFb, scrapedData)
+		} catch (err) {
+			console.log("err: ", err)
+			await tabFb.screenshot(`${Date.now()}sU.png`)
+			await buster.saveText(await tabFb.getContent(), `${Date.now()}sU.html`)
+		}
 		results.push(scrapedData)
 	}
 	// const results = [{ 
