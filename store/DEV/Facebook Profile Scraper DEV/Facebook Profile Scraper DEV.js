@@ -117,6 +117,9 @@ const craftCsvObject = data => {
 	if (data.gender) {
 		csvResult.gender = data.gender
 	}
+	if (data.age) {
+		csvResult.age = data.age
+	}
 	return csvResult
 }
 

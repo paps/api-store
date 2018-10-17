@@ -148,16 +148,66 @@ class Facebook {
 					scrapedData.relationship = relationship
 				}
 			}
-		
+			try {
+				let birthday = Array.from(Array.from(document.querySelectorAll("ul.uiList")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0].querySelectorAll("li")).filter(el => !el.querySelector("a"))[0].textContent
+				let language
+				const birthdayIntro = birthday.slice(0,5)
+				switch (birthdayIntro) {
+					case "Birth":
+						birthday = birthday.slice(8)
+						language = "en"
+						break
+					case "Date ":
+						birthday = birthday.slice(17)
+						language = "fr"
+						break
+					case "תאריך":
+						birthday = birthday.slice(10)
+						language = "he"
+						break
+					case "تاريخ":
+						birthday = birthday.slice(13)
+						language = "ar"
+						break
+					case "Fecha":
+						birthday = birthday.slice(19)
+						language = "es"
+						break
+					case "Gebur":
+						birthday = birthday.slice(10)
+						language = "de"
+						break
+					default:
+						birthday = null
+				}
+				if (birthday) {
+					scrapedData.birthday = birthday
+					scrapedData.language = language
+				}
+			} catch (err) {
+				//
+			}
 			scrapedData.timestamp = (new Date()).toISOString()
 			cb(null, scrapedData)
 		}
 
 		const scrapedData = await tab.evaluate(scrapePage, arg)
+		
+		if (scrapedData.birthday) {
+			const moment = require("moment")
+			moment.locale(scrapedData.language)
+			const age = moment().diff(moment(scrapedData.birthday, "LL"), "years")
+			 if (age) { // if year isn't displayed, age = 0 
+				 scrapedData.age = age
+			}
+			delete scrapedData.language
+		}
+
 		const gender = await this.guessGender(tab)
 		if (gender) {
 			scrapedData.gender = gender
 		}
+
 		return scrapedData
 	}
 	
