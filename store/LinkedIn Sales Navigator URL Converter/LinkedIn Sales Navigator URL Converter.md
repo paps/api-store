@@ -1,23 +1,14 @@
-# Launch a LinkedIn search from your Sales Navigator Account
+# Convert your Sales Navigator URLs to default LinkedIn profile URLs
 
-You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results...? 
-
-Now you can use this API with your Sales Navigator account to retrieve highly relevant search results automatically with little effort.
-
-This API can easily be combined with our other LinkedIn APIs, most notably <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a>.
-
-Of course, it only works if you have an active Sales Navigator account.
-
-# Our Solution
-
-Launch **LinkedIn Sales Navigator Search Export** that will export in CSV the _URL profile link_ of every person appearing in the search results.
-You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch the search.
+Got a list of Sales Navigator profile URLs and want to their regular profile URLs? 
+Well that's all that API does :) And you don't even need a Sales Navigator account for it to work!
 
 # What will you need? ⚙️ 
 
 - **Session cookie**: Your session Cookie from LinkedIn
-- **Search**: What terms to search on the LinkedIn search engine
-- **Number of profiles**: How many profiles should the bot try to scrape?
+- **Spreadsheet URL**: Your spreadsheet URL as input
+- **Number of lines to process per launch**: How many URLs to convert from your spreadsheet (all of them if empty)
+
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
@@ -62,19 +53,16 @@ or
 
 _// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
-## 5. Decide which search you want to launch
 
-In the _search_ text field, simply enter the terms you want to search on the LinkedIn Sales Navigator search engine. For example _SpaceX engineer_ or _iOS developer_ or even _CEO_!
+## 5. Add a Google Spreadsheet 📑
+Below your session cookies you’ll find Spreadsheet URL.
 
-You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) containing a list of searches to run. It's that easy! (make sure your file is publicly accessible)
+Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**.
 
-**More advanced search queries are also possible** using keywords allowed by LinkedIn: `OR` & `AND` (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even `school:`, `company:`... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>).
+Your spreadsheet should contain a list of LinkedIn Sales Navigator Profile URLs (**one link per row**).
 
-**Even more advanced:** You can also paste into the _search_ field a LinkedIn Sales Navigator search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field. Be careful not to use a regular LinkedIn search though.
-
-## 6. How many profiles?
-
-Define here the number of profiles you want the bot to scrape.
+You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
+You can also enter a single SN Profile URL directly in the field.
 
 
 # Click on Launch & Enjoy!

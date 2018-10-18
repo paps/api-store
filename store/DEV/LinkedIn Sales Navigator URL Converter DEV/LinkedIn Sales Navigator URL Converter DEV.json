@@ -2,7 +2,7 @@
 	"slug": "linkedin-sales-navigator-url-converter",
 	"description": "Convert Sales Navigator URLs to LinkedIn profile URLs",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"gradientBegin": "#42327f",
 	"gradientEnd": "#7C5BBB",

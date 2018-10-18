@@ -76,28 +76,28 @@ const craftObjectFromCsv = (csv, header = true) => {
 	}
 	await linkedIn.login(tab, sessionCookie)
 	csvObject = filterCsvObject(csvObject, result, columnName).slice(0, numberOfLinesPerLaunch)
-	console.log("csvO", csvObject)
-	for (let i = 0; i < csvObject.length; i++) {
+	let i
+	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
 			const convertedObject = csvObject[i]
 
 			try {
 				convertedObject.defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
 			} catch (err) {
-				utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
+				utils.log(`Error converting Sales Navigator URL... ${err}`, "warning")
 				convertedObject.error = "Error converting URL"
 			}
 			convertedObject.timestamp = (new Date()).toISOString()
 			result.push(convertedObject)
-
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
 		}
 		buster.progressHint(i / csvObject.length, `${i} URL converted`)
 	}
+	utils.log(`${i + 1} URLs converted.`, "done")
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
