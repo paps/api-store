@@ -35,7 +35,8 @@ const SELECTORS = {
 	spinners: "li-icon > .artdeco-spinner",
 	messageEditor: "div.msg-form__contenteditable",
 	sendButton: "button.msg-form__send-button[type=submit]",
-	messageSendError: "p.msg-s-event-listitem__error-message"
+	messageSendError: "p.msg-s-event-listitem__error-message",
+	editProfile: ".pv-dashboard-section"
 }
 // }
 
@@ -111,6 +112,15 @@ const isUrl = url => {
 	}
 }
 
+const isLinkedInProfile = url => {
+	try {
+		let urlRep = new URL(url)
+		return ((urlRep.hostname.indexOf("linkedin.com") > -1) && urlRep.pathname.startsWith("/in/"))
+	} catch (err) {
+		return false
+	}
+}
+
 /**
  * @async
  * @description Function used to open the chat widget
@@ -177,10 +187,17 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	const tab = await nick.newTab()
 	const db = await utils.getDb(DB_NAME)
-	let rows = await utils.getRawCsv(spreadsheetUrl)
-	let csvHeader = rows[0].filter(cell => !isUrl(cell))
-	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-	let columns = [columnName, ...msgTags]
+	let rows = []
+	let columns = []
+	if (isLinkedInProfile(spreadsheetUrl)) {
+		rows = [{ "0": spreadsheetUrl }]
+	} else {
+		rows = await utils.getRawCsv(spreadsheetUrl)
+		let csvHeader = rows[0].filter(cell => !isUrl(cell))
+		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+		columns = [columnName, ...msgTags]
+	}
+
 	let step = 0
 	const result = []
 	rows = utils.extractCsvRows(rows, columns)
@@ -209,6 +226,12 @@ const sendMessage = async (tab, message, tags) => {
 		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
 		try {
 			await linkedInScraper.visitProfile(tab, url)
+			// Can't send a message to yourself ...
+			if (await tab.isVisible(SELECTORS.editProfile)) {
+				utils.log("Trying to send a message to yourself ...", "warning")
+				result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
+				continue
+			}
 			utils.log(`${row[columnName]} loaded`, "done")
 			utils.log(`Sending message to: ${row[columnName]}`, "info")
 			await loadChat(tab)
