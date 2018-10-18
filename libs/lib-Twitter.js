@@ -48,11 +48,61 @@ const waitWhileHttpErrors = async (utils, tab) => {
 	utils.log(`Resuming the API scraping process (Rate limit duration ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
 
+const _scrapeProfile = (arg, cb) => {
+	const res = { name: null, twitterProfile: null, handle: null, bio: null, location: null, website: null, joinDate: null }
+	const descriptionSelector = document.querySelector("div.ProfileSidebar")
+	const avatarSelector = document.querySelector("img.ProfileAvatar-image")
+	res.profilePicture = avatarSelector ? avatarSelector.src : null
+	if (descriptionSelector) {
+		const screenNameSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-nameLink")
+		const handleSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-screennameLink")
+		const bioSelector = descriptionSelector.querySelector("p.ProfileHeaderCard-bio")
+		const locationSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-location span.ProfileHeaderCard-locationText a[data-place-id]")
+		const websiteSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-url span.ProfileHeaderCard-urlText a:first-of-type")
+		const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
+		const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")
+		res.name = screenNameSelector ? screenNameSelector.textContent.trim() : null
+		res.twitterProfile = screenNameSelector ? screenNameSelector.href : null
+		res.handle = handleSelector ? handleSelector.textContent.trim() : null
+		res.bio = bioSelector ? bioSelector.textContent.trim() : null
+		res.location = locationSelector ? locationSelector.textContent.trim() : null
+		res.website = websiteSelector ? websiteSelector.title : null
+		res.joinDate = null
+		if (joinDateSelector) {
+			if (joinDateSelector.title) {
+				res.joinDate = joinDateSelector.title
+			}
+			if (joinDateSelector.dataset.originalTitle) {
+				res.joinDate = joinDateSelector.dataset.originalTitle
+			}
+		}
+		res.birthday = birthdaySelector ? birthdaySelector.textContent.trim() : null
+	}
+	cb(null, res)
+}
+
 class Twitter {
 	constructor(nick, buster, utils) {
 		this.nick = nick
 		this.buster = buster
 		this.utils = utils
+	}
+
+	/**
+	 * @async
+	 * @description
+	 * @param {Object} tab - Nickjs Tab instance (with a twitter page opened)
+	 * @return {Promise<Boolean>} true if logged otherwise false
+	 */
+	async isLogged(tab, printErrors = false) {
+		try {
+			// The selector represents the top right dropdown button used, it has a with an href /settings which require to logged on
+			await tab.waitUntilVisible("ul > li.me.dropdown.session.js-session > a.settings", 15000)
+			return true
+		} catch (err) {
+			printErrors && this.utils.log(err.message || err, "warning")
+			return false
+		}
 	}
 
 	/**
@@ -82,10 +132,39 @@ class Twitter {
 			await tab.waitUntilVisible(".DashboardProfileCard")
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
 		} catch (error) {
+			await tab.screenshot(`Tok${Date.now()}.png`)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
 			this.nick.exit(1)
 		}
 	}
+
+	/**
+	 * @async
+	 * @description Scrape a given Twitter profile
+	 * @param {Object} tab - NickJS tab
+	 * @param {String} url - Twitter profile URL to open
+	 * @param {Boolean} [verbose] - show/hide logs (default: hide)
+	 * @throws if url can't be opened, scraping failures
+	 * @return {Promise<Object>}
+	 */
+	async scrapeProfile(tab, url, verbose = false) {
+		const [httpCode] = await tab.open(url)
+		if (httpCode === 404) {
+			throw `Can't open URL: ${url}`
+		}
+
+		verbose && this.utils.log(`Loading profile: ${url}...`, "loading")
+		try {
+			await tab.waitUntilVisible(".ProfileHeading", 10000)
+		} catch (err) {
+			const loadingErr = `Error while loading ${url}: ${err.message || err}`
+			this.utils.log(loadingErr, "warning")
+			throw loadingErr
+		}
+		verbose && this.utils.log(`${url} loaded`, "done")
+		return tab.evaluate(_scrapeProfile)
+	}
+
 	/**
 	 * @async
 	 * @description Method used to collects followers from a given page: allowed pages: /followers /following
@@ -121,7 +200,7 @@ class Twitter {
 			} catch (error) {
 				if (RATE_LIMIT_REACHED) {
 					if (!isNetworkCleaner) {
-						await waitWhileHttpErrors(this.utils, tab)						
+						await waitWhileHttpErrors(this.utils, tab)
 					} else {
 					this.utils.log("Twitter rate limit reached, you should try again later.", "warning")
 					this.nick.exit(1)
