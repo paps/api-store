@@ -146,7 +146,7 @@ const sendMessage = async (tab, message, tags) => {
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
 
 	const sendButtonSelector = `${SELECTORS.chatWidget} ${SELECTORS.sendButton}`
-	
+
 	if (!await tab.isVisible(sendButtonSelector)) { // if send button isn't visible, we use the ... button to make it appear
 		await tab.click(".msg-form__send-toggle")
 		await tab.waitUntilVisible(".msg-form__hovercard label:last-of-type")
@@ -170,7 +170,7 @@ const sendMessage = async (tab, message, tags) => {
 	return payload
 }
 
-; (async () => {
+;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message } = utils.validateArguments()
 	if (!message || !message.trim()) {
 		throw "No message found!"
