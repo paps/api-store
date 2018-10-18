@@ -52,6 +52,13 @@
 							"Use #firstName# to insert the firstname of the person in your message",
 							"You can use custom tags in this API"
 						]
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
+					},
+					"disableScraping": {
+						"rightLabel": "<b>Disable profile scraping</b> (not recommended — speeds up the API but prevents email discovery and tags other than #firstName#)"
 					}
 				}
 			}
@@ -80,6 +87,13 @@
 				"type": "string",
 				"minLength": 2,
 				"maxLength": 7000
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"disableScraping": {
+				"type": "boolean"
 			}
 		}
 	}

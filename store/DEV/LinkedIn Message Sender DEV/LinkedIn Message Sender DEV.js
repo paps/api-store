@@ -20,7 +20,7 @@ const utils = new StoreUtilites(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedin = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
-const linkedInScraper = new LinkedInScraper(utils, null, nick)
+let linkedInScraper
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 const { URL } = require("url")
@@ -181,10 +181,11 @@ const sendMessage = async (tab, message, tags) => {
 }
 
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping } = utils.validateArguments()
 	if (!message || !message.trim()) {
 		throw "No message found!"
 	}
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()
 	const db = await utils.getDb(DB_NAME)
 	let rows = []
@@ -215,7 +216,7 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
-	for (const row of rows) {
+	for (let row of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -225,7 +226,12 @@ const sendMessage = async (tab, message, tags) => {
 		utils.log(`Loading ${row[columnName]}...`, "loading")
 		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
 		try {
-			await linkedInScraper.visitProfile(tab, url)
+			if (disableScraping) {
+				await linkedInScraper.visitProfile(tab, url)
+			} else {
+				const profile = await linkedInScraper.scrapeProfile(tab, url)
+				row = Object.assign({}, profile.csv, row)
+			}
 			// Can't send a message to yourself ...
 			if (await tab.isVisible(SELECTORS.editProfile)) {
 				utils.log("Trying to send a message to yourself ...", "warning")
