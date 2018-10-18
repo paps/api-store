@@ -1,0 +1,103 @@
+{
+	"slug": "twitter-profile-scraper",
+	"description": "Collect valuable information you need from Twitter profiles",
+	"image": "",
+	"hidden": true,
+	"updated": true,
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35CBDF",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter auth_token session cookie</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+							"<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
+						],
+						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/3112/linkedin-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberProfilesPerLaunch": {
+						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberProfilesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 25
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
