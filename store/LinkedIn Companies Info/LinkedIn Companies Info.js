@@ -174,7 +174,7 @@ const isLinkedUrl = target => {
 				utils.log(`Getting data for ${company}`, "loading")
 				if (!fullUrl) {
 					/**
-					 * HACK: If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
+					 * If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
 					 * the script will sraightforwardly forge an URL with the given ID
 					 * It coulds fail if the input is an number but doesn't represents an ID
 					 */
@@ -188,6 +188,7 @@ const isLinkedUrl = target => {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."
 						}
+						await tab.close()
 					}
 				} else {
 					link = company
