@@ -188,7 +188,6 @@ const isLinkedUrl = target => {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."
 						}
-						await tab.close()
 					}
 				} else {
 					link = company
