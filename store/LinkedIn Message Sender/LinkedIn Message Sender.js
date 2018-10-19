@@ -192,20 +192,21 @@ const sendMessage = async (tab, message, tags) => {
 	let columns = []
 	if (isLinkedInProfile(spreadsheetUrl)) {
 		rows = [{ "0": spreadsheetUrl }]
+		columnName = "0"
 	} else {
 		rows = await utils.getRawCsv(spreadsheetUrl)
 		let csvHeader = rows[0].filter(cell => !isUrl(cell))
 		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
 		columns = [columnName, ...msgTags]
+		rows = utils.extractCsvRows(rows, columns)
+		if (!columnName) {
+			columnName = "0"
+		}
 	}
 
 	let step = 0
 	const result = []
-	rows = utils.extractCsvRows(rows, columns)
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
-	if (!columnName) {
-		columnName = "0"
-	}
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl && !line.error) < 0)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
