@@ -51,8 +51,22 @@ const waitWhileHttpErrors = async (utils, tab) => {
 const _scrapeProfile = (arg, cb) => {
 	const res = { name: null, twitterProfile: null, handle: null, bio: null, location: null, website: null, joinDate: null }
 	const descriptionSelector = document.querySelector("div.ProfileSidebar")
+	const activitySelector = document.querySelector("div.ProfileNav")
 	const avatarSelector = document.querySelector("img.ProfileAvatar-image")
 	res.profilePicture = avatarSelector ? avatarSelector.src : null
+	if (activitySelector) {
+		const tweetCountSelector = activitySelector.querySelector("li.ProfileNav-item--tweets span.ProfileNav-value")
+		const followersSelector = activitySelector.querySelector("li.ProfileNav-item--followers span.ProfileNav-value")
+		const followingSelector = activitySelector.querySelector("li.ProfileNav-item--following span.ProfileNav-value")
+		const likesSelector = activitySelector.querySelector("li.ProfileNav-item--favorites span.ProfileNav-value")
+		const listsSelector = activitySelector.querySelector("li.ProfileNav-item--lists span.ProfileNav-value")
+		res.twitterId = activitySelector.dataset.userId
+		res.tweetsCount = tweetCountSelector ? tweetCountSelector.dataset.count : null
+		res.followers = followersSelector ? followersSelector.dataset.count : null
+		res.following = followingSelector ? followingSelector.dataset.count : null
+		res.likes = likesSelector ? likesSelector.dataset.count : null
+		res.lists = listsSelector ? listsSelector.dataset.count : null
+	}
 	if (descriptionSelector) {
 		const screenNameSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-nameLink")
 		const handleSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-screennameLink")
