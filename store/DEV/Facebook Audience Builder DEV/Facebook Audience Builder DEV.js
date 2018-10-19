@@ -52,7 +52,7 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 }
 
 const loadFacebookProfile = async (tab, profileUrl) => {
-	let blocked
+	// let blocked
 	await tab.open(forgeUrl(profileUrl))
 	let selector
 	try {
@@ -66,7 +66,7 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 	if (selector === "#content > div.uiBoxWhite") {
 		const isBlocked = await tab.evaluate(checkIfBlockedOrSoloBlocked)
 		if (isBlocked) { // temporarily blocked by facebook
-			blocked = true
+			// blocked = true
 			return null
 		} else { // profile has blocked us
 			utils.log("Profile page isn't visible!", "warning")
