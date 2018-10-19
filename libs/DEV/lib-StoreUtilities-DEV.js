@@ -377,7 +377,7 @@ class StoreUtilities {
 			let column = 0
 			if (columnName) {
 				column = data[0].findIndex(el => el === columnName)
-				if (columnName < 0) {
+				if (column < 0) {
 					throw `No title ${columnName} in csv file.`
 				}
 				data.shift()
