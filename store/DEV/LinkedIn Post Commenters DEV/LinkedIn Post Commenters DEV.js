@@ -41,6 +41,11 @@ const callComments = (arg, callback) => {
 	})
 }
 
+/**
+ * @description Function used to format voyager API content to "human redeable"
+ * @param {Object} element - Voyager API raw element
+ * @return {Object} formatted element
+ */
 const commentToCsv = element => {
 	const newComment = {}
 	if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
@@ -56,6 +61,10 @@ const commentToCsv = element => {
 	return newComment
 }
 
+/**
+ * @param {Object} response - Raw Voyagager API result
+ * @return {Array<Object>} Formatted API content
+ */
 const linkedinObjectToResult = response => {
 	const res = []
 	if (response.elements) {
@@ -72,6 +81,15 @@ const linkedinObjectToResult = response => {
 	return res
 }
 
+/**
+ * @async
+ * @description
+ * @param {Object} tab - Nickjs tab
+ * @param {Object} headers - LinkedIn HTTP headers used to call Voyager endpoint
+ * @param {Object} search
+ * @param {Number} max
+ * @return {Promise<Array<Object>>}
+ */
 const getAllComments = async (tab, headers, search, max) => {
 	let fail = 0
 	let result = []
@@ -95,7 +113,7 @@ const getAllComments = async (tab, headers, search, max) => {
 			const response = await tab.evaluate(callComments, {url: "https://www.linkedin.com/voyager/api/feed/comments", headers, search})
 			result = result.concat(linkedinObjectToResult(response))
 			utils.log(`Got ${result.length} comments.`, "info")
-			buster.progressHint((result.length/max), "Getting comments...")
+			buster.progressHint((result.length / max), "Getting comments...")
 			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
@@ -166,6 +184,11 @@ const searchUrnArticle = (arg, cb) => {
 	cb(null, null)
 }
 
+/**
+ * Handled articles:
+ * https://www.linkedin.com/feed/update/urn:li:activity:xxxx/
+ * https://www.linkedin.com/pulse/xxx-xxx-xxx/
+ */
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
