@@ -61,6 +61,7 @@ const _scrapeProfile = (arg, cb) => {
 		const likesSelector = activitySelector.querySelector("li.ProfileNav-item--favorites span.ProfileNav-value")
 		const listsSelector = activitySelector.querySelector("li.ProfileNav-item--lists span.ProfileNav-value")
 		res.twitterId = activitySelector.dataset.userId
+		res.alternativeProfileUrl = `https://www.twitter.com/intent/user?user_id=${res.twitterId}`
 		res.tweetsCount = tweetCountSelector ? tweetCountSelector.dataset.count : null
 		res.followers = followersSelector ? followersSelector.dataset.count : null
 		res.following = followingSelector ? followingSelector.dataset.count : null
@@ -111,7 +112,7 @@ class Twitter {
 	async isLogged(tab, printErrors = false) {
 		try {
 			// The selector represents the top right dropdown button used, it has a with an href /settings which require to logged on
-			await tab.waitUntilVisible("ul > li.me.dropdown.session.js-session > a.settings", 15000)
+			await tab.waitUntilVisible(["ul > li.me.dropdown.session.js-session > a.settings", "div#session h2.current-user"], "or", 15000)
 			return true
 		} catch (err) {
 			printErrors && this.utils.log(err.message || err, "warning")
@@ -154,22 +155,41 @@ class Twitter {
 
 	/**
 	 * @async
-	 * @description Scrape a given Twitter profile
+	 * @description Load a given Twitter profile
+	 * Handled URLs:
+	 * https://twitter.com/(@)user
+	 * https://twitter.com/intent/user?(user_id,screen_name)=(@)xxx
 	 * @param {Object} tab - NickJS tab
-	 * @param {String} url - Twitter profile URL to open
-	 * @param {Boolean} [verbose] - show/hide logs (default: hide)
-	 * @throws if url can't be opened, scraping failures
-	 * @return {Promise<Object>}
+	 * @param {String} url - URL to open
+	 * @throws on CSS exception / 404 HTTP code
 	 */
-	async scrapeProfile(tab, url, verbose = false) {
+	async openProfile(tab, url) {
+		const selectors = [ ".ProfileHeading", "div.footer a.alternate-context" ]
 		const [httpCode] = await tab.open(url)
 		if (httpCode === 404) {
 			throw `Can't open URL: ${url}`
 		}
+		const contextSelector = await tab.waitUntilVisible(selectors, "or", 15000)
+		// Intent URL: you need to click the redirection link to open the profile
+		if (contextSelector === selectors[1]) {
+			await tab.click(contextSelector)
+			await tab.waitUntilVisible(selectors[0], 15000)
+		}
+	}
 
+	/**
+	 * @async
+	 * @description Scrape a given Twitter profile
+	 * @param {Object} tab - NickJS tab
+	 * @param {String} url - Twitter profile URL to open
+	 * @param {Boolean} [verbose] - show/hide logs (default: hide)
+	 * @throws scraping failures / 404 HTTP code
+	 * @return {Promise<Object>}
+	 */
+	async scrapeProfile(tab, url, verbose = false) {
 		verbose && this.utils.log(`Loading profile: ${url}...`, "loading")
 		try {
-			await tab.waitUntilVisible(".ProfileHeading", 10000)
+			await this.openProfile(tab, url)
 		} catch (err) {
 			const loadingErr = `Error while loading ${url}: ${err.message || err}`
 			this.utils.log(loadingErr, "warning")
