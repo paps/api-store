@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const Nick = require("nickjs")
@@ -20,8 +19,8 @@ const nick = new Nick({
 })
 const utils = new StoreUtilities(nick, buster)
 const twitter = new Twitter(nick, buster, utils)
-const DB_NAME = "result.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_SHORT_NAME = "result"
+const DB_NAME = DB_SHORT_NAME + ".csv"
 const DEFAULT_ACCOUNTS_PER_LAUNCH = 2
 let requestIdVideos = []
 // }
@@ -33,8 +32,7 @@ let requestIdVideos = []
  */
 const isUrl = url => {
 	try {
-		new URL(url)
-		return true
+		return ((new URL(url)) !== null)
 	} catch (err) {
 		return false
 	}
@@ -125,85 +123,84 @@ const isTimelineLoaded = (arg, cb) => cb(null, !document.querySelector(".stream-
  */
 const scrapeMedias = async (tab, url) => {
 	tab.driver.client.on("Network.responseReceived", interceptTwitterApiCalls)
-	const [httpCode] = await tab.open(url)
-	if ((httpCode >= 300) && (httpCode < 200)) {
+	try {
+		await twitter.openProfile(tab, url)
+	} catch (err) {
 		tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-		utils.log(`Can't properly ${url}, expecting HTTP code 200, got: ${httpCode}`, "error")
+		utils.log(`Can't properly ${url}, expecting HTTP code 200, got: ${err.message || err}`, "error")
 		return { url }
-	} else {
-		const selectors = [ ".ProfileHeading", "svg ~ a" ]
-		const sel = await tab.waitUntilVisible(selectors, "or", 7500)
-
-		if (sel === selectors[1]) {
-			await tab.click(sel)
-			await tab.waitUntilVisible(selectors[0], 7500)
-		}
-
-		let contentCount = 0
-		let lastCount = contentCount
-		while (!await tab.evaluate(isTimelineLoaded)) {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				break
-			}
-			try {
-				lastCount = contentCount
-				contentCount = await tab.evaluate(getLoadedMediaCount)
-				if (lastCount !== contentCount) {
-					utils.log(`${contentCount} medias loaded`, "info")
-				}
-				await tab.evaluate(lazyScroll)
-			} catch (err) {
-				utils.log(`Error while loading medias: ${err.message || err}`, "warning")
-				await tab.screenshot(`loading-err-${Date.now()}.jpg`)
-				break
-			}
-		}
-		utils.log(`All medias are loaded (${contentCount})`, "done")
-		const data = await tab.evaluate(scrapeMediasMetadata)
-		const iframes = await tab.evaluate(getAllIframeUrls)
-		const iframeTab = await nick.newTab()
-		for (const iframe of iframes) {
-			try {
-				await iframeTab.open(iframe)
-				const selectors = ["div.TwitterCardsGrid.TwitterCard", "svg ~ a"]
-				const sel = await iframeTab.waitUntilVisible(selectors, "or", 15000)
-				if (sel === selectors[1]) {
-					await iframeTab.click(selectors[1])
-					await iframeTab.waitUntilVisible(selectors[0], 15000)
-				}
-				const metadata = await iframeTab.evaluate((arg, cb) => {
-					const json = JSON.parse(document.querySelector("script[type=\"text/twitter-cards-serialization\"]").textContent)
-					cb(null, {
-						mediaUrl: json.card ? json.card.card_uri : "no media url found",
-						pubImage: document.querySelector("img") ? document.querySelector("img").src : "no external media image found",
-						mediaDescription: document.querySelector("div.SummaryCard-content:first-of-type") ? document.querySelector("div.SummaryCard-content:first-of-type").textContent.trim() : "no media description found"
-					})
-				})
-				data.push(metadata)
-			} catch (err) {
-				utils.log(`${err.message || err}`, "warning")
-			}
-		}
-		await iframeTab.close()
-		requestIdVideos = Array.from(new Set(requestIdVideos))
-		for (const one of requestIdVideos) {
-			let twitterJson = await tab.driver.client.Network.getResponseBody({ requestId: one })
-			twitterJson = JSON.parse(twitterJson.body)
-			let dataToPush = {
-				pubImage: twitterJson.posterImage,
-				duration: twitterJson.track.durationMs || 0,
-				views: twitterJson.track.viewCount,
-				videoUrl: twitterJson.track.playbackUrl,
-				twitterPostUrl: twitterJson.track.expandedUrl
-			}
-			data.push(dataToPush)
-		}
-		tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-		requestIdVideos.length = 0
-		utils.log(`${data.length} medias scraped`, "done")
-		return { query: url, data }
 	}
+	const selectors = [ ".ProfileHeading", "svg ~ a" ]
+	const sel = await tab.waitUntilVisible(selectors, "or", 7500)
+
+	if (sel === selectors[1]) {
+		await tab.click(sel)
+		await tab.waitUntilVisible(selectors[0], 7500)
+	}
+
+	let contentCount = 0
+	let lastCount = contentCount
+	while (!await tab.evaluate(isTimelineLoaded)) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
+		try {
+			lastCount = contentCount
+			contentCount = await tab.evaluate(getLoadedMediaCount)
+			if (lastCount !== contentCount) {
+				utils.log(`${contentCount} medias loaded`, "info")
+			}
+			await tab.evaluate(lazyScroll)
+		} catch (err) {
+			utils.log(`Error while loading medias: ${err.message || err}`, "warning")
+			break
+		}
+	}
+	utils.log(`All medias are loaded (${contentCount})`, "done")
+	const data = await tab.evaluate(scrapeMediasMetadata)
+	const iframes = await tab.evaluate(getAllIframeUrls)
+	const iframeTab = await nick.newTab()
+	for (const iframe of iframes) {
+		try {
+			await iframeTab.open(iframe)
+			const selectors = ["div.TwitterCardsGrid.TwitterCard", "svg ~ a"]
+			const sel = await iframeTab.waitUntilVisible(selectors, "or", 15000)
+			if (sel === selectors[1]) {
+				await iframeTab.click(selectors[1])
+				await iframeTab.waitUntilVisible(selectors[0], 15000)
+			}
+			const metadata = await iframeTab.evaluate((arg, cb) => {
+				const json = JSON.parse(document.querySelector("script[type=\"text/twitter-cards-serialization\"]").textContent)
+				cb(null, {
+					mediaUrl: json.card ? json.card.card_uri : "no media url found",
+					pubImage: document.querySelector("img") ? document.querySelector("img").src : "no external media image found",
+					mediaDescription: document.querySelector("div.SummaryCard-content:first-of-type") ? document.querySelector("div.SummaryCard-content:first-of-type").textContent.trim() : "no media description found"
+				})
+			})
+			data.push(metadata)
+		} catch (err) {
+			utils.log(`${err.message || err}`, "warning")
+		}
+	}
+	await iframeTab.close()
+	requestIdVideos = Array.from(new Set(requestIdVideos))
+	for (const one of requestIdVideos) {
+		let twitterJson = await tab.driver.client.Network.getResponseBody({ requestId: one })
+		twitterJson = JSON.parse(twitterJson.body)
+		let dataToPush = {
+			pubImage: twitterJson.posterImage,
+			duration: twitterJson.track.durationMs || 0,
+			views: twitterJson.track.viewCount,
+			videoUrl: twitterJson.track.playbackUrl,
+			twitterPostUrl: twitterJson.track.expandedUrl
+		}
+		data.push(dataToPush)
+	}
+	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
+	requestIdVideos.length = 0
+	utils.log(`${data.length} medias scraped`, "done")
+	return { query: url, data }
 }
 
 /**
@@ -274,6 +271,5 @@ const createCsvOutput = json => {
 })()
 .catch(err => {
 	utils.log(err.message || err, "error")
-	utils.log(err.stack || "no stack available", "error")
 	nick.exit(1)
 })
