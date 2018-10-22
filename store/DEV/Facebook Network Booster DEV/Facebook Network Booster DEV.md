@@ -1,4 +1,7 @@
-You want to get attention and be visible on Facebook? More connections = **wider reach and larger audience** (Yeaaah size does matter sometimes…)  
+# Add a list of people to your Facebook friends 
+
+You want to get attention and be visible on Facebook? More connections will get you a **wider reach and larger audience**. Size does matter.. 
+sometimes.
 
 # What will you need? ⚙️ 
 
