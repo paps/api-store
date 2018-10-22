@@ -1,0 +1,117 @@
+{
+	"slug": "linkedin-chat-extractor",
+	"description": "Find all messages from any LinkedIn conversations at a glance",
+	"image": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35C2BF",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": true,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"profilesPerLaunch": 5,
+		"messagesPerExtract": 5,
+		"chronOrder": false
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of conversations",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name from which to get conversations URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"profilesPerLaunch": {
+						"label": "Number of conversations to extract per launch",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"messagesPerExtract": {
+						"label": "Number of messages to extract for each conversation",
+						"placeholder": 5,
+						"inputType": "number"
+					},
+					"chronOrder": {
+						"rightLabel": "Get messages from <b>oldest to newest</b>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10
+			},
+			"messagesPerExtract": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 100
+			},
+			"chronOrder": {
+				"type": "boolean"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [ "spreadsheetUrl" ]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
