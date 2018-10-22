@@ -17,14 +17,13 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const DB_NAME = "result.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_SHORT_NAME = "result"
+const DB_NAME = DB_SHORT_NAME + ".csv"
 const DEFAULT_ELEMENTS_LAUNCH = 2
 // }
 
 const doScraping = (arg, cb) => {
 	let data = Array.from(document.querySelectorAll(arg.selector))
-	// cb(null, data.map(el => (arg.trim) ? el.textContent.trim() : el.textContent))
 	cb(null, data.map(el => el.textContent.trim()))
 }
 
@@ -33,7 +32,7 @@ const doScraping = (arg, cb) => {
  * @description Method used to scrape all given selectors for a specific page
  * @param {Tab} tab - Nickjs Tab instance
  * @param {Object} scrapingBundle - Bundle representing all necessary informations to scrape a page (object must be exaclty like buster.arguments)
- * @return {Promise<Object>} All scraped data envetually with scraping errors
+ * @return {Promise<Array<Object>>} All scraped data envetually with scraping errors
  */
 const scrapeOnePage = async (tab, scrapingBundle) => {
 	let scrapingRes = { url: scrapingBundle.link, date: (new Date()).toISOString(), elements: [] }
@@ -166,7 +165,6 @@ const filterArgumentsBySelector = (db, argv) => {
 	let i = 0
 
 	urls = filterArgumentsBySelector(db, await handleArguments(urls))
-
 	if (urls.length < 1) {
 		utils.log("All pages & selectors specified has been scraped.", "warning")
 		nick.exit(0)
@@ -175,7 +173,6 @@ const filterArgumentsBySelector = (db, argv) => {
 	if (typeof pageToScrapePerLaunch !== "number") {
 		pageToScrapePerLaunch = DEFAULT_ELEMENTS_LAUNCH
 	}
-
 	urls = urls.slice(0, pageToScrapePerLaunch)
 
 	for (const el of urls) {
@@ -189,9 +186,7 @@ const filterArgumentsBySelector = (db, argv) => {
 		scrapedData.push(await scrapeOnePage(tab, el))
 		i++
 	}
-
 	db = db.concat(createCsvOutput(scrapedData))
-
 	await utils.saveResults(scrapedData, db, DB_SHORT_NAME, null, false)
 	nick.exit(0)
 })()
