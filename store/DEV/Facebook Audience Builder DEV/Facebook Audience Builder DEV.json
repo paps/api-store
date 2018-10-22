@@ -1,0 +1,92 @@
+{
+	"slug": "facebook-audience-builder",
+	"description": "Automatically like posts of people you're close to",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Auto_Liker/Facebook+Auto+Liker_nobg.png",
+	"argumentDescription": "",
+	"gradientBegin": "#00B4DB",
+	"gradientEnd": "#0083B0",
+	"hidden": false,
+	"new": true,
+	"defaultArgument": {
+		"sessionCookieliAt": "your_li-at_session_cookie",
+        "sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieXs": "your_xs_session_cookie",
+		"spreadsheetUrl": "linkedin_profile_urls",
+		"numberOfLinesPerLaunch": 10
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookieliAt": {
+                        "label": "LinkedIn session cookie li-at <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+					"sessionCookieCUser": {
+                        "label": "Facebook session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Facebook session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
+					},
+					"columnName": {
+						"label": "Column name from which Twitter profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
+						"placeholder": "Facebook Profile"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookieliAt": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+			"sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 6
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+            "spreadsheetUrl": {
+				"type": "string",
+				"required": true
+            },
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			}
+		}
+	}
+}

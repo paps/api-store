@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -25,8 +24,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 /* global $ */
 
 // }
-
-const noop = () => {}
 
 /**
  * @description Browser context function used to get how many sent invitations has been sent
@@ -94,7 +91,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	 */
 	await linkedIn.login(tab, sessionCookie)
 	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/sent")
-	await tab.untilVisible(_selectors.withdrawCount, 10000)
+	await tab.untilVisible(_selectors.withdrawCount, 15000)
 	linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
 	utils.log(`You have sent ${linkedInWithdrawCount} invitations`, "info")
 
@@ -113,7 +110,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	 * Now this is the fun part of the script
 	 */
 	const selectors = ["ul.mn-invitation-list", "section.mn-invitation-manager__no-invites"]
-	await tab.waitUntilVisible(selectors, 5000, "or")
+	await tab.waitUntilVisible(selectors, 15000, "or")
 
 	utils.log("Please wait while the API goes to the oldest sent invite...", "info")
 	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null)))
@@ -127,7 +124,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 			stopLoopPage = true
 			continue
 		}
-		await tab.untilVisible(selectors, 5000, "or")
+		await tab.untilVisible(selectors, 15000, "or")
 		await tab.untilVisible(_selectors.pageWaitAnchor)
 		/**
 		 * Here we're waiting the end of the end of a loading animation
@@ -136,18 +133,17 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		try {
 			await tab.waitUntilPresent(_selectors.spinLoading)
 		} catch (e) {
-			noop()
+			/* ... */
 		}
 		if (Math.random() > 0.98) {
 			utils.log("Still working...", "info")
 		}
 	}
 
-	await tab.untilVisible(selectors, 5000, "or")
+	await tab.untilVisible(selectors, 15000, "or")
 	await tab.untilVisible(_selectors.pageWaitAnchor)
 	await tab.wait(10000)
 	await tab.scrollToBottom()
-	await tab.screenshot(`${Date.now()}.png`)
 
 	/**
 	 * withdraw until we get the same value of peopleCountToKeep
@@ -164,7 +160,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		} else {
 			await tab.click(_selectors.withdrawElement)
 			await tab.click(_selectors.withdrawBtn)
-			await tab.untilVisible(_selectors.withdrawSuccess)
+			await tab.untilVisible(_selectors.withdrawSuccess, 15000)
 			await tab.wait(1000)
 			if (Math.random() > 0.95) {
 				utils.log(`Withdrawing invites (still ${linkedInWithdrawCount} invites left)...`, "info")

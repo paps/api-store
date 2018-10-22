@@ -20,12 +20,12 @@ const utils = new StoreUtilites(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedin = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
-const linkedInScraper = new LinkedInScraper(utils, null, nick)
+let linkedInScraper
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 const { URL } = require("url")
-const DB_NAME = "linkedin-chat-send-message.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_SHORT_NAME = "linkedin-chat-send-message"
+const DB_NAME = DB_SHORT_NAME + ".csv"
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
@@ -35,7 +35,8 @@ const SELECTORS = {
 	spinners: "li-icon > .artdeco-spinner",
 	messageEditor: "div.msg-form__contenteditable",
 	sendButton: "button.msg-form__send-button[type=submit]",
-	messageSendError: "p.msg-s-event-listitem__error-message"
+	messageSendError: "p.msg-s-event-listitem__error-message",
+	editProfile: ".pv-dashboard-section"
 }
 // }
 
@@ -111,6 +112,15 @@ const isUrl = url => {
 	}
 }
 
+const isLinkedInProfile = url => {
+	try {
+		let urlRep = new URL(url)
+		return ((urlRep.hostname.indexOf("linkedin.com") > -1) && urlRep.pathname.startsWith("/in/"))
+	} catch (err) {
+		return false
+	}
+}
+
 /**
  * @async
  * @description Function used to open the chat widget
@@ -139,16 +149,25 @@ const loadChat = async tab => {
  */
 const sendMessage = async (tab, message, tags) => {
 	utils.log("Writting message...", "loading")
-	const payload = { profileUrl: await tab.getUrl(), timestamp: (new Date()).toISOString() }
 	const firstname = await tab.evaluate(getFirstName)
 	tags = Object.assign({}, { firstName: firstname }, tags) // Custom tags are mandatory
 	message = inflater.forgeMessage(message, tags)
+	const payload = { profileUrl: await tab.getUrl(), message, timestamp: (new Date()).toISOString() }
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
-	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
+
+	const sendButtonSelector = `${SELECTORS.chatWidget} ${SELECTORS.sendButton}`
+
+	if (!await tab.isVisible(sendButtonSelector)) { // if send button isn't visible, we use the ... button to make it appear
+		await tab.click(".msg-form__send-toggle")
+		await tab.waitUntilVisible(".msg-form__hovercard label:last-of-type")
+		await tab.click(".msg-form__hovercard label:last-of-type")
+	}
+
+	await tab.click(sendButtonSelector)
+
 	try {
 		await tab.evaluate(waitWhileButtonEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
 	} catch (err) {
-		await tab.screenshot(`send-error-${Date.now()}.jpg`)
 		payload.error = err.message || err
 		utils.log(`${payload.error}`, "error")
 	}
@@ -162,21 +181,33 @@ const sendMessage = async (tab, message, tags) => {
 }
 
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping } = utils.validateArguments()
+	if (!message || !message.trim()) {
+		throw "No message found!"
+	}
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
-	let rows = await utils.getRawCsv(spreadsheetUrl)
-	let csvHeader = rows[0].filter(cell => !isUrl(cell))
-	let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-	let columns = [ columnName, ...msgTags ]
+	const db = await utils.getDb(DB_NAME)
+	let rows = []
+	let columns = []
+	if (isLinkedInProfile(spreadsheetUrl)) {
+		rows = [{ "0": spreadsheetUrl }]
+		columnName = "0"
+	} else {
+		rows = await utils.getRawCsv(spreadsheetUrl)
+		let csvHeader = rows[0].filter(cell => !isUrl(cell))
+		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+		columns = [columnName, ...msgTags]
+		rows = utils.extractCsvRows(rows, columns)
+		if (!columnName) {
+			columnName = "0"
+		}
+	}
+
 	let step = 0
 	const result = []
-	rows = utils.extractCsvRows(rows, columns)
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
-	if (!columnName) {
-		columnName = "0"
-	}
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl && !line.error) < 0)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
@@ -186,17 +217,28 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
-	for (const row of rows) {
+	for (let row of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		buster.progressHint((step++) + 1 / rows.length, `Sending message to ${row[columnName]}`)
+		buster.progressHint((step++) / rows.length, `Sending message to ${row[columnName]}`)
 		utils.log(`Loading ${row[columnName]}...`, "loading")
 		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
 		try {
-			await linkedInScraper.visitProfile(tab, url)
+			if (disableScraping) {
+				await linkedInScraper.visitProfile(tab, url)
+			} else {
+				const profile = await linkedInScraper.scrapeProfile(tab, url)
+				row = Object.assign({}, profile.csv, row)
+			}
+			// Can't send a message to yourself ...
+			if (await tab.isVisible(SELECTORS.editProfile)) {
+				utils.log("Trying to send a message to yourself ...", "warning")
+				result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
+				continue
+			}
 			utils.log(`${row[columnName]} loaded`, "done")
 			utils.log(`Sending message to: ${row[columnName]}`, "info")
 			await loadChat(tab)

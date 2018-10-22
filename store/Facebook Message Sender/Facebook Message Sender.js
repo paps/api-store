@@ -203,7 +203,8 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
-		await utils.saveResults(result, result, csvName)
+	utils.log(`${result.length} messages sent in total.`, "done")
+	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

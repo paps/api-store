@@ -697,7 +697,7 @@ class LinkedInScraper {
 	 */
 	async visitProfile(tab, url, verbose = false) {
 		const [httpCode] = await tab.open(url)
-		if (httpCode !== 200) {
+		if (httpCode !== 200 && httpCode !== null) {
 			throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 		}
 		try {

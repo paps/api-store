@@ -107,6 +107,8 @@ class LinkedIn {
 				console.log(error)
 			}
 			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
+			await this.buster.saveText(await tab.getContent(), `${(new Date()).toISOString()}Can't connect.html`)
+			await tab.screenshot(`${(new Date()).toISOString()}Can't connect.png`)
 			this.nick.exit(1)
 		}
 	}
