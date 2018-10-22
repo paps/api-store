@@ -1,5 +1,10 @@
-# Get highly qualified active Facebook members
-Wether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about all the likers.
+# Get the list of everyone liking a specific Facebook page
+
+Have you ever found an interesting page and wished you could connect with all its members ?
+
+Wish granted !
+
+This API will help you get the names and some basic infos about all the people liking a specific page. This tool can be a great alternative to Facebook lookalike audiences. 
 
 # What will you need? ⚙️ 
 
