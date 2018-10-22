@@ -1,7 +1,10 @@
 # Send messages to a list of Facebook profiles
 
-Connecting with someone via private message is incredibly powerful. It shows focus and closeness with the person. How about scaling that action in order to get more feedbacks and honest answers from people?
-That is precisely what this API does.
+Connecting with someone via private message is incredibly powerful. 
+
+It allows deep focus on a single person and genuine care for their feedbacks. How about scaling that action in order to get more answers from your friends on Facebook?
+
+That's precisely what this new API does.
 
 # What will you need? ⚙️ 
 
