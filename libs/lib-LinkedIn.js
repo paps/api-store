@@ -107,6 +107,8 @@ class LinkedIn {
 				console.log(error)
 			}
 			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
+			await this.buster.saveText(await tab.getContent(), "login-err.html")
+			await this.buster.save(await tab.screenshot("login-err.jpg"))
 			this.nick.exit(1)
 		}
 	}
@@ -148,16 +150,6 @@ class LinkedIn {
 			}
 		}
 		return errorToRet
-	}
-
-	async isStillLogged(tab) {
-		try {
-			await tab.open("https://www.linkedin.com")
-			await tab.waitUntilVisible("#extended-nav", 5000)
-			return true
-		} catch (err) {
-			return false
-		}
 	}
 }
 
