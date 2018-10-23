@@ -55,9 +55,8 @@ const getCommentsCount = (arg, cb) => {
 	cb(null, comments.length)
 }
 
-
-// main scraping function
-const scrapeComments = (arg, cb) => {
+// main scraping function, retrieve comments and remove them from the page
+const scrapeCommentsAndRemove = (arg, cb) => {
 	// remove '?fref=ufi&rc=p' from profile urls
 	const cleanFacebookProfileUrl = url => {
 		if (url.includes("&fref=")) { // profile.php?id= type of profiles URLs
@@ -71,49 +70,56 @@ const scrapeComments = (arg, cb) => {
 
 	const comments = Array.from(document.querySelector(arg.selector).querySelectorAll("div")).filter(el => el.id.startsWith("comment_js_"))
 	const result = []
+	let firstComment = arg.firstComment
 	for (const comment of comments) {
-		const scrapedData = { query:arg.query }
+		if (firstComment) {
+			firstComment = false
+		} else {
+			const scrapedData = { query:arg.query }
 
-		if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a")) {
-			if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i")) { // removing admin tag to only get the name
-				comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").removeChild(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i"))
-			}
-			scrapedData.name = comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").textContent
-			const nameArray = scrapedData.name.split(" ")
-			scrapedData.firstName = nameArray.shift()
-			const lastName = nameArray.join(" ")
-			if (lastName) {
-				scrapedData.lastName = lastName
-			}
-			scrapedData.profileUrl = cleanFacebookProfileUrl(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").href)
-			if (comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody")) {
-				scrapedData.comment = comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody").textContent
-			}
-			if (comment.querySelector("a > img")) {
-				scrapedData.profileImageUrl = comment.querySelector("a > img").src
-			}
-			if (comment.querySelector(".uiScaledImageContainer img")) { // picture as only comment
-				scrapedData.comment = comment.querySelector(".uiScaledImageContainer img").src
-			}
-			if (comment.querySelector("video")) { // gif as only comment
-				scrapedData.comment = comment.querySelector("video").src
-			}
-			let likeCount = 0
-			try { // converting 3K to 3000
-				likeCount = comment.querySelector(".UFICommentContent > div > div > div > a > div > span:last-of-type").textContent
-				if (likeCount.includes("K")) {
-					likeCount = parseFloat(likeCount.replace(",", ".")) * 1000
+			if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a")) {
+				if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i")) { // removing admin tag to only get the name
+					comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").removeChild(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i"))
 				}
-			} catch (err) {
-				//
+				scrapedData.name = comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").textContent
+				const nameArray = scrapedData.name.split(" ")
+				scrapedData.firstName = nameArray.shift()
+				const lastName = nameArray.join(" ")
+				if (lastName) {
+					scrapedData.lastName = lastName
+				}
+				scrapedData.profileUrl = cleanFacebookProfileUrl(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").href)
+				if (comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody")) {
+					scrapedData.comment = comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody").textContent
+				}
+				if (comment.querySelector("a > img")) {
+					scrapedData.profileImageUrl = comment.querySelector("a > img").src
+				}
+				if (comment.querySelector(".uiScaledImageContainer img")) { // picture as only comment
+					scrapedData.comment = comment.querySelector(".uiScaledImageContainer img").src
+				}
+				if (comment.querySelector("video")) { // gif as only comment
+					scrapedData.comment = comment.querySelector("video").src
+				}
+				let likeCount = 0
+				try { // converting 3K to 3000
+					likeCount = comment.querySelector(".UFICommentContent > div > div > div > a > div > span:last-of-type").textContent
+					if (likeCount.includes("K")) {
+						likeCount = parseFloat(likeCount.replace(",", ".")) * 1000
+					}
+				} catch (err) {
+					//
+				}
+				scrapedData.likeCount = likeCount
 			}
-			scrapedData.likeCount = likeCount
+			scrapedData.timestamp = (new Date()).toISOString()
+			result.push(scrapedData)
+			comment.parentElement.removeChild(comment)
 		}
-		scrapedData.timestamp = (new Date()).toISOString()
-		result.push(scrapedData)
 	}
 	cb(null, result)
 }
+
 
 // expand all comments with a delay 
 const expandComments = (arg, cb) => {
@@ -127,12 +133,20 @@ const expandComments = (arg, cb) => {
 }
 
 // handle all loading and scraping
-const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, expandAllComments, postType) => {
+const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, expandAllComments, postType, totalCount) => {
 	let commentsCount = 0	
 	let lastDate = new Date()
 	let newCommentsCount
 	let selector = ".userContentWrapper"
-	if (postType === "video") { selector = ".UFIContainer" }
+	if (postType === "video") {
+		selector = ".UFIContainer"
+		try {
+			await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("video")).map(el => el.pause()))) //pausing the video so that it doesn't skip to the next one
+		} catch (err) {
+			//
+		}
+	}
+	let result = []
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -141,24 +155,30 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 		}
 		newCommentsCount = await tab.evaluate(getCommentsCount, { selector })
 		if (newCommentsCount > commentsCount) {
-			console.log("elapsed: ", new Date() - lastDate)
-			commentsCount = newCommentsCount
+			if (expandAllComments) {
+				utils.log("Expanding all comments.", "loading")
+				const expandedCount = await tab.evaluate(expandComments)
+				await tab.wait((expandedCount + 5) * 2000)
+				utils.log(`${expandedCount} comments expanded`, "done")
+			}
+
+			result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, firstComment:true }))
+			if (totalCount) {
+				if (numberOfCommentsPerPost && numberOfCommentsPerPost < totalCount) {
+					totalCount = numberOfCommentsPerPost
+				}
+				buster.progressHint(result.length / totalCount, `${result.length} posts scraped`)
+			}
+			commentsCount = await tab.evaluate(getCommentsCount, { selector })
 			lastDate = new Date()
-			utils.log(`${commentsCount} comments loaded.`, "info")
-			if (await tab.isVisible(".UFIPagerRow a")) { 
-				await tab.click(".UFIPagerRow a")
+			utils.log(`${result.length} comments scraped.`, "info")
+			if (await tab.isVisible(".UFIPagerLink")) { 
+				await tab.click(".UFIPagerLink")
 			}
 		}
 		await tab.wait(500)
-	} while ((!numberOfCommentsPerPost || commentsCount < numberOfCommentsPerPost) && new Date() - lastDate < 60000)
-	console.log("elapsed final: ", new Date() - lastDate)
-	if (expandAllComments) {
-		utils.log("Expanding all comments.", "loading")
-		const expandedCount = await tab.evaluate(expandComments)
-		await tab.wait((expandedCount + 5) * 2000)
-		utils.log(`${expandedCount} comments expanded`, "done")
-	}
-	let result = await tab.evaluate(scrapeComments, { query, selector })
+	} while ((!numberOfCommentsPerPost || result.length < numberOfCommentsPerPost) && new Date() - lastDate < 30000)
+	result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, first:false }))
 	if (result.length) {
 		if (numberOfCommentsPerPost) {
 			result = result.slice(0, numberOfCommentsPerPost)
@@ -172,7 +192,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 
 // get the total comment count that is displayed by the page
 const getTotalCommentsCount = (arg, cb) => {
-	let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(",",".")
+	let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(/[,.]/,"")
 	// we're converting 56.3K to 56300
 	if (totalCount.includes("K")) {
 		totalCount = parseFloat(totalCount.replace("K", "")) * 1000
@@ -211,8 +231,6 @@ const getTotalCommentsCount = (arg, cb) => {
 	console.log(`URLs to scrape: ${JSON.stringify(postsToScrape, null, 4)}`)
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
-	let urlCount = 0
-
 	for (let postUrl of postsToScrape) {
 		let postType
 		const timeLeft = await utils.checkTimeLeft()
@@ -224,8 +242,6 @@ const getTotalCommentsCount = (arg, cb) => {
 			
 			utils.log(`Scraping comments from ${postUrl}`, "loading")
 			
-			urlCount++
-			buster.progressHint(urlCount / postsToScrape.length, `${urlCount} profile${urlCount > 1 ? "s" : ""} scraped`)
 			try {
 				await tab.open(postUrl)
 			} catch (err1) {
@@ -238,10 +254,10 @@ const getTotalCommentsCount = (arg, cb) => {
 			}
 			try {
 				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
-
+				let totalCount
 				try {
-					const totalCount = await tab.evaluate(getTotalCommentsCount)
-					utils.log(`There's ${totalCount} comments in total`, "info")
+					totalCount = await tab.evaluate(getTotalCommentsCount)
+					utils.log(`There's ${totalCount} comments in total.`, "info")
 				} catch (err) {
 					utils.log(`Couldn't get comments count: ${err}`, "warning")
 				}
@@ -260,7 +276,7 @@ const getTotalCommentsCount = (arg, cb) => {
 						continue
 					}
 				}
-				result = result.concat(await loadAllCommentersAndScrape(tab , postUrl, numberOfCommentsPerPost, expandAllComments, postType))
+				result = result.concat(await loadAllCommentersAndScrape(tab , postUrl, numberOfCommentsPerPost, expandAllComments, postType, totalCount))
 
 			} catch (err) {
 				utils.log(`Error accessing comment page ${err}`, "error")
