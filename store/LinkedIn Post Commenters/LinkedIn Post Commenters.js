@@ -3,6 +3,7 @@
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
+const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -24,9 +25,8 @@ let voyagerHeadersFound = false
 
 /* global $ */
 
-// }
-
 const gl = {}
+// }
 
 const callComments = (arg, callback) => {
 	$.ajax({
@@ -41,6 +41,11 @@ const callComments = (arg, callback) => {
 	})
 }
 
+/**
+ * @description Function used to format voyager API content to "human redeable"
+ * @param {Object} element - Voyager API raw element
+ * @return {Object} formatted element
+ */
 const commentToCsv = element => {
 	const newComment = {}
 	if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
@@ -56,6 +61,10 @@ const commentToCsv = element => {
 	return newComment
 }
 
+/**
+ * @param {Object} response - Raw Voyagager API result
+ * @return {Array<Object>} Formatted API content
+ */
 const linkedinObjectToResult = response => {
 	const res = []
 	if (response.elements) {
@@ -72,6 +81,15 @@ const linkedinObjectToResult = response => {
 	return res
 }
 
+/**
+ * @async
+ * @description
+ * @param {Object} tab - Nickjs tab
+ * @param {Object} headers - LinkedIn HTTP headers used to call Voyager endpoint
+ * @param {Object} search
+ * @param {Number} max
+ * @return {Promise<Array<Object>>}
+ */
 const getAllComments = async (tab, headers, search, max) => {
 	let fail = 0
 	let result = []
@@ -95,7 +113,7 @@ const getAllComments = async (tab, headers, search, max) => {
 			const response = await tab.evaluate(callComments, {url: "https://www.linkedin.com/voyager/api/feed/comments", headers, search})
 			result = result.concat(linkedinObjectToResult(response))
 			utils.log(`Got ${result.length} comments.`, "info")
-			buster.progressHint((result.length/max), "Getting comments...")
+			buster.progressHint((result.length / max), "Getting comments...")
 			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
@@ -111,61 +129,40 @@ const getAllComments = async (tab, headers, search, max) => {
 	return result
 }
 
-const onHttpRequest = (e) => {
-	if (!voyagerHeadersFound && (e.request.url.indexOf("https://www.linkedin.com/voyager/api/") > -1)) {
+const onHttpRequest = e => {
+	if (!voyagerHeadersFound && (e.request.url.indexOf("https://www.linkedin.com/voyager/api/feed/comments") > -1)) {
+		const urlParams = (new URL(e.request.url)).searchParams
+		const params = {}
+		for (const key of urlParams.keys()) {
+			params[key] = urlParams.get(key)
+		}
 		gl.headers = e.request.headers
 		gl.headers.Accept = "application/json"
-		gl.search = { count: 100, start: 0, q: "comments", sortOrder: "CHRON", updateId: null }
+		gl.search = Object.assign({}, { count: 100, start: 0, sortOrder: "CHRON" }, params)
 		gl.url = "https://www.linkedin.com/voyager/api/feed/comments"
 		voyagerHeadersFound = true
 	}
 }
 
 /**
- * @description Browser context function used to retrieve the current LinkedIn article URN
- * The URN is mandatory to perform Voyager API calls to get all commenters for the current article
- * @param {Object} arg
- * @param {Function} cb
- * @return {Promise<String>} the article URN
+ * @description
+ * @param {{ selectors: Array<String> }} arg - urn articles & pulse articles trigger buttons
+ * @param {Callback} cb
+ * @return {Promise<Boolean>} true if the click is done otherwise false
  */
-const searchUrnArticle = (arg, cb) => {
-	const rawData = Array.from(document.querySelectorAll("body > code"))
-		.map(el => {
-			// Some voyager payloads aren't representings JSON objects so we can skip those payloads
-			try {
-				return JSON.parse(el.textContent)
-			} catch (err) {
-				return
-			}
-		})
-		.filter(el => typeof el !== "undefined")
-	// Since URNs and others related informations for the current article are into JS objects we need to find objects with specific patterns
-	for (const seek of rawData) {
-		if (typeof seek === "object") {
-			// If the current article is not a pulse article we're only looking for urn field into data named object
-			if (Array.isArray(seek.included)) {
-				for (const entry of seek.included) {
-					if (entry.linkedInArticleUrn) {
-						if (entry.linkedInArticleUrn.indexOf("urn:li:linkedInArticle:") === 0) {
-							entry.linkedInArticleUrn = entry.linkedInArticleUrn.split(":").pop()
-							return cb(null, `article:${entry.linkedInArticleUrn}`)
-						}
-					} else if (entry.shareUrn) {
-						if (entry.shareUrn.indexOf("urn:li:ugcPost:") === 0) {
-							entry.shareUrn = entry.shareUrn.split(":").pop()
-							return cb(null, `ugcPost:${entry.shareUrn}`)
-						}
-					}
-				}
-			}
-			if (seek.data && seek.data.urn && seek.data.urn.indexOf("urn:li:activity:") === 0) {
-				return cb(null, seek.data.urn)
-			}
-		}
+const triggerCommentsLoading = (arg, cb) => {
+	const trigger = document.querySelector(arg.selectors[0]) || document.querySelector(arg.selectors[1])
+	if (trigger) {
+		trigger.click()
 	}
-	cb(null, null)
+	cb(null, trigger !== null)
 }
 
+/**
+ * Handled articles:
+ * https://www.linkedin.com/feed/update/urn:li:activity:xxxx/
+ * https://www.linkedin.com/pulse/xxx-xxx-xxx/
+ */
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
@@ -174,8 +171,8 @@ const searchUrnArticle = (arg, cb) => {
 		csvName = "result"
 	}
 
-	let result = []
-
+	// Issue #157: append the content instead of overwritting the db
+	const db = await utils.getDb(csvName + ".csv")
 	if (postUrl.indexOf("linkedin.com/") < 0) {
 		postUrl = await utils.getDataFromCsv(postUrl, columnName)
 	} else {
@@ -186,11 +183,20 @@ const searchUrnArticle = (arg, cb) => {
 
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (const url of postUrl) {
-		await tab.open(url)
-		await tab.waitUntilVisible(".comment", 10000)
-		const urn = await tab.evaluate(searchUrnArticle)
-		gl.search.updateId = urn
-		await tab.wait(3000)
+		utils.log(`Opening ${url} ...`, "loading")
+		try {
+			await tab.open(url)
+			await tab.waitUntilVisible(".comment", 15000)
+		} catch (err) {
+			const error = `Can't open properly ${url} due to : ${err.message || err}`
+			utils.log(error, "warning")
+			db.push({ postUrl: url, error, timestamp: (new Date()).toISOString() })
+			continue
+		}
+		// Comment section in pulse article are slow to load, we need to wait until the section fully loaded before scraping
+		// TODO: find a more elegant way to wait the comment section on pulse articles
+		await tab.wait(5000)
+		await tab.evaluate(triggerCommentsLoading, { selectors: [ "button[data-control-name=\"comments_count\"]", "button[data-control-name=\"more_comments\"]" ] })
 		if (!gl.search.updateId) {
 			throw "Could not get comments on this page."
 		}
@@ -201,10 +207,11 @@ const searchUrnArticle = (arg, cb) => {
 			el.timestamp = (new Date()).toISOString()
 			return el
 		})
-		result = result.concat(commenters)
+		voyagerHeadersFound = false
+		db.push(...commenters)
 	}
 	await linkedIn.saveCookie()
-	await utils.saveResult(result, csvName)
+	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {
 		utils.log(err, "error")
