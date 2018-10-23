@@ -215,11 +215,14 @@ const clickNextPage = async (tab, lastLoc) => {
 	} catch (err) {
 		return "noMorePages"
 	}
+	if (await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.selector).classList.contains("artdeco-button--disabled")), { selector })) {
+		return "Button disabled"
+	}
 	try {
 		await tab.click(selector)
 		const lastDate = new Date()
 		do {
-			if (lastDate - new Date() > 10000) {
+			if (new Date() - lastDate > 10000) {
 				throw "Error loading next page!"
 			}
 			await tab.wait(500)
@@ -292,7 +295,9 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 						try {
 							await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
 								if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
-								callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+									callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
+								} else {
+									callback(null, "coucou")
 								}
 							}, { i, selectorList })
 							await tab.wait(100)
@@ -327,13 +332,14 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					} else {
 						nextButtonIsClicked = true
 						const hasPages = await clickNextPage(tab, lastLoc)
-						if (hasPages === "noMorePages") {
+						if (hasPages === "noMorePages" || hasPages === "Button disabled") {
 							break
 						}
 					}
 				}
 			} catch (err) {
 				utils.log(`Couldn't load page ${pageNumber}: ${err}`, "error")
+				break
 			}
 		} else {
 			await tab.wait(1000)
