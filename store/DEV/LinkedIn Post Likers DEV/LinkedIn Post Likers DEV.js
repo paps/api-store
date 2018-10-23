@@ -49,7 +49,7 @@ const loadAllLikes = async (tab, listSelector) => {
 			likes = await tab.evaluate(getLikesNumber)
 			utils.log(`Loaded ${likes} likes.`, "info")
 		} catch (error) {
-			return(likes)
+			return (likes)
 		}
 	}
 }
@@ -119,23 +119,30 @@ const getLikes = async (tab, urls) => {
 // Main function to launch everything and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
+	let db = null
 	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = "result"
 	}
-
+	// Issue #157: append the content instead of overwritting the db
+	db = await utils.getDb(csvName + ".csv")
 	if (postUrl.indexOf("linkedin.com/") < 0) {
 		postUrl = await utils.getDataFromCsv(postUrl, columnName)
 	} else {
 		postUrl = [ postUrl ]
 	}
-
+	if (postUrl.length < 1) {
+		utils.log("Every posts are scraped (you need to wait one day to rescrape them) OR input is empty", "warning")
+		nick.exit()
+	}
+	utils.log(`URLs to scrape: ${JSON.stringify(postUrl, null, 2)}`, "info")
 	await linkedIn.login(tab, sessionCookie)
 	const results = await getLikes(tab, postUrl)
+	db.push(...utils.filterRightOuter(db, results))
 	utils.log(`Got ${results.length} likers.`, "done")
 	await linkedIn.saveCookie()
-	await utils.saveResult(results, csvName)
+	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {
 		utils.log(err, "error")
