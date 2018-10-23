@@ -272,6 +272,23 @@ class Instagram {
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}
+
+	// only keep the instagram.com/profile of a profile URL, and convert @profile to an URL
+	cleanInstagramUrl(str) {
+		if (str && str.includes("instagram.")) {
+			const { URL } = require("url")
+			let path = new URL(str).pathname
+			path = path.slice(1)
+			let id = path
+			if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
+			if (id !== "p") { // not a picture url
+				return "https://www.instagram.com/" + id
+			}
+		} else if (str.startsWith("@")) {
+			return "https://www.instagram.com/" + str.substr(1)
+		}
+		return null
+	}
 }
 
 module.exports = Instagram

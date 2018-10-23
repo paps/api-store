@@ -21,7 +21,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
-const { parse } = require("url")
 /* global $ */
 
 // }
@@ -71,19 +70,6 @@ const checkDb = (str, db) => {
 		}
 	}
 	return true
-}
-
-const cleanInstagramUrl = (url) => {
-	if (url && url.includes("instagram.")) {
-		let path = parse(url).pathname
-		path = path.slice(1)
-		let id = path
-		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
-		if (id !== "p") { // not a picture url
-			return "https://www.instagram.com/" + id
-		}
-	}
-	return null
 }
 
 // Removes any duplicate profile
@@ -269,7 +255,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	}
 	if (!numberMaxOfFollowers) { numberMaxOfFollowers = false }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
-		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
+		urls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
 		if (urls) {	
 			urls = [ urls ]
 		} else {
@@ -283,7 +269,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				urls[i] = "https://www.instagram.com/" + urls[i].slice(1)
 			} else {
 				urls[i] = utils.adjustUrl(urls[i], "instagram")
-				urls[i] = cleanInstagramUrl(urls[i])
+				urls[i] = instagram.cleanInstagramUrl(urls[i])
 			}
 		}
 		if (!numberofProfilesperLaunch) {

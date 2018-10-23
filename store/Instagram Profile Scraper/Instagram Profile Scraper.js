@@ -20,7 +20,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
-const { parse } = require("url")
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -41,19 +40,6 @@ const checkDb = (str, db) => {
 		}
 	}
 	return true
-}
-
-const cleanInstagramUrl = (url) => {
-	if (url && url.includes("instagram.")) {
-		let path = parse(url).pathname
-		path = path.slice(1)
-		let id = path
-		if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
-		if (id !== "p") { // not a picture url
-			return "https://www.instagram.com/" + id
-		}
-	}
-	return null
 }
 
 const scrapePage = (arg, callback) => {
@@ -123,7 +109,7 @@ const scrapePage = (arg, callback) => {
 	if (!csvName) { csvName = "result" }
 	let urls, result
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
-		urls = cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
+		urls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
 		if (urls) {	
 			urls = [ urls ]
 		} else {
@@ -135,7 +121,7 @@ const scrapePage = (arg, callback) => {
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")
-			urls[i] = cleanInstagramUrl(urls[i])
+			urls[i] = instagram.cleanInstagramUrl(urls[i])
 		}
 		if (!numberOfProfilesPerLaunch) {
 			numberOfProfilesPerLaunch = urls.length
