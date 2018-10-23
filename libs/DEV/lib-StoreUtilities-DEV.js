@@ -662,6 +662,24 @@ class StoreUtilities {
 		return true
 	}
 
+	/**
+	 * @description Filtering objects arrays, it will returns unmatched content of the second parameter
+	 * @param {Array<Object>} left
+	 * @param {Array<Object>} right
+	 * @return {Array<Object>} Unmatched right objects from right parameters
+	 */
+	filterRightOuter(left, right) {
+		return right.filter(el => {
+			let { timestamp, ...tmpA } = el
+			timestamp >> 1
+			return left.findIndex(dup => {
+				let { timestamp, ...tmpB } = dup
+				timestamp >> 1
+				return JSON.stringify(tmpA) === JSON.stringify(tmpB)
+			}) < 0
+		})
+	}
+
 }
 
 module.exports = StoreUtilities
