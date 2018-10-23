@@ -277,6 +277,17 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(err.message || err, "warning")
 					return result
 				}
+				if (selector === selectors[0] || selector === selectors[2]) { 
+					// fixing the "No results" bug by simply reloading the page until results show up
+					let retryCount = 0
+					do {				
+						await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
+						selector = await tab.waitUntilVisible(selectors, 15000, "or")
+						if (retryCount++ === 6) {
+							break
+						}
+					} while (selector === selectors[0] || selector === selectors[2])
+				}
 				if (selector === selectors[0] || selector === selectors[2]) {
 					utils.log("No result on that page.", "done")
 					break
