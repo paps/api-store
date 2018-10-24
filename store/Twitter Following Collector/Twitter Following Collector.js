@@ -34,9 +34,9 @@ let agentObject
 let interrupted
 let rateLimited
 let lastSavedQuery
-let alreadyScraped
 let twitterUrl
 let isProtected
+let fullScrape = false
 
 
 const ajaxCall = (arg, cb) => {
@@ -160,9 +160,6 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 		twitterHandle = removeNonPrintableChars(twitterHandle)
 	}
 	let profileCount = 0
-	if (resuming) {
-		profileCount = alreadyScraped
-	}
 	const profileUrl = `https://twitter.com/${twitterHandle}`
 	await tab.open(profileUrl + "/following")
 	let followingCount
@@ -224,6 +221,9 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 					if (displayResult % 25 === 24) { utils.log(`Got ${profileCount} followers.`, "info") }
 					buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
 					if (followersPerAccount && profileCount >= followersPerAccount) { 
+						if (fullScrape) {
+							interrupted = true
+						}
 						break
 					}
 					if (rateLimited) {
@@ -295,7 +295,6 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			agentObject = await buster.getAgentObject()
 			if (agentObject && agentObject.nextUrl) {
 				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
-				alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
 			}
 
 		} catch (err) {
@@ -316,7 +315,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		}
 	}
 	twitterUrls = twitterUrls.filter(str => str) // removing empty lines
-
+	if (twitterUrls.length === 1) {
+		fullScrape = true
+	}
 	for (let i = 0; i < twitterUrls.length; i++) { // removing ending slash
 		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
 	}
@@ -331,7 +332,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (!numberofProfilesperLaunch) {
 		numberofProfilesperLaunch = twitterUrls.length
 	}
-	twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
+	if (!fullScrape) {
+		twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls, null, 4)}`)
 
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
