@@ -2,7 +2,7 @@
     "slug": "facebook-page-likers",
     "description": "Extract a list of all the profiles that liked any Facebook page",
     "image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
-    "hidden": true,
+    "hidden": false,
     "new": true,
     "gradientBegin": "#353040",
     "gradientEnd": "#4589f9",
