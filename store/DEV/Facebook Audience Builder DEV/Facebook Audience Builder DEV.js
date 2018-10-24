@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Facebook-DEV.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper.js, lib-Google-DEV.js, lib-Twitter-DEV.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -19,13 +19,16 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
-
+const Twitter = require("./lib-Twitter-DEV")
+const twitter = new Twitter(nick, buster, utils)
+const Google = require("./lib-Google-DEV")
+const { URL } = require("url")
 // }
 
 const forgeUrl = (url, section) => {
@@ -100,8 +103,8 @@ const getFirstResultUrl = (arg, cb) => {
 	cb(null, url)
 }
 
-const searchProfile = async (tab, profile) => {
-	const searchOrder = [ { location: true, company: true, school: true }, { location: true, company: true }, { location: true }, {}]
+const searchFacebookProfile = async (tab, profile) => {
+	const searchOrder = [ { location: true, company: true, school: true }, { location: true, company: true }, { location: true }, { company: true }, {}]
 	let allResultsFound
 	let resultCount
 	for (const search of searchOrder) {
@@ -144,13 +147,97 @@ const searchProfile = async (tab, profile) => {
 	return profile
 }
 
+const guessEmail = (partialEmail, scrapedData) => {
+	let emailHandle = partialEmail.split("@")[0]
+	const domain = partialEmail.split("@")[1]
+	let guessedDomain = domain
+	switch (domain) {
+		case "g****.***":
+			guessedDomain = "gmail.com"
+			break
+		case "y****.***":
+			guessedDomain = "yahoo.com"
+			break
+		case "h******.***":
+			guessedDomain = "hotmail.com"
+			break
+		case "a**.***":
+			guessedDomain = "aol.com"
+			break
+		case "h******.**.**":
+			guessedDomain = "hotmail.co.uk"
+			break
+		case "h******.**":
+			guessedDomain = "hotmail.fr"
+			break
+		case "m**.***":
+			guessedDomain = "msn.com"
+			break
+		case "y****.**":
+			guessedDomain = "yahoo.fr"
+			break
+		case "h**.***":
+			guessedDomain = "hec.com"
+			break
+	}
+	const firstName = scrapedData.firstName.toLowerCase().replace("-", "")
+	const lastName = scrapedData.lastName.toLowerCase().replace("-", "")
+	const lengthDiff = emailHandle.length - (firstName.length + lastName.length)
+	if (lengthDiff === 0 || lengthDiff === 1) {
+		let separator = ""
+		if (lengthDiff === 1) {
+			separator = "."
+		}
+		if (emailHandle.charAt(0) === firstName.charAt(0)) {
+			emailHandle = firstName + separator + lastName
+		} else if (emailHandle.charAt(0) === lastName.charAt(0)) {
+			emailHandle = lastName + separator + firstName
+		}
+	}
+	const guessedEmail = emailHandle + "@" + guessedDomain
+	console.log("guessedEmail=", guessedEmail)
+	return guessedEmail
+}
+
+const findTwitterData = async (tab, scrapedData) => {
+	const google = new Google(tab, buster)
+	const twitterResults = await google.search("site:twitter.com " + scrapedData.name)
+	const firstResult = twitterResults.results[0]
+	if (firstResult.title.endsWith("Twitter")) {
+		let twitterUrl = firstResult.link
+		// only keep the twitter.com/profile of a profile URL
+	
+		let path = new URL(twitterUrl).pathname
+		path = path.slice(1)
+		if (path.includes("/")) {
+			path = path.slice(0, path.indexOf("/"))
+		}
+		twitterUrl = "https://www.twitter.com/" + path
+
+		console.log("Twitter URL found:", twitterUrl)
+		const urlObject = new URL(twitterUrl)
+		const twitterHandle = urlObject.pathname.substr(1)
+		const partialTwitterEmail = await twitter.checkEmail(tab, twitterHandle)
+		console.log("partialTwitter=", partialTwitterEmail)
+		const guessedEmail = guessEmail(partialTwitterEmail, scrapedData)
+		return { twitterUrl, twitterEmail: guessedEmail }
+	}
+	return null
+}
 
 
 // keep only the data we want from the LinkedIn profile
 const extractData = (json, profileUrl) => {
 	// console.log("json", json)
 	const main = json.general
-	return { name: main.fullName, headline: main.headline, firstName: main.firstName, lastName: main.lastName, company: main.company, school: main.school, location: main.location, linkedinUrl: profileUrl }
+	const filteredData = { name: main.fullName, headline: main.headline, firstName: main.firstName, lastName: main.lastName, company: main.company, school: main.school, location: main.location, linkedinUrl: profileUrl }
+	if (json.details.twitter) {
+		filteredData.lkTwitterUrl = `https://twitter.com/${json.details.twitter}`
+	}
+	if (json.details.mail) {
+		filteredData.lkMail = json.details.mail
+	}
+	return filteredData
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
@@ -188,8 +275,13 @@ const extractData = (json, profileUrl) => {
 		let scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
 		scrapedData = extractData(scrapedData.json, scrapingUrl)
 		console.log("scrapedData", scrapedData)
+		const twitterData = await findTwitterData(tabLk, scrapedData)
+		if (twitterData) {
+			scrapedData.twitterEmail = twitterData.twitterEmail
+			scrapedData.twitterUrl = twitterData.twitterUrl
+		}
 		try {
-			scrapedData = await searchProfile(tabFb, scrapedData)
+			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
 		} catch (err) {
 			console.log("err: ", err)
 			await tabFb.screenshot(`${Date.now()}sU.png`)
@@ -209,7 +301,7 @@ const extractData = (json, profileUrl) => {
 	// }]
 	// let profilesFound = []
 	// for (const result of results) {
-	// 	profilesFound.push(await searchProfile(tab, result))
+	// 	profilesFound.push(await searchFacebookProfile(tab, result))
 	// }
 	await utils.saveResults(results, results)
 	nick.exit(0)
