@@ -45,6 +45,9 @@ const isUrl = url => {
 
 const isLinkedInProfile = url => {
 	try {
+		if (url.startsWith("linkedin")) { 
+			url = "https://" + url
+		}
 		let tmp = new URL(url)
 		return tmp.pathname.startsWith("/in/")
 	} catch (err) {
@@ -308,11 +311,11 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			utils.log(`${url} is not a valid LinkedIn URL.`, "error")
 		} else {
 			/**
-				* Nickjs errors can occur here
-				* examples:
-				* Timeout error
-				* The profile should be reprocess in another launch
-				*/
+			 * Nickjs errors can occur here
+			 * examples:
+			 * Timeout error
+			 * The profile should be reprocess in another launch
+			 */
 			utils.log(`Error while loading ${url}: ${err.message || err}`, "error")
 			invitation = null
 		}
@@ -344,6 +347,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	if (message) {
 		message = inflater.forgeMessage(message, invitation)
 	}
+	invitation.message = message
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -422,10 +426,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 }
 
 /**
-	* @description Removing all tags stored in the invitation object
-	* @param {Array<Object>} invitations - Invitations representations
-	* @param {String} msg - message
-	*/
+ * @description Removing all tags stored in the invitation object
+ * @param {Array<Object>} invitations - Invitations representations
+ * @param {String} msg - message
+ */
 const cleanUpInvitations = (invitations, msg) => {
 	if (msg) {
 		const tags = inflater.getMessageTags(msg)
@@ -468,7 +472,7 @@ nick.newTab().then(async (tab) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).slice(0, numberOfAddsPerLaunch)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url").slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
