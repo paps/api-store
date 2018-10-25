@@ -1,7 +1,10 @@
 # Send messages to a list of Facebook profiles
 
-You have want to target a list of Facebook profiles? One way would be to directly talk to them!
-Use our API to automatically send them a customizable message.
+Connecting with someone via private message is incredibly powerful. 
+
+It allows deep focus on a single person and genuine care for their feedbacks. How about scaling that action in order to get more answers from your friends on Facebook?
+
+That's precisely what this new API does.
 
 # What will you need? ⚙️ 
 
@@ -70,7 +73,7 @@ Your spreadsheet should contain a list of Facebook Profile URLs (**one link per 
 You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 You can also enter a single Facebook profile URL directly in the field.
 
-## 6. Add a private personalized message 🆕 💬
+## 6. Personalize your message 🆕 💬
 Below the column name you'll find the **message** configuration.
 
 In the message textbox you can write a private note which will be sent to the profile included in your Google spreadsheet.
@@ -114,5 +117,5 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
 
-Facebook tends to notice when too many profiles viewings are done in a short period of time. Spamming invitations is probably reprimanded. We recommend spreading your invites (like 1 profile every 15min rather than 10 profiles in one go).
-If too many actions are done, Facebook may temporarily block your profile. If that happens, you should be careful and reduce your API frequency the next time.
+Facebook tends to notice when too many messages are sent in a short period of time. Spamming messages is probably reprimanded. We recommend spreading your messages (like 1 message every 15min rather than 10 in one go).
+If too many actions are done too quickly, Facebook may temporarily block your messages. If that happens, you would need to wait for a few hours before being able to send them again. Be careful and reduce your API frequency the next time.
