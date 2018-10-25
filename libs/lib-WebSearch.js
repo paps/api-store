@@ -273,7 +273,7 @@ class WebSearch {
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
 	 * If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
-	constructor(tab, buster, verbose = false, lockEngine = null) {
+	constructor(tab, buster, verbose = false, lockEngine = null, utils = null) {
 		this.engines = _defaultEngines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
 		this.verbose = verbose
@@ -282,9 +282,10 @@ class WebSearch {
 		this.buster = buster
 		this.lockEngine = lockEngine
 		this.nbRequestsBeforeDeletingCookies = Math.round(50 + Math.random() * 50) // 50 <=> 100
+		this.utils = utils
 	}
 
-	static engines () { return _defaultEngines }
+	static engines() { return _defaultEngines }
 
 	/**
 	 * @async
@@ -327,6 +328,12 @@ class WebSearch {
 		 */
 		let codenameList = ""
 		while (true) {
+			if (this.utils) {
+				const timeLeft = await this.utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					break
+				}
+			}
 			this.verbose && console.log(`-- Performing search "${query}" with engine ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)

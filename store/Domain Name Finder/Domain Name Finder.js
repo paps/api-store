@@ -174,7 +174,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 
 	const tab = await nick.newTab()
 	const result = []
-	const webSearch = new WebSearch(tab, buster)
+	const webSearch = new WebSearch(tab, buster, null, null, utils)
 
 	let i = 0
 	for (const query of companies) {

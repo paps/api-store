@@ -1,12 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -132,10 +132,13 @@ const craftDomains = (argv, cb) => {
  */
 const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
+	console.log("names=", names)
 	query = query.toLowerCase()
 	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
+	console.log("results=", results)
 	const theDomain = getBestRankedDomain(results)
+	console.log("theDomain=", theDomain)
 	// Issue #56: return an empty line when no domain where found
 	return {
 		query,
@@ -174,8 +177,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 
 	const tab = await nick.newTab()
 	const result = []
-	const webSearch = new WebSearch(tab, buster)
-
+	const webSearch = new WebSearch(tab, buster, null, null, utils)
 	let i = 0
 	for (const query of companies) {
 		if (!query || query.trim().length < 1) {
@@ -192,6 +194,8 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		try {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
+			// await tab.screenshot(`${Date.now()}firstResult.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}${query}.html`)
 			delete res.codename
 			res.timestamp = (new Date()).toISOString()
 			result.push(res)
