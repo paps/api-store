@@ -67,7 +67,13 @@ const checkDb = (str, db) => {
 	return true
 }
 
-const getInviteesUrls = (arg, cb) => cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => el.querySelector("a[data-control-name=profile]").href))
+const getInviteesUrls = (arg, cb) => {
+	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
+		if (el.querySelector("a[data-control-name=profile]")) {
+			return el.querySelector("a[data-control-name=profile]").href
+		}
+	}))
+}
 
 /**
  * @async
