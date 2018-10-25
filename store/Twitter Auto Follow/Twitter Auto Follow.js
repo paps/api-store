@@ -30,7 +30,7 @@ const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim(
  * @description Browser context function used to scrape languages used for every tweets loaded in the current page
  * @param {Object} arg -- Arguments passed to browser context }
  * @param {Function} cb -- Function to quit browser context }
- * @return {Promise<Array>} Languages used for every tweets loaded in the current page
+ * @return {Promise<Array<String>>} Languages used for every tweets loaded in the current page
  */
 const getTweetsLanguages = (arg, cb) => {
 	const tweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
@@ -40,8 +40,8 @@ const getTweetsLanguages = (arg, cb) => {
 /**
  * @async
  * @description Function used to check if languages used from a tweet are in a given whitelist
- * @param {Tab} tab -- Nickjs Tab instance }
- * @param {Array} list -- Whitelisted languages }
+ * @param {Object} tab -- Nickjs Tab instance }
+ * @param {Array<String>} list -- Whitelisted languages }
  * @return {Promise<Boolean>} true if every languages are in the whitelist otherwise false at the first occurence
  */
 const isLanguagesInList = async (tab, list) => {
@@ -73,13 +73,12 @@ const isLanguagesInList = async (tab, list) => {
 /**
  * @description Compare list received with file saved to know what profile to add
  * @param {String} spreadsheetUrl
- * @param {Array} db
+ * @param {Array<Object>} db
  * @param {Number} numberOfAddsPerLaunch
- * @return {Array} Contains all profiles to add
+ * @return {Array<String>} Contains all profiles to add
  */
 const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
 	let result = []
-	// TODO/ change if
 	if (spreadsheetUrl.indexOf("twitter.com") > -1) {
 		result = [spreadsheetUrl]
 	} else if (spreadsheetUrl.indexOf("docs.google.com") > -1 || spreadsheetUrl.indexOf("https://") > -1 || spreadsheetUrl.indexOf("http://") > -1) {
@@ -112,7 +111,7 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
  * @description Subscribe to one twitter profile
  * @param {Object} tab
  * @param {String} url
- * @param {Array} whitelist
+ * @param {Array<String>} whitelist
  * @throws if url is not a valid URL, or the daily follow limit is reached
  */
 const subscribe = async (tab, url, whitelist) => {
@@ -122,7 +121,7 @@ const subscribe = async (tab, url, whitelist) => {
 	try {
 		selector = await tab.waitUntilVisible([".ProfileNav-item .follow-text", ".ProfileNav-item .following-text", ".pending"], 5000, "or")
 	} catch (error) {
-		utils.log(`Reported error: ${error.message || error}`, "error")
+		// utils.log(`Reported error: ${error.message || error}`, "error")
 		throw `${url} isn't a valid twitter profile.`
 	}
 	/**
@@ -168,10 +167,10 @@ const subscribe = async (tab, url, whitelist) => {
 /**
  * @description Subscribe to all profiles in the list
  * @param {Object} tab
- * @param {Array} profiles
+ * @param {Array<String>} profiles
  * @param {Number} numberOfAddsPerLaunch
- * @param {Array} whitelist
- * @return {Array} Contains profile added {url, handle}
+ * @param {Array<String>} whitelist
+ * @return {Array<{ url: String, handle: String, ?error: String }>} Contains profile added
  */
 const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) => {
 	const added = []
@@ -211,6 +210,8 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 			if (error === "TLIMIT") {
 				return added
 			} else {
+				newAdd.error = error.message || error
+				added.push(newAdd)
 				utils.log(error, "warning")
 			}
 		}
