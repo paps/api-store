@@ -180,7 +180,6 @@ const triggerCommentsLoading = (arg, cb) => {
 	}
 
 	await linkedIn.login(tab, sessionCookie)
-
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	for (const url of postUrl) {
 		utils.log(`Opening ${url} ...`, "loading")
@@ -208,7 +207,7 @@ const triggerCommentsLoading = (arg, cb) => {
 			return el
 		})
 		voyagerHeadersFound = false
-		db.push(...commenters)
+		db.push(...utils.filterRightOuter(db, commenters))
 	}
 	await linkedIn.saveCookie()
 	await utils.saveResult(db, csvName)
