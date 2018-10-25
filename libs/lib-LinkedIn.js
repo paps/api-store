@@ -149,6 +149,23 @@ class LinkedIn {
 		}
 		return errorToRet
 	}
+
+	/**
+	 * @param {Object} url -- Profile URL
+	 * @return {Boolean} true if url is a valid profile URL
+	 */
+	isLinkedInProfile(url) {
+		try {
+			if (url.startsWith("linkedin")) { 
+				url = "https://" + url
+			}
+			const { URL } = require("url")
+			let urlObject = new URL(url)
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && urlObject.pathname.startsWith("/in/"))
+		} catch (err) {
+			return false
+		}
+	}
 }
 
 module.exports = LinkedIn

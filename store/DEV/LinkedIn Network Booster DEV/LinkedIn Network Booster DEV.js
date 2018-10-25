@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const Messaging = require("./lib-Messaging")
@@ -38,18 +38,6 @@ const isUrl = url => {
 	try {
 		let tmp = new URL(url)
 		return tmp !== null
-	} catch (err) {
-		return false
-	}
-}
-
-const isLinkedInProfile = url => {
-	try {
-		if (url.startsWith("linkedin")) { 
-			url = "https://" + url
-		}
-		let tmp = new URL(url)
-		return tmp.pathname.startsWith("/in/")
 	} catch (err) {
 		return false
 	}
@@ -275,8 +263,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	} else {
 		invitation = Object.assign(invitation, bundle)
 	}
-
-	if (!isLinkedInProfile(url)) {
+	if (!linkedIn.isLinkedInProfile(url)) {
 		invitation.error = `${url} doesn't represent a LinkedIn profile`
 		utils.log(invitation.error, "warning")
 		return invitation
@@ -461,17 +448,26 @@ nick.newTab().then(async (tab) => {
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
-	let rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
-	let csvHeader = rows[0].filter(cell => !isUrl(cell))
-	let messagesTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-	let columns = [ columnName, ...messagesTags ]
+
+	let rows = []
+	let columns = []
+	if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
+		rows = [{ "0": spreadsheetUrl }]
+		columnName = "0"
+	} else {
+		rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
+		let csvHeader = rows[0].filter(cell => !isUrl(cell))
+		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+		columns = [columnName, ...msgTags]
+		rows = utils.extractCsvRows(rows, columns)
+		if (!columnName) {
+			columnName = "0"
+		}
+	}
+
 	let step = 1
-	rows = utils.extractCsvRows(rows, columns)
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
-	if (!columnName) {
-		columnName = "0"
-	}
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url").slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
