@@ -15,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const _ = require("lodash")
@@ -217,8 +218,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		urlTemplateData["page_number"] = nextPageNumber
 		urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
 
-		//utils.log(`Requesting ${urlTemplate.toString()}`, "info")
-
 		let responseContent
 
 		const onResponse = async (e) => {
@@ -305,8 +304,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 	let pageUrls = await retrieveAllPageUrls(result, agentObject, spreadsheetUrl, columnName)
 
-	utils.log(`Cookie CUser: ${sessionCookieCUser}`, "info")
-	utils.log(`Cookie Xs: ${sessionCookieXs}`, "info")
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
 	let currentResult = []
