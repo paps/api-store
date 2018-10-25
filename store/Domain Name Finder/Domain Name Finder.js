@@ -162,7 +162,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	 * We need to lowercase all inputs to check if there were already scraped,
 	 * since getDomainName return the query in lowercase
 	 */
-	companies = companies.filter(el => db.findIndex(line => line.query === el.toLowerCase()) < 0)
+	companies = companies.filter(el => db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
 	if (companies.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
@@ -197,7 +197,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
-			result.push({ query, domain: "Not found", timestamp: (new Date()).toISOString() })
+			result.push({ query: query.toLowerCase(), domain: "Not found", timestamp: (new Date()).toISOString() })
 		}
 		i++
 	}
