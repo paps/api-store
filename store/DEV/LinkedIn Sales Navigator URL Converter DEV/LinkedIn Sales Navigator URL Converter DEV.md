@@ -2,6 +2,7 @@
 
 Got a list of Sales Navigator profile URLs and want to their regular profile URLs? 
 Well that's all that API does :) And you don't even need a Sales Navigator account for it to work!
+Not that for converting the Sales Navigator URL the API needs to visit the profile for that URL.
 
 # What will you need? ⚙️ 
 
@@ -69,3 +70,9 @@ You can also enter a single SN Profile URL directly in the field.
 It’s done! All that is left to do is to click on "launch" and watch your API do the work for you!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
+
+# Limits
+
+Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf.
+
+The API needs to visit the profile to convert the URL and we've noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). In that regard we recommend spacing your launches.
