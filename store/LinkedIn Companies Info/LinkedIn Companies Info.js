@@ -46,6 +46,12 @@ const scrapeCompanyInfo = (arg, callback) => {
 	if (document.querySelector("h1.org-top-card-module__name")) { result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim() }
 	if (document.querySelector("span.company-industries")) { result.industry = document.querySelector("span.company-industries").textContent.trim() }
 	if (document.querySelector("span.org-top-card-module__location")) { result.location = document.querySelector("span.org-top-card-module__location").textContent.trim() }
+	if (document.querySelector("div.org-location-card")) {
+		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
+							.map(selector => selector.querySelector("p[dir=ltr]") ? selector.querySelector("p[dir=ltr]").textContent.trim() : null)
+							.filter(address => address)
+		result.companyAddress = addresses.join(" | ")
+	}
 	if (document.querySelector("p.org-about-us-organization-description__text")) { result.description = document.querySelector("p.org-about-us-organization-description__text").textContent.trim() }
 	if (document.querySelector("a.org-about-us-company-module__website")) { result.website = document.querySelector("a.org-about-us-company-module__website").href }
 	if (document.querySelector("p.org-about-company-module__company-staff-count-range")) { result.size = document.querySelector("p.org-about-company-module__company-staff-count-range").textContent.trim() }
@@ -111,8 +117,8 @@ const scrapeCompanyInfo = (arg, callback) => {
 }
 
 const getCompanyInfo = async (tab, link, query) => {
-	await tab.open(link)
 	try {
+		await tab.open(link)
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {
 			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
@@ -123,12 +129,7 @@ const getCompanyInfo = async (tab, link, query) => {
 		}
 		return tab.evaluate(scrapeCompanyInfo, { link, query })
 	} catch (err) {
-		if (await linkedIn.isStillLogged(tab)) {
-			utils.log("Invalid company URL.", "warning")
-			return { link, query, invalidResults: "Couldn't access company profile" }
-		} else {
-			return "invalid"
-		}
+		return { link, query, invalidResults: "Couldn't access company profile" }
 	}
 }
 
