@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper.js, lib-Google-DEV.js, lib-Twitter-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper.js, lib-Google-DEV.js, lib-Twitter-DEV.js, lib-Dropcontact.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -28,6 +28,7 @@ const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
 const Google = require("./lib-Google-DEV")
+const Dropcontact = require("./lib-Dropcontact")
 const { URL } = require("url")
 // }
 
@@ -147,43 +148,25 @@ const searchFacebookProfile = async (tab, profile) => {
 	return profile
 }
 
-const guessEmail = (partialEmail, scrapedData) => {
+const guessEmail = async (tab, partialData, scrapedData) => {
+	console.log("partialData", partialData)
+	const partialEmail = partialData.email
 	let emailHandle = partialEmail.split("@")[0]
 	const domain = partialEmail.split("@")[1]
+	const domainList = [ "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "hotmail.co.uk", "hotmail.fr", "msn.com", "yahoo.fr", "wanadoo.fr", "orange.fr", "comcast.net", "yahoo.co.uk", "yahoo.com.br", "live.com", "rediffmail.com", "free.fr", "gmx.de", "web.de", "yandex.ru", "ymail.com", "libero.it", "outlook.com", "hec.edu"]
 	let guessedDomain = domain
-	switch (domain) {
-		case "g****.***":
-			guessedDomain = "gmail.com"
+	for (const testedDomain of domainList) {
+		if (twitter.matchEmail(domain, testedDomain)) {
+			guessedDomain = testedDomain
+			console.log("testedDomain:", testedDomain)
+			console.log("domain:", domain)
 			break
-		case "y****.***":
-			guessedDomain = "yahoo.com"
-			break
-		case "h******.***":
-			guessedDomain = "hotmail.com"
-			break
-		case "a**.***":
-			guessedDomain = "aol.com"
-			break
-		case "h******.**.**":
-			guessedDomain = "hotmail.co.uk"
-			break
-		case "h******.**":
-			guessedDomain = "hotmail.fr"
-			break
-		case "m**.***":
-			guessedDomain = "msn.com"
-			break
-		case "y****.**":
-			guessedDomain = "yahoo.fr"
-			break
-		case "h**.***":
-			guessedDomain = "hec.com"
-			break
+		}
 	}
 	const firstName = scrapedData.firstName.toLowerCase().replace("-", "")
 	const lastName = scrapedData.lastName.toLowerCase().replace("-", "")
 	const lengthDiff = emailHandle.length - (firstName.length + lastName.length)
-	if (lengthDiff === 0 || lengthDiff === 1) {
+	if (lengthDiff === 0 || lengthDiff === 1) { // firstNameLastName@domain or firstName.LastName@domain
 		let separator = ""
 		if (lengthDiff === 1) {
 			separator = "."
@@ -193,10 +176,21 @@ const guessEmail = (partialEmail, scrapedData) => {
 		} else if (emailHandle.charAt(0) === lastName.charAt(0)) {
 			emailHandle = lastName + separator + firstName
 		}
+	} else if (emailHandle.charAt(0) === firstName.charAt (0) && emailHandle.charAt(1) === lastName.charAt(0) && lengthDiff === 1 - lastName.length) { // testing firstNameFirstLetter + lastName@domain
+		emailHandle = firstName.charAt(0) + lastName
 	}
-	const guessedEmail = emailHandle + "@" + guessedDomain
-	console.log("guessedEmail=", guessedEmail)
-	return guessedEmail
+	let twitterEmail = emailHandle + "@" + guessedDomain
+	if (!twitterEmail.includes("*")) { // if there's no * in the twitterEmail, we test it again on twitter
+		const twitterCheck = await twitter.checkEmail(tab, twitterEmail)
+		if (!twitterCheck || twitterCheck.phoneNumber !== partialData.phoneNumber) { // if there's no results with that guessed Email, or if the phone number doesn't match, we return the original partial one
+			console.log("Wrong Email!")
+			twitterEmail = partialEmail
+		} else {
+			console.log(twitterEmail, " is a valid Twitter Email!")
+		}
+	}
+	console.log("twitterEmail=", twitterEmail)
+	return twitterEmail
 }
 
 const findTwitterData = async (tab, scrapedData) => {
@@ -217,9 +211,12 @@ const findTwitterData = async (tab, scrapedData) => {
 		console.log("Twitter URL found:", twitterUrl)
 		const urlObject = new URL(twitterUrl)
 		const twitterHandle = urlObject.pathname.substr(1)
-		const partialTwitterEmail = await twitter.checkEmail(tab, twitterHandle)
-		console.log("partialTwitter=", partialTwitterEmail)
-		const guessedEmail = guessEmail(partialTwitterEmail, scrapedData)
+		const partialTwitterData = await twitter.checkEmail(tab, twitterHandle)
+		console.log("partialTwitter=", partialTwitterData)
+		if (partialTwitterData === "Too many attemps") {
+			return { twitterUrl }
+		}
+		const guessedEmail = await guessEmail(tab, partialTwitterData, scrapedData)
 		return { twitterUrl, twitterEmail: guessedEmail }
 	}
 	return null
@@ -270,15 +267,18 @@ const extractData = (json, profileUrl) => {
 
 	for (const profileUrl of profileUrls) {
 		utils.log(`Processing ${profileUrl}`, "loading")
-		const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
+		// const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
 
-		let scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
-		scrapedData = extractData(scrapedData.json, scrapingUrl)
-		console.log("scrapedData", scrapedData)
+		// let scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
+		// scrapedData = extractData(scrapedData.json, scrapingUrl)
+		// console.log("scrapedData", scrapedData)
+		let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
 		const twitterData = await findTwitterData(tabLk, scrapedData)
 		if (twitterData) {
-			scrapedData.twitterEmail = twitterData.twitterEmail
 			scrapedData.twitterUrl = twitterData.twitterUrl
+			if (twitterData.twitterEmail) {
+				scrapedData.twitterEmail = twitterData.twitterEmail
+			}
 		}
 		try {
 			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
@@ -289,20 +289,7 @@ const extractData = (json, profileUrl) => {
 		}
 		results.push(scrapedData)
 	}
-	// const results = [{ 
-	// 	name: "Misha Stanford-Harris",
-	// 	headline: "Executive Producer at The Mill",
-	// 	firstName: "Misha",
-	// 	lastName: "Stanford-Harris",
-	// 	company: "The Mill",
-	// 	school: "Buckinghamshire New University",
-	// 	location: "London, United Kingdom",
-	// 	profileUrl: "https://www.linkedin.com/in/misha-stanford-harris-b26aa915/"
-	// }]
-	// let profilesFound = []
-	// for (const result of results) {
-	// 	profilesFound.push(await searchFacebookProfile(tab, result))
-	// }
+
 	await utils.saveResults(results, results)
 	nick.exit(0)
 })()

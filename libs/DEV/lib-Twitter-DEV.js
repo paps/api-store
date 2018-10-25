@@ -270,6 +270,7 @@ class Twitter {
 	 * @return {String} partialEmail
 	 */
 	async checkEmail(tab, input) {
+		console.log("checking Email with input=", input)
 		try {
 			await tab.open("https://twitter.com/account/begin_password_reset")
 			try {
@@ -277,9 +278,26 @@ class Twitter {
 				await tab.sendKeys("form input", input, { reset: true })
 				await tab.click(".Button")
 				const selector = await tab.waitUntilVisible(["strong", ".is-errored"], "or", 10000)
+				await tab.screenshot(`${Date.now()}-selector".png`)
+				await this.buster.saveText(await tab.getContent(), `${Date.now()}- selector".html`)
+				console.log("selector=", selector)
 				if (selector === "strong") {
-					const emailFound = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).filter(el => el.textContent.includes("@"))[0].textContent))
-					return emailFound
+					// const emailFound = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).filter(el => el.textContent.includes("@"))[0].textContent))
+					const twitterDataArray = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).map(el => el.textContent)))
+					const twitterData = {}
+					twitterDataArray.map(el => { 
+						if (el.includes("@")) { 
+							twitterData.email = el
+						} else {
+							twitterData.phoneNumber = el
+						} 
+					})
+					console.log("twitterData", twitterData)
+					return twitterData
+				} else if (await tab.evaluate((arg, cb) => cb(null, document.querySelector("div.Section > a")))) {
+					return "Too many attemps"
+				} else {
+					return null
 				}
 			} catch (err) {
 				console.log("err1", err)
