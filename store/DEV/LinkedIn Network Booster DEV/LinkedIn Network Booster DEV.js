@@ -168,14 +168,19 @@ const connectTo = async (selector, tab, message) => {
 		throw "Email needed."
 	}
 	if (message && message.length > 0) {
-		await tab.click(".send-invite__actions > button:nth-child(1)")
-		// Write the message
-		await tab.waitUntilVisible("#custom-message")
-		await tab.evaluate((arg, callback) => {
-			document.getElementById("custom-message").value = arg.message
-			callback()
-		}, {message})
-		await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
+		try {
+			await tab.click(".send-invite__actions > button:nth-child(1)")
+			// Write the message
+			await tab.waitUntilVisible("#custom-message")
+			await tab.evaluate((arg, callback) => {
+				document.getElementById("custom-message").value = arg.message
+				callback()
+			}, {message})
+			await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
+			utils.log(`Message sent: ${message}`, "done")
+		} catch (err) {
+			utils.log(`Error while sending message: ${err}`, "error")
+		}
 	}
 	await tab.click(".send-invite__actions > button:nth-child(2)")
 	try {
