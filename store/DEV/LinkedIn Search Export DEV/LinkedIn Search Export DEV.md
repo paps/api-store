@@ -1,6 +1,6 @@
 # Launch a LinkedIn search and export its results
 
-UPDATE: Now handles more search categories! People, Jobs, Companies, groups, and even schools!
+UPDATE: Now handles more search categories! People, Content, Jobs, Companies, groups, and even schools!
 
 You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results..? 
 

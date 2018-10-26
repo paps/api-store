@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -17,12 +18,28 @@ const nick = new Nick({
 	printAborts: false,
 	debug: false,
 	height: (1700 + Math.round(Math.random() * 200)), // 1700 <=> 1900
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
+
+// add tempResult to result while removing duplicates (keeping last one) according to matching property
+const removeDuplicates = (results, tempResult, category) => {
+	const tempResultLength = tempResult.length
+	const finalResults = results.slice(0)
+	for (let i = 0 ; i < tempResultLength ; i++) {
+		const index = results.findIndex(el => el.url === tempResult[i].url && el.query === tempResult[i].query)
+		if (index > -1) {
+			finalResults[index] = tempResult[i]
+		} else if (category !== "Content" || tempResult[i].url || results.findIndex(el => el.textContent === tempResult[i].textContent && el.query === tempResult[i].query) === -1) { // for Content search some posts may have no url found, we need to check textContent for duplicates
+			finalResults.push(tempResult[i])
+		}
+	}
+	return finalResults
+}
 
 const createUrl = (search, circles, category) => {
 	if (category === "Jobs") {
@@ -208,6 +225,7 @@ const getPageNumber = url => {
 	return 1
 }
 
+// click on the Next Page Button
 const clickNextPage = async (tab, lastLoc) => {
 	let selector
 	try {
@@ -232,11 +250,155 @@ const clickNextPage = async (tab, lastLoc) => {
 	}
 }
 
-const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category) => {
-	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
+// return the number of posts visible on the page
+const getPostCount = (arg, cb) => cb(null, document.querySelectorAll("li.search-content__result").length)
+
+// Content scraping and removing function
+const scrapeAndRemove = (arg, cb) => {
+	const results = document.querySelectorAll("li.search-content__result")
+	const scrapedData = []
+	for (let i = 0 ; i < results.length - arg.limiter ; i++) {
+		const scrapedObject = { query: arg.query }
+		if (results[i].querySelector(".feed-shared-actor__name")) {
+        	scrapedObject.name = results[i].querySelector(".feed-shared-actor__name").innerText
+		}
+		if (results[i].querySelector(".feed-shared-actor__meta a")) {
+			const url = results[i].querySelector(".feed-shared-actor__meta a").href
+			const urlObject = new URL(url)
+			scrapedObject.profileUrl = urlObject.hostname + urlObject.pathname
+		}
+		if (results[i].querySelector(".feed-shared-actor__description")) {
+        	scrapedObject.title = results[i].querySelector(".feed-shared-actor__description").innerText
+		}
+		if (results[i].querySelector(".feed-shared-actor__sub-description")) {
+        	scrapedObject.postDate = results[i].querySelector(".feed-shared-actor__sub-description").innerText
+		}
+		if (results[i].querySelector(".feed-shared-text__text-view")) {
+        	scrapedObject.textContent = results[i].querySelector(".feed-shared-text__text-view").innerText
+		}
+		if (results[i].querySelector("button.feed-shared-social-counts__num-likes > span")) {
+			let likeCount = results[i].querySelector("button.feed-shared-social-counts__num-likes > span").textContent
+			likeCount = likeCount.replace(/\D/g, "")
+			scrapedObject.likeCount = parseInt(likeCount, 10)
+		} else {
+			scrapedObject.likeCount = 0
+		}
+		if (results[i].querySelector("button.feed-shared-social-counts__num-comments > span")) {
+			let commentCount = results[i].querySelector("button.feed-shared-social-counts__num-comments > span").textContent
+			commentCount = commentCount.replace(/\D/g, "")
+			scrapedObject.commentCount = parseInt(commentCount, 10)
+		} else {
+			scrapedObject.commentCount = 0
+		}
+		const articleArray = Array.from(results[i].querySelectorAll("article")).filter(el => el.getAttribute("data-id"))
+		if (articleArray[0]) {
+			let articleId = articleArray[0].getAttribute("data-id")
+			let separator
+			if (articleId.includes("ugcPost")) {
+				articleId = articleId.slice(articleId.indexOf("ugcPost") + 8, articleId.indexOf(","))
+				separator = "ugcPost"
+			} else if (articleId.includes("article")) {
+				articleId = articleId.slice(articleId.indexOf("article") + 8, articleId.indexOf(","))
+				separator = "article"
+			} else {
+				articleId = articleId.slice(articleId.indexOf("activity") + 9, articleId.indexOf(","))
+				separator = "activity"
+			}
+			const postUrl = `https://www.linkedin.com/feed/update/urn:li:${separator}:${articleId}`
+			scrapedObject.url = postUrl
+		}
+		scrapedObject.timestamp = (new Date()).toISOString()
+		results[i].parentElement.removeChild(results[i])
+		scrapedData.push(scrapedObject)
+	}
+	cb(null, scrapedData)
+}
+
+// handle loading and scraping of Content
+const loadContentAndScrape = async (tab, numberOfPost, query) => {
 	let result = []
+	let scrapeCount = 0
+	let postCount = 0
+	let lastDate = new Date()
+	do {
+		const newPostCount = await tab.evaluate(getPostCount)
+		if (newPostCount > postCount) {
+			const tempResult = await tab.evaluate(scrapeAndRemove, { query, limiter: 6 })
+			result = result.concat(tempResult)
+			scrapeCount = result.length
+			if (scrapeCount) {
+				utils.log(`Scraped ${Math.min(scrapeCount, numberOfPost)} posts.`, "done")
+			}
+			buster.progressHint(Math.min(scrapeCount, numberOfPost) / numberOfPost, `${scrapeCount} posts scraped`)
+			postCount = 6
+			lastDate = new Date()
+			await tab.scroll(0, -1000)
+			for (let i = 1; i <= postCount ; i++) {
+				try {
+					await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+						if (document.querySelector(`li.search-content__result:nth-child(${arg.i})`)) {
+							callback(null, document.querySelector(`li.search-content__result:nth-child(${arg.i})`).scrollIntoView())
+						} else {
+							callback(null, "coucou")
+						}
+					}, { i })
+					await tab.wait(300)
+				} catch (err) {
+					utils.log(`Scrolling took too long!${err}`, "warning")
+					await buster.saveText(await tab.getContent(), `${Date.now()}scrollIntoView.html`)
+					await tab.screenshot(`${Date.now()}scrollIntoView.png`)
+					break
+				}
+			}
+		}
+		if (new Date() - lastDate > 10000) {
+			if (result.length) {
+				utils.log("Scrolling took too long!", "warning")
+			}
+			break
+		}
+		await tab.wait(1000)
+	} while (scrapeCount < numberOfPost)
+	result = result.concat(await tab.evaluate(scrapeAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
+	result = result.slice(0, numberOfPost)
+	if (result.length && scrapeCount === 0) { // if we scraped posts without more loading
+		utils.log(`Scrapsed ${Math.min(result.length, numberOfPost)} posts.`, "done")
+	}
+	if (!result.length) {
+		utils.log("No results found!", "warning")
+	}
+	return result
+}
+
+// handle scraping of Content posts
+const getContentPosts = async (tab, searchUrl, numberOfPost, query) => {
+	let result = []
+	try {
+		await tab.open(searchUrl)
+		await tab.waitUntilVisible(".search-results__list")
+		await buster.saveText(await tab.getContent(), `${Date.now()}getContent.html`)
+		await tab.screenshot(`${Date.now()}getContent.png`)
+		result = await loadContentAndScrape(tab, numberOfPost, query)
+	} catch (err) {
+		utils.log(`Error getting Content:${err}`, "error")
+		await buster.saveText(await tab.getContent(), `${Date.now()}Error getting Content.html`)
+		await tab.screenshot(`${Date.now()}Error getting Content.png`)
+	}
+	return result
+}
+
+const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category) => {
+	utils.log(`Getting data for search ${query} ...`, "loading")
 	let searchCat = isSearchURL
-	if (isSearchURL === 0) { searchCat = category.toLowerCase() }
+	if (isSearchURL === 0) {
+		searchCat = category.toLowerCase()
+		query += ` - ${category}`
+	}
+	if (searchCat === "content") {
+		const result = await getContentPosts(tab, searchUrl, numberOfPage, query)
+		return result
+	}
+	let result = []
 	const selectors = ["div.search-no-results__container", "div.search-results-container", ".jobs-search-no-results", ".jobs-search-results__list"]
 	let jobPageCounter
 	if (searchCat === "jobs") {
@@ -369,6 +531,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
 			if (urlObject.pathname.includes("schools")) { return "schools" } // Schools search
 			if (urlObject.pathname.includes("jobs")) { return "jobs" } // Jobs search
+			if (urlObject.pathname.includes("content")) { return "content" } // Content search
 			if (urlObject.pathname.includes("people") || urlObject.pathname.includes("all")) { return "people" } // People search
 		}
 	}
@@ -377,13 +540,14 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, queryColumn } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
 		utils.log("Empty search field.", "error")
 		nick.exit(1)
 	}
+	let result = await utils.getDb("result.csv")
 	if (!category) { category = "People" }
 	// 							//
 	if (typeof search === "string") {
@@ -399,7 +563,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		}
 	}
 	await linkedIn.login(tab, sessionCookie)
-	let result = []
+	
 	for (const search of searches) {
 		let searchUrl = ""
 		const isSearchURL = isLinkedInSearchURL(search)
@@ -413,9 +577,10 @@ const isLinkedInSearchURL = (targetUrl) => {
 		} else {
 			searchUrl = search
 		}
-		const query = queryColumn ? search : false
 		try {
-			result = result.concat(await getSearchResults(tab, searchUrl, numberOfPage, query, isSearchURL, category))
+			const tempResult = await getSearchResults(tab, searchUrl, numberOfPage, search, isSearchURL, category)
+			result = removeDuplicates(result, tempResult, category)
+
 		} catch (err) {
 			utils.log(`Error : ${err}`, "error")
 		}
