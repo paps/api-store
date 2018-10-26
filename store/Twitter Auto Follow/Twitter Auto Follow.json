@@ -34,6 +34,9 @@
 						"label": "Number of follows per launch (max. 50) <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "By default, the API will follow 20 profiles per launch.",
 						"inputType": "number"
+					},
+					"unfollowProfiles": {
+						"rightLabel": "<b>Unfollow every profile</b> (if you need to undo what you've done)"
 					}
 				}
 			}
@@ -57,6 +60,9 @@
 				"minimum": 1,
 				"maximum": 50,
 				"required": false
+			},
+			"unfollowProfiles": {
+				"type": "boolean"
 			}
 		}
 	}

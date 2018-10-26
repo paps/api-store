@@ -44,31 +44,31 @@ const getTweetsLanguages = (arg, cb) => {
  * @param {Array<String>} list -- Whitelisted languages }
  * @return {Promise<Boolean>} true if every languages are in the whitelist otherwise false at the first occurence
  */
-const isLanguagesInList = async (tab, list) => {
-	if (list.length < 1) {
-		return true
-	}
+// const isLanguagesInList = async (tab, list) => {
+// 	if (list.length < 1) {
+// 		return true
+// 	}
 
-	const langsScraped = await tab.evaluate(getTweetsLanguages)
+// 	const langsScraped = await tab.evaluate(getTweetsLanguages)
 
-	/**
-	 * No tweets scraped:
-	 * - No tweets from the user ?
-	 * - Protected mode ?
-	 * - An error ?
-	 * In any case the function will return false
-	 */
-	if (langsScraped.length < 1) {
-		return false
-	}
+// 	/**
+// 	 * No tweets scraped:
+// 	 * - No tweets from the user ?
+// 	 * - Protected mode ?
+// 	 * - An error ?
+// 	 * In any case the function will return false
+// 	 */
+// 	if (langsScraped.length < 1) {
+// 		return false
+// 	}
 
-	for (const lang of langsScraped) {
-		if (list.indexOf(lang) < 0) {
-			return false
-		}
-	}
-	return true
-}
+// 	for (const lang of langsScraped) {
+// 		if (list.indexOf(lang) < 0) {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
 /**
  * @description Compare list received with file saved to know what profile to add
@@ -112,35 +112,33 @@ const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
  * @param {Object} tab
  * @param {String} url
  * @param {Array<String>} whitelist
+ * @param {Boolean} unfollow
  * @throws if url is not a valid URL, or the daily follow limit is reached
  */
-const subscribe = async (tab, url, whitelist) => {
+const subscribe = async (tab, url, whitelist, unfollow) => {
 	utils.log(`Adding ${url}...`, "loading")
+	const followingSelector = ".ProfileNav-item .following-text"
+	const followSelector = ".ProfileNav-item .follow-text"
+	const pendingSelector = ".pending"
 	await tab.open(url)
 	let selector
 	try {
-		selector = await tab.waitUntilVisible([".ProfileNav-item .follow-text", ".ProfileNav-item .following-text", ".pending"], 5000, "or")
+		selector = await tab.waitUntilVisible([ followSelector, followingSelector, pendingSelector ], 5000, "or")
 	} catch (error) {
-		// utils.log(`Reported error: ${error.message || error}`, "error")
 		throw `${url} isn't a valid twitter profile.`
 	}
-	/**
-	 * Aren't we following the profile ?
-	 */
-	if (selector === ".ProfileNav-item .follow-text") {
-		/**
-		 * Does tweet languages found in the profile are in the provided whitelist
-		 */
-		if (!await isLanguagesInList(tab, whitelist)) {
-			return utils.log(`Tweets from ${url} includes languages that aren't provided by your whitelist, follow request canceled`, "warning")
+
+	if (selector === followSelector) {
+		if (unfollow) {
+			return utils.log(`You need to follow ${url} before sending an unfollow request`, "warning")
 		}
-		await tab.click(".ProfileNav-item .follow-text")
-		const result = await tab.waitUntilVisible([ ".ProfileNav-item .following-text", ".pending" ], 5000, "or")
+		await tab.click(followSelector)
+		const result = await tab.waitUntilVisible([ followingSelector, pendingSelector ], 5000, "or")
 		await tab.wait(1000)
 		/**
 		 * Is the target profile in protected mode ?
 		 */
-		if (await tab.isPresent(".pending")) {
+		if (await tab.isPresent(pendingSelector)) {
 			return utils.log(`Follow request for ${url} is in pending state`, "info")
 		}
 		/**
@@ -153,13 +151,24 @@ const subscribe = async (tab, url, whitelist) => {
 		/**
 		 * Follow process is a success
 		 */
-		if (result === ".ProfileNav-item .following-text") {
+		if (result === followingSelector) {
 			return utils.log(`${url} followed`, "done")
 		}
-		/**
-		 * Are we already following the profile
-		 */
-	} else if (selector === ".ProfileNav-item .following-text") {
+
+	} else if (selector === followingSelector) {
+		if (unfollow) {
+			await tab.click(followingSelector)
+			const selectorFound = await tab.waitUntilVisible([ followingSelector, followSelector ], 5000, "or")
+			await tab.wait(1000)
+			if (await tab.isVisible(".alter-messages")) {
+				utils.log("Twitter daily un/follow limit reached", "error")
+				throw "TLIMIT"
+			}
+			if (selectorFound === followingSelector) {
+				return utils.log(`${url} unfollowed`, "done")
+			}
+			return utils.log(`Unfollow request for ${url} can't be done`, "warning")
+		}
 		return utils.log(`You are already following ${url}.`, "warning")
 	}
 }
@@ -170,9 +179,10 @@ const subscribe = async (tab, url, whitelist) => {
  * @param {Array<String>} profiles
  * @param {Number} numberOfAddsPerLaunch
  * @param {Array<String>} whitelist
+ * @param {Boolean} unfollow
  * @return {Array<{ url: String, handle: String, ?error: String }>} Contains profile added
  */
-const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) => {
+const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, unfollow) => {
 	const added = []
 	let i = 1
 	for (let profile of profiles) {
@@ -199,7 +209,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 			newAdd.handle = profile
 		}
 		try {
-			await subscribe(tab, newAdd.url, whitelist)
+			await subscribe(tab, newAdd.url, whitelist, unfollow)
 			if (!newAdd.handle) {
 				const url = await tab.getUrl()
 				newAdd.handle = url.match(getUsernameRegex)[1]
@@ -224,7 +234,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let {spreadsheetUrl, sessionCookie, numberOfAddsPerLaunch, whiteList} = utils.validateArguments()
+	let { spreadsheetUrl, sessionCookie, numberOfAddsPerLaunch, whiteList, unfollowProfiles } = utils.validateArguments()
 	if (!whiteList) {
 		whiteList = []
 	}
@@ -234,8 +244,8 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist) =
 	let db = await utils.getDb(dbFileName)
 	let profiles = await getProfilesToAdd(spreadsheetUrl, db, numberOfAddsPerLaunch)
 	await twitter.login(tab, sessionCookie)
-	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList)
-	utils.log(`Added successfully ${added.length} profile.`, "done")
+	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, unfollowProfiles)
+	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${unfollowProfiles ? "unfollowed" : "added" }.`, "done")
 	db = db.concat(added)
 	await utils.saveResult(db, dbFileName.split(".").shift())
 	nick.exit()
