@@ -3,8 +3,8 @@
 	"description": "Automatically like the last tweets of a list of Twitter profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_liker/twitter_auto_liker_2.png",
 	"argumentDescription": "",
-	"gradientBegin": "#FFB75E",
-	"gradientEnd": "#6eaeb9",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
 	"hidden": false,
 	"new": false,
 	"defaultArgument": {

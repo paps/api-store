@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_follower_collector/twitter_follower_collector.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#2DAAE2",
-	"gradientEnd": "#EF629F",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_4aimaspecifictwitteraccountorseveralatatime",
 	"defaultArgument": {
@@ -19,7 +19,7 @@
 		"userId": "Their User ID",
 		"imgUrl": "Their profile picture",
 		"backgroundImg": "Their background profile image",
-		"Certified": "If they are a verified Twitter profile",
+		"certified": "If they are a verified Twitter profile",
 		"query": "Url of the profile targeted"
 	},
 	"defaultArgumentAllowed": false,

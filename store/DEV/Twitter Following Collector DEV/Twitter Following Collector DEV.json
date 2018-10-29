@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_following_collector/twitter_following_collector.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#2DAAE2",
-	"gradientEnd": "#7e9346",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_4aimaspecifictwitteraccountorseveralatatime",
 	"defaultArgument": {
