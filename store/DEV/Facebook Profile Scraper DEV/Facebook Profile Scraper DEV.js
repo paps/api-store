@@ -123,13 +123,6 @@ const craftCsvObject = data => {
 	return csvResult
 }
 
-// Checks if a url is a facebook group url
-const isFacebookProfileUrl = url => {
-	let urlObject = new URL(url.toLowerCase())
-	if (urlObject.hostname.includes("facebook.com")) { return true }
-	return false
-}
-
 const scrapeWorkPage = (arg, cb) => {
 	const extractData = array => array.map(el => {
 		const data = {}
@@ -382,7 +375,7 @@ nick.newTab().then(async (tab) => {
 	let db = await utils.getDb(csvName + ".csv")
 	let result = []
 	let profilesToScrape
-	if (isFacebookProfileUrl(spreadsheetUrl)) {
+	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ spreadsheetUrl ]
 	} else {
 		profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -406,7 +399,7 @@ nick.newTab().then(async (tab) => {
 		}
 		profileCount++
 		buster.progressHint(profileCount / profilesToScrape.length, `Scraping profile ${profileCount} out of ${profilesToScrape.length}`)
-		if (isFacebookProfileUrl(profileUrl)) { // Facebook Profile URL
+		if (facebook.isFacebookUrl(profileUrl)) {
 			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
 			try {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)

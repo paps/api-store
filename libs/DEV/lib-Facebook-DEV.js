@@ -27,6 +27,24 @@ class Facebook {
 		return url
 	}
 
+	/**
+	 * @description Tiny function used to check if a given string represents a Facebook URL
+	 * @param { String } target
+	 * @return { Boolean } true if target represents an Facebook URL otherwise false
+	 */
+	isFacebookUrl(url) {
+		try {
+			const { URL } = require("url")
+			let urlObject = new URL(url.toLowerCase())
+			if (urlObject.hostname.includes("facebook.com")) {
+				return true
+			}
+		} catch (err) {
+			//
+		}
+		return false
+	}
+
 	// guessing the gender based on facebook indication (depends on user language)
 	async guessGender(tab){
 		const guessFunction = (arg, cb) => {

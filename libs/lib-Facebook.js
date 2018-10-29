@@ -27,43 +27,61 @@ class Facebook {
 		return url
 	}
 
-		// guessing the gender based on facebook indication (depends on user language)
-		async guessGender(tab){
-			const guessFunction = (arg, cb) => {
-				let gender
-				try {
-					const placesText = document.querySelector("._Interaction__ProfileSectionPlaces").textContent
-					switch (placesText) {
-						case "Places He's Lived":
-						case "Lieux où il a habité":
-						case "מקומות שהוא גר בהם":
-						case "أماكن أقام فيها":
-						case "वे स्थान जहाँ वह रहा है":
-							gender = "male"
-							break
-						case "Places She's Lived":
-						case "Lieux où elle a habité":
-						case "מקומות שהיא גרה בהם":
-						case "أماكن أقامت فيها":
-						case "वे स्थान जहाँ वह रही है":
-							gender = "female"
-							break
-						case "Places They've Lived":
-						case "Lieux où ils ont habité":
-						case "מקומות שבהם גרו":
-						case "الأماكن التي عاشوا فيها":
-						case "वे स्थान जहाँ वे रहे हैं":
-							gender = "neutral"
-					}
-				} catch (err) {
-						//
-				}
-				cb(null, gender)
+	/**
+	 * @description Tiny function used to check if a given string represents a Facebook URL
+	 * @param { String } target
+	 * @return { Boolean } true if target represents an Facebook URL otherwise false
+	 */
+	isFacebookUrl(url) {
+		try {
+			const { URL } = require("url")
+			let urlObject = new URL(url.toLowerCase())
+			if (urlObject.hostname.includes("facebook.com")) {
+				return true
 			}
-			const gender = await tab.evaluate(guessFunction)
-			return gender
+		} catch (err) {
+			//
 		}
-		
+		return false
+	}
+
+	// guessing the gender based on facebook indication (depends on user language)
+	async guessGender(tab){
+		const guessFunction = (arg, cb) => {
+			let gender
+			try {
+				const placesText = document.querySelector("._Interaction__ProfileSectionPlaces").textContent
+				switch (placesText) {
+					case "Places He's Lived":
+					case "Lieux où il a habité":
+					case "מקומות שהוא גר בהם":
+					case "أماكن أقام فيها":
+					case "वे स्थान जहाँ वह रहा है":
+						gender = "male"
+						break
+					case "Places She's Lived":
+					case "Lieux où elle a habité":
+					case "מקומות שהיא גרה בהם":
+					case "أماكن أقامت فيها":
+					case "वे स्थान जहाँ वह रही है":
+						gender = "female"
+						break
+					case "Places They've Lived":
+					case "Lieux où ils ont habité":
+					case "מקומות שבהם גרו":
+					case "الأماكن التي عاشوا فيها":
+					case "वे स्थान जहाँ वे रहे हैं":
+						gender = "neutral"
+				}
+			} catch (err) {
+					//
+			}
+			cb(null, gender)
+		}
+		const gender = await tab.evaluate(guessFunction)
+		return gender
+	}
+	
 	// Scrape main information about the visited profile
 	async scrapeAboutPage(tab, arg){
 		const scrapePage = (arg, cb) => {

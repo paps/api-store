@@ -154,15 +154,6 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 const isUrl = target => url.parse(target).hostname !== null
 
 /**
- * @description Tiny function used tio check if a given string represents a Facebook URL
- * @param { String } target
- * @return { Boolean } true if target represents an Facebook URL otherwise false
- */
-const isFacebookUrl = target => { 
-	return url.parse(target).hostname === "www.facebook.com" || url.parse(target).hostname === "mobile.facebook.com"
-}
-
-/**
  * @description Main function to launch everything
  */
 ;(async () => {
@@ -171,7 +162,7 @@ const isFacebookUrl = target => {
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			if (isFacebookUrl(spreadsheetUrl)) {
+			if (facebook.isFacebookUrl(spreadsheetUrl)) {
 				queries = [ spreadsheetUrl ]
 			} else {
 				queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)

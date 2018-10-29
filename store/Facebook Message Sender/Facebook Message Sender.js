@@ -34,13 +34,6 @@ const isUrl = url => {
 	}
 }
 
-// Checks if a url is a facebook group url
-const isFacebookProfileUrl = url => {
-	let urlObject = new URL(url.toLowerCase())
-	if (urlObject.hostname.includes("facebook.com")) { return true }
-	return false
-}
-
 // extract target's name from chat page
 const getNameFromChat = (arg, cb) => {
 	if (Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0]) {
@@ -132,7 +125,7 @@ nick.newTab().then(async (tab) => {
 	}
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
-	if (isFacebookProfileUrl(spreadsheetUrl)) {
+	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ { "0": spreadsheetUrl } ]
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
@@ -163,7 +156,7 @@ nick.newTab().then(async (tab) => {
 			const profileUrl = profileObject[columnName]
 			profileCount++
 			buster.progressHint(profileCount / profilesToScrape.length, `Processing profile ${profileCount} out of ${profilesToScrape.length}`)
-			if (isFacebookProfileUrl(profileUrl)) { // Facebook Profile URL
+			if (facebook.isFacebookUrl(profileUrl)) { // Facebook Profile URL
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
