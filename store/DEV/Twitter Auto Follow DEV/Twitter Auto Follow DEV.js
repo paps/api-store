@@ -32,10 +32,10 @@ const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim(
  * @param {Function} cb -- Function to quit browser context }
  * @return {Promise<Array<String>>} Languages used for every tweets loaded in the current page
  */
-const getTweetsLanguages = (arg, cb) => {
-	const tweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
-	cb(null, tweets.map(el => el.querySelector("*[lang]").lang))
-}
+// const getTweetsLanguages = (arg, cb) => {
+// 	const tweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
+// 	cb(null, tweets.map(el => el.querySelector("*[lang]").lang))
+// }
 
 /**
  * @async

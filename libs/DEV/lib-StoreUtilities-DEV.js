@@ -495,9 +495,11 @@ class StoreUtilities {
 	/**
 	 * @async
 	 * @param {String} filename - Agent DB filename to retrieve (csv file)
+	 * @param {Boolean} [parseContent] - call Papaparse when the parameter is true
 	 * @return {Promise<Array<String>>|Promise<String>} an array representing a CSV othersiwe file content into a string
+	 * @throws when the file can't be loaded
 	 */
-	async getDb(filename) {
+	async getDb(filename, parseContent = true) {
 		const res = await needle("get", `https://phantombuster.com/api/v1/agent/${this.buster.agentId}`, {},
 			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } }
 		)
@@ -506,10 +508,9 @@ class StoreUtilities {
 			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
 			try {
 				const httpRes = await needle("get", url)
-				// When requesting a bad / non existing URL at phantombuster s3, needle will return a JS Object representing an access denied xml document
-				// The function will return an empty array
-				if (httpRes.raw && typeof httpRes.body === "string") {
-					const data = Papa.parse(httpRes.raw.toString(), { header: true }).data
+				// Trying to access an unknown file in s3 will make an 403 HTTP status code for the response
+				if (httpRes.raw && httpRes.statusCode === 200) {
+					const data = parseContent ? Papa.parse(httpRes.raw.toString(), { header: true }).data : httpRes.raw.toString()
 					return data
 				} else {
 					return []

@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
-"phantombuster flags: save-folder" 
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -21,7 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const { URL } = require("url")
 
 const DB_NAME = "result"
@@ -107,9 +106,6 @@ const removeLinkedinSubdomains = url => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase} = utils.validateArguments()
-	const tab = await nick.newTab()
-	await linkedIn.login(tab, sessionCookie)
-
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -128,11 +124,16 @@ const removeLinkedinSubdomains = url => {
 	}
 
 	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
+	let jsonDb = noDatabase ? [] : await utils.getDb(DB_NAME + ".json", false)
+	if (typeof jsonDb === "string") {
+		jsonDb = JSON.parse(jsonDb)
+	}
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
-
+	const tab = await nick.newTab()
+	await linkedIn.login(tab, sessionCookie)
 
 	const result = []
 	for (let url of urls) {
@@ -177,7 +178,8 @@ const removeLinkedinSubdomains = url => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		await utils.saveResults(result, db, DB_NAME, null, true)
+		jsonDb.push(...result)
+		await utils.saveResults(jsonDb, db, DB_NAME, null, true)
 		nick.exit(0)
 	}
 })()
