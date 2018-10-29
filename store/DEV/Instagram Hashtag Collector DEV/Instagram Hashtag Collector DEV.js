@@ -182,7 +182,7 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	const MAX_POSTS = 1000
+	const MAX_POSTS = 1500
 	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
 
 	if (!maxPosts) {

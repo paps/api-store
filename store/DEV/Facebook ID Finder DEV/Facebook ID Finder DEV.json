@@ -3,8 +3,8 @@
 	"description": "Find Facebook IDs from Facebook profile URLs",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_ID_Finder/FB_ID_finder2.png",
 	"hidden": false,
-	"gradientBegin": "#ff00cc",
-	"gradientEnd": "#333399",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
 	"argumentHelpAnchor": "#section_4googlespreadsheet",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/13EW6nmHZwwdlngew7G2BoKsHjRKEH_g6U-C9zvaLYII"

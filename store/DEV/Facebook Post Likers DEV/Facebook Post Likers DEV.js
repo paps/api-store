@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 
 // }

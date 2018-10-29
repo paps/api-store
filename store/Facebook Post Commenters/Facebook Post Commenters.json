@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Commenters/Facebook+Post+Commenters_nobg.png",
 	"hidden": false,
 	"new": true,
-	"gradientBegin": "#91EAE4",
-	"gradientEnd": "#7F7FD5",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",

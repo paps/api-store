@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#833ab4",
-	"gradientEnd": "#fcb045",
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

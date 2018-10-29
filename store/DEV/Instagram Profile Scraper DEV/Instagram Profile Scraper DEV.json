@@ -3,8 +3,8 @@
 	"description": "Collect valuable information you need from Instagram profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
-	"gradientBegin": "#833ab4",
-	"gradientEnd": "#fcb045",
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#v",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

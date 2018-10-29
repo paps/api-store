@@ -11,12 +11,14 @@ Optional additional details on how it's going to work.
 - [ ] Code
 - [ ] Hidden prod version deployed
 - [ ] Tutorial
+  - [ ] Description
   - [ ] Basic step-by-step
   - [ ] Growth-hacking blurb, strategy & tips
 - [ ] Settings
   - [ ] Argument help link
   - [ ] Inline help `(?)` links
 - [ ] Tests
+- [ ] Logo
 - [ ] Secret URL shared with beta testers
 - [ ] Prod version revealed and flagged as new
 - [ ] Newsletter sent

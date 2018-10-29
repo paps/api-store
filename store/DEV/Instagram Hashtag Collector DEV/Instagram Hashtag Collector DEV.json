@@ -96,7 +96,7 @@
 			"maxPosts": {
 				"type": "number",
 				"default": 250,
-				"maximum": 1000,
+				"maximum": 1500,
 				"minimum": 1
 			}
 		},
