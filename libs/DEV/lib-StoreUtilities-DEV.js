@@ -441,6 +441,17 @@ class StoreUtilities {
 		return fields
 	}
 
+	/**
+	 * @description Get the IP used during the execution
+	 * @return {Promise<String>} IP found
+	 */
+	async getIP() {
+		const res = await needle("get", "https://ipinfo.io/ip")
+		if (res.statusCode === 200) {
+			return res.raw.toString()
+		}
+	}
+
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		this.log("Saving data...", "loading")
