@@ -203,6 +203,10 @@ const scrapeInfos = (arg, callback) => {
 			infos.general.connections = sel.textContent.trim().match(/\d+\+?/)[0]
 		}
 
+		if (document.querySelector(".dist-value")) {
+			infos.general.connectionDegree = document.querySelector(".dist-value").textContent
+		}
+		
 		/**
 		 * Issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
