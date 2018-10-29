@@ -3,8 +3,8 @@
 	"description": "Add incoming pending invitations automatically",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Accept_Invitations/lkd_logo_invitation.png",
 	"hidden": false,
-	"gradientBegin": "#F4D03F",
-	"gradientEnd": "#16A085",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

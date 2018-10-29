@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_auto_endorse/linkedin+auto+endorse.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#BDFFF3",
-	"gradientEnd": "#4AC29A",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",

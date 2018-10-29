@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_profile_url_finder/linkedin+_profile_url_finder.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#12FFF7",
-	"gradientEnd": "#EDDE5D",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1nAqPZu16jyJWFNEhP1E020ghL2Q-dt_EyghWIpVKqIQ",

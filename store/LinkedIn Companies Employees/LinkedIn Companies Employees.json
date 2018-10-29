@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Companies_Employees/lkd_cmpns_mpls.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#f79d00",
-	"gradientEnd": "#64f38c",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

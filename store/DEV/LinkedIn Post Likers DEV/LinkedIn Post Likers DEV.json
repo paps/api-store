@@ -3,8 +3,8 @@
 	"description": "Extract LinkedIn profiles, names & jobs of everyone who liked a LinkedIn post",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_post_likers/lkd_post_lks.png",
 	"hidden": false,
-	"gradientBegin": "#e65c00",
-	"gradientEnd": "#F9D423",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"argumentDescription": "",
 	"defaultArgument": {

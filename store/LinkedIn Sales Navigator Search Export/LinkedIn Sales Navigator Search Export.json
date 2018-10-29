@@ -3,8 +3,9 @@
 	"description": "Collect LinkedIn Sales Navigator search results",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
 	"hidden": false,
-	"gradientBegin": "#7C5BBB",
-	"gradientEnd": "#42327f",
+	"new": true,
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"argumentDescription": "",
 	"defaultArgument": {
@@ -15,8 +16,7 @@
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
-		"profileUrl": "LinkedIn Sales Navigator profile URL",
-		"defaultProfileUrl" : "Default profile URL (if checked)",
+		"url": "LinkedIn Sales Navigator profile URL",
 		"currentJob": "",
 		"name": "Full name of the person",
 		"companyName": "",

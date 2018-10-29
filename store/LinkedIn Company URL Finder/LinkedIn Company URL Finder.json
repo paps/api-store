@@ -4,8 +4,8 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_company_url_finder/linkedin+_company_url_finder.png",
 	"hidden": false,
 	"new": false,
-	"gradientBegin": "#74d3ad",
-	"gradientEnd": "#f4935a",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": true,
 	"defaultArgument": {
@@ -41,6 +41,10 @@
 					"csvName": {
 						"label": "Output CSV name",
 						"placeholder": "result"
+					},
+					"numberOfLinesToProcess": {
+						"label": "Number of lines to process per launch (all of them if empty)",
+						"inputType": "number"
 					}
 				}
 			}
@@ -57,6 +61,9 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"numberOfLinesToProcess": {
+				"type": "number"
 			}
 		},
 		"oneOf": [

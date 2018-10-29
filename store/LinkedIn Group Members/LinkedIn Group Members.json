@@ -4,7 +4,7 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_post_likers/lkd_post_lks.png",
 	"hidden": false,
 	"gradientBegin": "#4CA1AF",
-	"gradientEnd": "#2C3E50",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

@@ -3,8 +3,8 @@
 	"description": "Accept and message people",
 	"image": "",
 	"hidden": true,
-	"gradientBegin": "#E44D26",
-	"gradientEnd": "#F16529",
+	"gradientBegin": "#28485B",
+	"gradientEnd": "#4CA1AF",
 	"argumentDescription": "",
 	"defaultArgument": {
 		"sessionCookie": "",

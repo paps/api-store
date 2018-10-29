@@ -3,8 +3,8 @@
 	"description": "Automatically withdraw old pending sent invitations",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/linkedin_auto_withdraw/linkedin+auto+withdraw_paper.png",
 	"hidden": false,
-	"gradientBegin": "#54B325",
-	"gradientEnd": "#fffc00",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
