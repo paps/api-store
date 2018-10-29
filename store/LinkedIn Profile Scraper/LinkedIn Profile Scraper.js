@@ -108,7 +108,11 @@ const removeLinkedinSubdomains = url => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
+			urls = [spreadsheetUrl]
+		} else {
+			urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		}
 	} else if (typeof profileUrls === "string") {
 		urls = [profileUrls]
 	}
