@@ -65,18 +65,18 @@ Your spreadsheet should contain the list of profile URLs you want to send messag
 You can also specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 
 ## 6. Personalize your message 🆕 💬
-Below the column name you'll find the **message** configuration.
+Below the column's name, you'll find the **message** configuration.
 
 ⚠️ Your message has to be **less than 7000 characters**.
 
-Make sure to taylor your message so it fits perfectly with its recipient. *And you will find a ton of ideas on that topic on our blog* 🤓
+Make sure to tailor your message so it fits perfectly with its recipient. *And you will find a ton of ideas on that topic on our blog* 🤓
 
 **\#firstName\#** will be replaced in your message by the first name of the person you’re adding.
 
 Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
 How about using your own tags ? <b>Simple.</b>
-Add a column in your Google Spreadsheet with any informations you want to apply.
+Add a column in your Google Spreadsheet with any pieces of information you want to inject.
 
 For instance:
 A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message
@@ -94,7 +94,7 @@ This will launch the API and, if you didn't already change the spreadsheet URL, 
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the API is launched, it will send 10 connection requests and stop. (You can lower this value in the API's configuration.)
+Every time the API is launched, it will send the number of messages you specified and stop. (You can modify this value in the API's configuration.)
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 
