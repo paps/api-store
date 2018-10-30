@@ -207,6 +207,14 @@ const scrapeInfos = (arg, callback) => {
 			infos.general.connectionDegree = document.querySelector(".dist-value").textContent
 		}
 		
+		// extract the vmid from the page code
+		try {
+			const entityUrn = JSON.parse(Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("urn:li:fs_memberBadges"))[0].textContent).data.entityUrn
+			infos.general.vmid = entityUrn.slice(entityUrn.indexOf("memberBadges:") + 13)
+		} catch (err) {
+			//
+		}
+		
 		/**
 		 * Issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
@@ -486,6 +494,8 @@ const craftCsvObject = infos => {
 		lastName: (hasGeneral) ? (infos.general.lastName || null) : null,
 		fullName: (hasGeneral) ? (infos.general.fullName || null) : null,
 		subscribers: (hasGeneral) ? (infos.general.subscribers || null) : null,
+		connectionDegree: (hasGeneral) ? (infos.general.connectionDegree || null) : null,
+		vmid: (hasGeneral) ? (infos.general.vmid || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
