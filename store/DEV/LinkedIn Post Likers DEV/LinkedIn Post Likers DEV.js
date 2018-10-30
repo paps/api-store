@@ -63,7 +63,8 @@ const scrapeLikes = (arg, callback) => {
 		result.push({
 			profileLink: like.querySelector("a").href,
 			name,
-			job: like.querySelector(".profile-link > p.headline").textContent.trim()
+			job: like.querySelector(".profile-link > p.headline").textContent.trim(),
+			degree: like.querySelector(".dist-value") ? like.querySelector(".dist-value").textContent.trim() : null
 		})
 	}
 	callback(null, result)
