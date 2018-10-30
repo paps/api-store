@@ -212,9 +212,10 @@ const sendMessage = async (tab, message, tags) => {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
 	}
-	if (typeof profilesPerLaunch === "number") {
-		rows = rows.slice(0, profilesPerLaunch)
+	if (!profilesPerLaunch) {
+		profilesPerLaunch = PROFILES_PER_LAUNCH
 	}
+	rows.slice(0, profilesPerLaunch)
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
 	for (let row of rows) {

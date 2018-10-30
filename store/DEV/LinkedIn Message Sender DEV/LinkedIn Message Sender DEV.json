@@ -40,7 +40,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"profilesPerLaunch": {
-						"label": "Number of profiles to send messages per launch",
+						"label": "Number of profiles to send messages per launch (max: 10)",
 						"inputType": "number",
 						"helper": "You can leave this field empty if you want to send a message to all profiles"
 					},
@@ -81,7 +81,8 @@
 			},
 			"profilesPerLaunch": {
 				"type": "number",
-				"minimum": 1
+				"minimum": 1,
+				"maximum": 10
 			},
 			"message": {
 				"type": "string",
