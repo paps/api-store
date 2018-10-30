@@ -211,7 +211,7 @@ const jsonToCsvOutput = json => {
 	let step = 0
 
 	if (spreadsheetUrl) {
-		queries = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName.trim())
+		queries = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	} else if (typeof queries === "string") {
 		queries = [ queries ]
 	}
@@ -255,6 +255,5 @@ const jsonToCsvOutput = json => {
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
 	nick.exit(1)
 })
