@@ -73,10 +73,8 @@ const isFacebookGroupUrl = (url) => {
 	if (urlObject.pathname.startsWith("www.facebook")) {
 		urlObject = parse("https://" + url)
 	}
-	if (urlObject && urlObject.hostname) {
-		if (urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
+	if (urlObject && urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
 			return true
-		}
 	}
 	return false
 }
@@ -85,7 +83,9 @@ const isFacebookGroupUrl = (url) => {
 const cleanGroupUrl = (url) => {
 	const urlObject = parse(url)
 	let cleanName = urlObject.pathname.slice(8)
-	if (cleanName.includes("/")) { cleanName = cleanName.slice(0,cleanName.indexOf("/")) }
+	if (cleanName.includes("/")) {
+		cleanName = cleanName.slice(0,cleanName.indexOf("/"))
+	}
 	return "https://www.facebook.com/groups/" + cleanName + "/"
 }
 
@@ -104,7 +104,9 @@ const onHttpRequest = (e) => {
 // Getting the group name and member count
 const firstScrape = (arg, callback) => {
 	let groupName
-	if (document.querySelector("#seo_h1_tag a")) { groupName = document.querySelector("#seo_h1_tag a").textContent }
+	if (document.querySelector("#seo_h1_tag a")) {
+		groupName = document.querySelector("#seo_h1_tag a").textContent
+	}
 	
 	let membersCount
 	if (document.querySelector("#groupsMemberBrowser div div div span")) {
@@ -134,14 +136,16 @@ const scrapeFirstMembers = (arg, callback) => {
 		if (lastName) {
 			newData.lastName = lastName
 		}
+		newData.groupName = groupName
+		newData.groupUrl = arg.groupUrl
 		if (result.querySelector(".timestampContent")) {
 			newData.memberSince = result.querySelector(".timestampContent").textContent
+		} else if (result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling) { // sometimes they're not in a .timestampContent class
+			newData.memberSince = result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling.textContent
 		}
 		if (result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type")) {
 			newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
 		}
-		newData.groupName = groupName
-		newData.groupUrl = arg.groupUrl
 		newData.timestamp = (new Date()).toISOString()
 
 		data.push(newData)
@@ -184,11 +188,24 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		const profilePicture = chr("img").attr("src")
 		data.profilePicture = profilePicture
 		const memberSince = chr(".timestamp").attr("title")
-		if (memberSince) { data.memberSince = memberSince }
+		if (memberSince) {
+			data.memberSince = memberSince
+		} else { 
+			let splitByATag = profile.split("<a")
+			splitByATag = "<a" + splitByATag[splitByATag.length - 1]
+			splitByATag = cheerio.load(splitByATag)
+			if (splitByATag("a").next().text()) {
+				data.memberSince = splitByATag("a").next().text()
+			}
+		}
 		let additionalData = chr(".timestampContent").parents().next().html()
 		const additionalDataText = chr(".timestampContent").parents().next().text()
-		if (additionalData && additionalDataText && additionalData.length > additionalDataText.length) { additionalData = additionalDataText }
-		if (additionalData) { data.additionalData = additionalData }
+		if (additionalData && additionalDataText && additionalData.length > additionalDataText.length) {
+			additionalData = additionalDataText
+		}
+		if (additionalData) {
+			data.additionalData = additionalData
+		}
 		data.groupUrl = groupUrl
 		data.groupName = groupName
 		data.timestamp = (new Date()).toISOString()
@@ -235,6 +252,7 @@ const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 }
 
 const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape, numberAlreadyScraped) => {
+	console.log("ajaxUrl", ajaxUrl)
 	let jsonResponse
 	try {
 		jsonResponse = await getJsonResponse(tab, ajaxUrl)
