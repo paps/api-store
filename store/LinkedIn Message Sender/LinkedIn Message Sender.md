@@ -1,10 +1,10 @@
 # Automatically send personalized messages on LinkedIn and engage with your network at scale!
 
-Contacting a segment of your LinkedIn contacts through the LinkedIn chat is really tedious - especially when you have grown your network with Phantombuster.
+Talking with your prospects id key. But messaging a segment of your LinkedIn contacts through the LinkedIn chat is really tedious. Especially when you have grown your network with Phantombuster.
 
-Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they will take care of it for you. Each message will be personalized according to your needs, at the rythm that you choose.
+Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they'll take care of it for you. Each message will be personalized according to your needs, at the rhythm that you choose.
 
-You're now free to focus on what really matters : your contacts' answers.
+You're now free to focus on what really matters: your contacts' answers.
 
 # What will you need? ⚙️
 
@@ -65,18 +65,18 @@ Your spreadsheet should contain the list of profile URLs you want to send messag
 You can also specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 
 ## 6. Personalize your message 🆕 💬
-Below the column name you'll find the **message** configuration.
+Below the column name, you'll find the **message** configuration.
 
 ⚠️ Your message has to be **less than 7000 characters**.
 
-Make sure to taylor your message so it fits perfectly with its recipient. *And you will find a ton of ideas on that topic on our blog* 🤓
+Make sure to tailor your message so it fits perfectly with its recipient. *And you will find a ton of ideas on that topic on our blog* 🤓
 
 **\#firstName\#** will be replaced in your message by the first name of the person you’re adding.
 
-Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
+Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#**, and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
-How about using your own tags ? <b>Simple.</b>
-Add a column in your Google Spreadsheet with any informations you want to apply.
+How about using your own tags? <b>Simple.</b>
+Add a column in your Google Spreadsheet with any pieces of information you want to apply.
 
 For instance:
 A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message

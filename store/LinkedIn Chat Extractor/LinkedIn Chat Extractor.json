@@ -1,7 +1,7 @@
 {
 	"slug": "linkedin-chat-extractor",
 	"description": "Find all messages from any LinkedIn conversations at a glance",
-	"image": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Chat+Extractor/LinkedIn+Chat+Extractor.png",
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentDescription": "",

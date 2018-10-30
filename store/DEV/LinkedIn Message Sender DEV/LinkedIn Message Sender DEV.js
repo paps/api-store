@@ -27,6 +27,8 @@ const { URL } = require("url")
 const DB_SHORT_NAME = "linkedin-chat-send-message"
 const DB_NAME = DB_SHORT_NAME + ".csv"
 
+const PROFILES_PER_LAUNCH = 10
+
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
 	chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
@@ -212,9 +214,10 @@ const sendMessage = async (tab, message, tags) => {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
 	}
-	if (typeof profilesPerLaunch === "number") {
-		rows = rows.slice(0, profilesPerLaunch)
+	if (!profilesPerLaunch) {
+		profilesPerLaunch = PROFILES_PER_LAUNCH
 	}
+	rows.slice(0, profilesPerLaunch)
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
 	for (let row of rows) {
