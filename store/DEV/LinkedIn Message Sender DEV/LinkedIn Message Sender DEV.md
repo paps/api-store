@@ -1,10 +1,10 @@
 # Automatically send personalized messages on LinkedIn and engage with your network at scale!
 
-Contacting a segment of your LinkedIn contacts through the LinkedIn chat is really tedious - especially when you have grown your network with Phantombuster.
+Talking with your prospects id key. But messaging a segment of your LinkedIn contacts through the LinkedIn chat is really tedious. Especially when you have grown your network with Phantombuster.
 
-Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they will take care of it for you. Each message will be personalized according to your needs, at the rythm that you choose.
+Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they'll take care of it for you. Each message will be personalized according to your needs, at the rhythm that you choose.
 
-You're now free to focus on what really matters : your contacts' answers.
+You're now free to focus on what really matters: your contacts' answers.
 
 # What will you need? ⚙️
 
@@ -65,7 +65,7 @@ Your spreadsheet should contain the list of profile URLs you want to send messag
 You can also specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 
 ## 6. Personalize your message 🆕 💬
-Below the column's name, you'll find the **message** configuration.
+Below the column name, you'll find the **message** configuration.
 
 ⚠️ Your message has to be **less than 7000 characters**.
 
@@ -73,10 +73,10 @@ Make sure to tailor your message so it fits perfectly with its recipient. *And y
 
 **\#firstName\#** will be replaced in your message by the first name of the person you’re adding.
 
-Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#** and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
+Many other replacement tags are available, like **\#company\#**, **\#jobTitle\#**, and **\#school\#**. In fact, you can use any column you want from the output CSV. (Note: you have to enable scraping by not checking the last checkbox for these tags to be available.)
 
-How about using your own tags ? <b>Simple.</b>
-Add a column in your Google Spreadsheet with any pieces of information you want to inject.
+How about using your own tags? <b>Simple.</b>
+Add a column in your Google Spreadsheet with any pieces of information you want to apply.
 
 For instance:
 A column named **greetings** in your Google Spreadsheet will replace all **\#greetings\#** tags in your message
@@ -94,7 +94,7 @@ This will launch the API and, if you didn't already change the spreadsheet URL, 
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the API is launched, it will send the number of messages you specified and stop. (You can modify this value in the API's configuration.)
+Every time the API is launched, it will send 10 connection requests and stop. (You can lower this value in the API's configuration.)
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 

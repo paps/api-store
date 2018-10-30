@@ -1,14 +1,15 @@
 # Find all messages from any LinkedIn conversartions in seconds
 
-As always, on Phantombuster, **no need to keep your computer on**, everything happens in the cloud :D
+Here is a little tool that will visit the conversations you had with a list of contacts of your choice. It will then extract as many messages as you wish off of these conversations.
+
+That means the content, but also the time you received each message as well as basics info about your sender. This is useful if you want to treat that data afterward or simply know if you received new messages after a specific time.
 
 # What you'll need to set to make it work? ⚙️ { argument }
+- **CSV/ Spreadsheet URLs or URLs to scrape**: The link of a Google Spreadsheet (or CSV) with LinkedIn URLs of all the profiles you're interested in.
 
-- **CSV/ Spreadsheet URLs or URLs to scrape** { tutu }: The link of a Google Spreadsheet (or CSV) with websites URLs or a list of URL set manually.
+- **Number of messages to extract per launch**: The API will load the entire conversation by default, but if you only need some messages it's possible to limit the API.
 
-- **Number of messages to find per launch**: The API will load the entire conversation by default, but if you only need some messages it's possible to limit the API
-
-- **Number of profiles to scrape per launch**: The API can be stopped at any time and relaunched later. This option defines the number of websites visited per launch.
+- **Number of profiles to scrape per launch**: The API can be stopped at any time and relaunched later. This option defines the number of profiles visited per launch.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 
@@ -47,7 +48,7 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 # Which data will you collect?
 
-A CSV file (Excel compatible file) will be created for you in the cloud. It's composed of two columns:
+A CSV file (Excel compatible file) will be created for you in the cloud. It's composed of the following columns:
 
 - author: Name of the person who send the message
 - profileUrl: Message sender LinkedIn profile
