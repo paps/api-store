@@ -59,9 +59,10 @@ const scrapeLikes = (arg, callback) => {
 	const result = []
 	const likes = document.querySelectorAll("li.actor-item")
 	for (const like of likes) {
+		const name = Array.from(like.querySelector(".profile-link > h3.name").childNodes).filter(el => el.nodeType === Node.TEXT_NODE).map(el => el.textContent.trim()).join("")
 		result.push({
 			profileLink: like.querySelector("a").href,
-			name: like.querySelector(".profile-link > h3.name").textContent.trim(),
+			name,
 			job: like.querySelector(".profile-link > p.headline").textContent.trim()
 		})
 	}
@@ -96,7 +97,7 @@ const getLikes = async (tab, urls) => {
 			 */
 			selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
 		} catch (error) {
-			const err = "Publication URL seems not to be a publication OR doesn't have any likes"
+			const err = `${url} seems not to be a publication OR doesn't have any likes`
 			utils.log(err, "warning")
 			results.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: err })
 			continue
