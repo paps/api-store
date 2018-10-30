@@ -158,6 +158,46 @@ const triggerCommentsLoading = (arg, cb) => {
 	cb(null, trigger !== null)
 }
 
+const scrapeCommenters = (arg, cb) => {
+	const flatArray = (list, depth = 3) => {
+		depth = ~~depth
+		if (depth === 0) return list
+		return list.reduce((acc, val) => {
+			if (Array.isArray(val)) {
+				acc.push(...flatArray(val, depth - 1))
+			} else {
+				acc.push(val)
+			}
+			return acc
+		}, [])
+	}
+	const _scrape = comment => {
+		const one = {}
+		const profile = comment.querySelector("a[data-control-name")
+		const occupationSelector = comment.querySelector("a.feed-shared-post-meta__profile-link span.feed-shared-post-meta__headline")
+		const commentSelector = comment.querySelector("p.feed-shared-comment-item__main-content")
+		if (profile) {
+			one.profileLink = profile.href
+			one.fullName = profile.querySelector("div.member span:first-of-type") ? profile.querySelector("div.member span:first-of-type").textContent.trim() : null
+			let tmp = typeof one.fullName === "string" ? one.fullName.split(" ") : null
+			one.firstName = tmp ? tmp.shift() : null
+			one.lastName = tmp ? tmp.join(" ") : null
+			one.occupation = occupationSelector ? occupationSelector.textContent.trim() : null
+		}
+		one.comment = commentSelector ? commentSelector.textContent.trim() : null
+		return one
+	}
+	const commenters = Array.from(document.querySelectorAll("div.feed-shared-comments-list article.feed-shared-comments-list__comment-item")).map(comment => {
+		const res = []
+		res.push(_scrape(comment))
+		if (comment.querySelector("div.feed-shared-comment-item__nested-items")) {
+			res.push(_scrape(comment.querySelector("div.feed-shared-comment-item__nested-items")))
+		}
+		return res
+	})
+	cb(null, flatArray(commenters))
+}
+
 /**
  * Handled articles:
  * https://www.linkedin.com/feed/update/urn:li:activity:xxxx/
@@ -195,9 +235,30 @@ const triggerCommentsLoading = (arg, cb) => {
 		// Comment section in pulse article are slow to load, we need to wait until the section fully loaded before scraping
 		// TODO: find a more elegant way to wait the comment section on pulse articles
 		await tab.wait(5000)
-		await tab.evaluate(triggerCommentsLoading, { selectors: [ "button[data-control-name=\"comments_count\"]", "button[data-control-name=\"more_comments\"]" ] })
-		if (!gl.search.updateId) {
-			throw "Could not get comments on this page."
+		const triggered = await tab.evaluate(triggerCommentsLoading, { selectors: [ "button[data-control-name=\"comments_count\"]", "button[data-control-name=\"more_comments\"]" ] })
+		if (!triggered) {
+			utils.log(`No commenters found at ${url}`, "warning")
+			db.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: `No commenters found in at ${url}` })
+			continue
+		}
+
+		if (!gl.search || !gl.search.updateId) {
+			// This situation happens when there are less than 10 commenters in the post
+			if (triggered) {
+				let commenters = await tab.evaluate(scrapeCommenters)
+				commenters.map(el => {
+					el.postUrl = url
+					el.timestamp = (new Date()).toISOString()
+				})
+				utils.log(`Got ${commenters.length} comments.`, "done")
+				db.push(...utils.filterRightOuter(db, commenters))
+				continue
+			} else {
+				const error = "Could not get comments on this page."
+				utils.log(error, "error")
+				db.push({ postUrl: url, timestamp: (new Date()).toISOString(), error })
+				continue
+			}
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))

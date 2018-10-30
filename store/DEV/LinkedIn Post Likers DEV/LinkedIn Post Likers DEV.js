@@ -96,8 +96,10 @@ const getLikes = async (tab, urls) => {
 			 */
 			selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
 		} catch (error) {
-			utils.log("Publication URL seems not to be a publication", "error")
-			nick.exit(1)
+			const err = "Publication URL seems not to be a publication OR doesn't have any likes"
+			utils.log(err, "warning")
+			results.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: err })
+			continue
 		}
 		try {
 			await loadAllLikes(tab, selectors.list)
