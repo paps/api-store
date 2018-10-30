@@ -1,8 +1,8 @@
 # Find all messages from any LinkedIn conversartions in seconds
 
-This API will visit the conversations you had with a list of contacts of your choice. It will then extract as many messages as you wish off of these conversations.
+This API will visit the conversations you had with a list of contacts of your choice. **It will then extract as many messages** as you wish **off of these conversations**.
 
-This is useful in order to treat that data afterward, or simply know if you received new messages after a specific time.
+This is useful in order to treat that data afterward, or simply know if you received new messages *after* a specific time.
 
 # What you'll need to set to make it work? ⚙️ { argument }
 - **CSV/ Spreadsheet URLs or URLs to scrape**: The link of a Google Spreadsheet (or CSV) with LinkedIn URLs of all the profiles you're interested in.
