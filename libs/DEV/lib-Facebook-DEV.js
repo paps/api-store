@@ -114,24 +114,31 @@ class Facebook {
 			}
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
-				const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
-				if (educationDiv.length) {
-					const educations = educationDiv.map(el => {
-						const data = {}
-						if (el.querySelector("a")) { 
-							data.url = el.querySelector("a").href
-							if (el.querySelectorAll("a")[1] && el.querySelectorAll("a")[1].parentElement) {
-								data.name = el.querySelectorAll("a")[1].parentElement.textContent
-							}
-							try {
-								data.description = el.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-							} catch (err) {
-								//
-							}
+				const workAndEducationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div"))
+				const extractData = node => {
+					const data = {}
+					if (node.querySelector("a")) {
+						data.url = node.querySelector("a").href
+						if (node.querySelectorAll("a")[1] && node.querySelectorAll("a")[1].parentElement) {
+							data.name = node.querySelectorAll("a")[1].parentElement.textContent
 						}
-						return data
-					})
-					scrapedData.educations = educations
+						try {
+							data.description = node.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
+						} catch (err) {
+							//
+						}
+					}
+					return data
+				}
+				if (workAndEducationDiv) {
+					const work = extractData(workAndEducationDiv[0])
+					if (work) {
+						scrapedData.works = work
+					}
+					const education = extractData(workAndEducationDiv[1])
+					if (education) {
+						scrapedData.educations = education
+					}
 				}
 			}
 		

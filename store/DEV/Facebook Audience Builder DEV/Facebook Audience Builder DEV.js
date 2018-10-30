@@ -29,6 +29,7 @@ const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
 const Google = require("./lib-Google-DEV")
 const Dropcontact = require("./lib-Dropcontact")
+const dropcontact = new Dropcontact("nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi")
 const { URL } = require("url")
 // }
 
@@ -147,6 +148,51 @@ const searchFacebookProfile = async (tab, profile) => {
 	}
 	return profile
 }
+const searchLinkedInProfile = async (tab, scrapedData) => {
+	let search = scrapedData.name
+	if (scrapedData.works && scrapedData.works.name) {
+		search += ` ${scrapedData.works.name}`
+	}
+	const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(search)}`
+	const selectors = ["div.search-no-results__container", "div.search-results-container"]
+
+	await tab.open(searchUrl)
+	let selector
+	try {
+		selector = await tab.waitUntilVisible(selectors, 15000, "or")
+	} catch (err) {
+		// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+		utils.log(err.message || err, "warning")
+	}
+	await tab.screenshot(`${Date.now()}sU.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
+	if (selector === selectors[0] || selector === selectors[2]) { 
+		// fixing the "No results" bug by simply reloading the page until results show up
+		let retryCount = 0
+		do {				
+			await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
+			selector = await tab.waitUntilVisible(selectors, 15000, "or")
+			if (retryCount++ === 6) {
+				break
+			}
+		} while (selector === selectors[0] || selector === selectors[2])
+	}
+	if (selector === selectors[0] || selector === selectors[2]) {
+		utils.log("No result on that page.", "done")
+		return []
+	} else {
+		return tab.evaluate(scrapeLinkedinresults)		
+	}
+}
+
+const scrapeLinkedinresults = (arg, cb) => {
+	const firstResult = document.querySelector(".search-result__wrapper")
+	let foundUrl
+	if (firstResult.querySelector("a")) {
+		foundUrl = firstResult.querySelector("a").href
+	}
+	cb(null, foundUrl)
+}
 
 const guessEmail = async (tab, partialData, scrapedData) => {
 	console.log("partialData", partialData)
@@ -193,11 +239,12 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 	return twitterEmail
 }
 
-const findTwitterData = async (tab, scrapedData) => {
+const findTwitterData = async (tab, scrapedData, company = null) => {
 	const google = new Google(tab, buster)
-	const twitterResults = await google.search("site:twitter.com " + scrapedData.name)
+	console.log("Searching Twitter for...", `site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
+	const twitterResults = await google.search(`site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
 	const firstResult = twitterResults.results[0]
-	if (firstResult.title.endsWith("Twitter")) {
+	if (firstResult && firstResult.title.endsWith("Twitter")) {
 		let twitterUrl = firstResult.link
 		// only keep the twitter.com/profile of a profile URL
 	
@@ -212,10 +259,10 @@ const findTwitterData = async (tab, scrapedData) => {
 		const urlObject = new URL(twitterUrl)
 		const twitterHandle = urlObject.pathname.substr(1)
 		const partialTwitterData = await twitter.checkEmail(tab, twitterHandle)
-		console.log("partialTwitter=", partialTwitterData)
-		if (partialTwitterData === "Too many attemps") {
+		if (! partialTwitterData || partialTwitterData === "Too many attemps") {
+			console.log("partialTwitter=", partialTwitterData)
 			return { twitterUrl }
-		}
+		}	
 		const guessedEmail = await guessEmail(tab, partialTwitterData, scrapedData)
 		return { twitterUrl, twitterEmail: guessedEmail }
 	}
@@ -224,7 +271,7 @@ const findTwitterData = async (tab, scrapedData) => {
 
 
 // keep only the data we want from the LinkedIn profile
-const extractData = (json, profileUrl) => {
+const extractLinkedInData = (json, profileUrl) => {
 	// console.log("json", json)
 	const main = json.general
 	const filteredData = { name: main.fullName, headline: main.headline, firstName: main.firstName, lastName: main.lastName, company: main.company, school: main.school, location: main.location, linkedinUrl: profileUrl }
@@ -237,13 +284,19 @@ const extractData = (json, profileUrl) => {
 	return filteredData
 }
 
+const useDropcontact = async (scrapedData) => {
+	const dropcontactData = { first_name:scrapedData.firstName, last_name: scrapedData.lastName, company: scrapedData.company }
+	const result = await dropcontact.clean(dropcontactData)
+	console.log("result:", result)
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookieliAt, sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberOfLinesPerLaunch} = utils.validateArguments()
 	let profileUrls
 	let results = await utils.getDb("result.csv")
 	console.log(`results: ${JSON.stringify(results, null, 4)}`)
-
+	console.log("IP:", await utils.getIP())
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} catch (err) {
@@ -267,25 +320,57 @@ const extractData = (json, profileUrl) => {
 
 	for (const profileUrl of profileUrls) {
 		utils.log(`Processing ${profileUrl}`, "loading")
-		// const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
+		let scrapedData = {}
+		if (linkedIn.isLinkedInProfile(profileUrl)) {
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
 
-		// let scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
-		// scrapedData = extractData(scrapedData.json, scrapingUrl)
-		// console.log("scrapedData", scrapedData)
-		let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
-		const twitterData = await findTwitterData(tabLk, scrapedData)
-		if (twitterData) {
-			scrapedData.twitterUrl = twitterData.twitterUrl
-			if (twitterData.twitterEmail) {
-				scrapedData.twitterEmail = twitterData.twitterEmail
+			scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
+			scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
+			try {
+				scrapedData = await searchFacebookProfile(tabFb, scrapedData)
+			} catch (err) {
+				console.log("err: ", err)
+				await tabFb.screenshot(`${Date.now()}sU.png`)
+				await buster.saveText(await tabFb.getContent(), `${Date.now()}sU.html`)
+			}
+		} else if (facebook.isFacebookUrl(profileUrl)) {
+			const fbData = await loadFacebookProfile(tabFb, profileUrl)
+			console.log("scrapedDatafromFacebook: ", scrapedData)
+			const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
+			if (profileLinkedinUrl) {
+				console.log("Found LinkedIn Profile!", profileLinkedinUrl)
+				scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl)
+				scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
+				scrapedData.facebookUrl = profileUrl
 			}
 		}
+		console.log("scrapedData", scrapedData)
+		const initDate = new Date()
 		try {
-			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
+			await useDropcontact(scrapedData)
 		} catch (err) {
-			console.log("err: ", err)
-			await tabFb.screenshot(`${Date.now()}sU.png`)
-			await buster.saveText(await tabFb.getContent(), `${Date.now()}sU.html`)
+			console.log("err:", err)
+		}
+		console.log("elapsed: ", new Date() - initDate)
+		// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
+		try {
+			let twitterData = await findTwitterData(tabLk, scrapedData, scrapedData.company)
+			if (!twitterData) {
+				console.log("noresults twitter")
+				await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
+				await buster.saveText(await tabLk.getContent(), `${Date.now()}noresultsTwitter.html`)
+				twitterData = await findTwitterData(tabLk, scrapedData)
+			}
+			if (twitterData) {
+				scrapedData.twitterUrl = twitterData.twitterUrl
+				if (twitterData.twitterEmail) {
+					scrapedData.twitterEmail = twitterData.twitterEmail
+				}
+			}
+		} catch (err) {
+			console.log("errTwitter:", err)
+			await tabLk.screenshot(`${Date.now()}errtwitter.png`)
+			await buster.saveText(await tabLk.getContent(), `${Date.now()}errtwitter.html`)
 		}
 		results.push(scrapedData)
 	}
