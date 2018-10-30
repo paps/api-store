@@ -1,8 +1,10 @@
 # Automatically send personalized messages on LinkedIn and engage with your network at scale!
 
-Talking with your prospects id key. But messaging a segment of your LinkedIn contacts through the LinkedIn chat is really tedious. Especially when you have grown your network with Phantombuster.
+Talking with your prospects is key. But messaging a segment of your LinkedIn contacts through the LinkedIn chat is really tedious... *Especially* when you have grown your network with Phantombuster. ;)
 
-Let's automate your LinkedIn messages. Just feed our robots with a list of contacts and your message and they'll take care of it for you. Each message will be personalized according to your needs, at the rhythm that you choose.
+**Let's automate** your LinkedIn messages. 
+
+Just feed our robots with a list of contacts and your message and they'll take care of it for you. **Each message will be personalized according to your needs**, at the rhythm that you choose.
 
 You're now free to focus on what really matters: your contacts' answers.
 

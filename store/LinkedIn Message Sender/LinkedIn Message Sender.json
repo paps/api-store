@@ -7,7 +7,7 @@
 	"argumentDescription": "",
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
