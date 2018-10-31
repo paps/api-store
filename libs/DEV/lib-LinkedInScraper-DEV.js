@@ -2,8 +2,6 @@
 "phantombuster dependencies: lib-Hunter.js"
 // }
 const { parse } = require ("url")
-// const request = require("request")
-// const fs = require("fs-extra")
 
 /**
  * Slowly but surely loading all sections of the profile
@@ -195,6 +193,7 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections" } // Issue #52
 			// { key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
 		])
+		infos.general.profileUrl = arg.url
 
 		const sel = document.querySelector(".pv-profile-section.pv-top-card-section .pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections")
 		if (sel) {
@@ -406,7 +405,7 @@ const scrapeInfos = (arg, callback) => {
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const scrapingProcess = async (tab, url, utils) => {
+const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot) => {
 	const [httpCode] = await tab.open(url)
 	if (httpCode !== 200 && httpCode !== 999 && httpCode !== null) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
@@ -435,8 +434,18 @@ const scrapingProcess = async (tab, url, utils) => {
 	}
 	utils.log("Scraping page...", "loading")
 
-	let infos = await tab.evaluate(scrapeInfos)
-
+	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
+	if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
+		let slug = infos.general.profileUrl.slice(28)
+		slug = slug.slice(0, slug.indexOf("/"))
+		if (saveImg) {
+			infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+		}
+		if (takeScreenshot) {
+			await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+		}
+	}
+	
 	const UI_SELECTORS = {
 		trigger: "a[data-control-name=\"contact_see_more\"]",
 		overlay: "artdeco-modal-overlay",
@@ -489,7 +498,7 @@ const craftCsvObject = infos => {
 	const hasHunter = infos.hasOwnProperty("hunter")
 
 	return {
-		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
+		linkedinProfile: (hasGeneral) ? (infos.general.profileUrl || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
@@ -618,11 +627,13 @@ class LinkedInScraper {
 	 * @param {StoreUtilities} utils -- StoreUtilities instance}
 	 * @param {String} [hunterApiKey] -- Hunter API key}
 	 * @param {Object} [nick] -- Nickjs instance}
+	 * @param {Object} [buster] -- buster instance}
 	 */
-	constructor(utils, hunterApiKey = null, nick = null) {
+	constructor(utils, hunterApiKey = null, nick = null, buster = null) {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
+		this.buster = buster
 		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
@@ -644,13 +655,15 @@ class LinkedInScraper {
 	 * if HunterApiKey was passed to the constructor, this method will also look for professional email
 	 * @param {Tab} tab -- Nick tab logged as a LinkedIn user}
 	 * @param {String} url -- LinkedIn Profile URL}
+	 * @param {Boolean} saveImg -- if true, save the profile picture as a jpeg}
+	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url = null) {
+	async scrapeProfile(tab, url = null, saveImg, takeScreenshot) {
 		let result = {}
 		let csvResult = {}
 		try {
-			result = await scrapingProcess(tab, url, this.utils)
+			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot)
 			/**
 			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser

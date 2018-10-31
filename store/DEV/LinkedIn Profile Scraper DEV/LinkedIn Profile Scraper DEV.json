@@ -69,6 +69,12 @@
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
+					},
+					"saveImg": {
+						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
+					},
+					"takeScreenshot": {
+						"rightLabel": "<b>Take a screenshot of the profile</b>"
 					}
 				}
 			}
@@ -96,6 +102,12 @@
 				"type": "number",
 				"minimum": 1,
 				"maximum": 25
+			},
+			"saveImg": {
+				"type": "boolean"
+			},
+			"takeScreenshot": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,7 +20,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const { URL } = require("url")
 
 const DB_NAME = "result"
@@ -105,7 +105,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -131,7 +131,7 @@ const removeLinkedinSubdomains = url => {
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 
@@ -145,7 +145,7 @@ const removeLinkedinSubdomains = url => {
 		try {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
 			utils.log(`Opening page ${scrapingUrl}`, "loading")
-			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl))
+			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot)
 			/**
 			 * the csv output from the lib is no more used in this API,
 			 * since the issue #40 require to give more than 3 skills & their endorsements count
@@ -184,6 +184,7 @@ const removeLinkedinSubdomains = url => {
 	}
 })()
 .catch(err => {
+	console.log(err.stack)
 	utils.log(err, "error")
 	nick.exit(1)
 })
