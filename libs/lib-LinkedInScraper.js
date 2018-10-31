@@ -443,7 +443,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot)
 			infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
 		}
 		if (takeScreenshot) {
-			await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+			infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
 		}
 	}
 	} catch (err) {
@@ -511,6 +511,8 @@ const craftCsvObject = infos => {
 		subscribers: (hasGeneral) ? (infos.general.subscribers || null) : null,
 		connectionDegree: (hasGeneral) ? (infos.general.connectionDegree || null) : null,
 		vmid: (hasGeneral) ? (infos.general.vmid || null) : null,
+		savedImg: (hasGeneral) ? (infos.general.savedImg || null) : null,
+		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
@@ -560,6 +562,10 @@ const defaultCsvResult = {
 	lastName: null,
 	fullName: null,
 	subscribers: null,
+	connectionDegree: null,
+	vmid: null,
+	savedImg: null,
+	screenshot: null,
 	company: null,
 	companyUrl: null,
 	jobTitle:  null,
