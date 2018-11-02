@@ -437,17 +437,17 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot)
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
-		let slug = infos.general.profileUrl.slice(28)
-		slug = slug.slice(0, slug.indexOf("/"))
-		if (saveImg) {
-			infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+			let slug = infos.general.profileUrl.slice(28)
+			slug = slug.slice(0, slug.indexOf("/"))
+			if (saveImg) {
+				infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+			}
+			if (takeScreenshot) {
+				infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+			}
 		}
-		if (takeScreenshot) {
-			infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
-		}
-	}
 	} catch (err) {
-		//
+		utils.log(`Couldn't save picture :${err}`, "warning")
 	}
 
 	const UI_SELECTORS = {

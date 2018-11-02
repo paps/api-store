@@ -144,19 +144,23 @@ const removeLinkedinSubdomains = url => {
 		}
 		try {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
-			utils.log(`Opening page ${scrapingUrl}`, "loading")
-			const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot)
-			/**
-			 * the csv output from the lib is no more used in this API,
-			 * since the issue #40 require to give more than 3 skills & their endorsements count
-			 * the lib still return the "basic" csv output
-			 */
-			const finalCsv = addSkills(infos.json, infos.csv)
-			finalCsv.baseUrl = url
-			finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
-			finalCsv.timestamp = (new Date()).toISOString()
-			db.push(finalCsv)
-			result.push(infos.json)
+			if (linkedIn.isLinkedInProfile(scrapingUrl)) {
+				utils.log(`Opening page ${scrapingUrl}`, "loading")
+				const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot)
+				/**
+				 * the csv output from the lib is no more used in this API,
+				 * since the issue #40 require to give more than 3 skills & their endorsements count
+				 * the lib still return the "basic" csv output
+				 */
+				const finalCsv = addSkills(infos.json, infos.csv)
+				finalCsv.baseUrl = url
+				finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
+				finalCsv.timestamp = (new Date()).toISOString()
+				db.push(finalCsv)
+				result.push(infos.json)
+			} else {
+				throw "Not a LinkedIn profile URL."
+			}
 		} catch (err) {
 			/**
 			 * Issue #119
@@ -164,7 +168,7 @@ const removeLinkedinSubdomains = url => {
 			 * to let know a fatal error occured
 			 */
 			db.push({ baseUrl: url })
-			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
+			utils.log(`Can't scrape the profile ${url}: ${err.message || err}`, "warning")
 			continue
 		}
 	}
