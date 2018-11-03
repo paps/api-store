@@ -46,7 +46,7 @@
 							"Enter either a Facebook Group URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Facebook Group URL / Spreadsheet <a href=\"/api-store/6987/facebook-group-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"label": "Facebook Group URL / Spreadsheet URL <a href=\"/api-store/6987/facebook-group-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
 						"placeholder": "https://www.facebook.com/groups/JavaScript.Programming"
                     },
                     "columnName": {

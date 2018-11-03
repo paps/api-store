@@ -119,36 +119,41 @@ const firstScrape = (arg, callback) => {
 }
 
 const scrapeFirstMembers = (arg, callback) => {
-	const groupName = document.querySelector("#seo_h1_tag a").textContent
-	const results = document.querySelectorAll(".uiList.clearfix > div")
+	let groupName
+	if (document.querySelector("#seo_h1_tag a")) {
+		groupName = document.querySelector("#seo_h1_tag a").textContent
+	}	const results = document.querySelectorAll(".uiList.clearfix > div")
 	const data = []
 	for (const result of results) {
-		const url = result.querySelector("a").href
-		
-		// a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
-		let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
-		let newData = { profileUrl }
-		newData.profilePicture = result.querySelector("img").src
-		newData.name = result.querySelector("img").getAttribute("aria-label")
-		const nameArray = newData.name.split(" ")
-		newData.firstName = nameArray.shift()
-		const lastName = nameArray.join(" ")
-		if (lastName) {
-			newData.lastName = lastName
+		if (result.querySelector("a")) {
+			const url = result.querySelector("a").href
+			// a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
+			let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
+			let newData = { profileUrl }
+			if (result.querySelector("img")) {
+				newData.profilePicture = result.querySelector("img").src
+				newData.name = result.querySelector("img").getAttribute("aria-label")
+				const nameArray = newData.name.split(" ")
+				newData.firstName = nameArray.shift()
+				const lastName = nameArray.join(" ")
+				if (lastName) {
+					newData.lastName = lastName
+				}
+			}
+			newData.groupName = groupName
+			newData.groupUrl = arg.groupUrl
+			if (result.querySelector(".timestampContent")) {
+				newData.memberSince = result.querySelector(".timestampContent").textContent
+			} else if (result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling) { // sometimes they're not in a .timestampContent class
+				newData.memberSince = result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling.textContent
+			}
+			if (result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type")) {
+				newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
+			}
+			newData.timestamp = (new Date()).toISOString()
+	
+			data.push(newData)
 		}
-		newData.groupName = groupName
-		newData.groupUrl = arg.groupUrl
-		if (result.querySelector(".timestampContent")) {
-			newData.memberSince = result.querySelector(".timestampContent").textContent
-		} else if (result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling) { // sometimes they're not in a .timestampContent class
-			newData.memberSince = result.querySelector(".uiProfileBlockContent a").parentElement.nextSibling.textContent
-		}
-		if (result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type")) {
-			newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
-		}
-		newData.timestamp = (new Date()).toISOString()
-
-		data.push(newData)
 	} 
 	callback(null, data)
 }
