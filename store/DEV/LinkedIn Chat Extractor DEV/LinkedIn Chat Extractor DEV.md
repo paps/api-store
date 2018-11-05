@@ -50,10 +50,10 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 A CSV file (Excel compatible file) will be created for you in the cloud. It's composed of the following columns:
 
-- author: Name of the person who send the message
 - profileUrl: Message sender LinkedIn profile
+- author: Name of the person who sent the message
 - message: The message itself
-- conversationUrl: An URL to access the conversation
+- conversationUrl: A URL to access the conversation
 - date: Date & hour when the message was sent
 - event: Special messages (Invitation accepted)
 

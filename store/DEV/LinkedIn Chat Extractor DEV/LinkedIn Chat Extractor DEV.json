@@ -7,7 +7,7 @@
 	"argumentDescription": "",
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
@@ -32,12 +32,12 @@
 						"label": "Session cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL of conversations",
+						"label": "Spreadsheet URL of LinkedIn Profiles",
 						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
-						"label": "Column name from which to get conversations URLs",
+						"label": "Column name from which to get Profile URLs",
 						"placeholder": "LinkedIn Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
