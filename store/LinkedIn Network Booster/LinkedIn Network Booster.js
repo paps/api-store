@@ -491,7 +491,7 @@ nick.newTab().then(async (tab) => {
 			row.baseUrl = row[columnName]
 			try {
 				utils.log(`Adding ${row[columnName]}...`, "loading")
-				const newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+				const newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)

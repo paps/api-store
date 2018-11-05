@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster dependencies: lib-Hunter.js"
 // }
-const { parse } = require ("url")
+const { parse, URL } = require ("url")
 
 /**
  * Slowly but surely loading all sections of the profile
@@ -767,33 +767,51 @@ class LinkedInScraper {
 		verbose && this.utils.log("Profile visited", "done")
 	}
 
-	// converts a Sales Navigator profile to a classic LinkedIn profile
-	async salesNavigatorUrlConverter(url) {
-		let urlObject = parse(url)
+	// converts a Sales Navigator profile to a classic LinkedIn profile without getting its slug 
+	salesNavigatorUrlCleaner(url, silence) {
+		if (url.startsWith("www")) {
+			url = `https://${url}`
+		}
+		try {
+			let urlObject = new URL(url)
 		if (urlObject.pathname.startsWith("/sales")) { // Sales Navigator link
 			if (urlObject.pathname.startsWith("/sales/profile/")) { // converting '/sales/profile' to '/sales/people
 				url = "https://linkedin.com/sales/people" + urlObject.pathname.slice(14)
-				urlObject = parse(url)
+				urlObject = new URL(url)
 			}
 			let path = urlObject.pathname
 			path = path.slice(14)
 			const id = path.slice(0, path.indexOf(","))
-			const newUrl = `https://linkedin.com/in/${id}`
-			let tab
+			url = `https://linkedin.com/in/${id}`
+			if (!silence) {
+				this.utils.log(`Converting Sales Navigator URL to ${url}`, "info")
+			}
+		}
+		} catch (err) {
+			//
+		}
+		return url
+	}
+
+
+	// converts a Sales Navigator profile to a classic LinkedIn profile while getting its slug (opening the page)
+	async salesNavigatorUrlConverter(url) {
+		const newUrl = this.salesNavigatorUrlCleaner(url, true)
+		if (newUrl !== url) {
+			const tab = await this.nick.newTab()
 			try {
-				tab = await this.nick.newTab()
 				await tab.open(newUrl)
 				await tab.wait(2000)
 				try {
 					let location = await tab.getUrl()
 					if (location !== newUrl) {
-						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location
 					} else {
 						await tab.wait(10000)
 						location = await tab.getUrl()
-						this.utils.log(`Converting Sales Navigator URL to ${location}`, "info")
+						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location
 					}
@@ -805,9 +823,8 @@ class LinkedInScraper {
 			}
 			await tab.close()
 		}
-		return url
+		return newUrl
 	}
-
 }
 
 module.exports = LinkedInScraper

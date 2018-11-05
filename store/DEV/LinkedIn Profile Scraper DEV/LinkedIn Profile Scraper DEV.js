@@ -14,6 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -145,7 +146,7 @@ const removeLinkedinSubdomains = url => {
 			break
 		}
 		try {
-			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(url)
 			if (linkedIn.isLinkedInProfile(scrapingUrl)) {
 				utils.log(`Opening page ${scrapingUrl}`, "loading")
 				const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot)

@@ -153,7 +153,7 @@ nick.newTab().then(async (tab) => {
 		utils.log("Opening LinkedIn profile (" + url + ")", "loading")
 		try {
 			let res = {}
-			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(url)
 			if (!disableScraping) {
 				const tmp = await linkedInScraper.scrapeProfile(tab, scrapingUrl)
 				res = Object.assign({}, tmp.csv)
