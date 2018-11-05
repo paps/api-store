@@ -38,9 +38,13 @@ const isUrl = url => {
 const getNameFromChat = (arg, cb) => {
 	if (Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0]) {
 		cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0].textContent)
+	} else if (document.querySelectorAll("#content div > h2")[1]) {
+			cb(null, document.querySelectorAll("#content div > h2")[1].textContent)
+	} else if (Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a")) {
+		cb(null, Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a").textContent)
 	} else {
-		cb(null, document.querySelectorAll("#content div > h2")[1].textContent)
-	}
+		cb(null, null)
+	}	
 }
 
 // click on chat's Send button
@@ -69,6 +73,9 @@ const openChatPage = async (tab, profileUrl) => {
 	
 	try {
 		const name = await tab.evaluate(getNameFromChat)
+		if (!name) {
+			throw "Name not accessible"
+		}
 		const names = facebook.getFirstAndLastName(name)
 		const firstName = names.firstName
 		const lastName = names.lastName

@@ -54,7 +54,7 @@
                         "helper": "By default, we'll use the first column of your spreadsheet (column A)"
                     },
                     "message": {
-						"label": "Message <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
+						"label": "Message <a href=\"/api-store/8852/facebook-message-sender#section_6personalizeyourmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
 						"helpers": [
 							"Use #fbFirstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Other tags are available.</a>",
