@@ -102,8 +102,8 @@ const getAllComments = async (tab, headers, search, max) => {
 			utils.log(timeLeft.message, "warning")
 			return result
 		}
-		if (fail > 2) {
-			utils.log(`Failed 3 times to fetch comments, exiting with ${result.length} comments.`, "warning")
+		if (fail > 10) {
+			utils.log(`Failed 10 times to fetch comments, exiting with ${result.length} comments.`, "warning")
 			return result
 		}
 		if (max - search.start < 100) {
@@ -111,14 +111,19 @@ const getAllComments = async (tab, headers, search, max) => {
 		}
 		try {
 			const response = await tab.evaluate(callComments, {url: "https://www.linkedin.com/voyager/api/feed/comments", headers, search})
+			if (response.elements.length < 1) {
+				await tab.wait((10000 + Math.round(Math.random() * 5000)))
+				++fail
+				continue
+			}
 			result = result.concat(linkedinObjectToResult(response))
 			utils.log(`Got ${result.length} comments.`, "info")
 			buster.progressHint((result.length / max), "Getting comments...")
-			search.start += 100
+			search.start += response.elements.length
 			fail = 0
-			await tab.wait(2000 + Math.random() * 2000)
+			await tab.wait((2000 + Math.round(Math.random() * 2000)))
 			if (response.elements.length < 100) {
-				await tab.wait((2000 + Math.round(Math.random() * 2000)))
+				await tab.wait((2500 + Math.round(Math.random() * 2500)))
 			}
 		} catch (error) {
 			await tab.wait(2000)
