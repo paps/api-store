@@ -288,6 +288,15 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 	cb(null, true)
 }
 
+// checks if it's a Page URL instead of a Profile
+const checkIfPage = (arg, cb) => {
+	if (Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-key") === "tab_ads")[0]) {
+		cb(null, true)
+	} else {
+		cb(null, false)
+	}
+}
+
 // load profile page and handle tabs switching
 const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	await tab.open(forgeUrl(profileUrl, ""))
@@ -310,6 +319,10 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 			return { profileUrl, error: "The profile page isn't visible" }
 		}
 
+	}
+	if (await tab.evaluate(checkIfPage)) {
+		utils.log("Page URL, not a Profile URL", "warning")
+		return { profileUrl, error: "Page URL, not handled"}
 	}
 	try {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
