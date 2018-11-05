@@ -182,7 +182,7 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 	ajaxBundle.date = Date.now()
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	conversation = messagesPerExtract ? conversation.slice(0, messagesPerExtract) : conversation
-	return { profileUrl: `https://www.linkedin/messaging/thread/${ajaxBundle.convId}/`, messages: conversation, url: await tab.getUrl() }
+	return { conversationUrl: `https://www.linkedin.com/messaging/thread/${ajaxBundle.convId}/`, messages: conversation, url: await tab.getUrl() }
 }
 
 /**
