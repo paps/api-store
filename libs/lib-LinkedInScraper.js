@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster dependencies: lib-Hunter.js"
 // }
-const { parse } = require ("url")
+const { URL } = require ("url")
 
 /**
  * Slowly but surely loading all sections of the profile
