@@ -25,6 +25,7 @@ const { URL } = require("url")
 
 const DB_NAME = "result"
 const MAX_SKILLS = 6
+const MAX_PROFILES = 25
 // }
 
 const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
@@ -118,7 +119,7 @@ const removeLinkedinSubdomains = url => {
 	}
 
 	if (!numberOfAddsPerLaunch) {
-		numberOfAddsPerLaunch = urls.length
+		numberOfAddsPerLaunch = MAX_PROFILES
 	} else if (numberOfAddsPerLaunch > urls.length) {
 		numberOfAddsPerLaunch = urls.length
 	}
