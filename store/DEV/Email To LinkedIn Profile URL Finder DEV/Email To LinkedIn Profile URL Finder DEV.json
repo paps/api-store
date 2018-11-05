@@ -68,8 +68,7 @@
 				"type": "string"
 			},
 			"numberOfLinesPerLaunch": {
-				"type": "number",
-				"minimum": 1
+				"type": "number"
 			}
 		}
 	}

@@ -3,7 +3,7 @@
 	"description": "Extract a list of all the people who commented Facebook posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Post_Commenters/Facebook+Post+Commenters_nobg.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
 	"argumentHelpAnchor": "#section_argument",
