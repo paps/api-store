@@ -70,7 +70,11 @@ const checkDb = (str, db) => {
 const getInviteesUrls = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
 		if (el.querySelector("a[data-control-name=profile]")) {
-			return el.querySelector("a[data-control-name=profile]").href
+			let url = el.querySelector("a[data-control-name=profile]").href
+			if (url.endsWith("/")) {
+				url = url.substring(0, url.length - 1)
+			}
+			return url
 		}
 	}))
 }
@@ -83,6 +87,7 @@ const getInviteesUrls = (arg, cb) => {
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
 const validateInvitations = async (invitations, sentCount) => {
+	console.log("invitations: ", invitations)
 	let matches = []
 	const withdrawTab = await nick.newTab()
 	try {
@@ -90,7 +95,7 @@ const validateInvitations = async (invitations, sentCount) => {
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
-		matches = invitations.filter(invitation => urls.includes(invitation.url))
+		matches = invitations.filter(invitation => urls.includes(invitation.linkedinProfile))
 	} catch (err) {
 		utils.log(`Error while double checking invitations: ${err.message || err}`, "error")
 	}

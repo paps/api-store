@@ -254,7 +254,6 @@ const createCsvOutput = json => {
 		}
 	}
 
-	queries = queries.filter(el => db.findIndex(line => line.tweetUrl === el) < 0)
 	if (typeof tweetsPerLaunch === "number") {
 		queries = queries.slice(0, tweetsPerLaunch)
 	}
@@ -276,7 +275,7 @@ const createCsvOutput = json => {
 		const data = await getTweetsInfos(tab, query)
 		execResult.push(data)
 	}
-	db.push(...createCsvOutput(execResult))
+	db.push(...utils.filterRightOuter(db, createCsvOutput(execResult)))
 	await utils.saveResults(noDatabase ? [] : execResult, noDatabase ? [] : db, DB_SHORT_NAME, null, false)
 	nick.exit()
 })().catch(err => {
