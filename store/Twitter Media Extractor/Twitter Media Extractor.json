@@ -1,14 +1,15 @@
 {
 	"slug": "twitter-media-extractor",
 	"description": "Collect all metadata from any Twitter medias",
-	"image": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_profile_url_finder/Twitter+Profile+URL+Finder.png",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
-	"new": false,
+	"hidden": false,
+	"updated": false,
+	"new": true,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://twitter.com/phbuster",

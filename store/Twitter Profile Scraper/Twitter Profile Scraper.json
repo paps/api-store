@@ -1,8 +1,8 @@
 {
 	"slug": "twitter-profile-scraper",
 	"description": "Collect valuable information you need from Twitter profiles",
-	"image": "",
-	"hidden": true,
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_profile_url_finder/Twitter+Profile+URL+Finder.png",
+	"hidden": false,
 	"updated": false,
 	"new": true,
 	"gradientBegin": "#E1F5C4",

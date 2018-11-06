@@ -1,13 +1,14 @@
 {
 	"slug": "twitter-likes-export",
 	"description": "",
-	"image": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_profile_url_finder/Twitter+Profile+URL+Finder.png",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
+	"hidden": false,
+	"updated": false,
 	"new": true,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
