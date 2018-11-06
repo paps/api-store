@@ -1,6 +1,6 @@
 # Retrieve the last likers of a list of Tweets 🐦
 
-This API will extract **the last 20 likers & 20 retweeters** out of every Tweet you want.
+This API will extract **the last 25 likers & 25 retweeters** out of every Tweet you want.
 
 That's another great way to target a very specific audience and build a list of people in your niche.
 
