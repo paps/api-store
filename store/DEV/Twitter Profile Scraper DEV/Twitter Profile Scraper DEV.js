@@ -33,6 +33,14 @@ const isUrl = url => {
 	}
 }
 
+const isTwitterProfile = url => {
+	try {
+		return ((new URL(url)).hostname.indexOf("twitter.com") > -1)
+	} catch (err) {
+		return false
+	}
+}
+
 ;(async () => {
 	const tab = await nick.newTab()
 	let { spreadsheetUrl, sessionCookie, columnName, numberProfilesPerLaunch, profileUrls, noDatabase } = utils.validateArguments()
@@ -40,7 +48,13 @@ const isUrl = url => {
 	const scrapingResult = []
 
 	if (spreadsheetUrl) {
-		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (isUrl(spreadsheetUrl) && isTwitterProfile(spreadsheetUrl)) {
+			profileUrls = [ spreadsheetUrl ]
+		} else if (!isUrl(spreadsheetUrl)) {
+			profileUrls = [ spreadsheetUrl ]
+		} else {
+			profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		}
 	}
 
 	if (profileUrls && typeof profileUrls === "string") {
