@@ -1,6 +1,6 @@
 {
 	"slug": "twitter-likes-export",
-	"description": "",
+	"description": "Retrieve the last likers of a list of Tweets",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Likes+Export/Twitter+Likes+Export.png",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
