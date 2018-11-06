@@ -52,6 +52,23 @@ const isLinkedInProfile = url => {
 	}
 }
 
+const isMessageThread = url => {
+	try {
+		return (new URL(url)).pathname.startsWith("/messaging/thread/")
+	} catch (err) {
+		return false
+	}
+}
+
+const extractThreadId = url => {
+	try {
+		let rep = new URL(url)
+		return rep.pathname.split("/").find(el => !isNaN(parseInt(el, 10)))
+	} catch (err) {
+		return null
+	}
+}
+
 /**
  * @async
  * @description Simple method used to check if the parameter URL is a real LinkedIn profile
@@ -60,9 +77,15 @@ const isLinkedInProfile = url => {
  * @param {String} url - LinkedIn Profile URL
  * @return {Promise<Boolean|String>} true or false otherwise an string error
  */
-const isRealProfile = async (tab, url) => {
+const isRealProfile = async (tab, url, threadUrl = false) => {
 	try {
-		await linkedInScraper.visitProfile(tab, url, true)
+		if (threadUrl) {
+			await tab.open(url)
+			await tab.waitUntilVisible("div.msg-thread", 15000)
+			await tab.waitWhileVisible(".artdeco-spinner", 15000)
+		} else {
+			await linkedInScraper.visitProfile(tab, url, true)
+		}
 	} catch (err) {
 		if (await tab.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			return false
@@ -71,6 +94,14 @@ const isRealProfile = async (tab, url) => {
 		}
 	}
 	return true
+}
+
+const getThreadHeaders = e => {
+	if ((e.request.url.indexOf("/voyager/api/messaging/conversations") > -1) && !interceptSuccess) {
+		ajaxBundle.headers = Object.assign({}, e.request.headers)
+		ajaxBundle.headers["Accept"] = "application/json"
+		interceptSuccess = true
+	}
 }
 
 const httpSendInterceptor = e => {
@@ -129,20 +160,20 @@ const formatAjaxResponse = msg => {
  * @throws on CSS selectors failure
  * @return {Promise<Array<Object>>} all messages
  */
-const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false) => {
+const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false, isThread = false) => {
 	let messagesLoaded = 0
 	let conversation = []
 	let loadAgain = true
-	tab.driver.client.addListener("Network.requestWillBeSent", httpSendInterceptor)
-	await tab.click(SELECTORS.conversationTrigger)
-	await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
-	try {
-		await tab.waitUntilVisible(SELECTORS.messages, 15000)
-		await tab.waitWhileVisible(SELECTORS.spinners, 15000)
-	} catch (err) {
-		throw `Can't open conversation due to: ${err.message || err}`
+	if (!isThread) {
+		await tab.click(SELECTORS.conversationTrigger)
+		await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
+		try {
+			await tab.waitUntilVisible(SELECTORS.messages, 15000)
+			await tab.waitWhileVisible(SELECTORS.spinners, 15000)
+		} catch (err) {
+			throw `Can't open conversation due to: ${err.message || err}`
+		}
 	}
-	tab.driver.client.removeListener("Network.requestWillBeSent", httpSendInterceptor)
 
 	if (!interceptSuccess) {
 		utils.log(`Can't find a way to load messages in the conversation (${await tab.getUrl()})`, "error")
@@ -150,6 +181,11 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 			await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 		}
 		return { conversationUrl: null, messages: conversation }
+	}
+
+	if (isThread) {
+		const threadId = extractThreadId(await tab.getUrl())
+		ajaxBundle.convId = threadId
 	}
 
 	while (loadAgain) {
@@ -180,7 +216,9 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false)
 	}
 	interceptSuccess = false
 	ajaxBundle.date = Date.now()
-	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	if (!isThread) {
+		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	}
 	conversation = messagesPerExtract ? conversation.slice(0, messagesPerExtract) : conversation
 	return { conversationUrl: `https://www.linkedin.com/messaging/thread/${ajaxBundle.convId}/`, messages: conversation, url: await tab.getUrl() }
 }
@@ -211,7 +249,7 @@ const jsonToCsvOutput = json => {
 	let step = 0
 
 	if (spreadsheetUrl) {
-		queries = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+		queries = isLinkedInProfile(spreadsheetUrl) || isMessageThread(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
 	} else if (typeof queries === "string") {
 		queries = [ queries ]
 	}
@@ -233,7 +271,9 @@ const jsonToCsvOutput = json => {
 		}
 		buster.progressHint((step++) + 1 / queries.length, `Conversation: ${convUrl}`)
 		let convRes = { conversationUrl: convUrl }
-		let tmp = await isRealProfile(tab, convUrl)
+		const isThreadURL = isMessageThread(convUrl)
+		tab.driver.client.addListener("Network.requestWillBeSent", isThreadURL ? getThreadHeaders : httpSendInterceptor)
+		let tmp = await isRealProfile(tab, convUrl, isThreadURL)
 		if (typeof tmp === "string" || (typeof tmp === "boolean" && !tmp)) {
 			convRes.error = typeof tmp === "string" ? tmp : "Unavailable profile"
 			currentScraping.push(convRes)
@@ -242,12 +282,13 @@ const jsonToCsvOutput = json => {
 		utils.log(`Loading conversation in ${convUrl} ...`, "loading")
 		let conversation
 		try {
-			conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder)
+			conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder, isThreadURL)
 		} catch (err) {
 			utils.log(`No messages in ${convUrl}`, "warning")
 			currentScraping.push({ url: convUrl, error: `${err.message || err}`, messages: [ { error: `${err.message || err}` } ] })
 			continue
 		}
+		tab.driver.client.removeListener("Network.requestWillBeSent", isThreadURL ? getThreadHeaders : httpSendInterceptor)
 		currentScraping.push(conversation)
 	}
 	db.push(...jsonToCsvOutput(currentScraping))
