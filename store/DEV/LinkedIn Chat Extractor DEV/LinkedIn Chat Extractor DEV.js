@@ -96,6 +96,9 @@ const isRealProfile = async (tab, url, threadUrl = false) => {
 	return true
 }
 
+/**
+ * @description Nickjs listener used on thread message pages
+ */
 const getThreadHeaders = e => {
 	if ((e.request.url.indexOf("/voyager/api/messaging/conversations") > -1) && !interceptSuccess) {
 		ajaxBundle.headers = Object.assign({}, e.request.headers)
@@ -104,6 +107,9 @@ const getThreadHeaders = e => {
 	}
 }
 
+/**
+ * @description Nickjs listener used on LinkedIn profiles
+ */
 const httpSendInterceptor = e => {
 	if (e.request.url.match(/conversations\/\d+\/events/) && !interceptSuccess) {
 		ajaxBundle.headers = Object.assign({}, e.request.headers)
