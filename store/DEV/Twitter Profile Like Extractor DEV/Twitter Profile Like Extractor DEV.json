@@ -1,0 +1,87 @@
+{
+	"slug": "twitter-profile-like-extractor",
+	"description": "Automatically find liked tweets by a person",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"hidden": false,
+	"new": false,
+	"defaultArgument": {
+		"sessionCookie": "session_cookie",
+		"spreadsheetUrl": "phbuster"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter session cookie",
+						"helper": "Twitter auth_token cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter profile URL",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
+					},
+					"columnName": {
+						"label": "Column name where Twitter profile URLs are stored",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
+						"placeholder": "Twitter Profile"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
