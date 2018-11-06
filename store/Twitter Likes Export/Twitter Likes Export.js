@@ -26,8 +26,8 @@ const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 
-const DB_NAME = "twitter-likes-export.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_SHORT_NAME = "twitter-likes-export"
+const DB_NAME = DB_SHORT_NAME + ".csv"
 
 // }
 
@@ -92,7 +92,7 @@ const scrapePopUp = (arg, cb) => {
 
 /**
  * @async
- * @param {Object} tab -
+ * @param {Object} tab - Nickjs tab
  * @param {String} selector - CSS selector to click on
  * @param {Number} [timeBeforeRelease] - time to wait between mousePressed & mouseReleased events (default no wait)
  */
@@ -254,7 +254,6 @@ const createCsvOutput = json => {
 		}
 	}
 
-	queries = queries.filter(el => db.findIndex(line => line.tweetUrl === el) < 0)
 	if (typeof tweetsPerLaunch === "number") {
 		queries = queries.slice(0, tweetsPerLaunch)
 	}
@@ -276,7 +275,7 @@ const createCsvOutput = json => {
 		const data = await getTweetsInfos(tab, query)
 		execResult.push(data)
 	}
-	db.push(...createCsvOutput(execResult))
+	db.push(...utils.filterRightOuter(db, createCsvOutput(execResult)))
 	await utils.saveResults(noDatabase ? [] : execResult, noDatabase ? [] : db, DB_SHORT_NAME, null, false)
 	nick.exit()
 })().catch(err => {
