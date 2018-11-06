@@ -93,3 +93,10 @@ There you go, the scraping will be made for you without you doing anything!
 It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
+
+
+# Limits
+
+Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
+
+Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).

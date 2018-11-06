@@ -113,3 +113,4 @@ Please be aware that this API, like most of our Facebook APIs, will manipulate y
 
 Facebook tends to notice when too many profiles viewings are done in a short period of time. Spamming invitations is probably reprimanded. We recommend spreading your invites (like 1 profile every 15min rather than 10 profiles in one go).
 If too many actions are done, Facebook may temporarily block your profile. If that happens, you should be careful and reduce your API frequency the next time.
+Also Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).

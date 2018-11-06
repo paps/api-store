@@ -119,3 +119,4 @@ Please be aware that this API, like most of our Facebook APIs, will manipulate y
 
 Facebook tends to notice when too many messages are sent in a short period of time. Spamming messages is probably reprimanded. We recommend spreading your messages (like 1 message every 15min rather than 10 in one go).
 If too many actions are done too quickly, Facebook may temporarily block your messages. If that happens, you would need to wait for a few hours before being able to send them again. Be careful and reduce your API frequency the next time.
+Also Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).
