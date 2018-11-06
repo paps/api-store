@@ -1,6 +1,6 @@
 {
 	"slug": "twitter-likes-export",
-	"description": "",
+	"description": "Extract every Tweets liked by a list of people",
 	"image": "",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
