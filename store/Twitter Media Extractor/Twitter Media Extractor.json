@@ -1,7 +1,7 @@
 {
 	"slug": "twitter-media-extractor",
 	"description": "Collect all metadata from any Twitter medias",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_profile_url_finder/Twitter+Profile+URL+Finder.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Media+Extractor/Twitter+Media+Extractor.png",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
