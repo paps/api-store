@@ -272,6 +272,115 @@ class Instagram {
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}
+	/**
+	 * @description
+	 * @param {*} tab - Nickjs Tab with a Instagram post opened
+	 * @return {Promise<Object>} Scraped post
+	 * @throws if the page doesn't represent a Instagram post or if there was an error during the scraping process
+	 */
+	async scrapePost2(tab, query) {
+
+		const SCRAPING_SELECTORS = {
+			baseSelector: "article header ~ div",
+			profileSelector: "header a.notranslate",
+			likeSelector: "section > div span", // Used when the value represents a number
+			alternativeLikeSelector: "section > div > a", // Used when there is less than 10 likes (counting links)
+			pubDateSelector: "time",
+			descriptionSelector: "ul > li:first-child span",
+			videoSelector: "article video",
+			postImageSelector: "article img",
+			profileImage: "header img",
+			location: "header div:last-of-type > div:last-of-type"
+		}
+
+		try {
+			await tab.waitUntilVisible("article", 7500)
+		} catch (err) {
+			throw `Could not load post ${await tab.getUrl()}, was it removed?`
+		}
+
+		let scrapedData = await tab.evaluate((arg, cb) => {
+			let data = { query:arg.query }
+
+			const baseSelector = document.querySelectorAll(arg.selectors.baseSelector)
+			let postDescription = baseSelector[1].querySelector(arg.selectors.descriptionSelector)
+
+			if ((!postDescription) || (!postDescription.children)) {
+				postDescription = ""
+			} else {
+				postDescription =
+					Array.from(postDescription.childNodes)
+						.filter(el => (el.nodeType === Node.TEXT_NODE) || (el.tagName.toLowerCase() === "a")) // only scraping html text nodes and HTML links
+						.map(el => el.textContent ? el.textContent.trim() : "")
+						.join(" ")
+			}
+			data.likeCount = 0
+			if (baseSelector[1].querySelector(arg.selectors.likeSelector)) {
+				// we only need digits from the scraped text
+				data.likeCount = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
+			} else {
+				try {
+					data.likeCount = parseInt(Array.from(document.querySelectorAll("meta")).filter(el => el.getAttribute("property") === "og:description")[0].getAttribute("content").split(",")[0].split("-")[0].trim().replace(/ \D+/g,""), 10)
+				} catch (err) {
+					//
+				}
+			}
+
+			try {
+				data.commentCount = parseInt(Array.from(document.querySelectorAll("meta")).filter(el => el.getAttribute("property") === "og:description")[0].getAttribute("content").split(",")[1].split("-")[0].trim().replace(/ \D+/g,""), 10)
+			} catch (err) {
+				data.commentCount = 0
+			}
+
+			try {
+				data.ownerId = Array.from(document.querySelectorAll("meta")).filter(el => el.getAttribute("property") === "instapp:owner_user_id")[0].getAttribute("content")
+			} catch (err) {
+				//
+			}
+
+			data.profileUrl = document.querySelector(arg.selectors.profileSelector).href || ""
+			data.profileName = document.querySelector(arg.selectors.profileSelector).textContent.trim() || ""
+			data.description = postDescription.trim()
+
+			if (baseSelector[0].querySelector(arg.selectors.videoSelector)) {
+				data.postVideo = baseSelector[0].querySelector(arg.selectors.videoSelector).src
+				data.videoThumbnail = baseSelector[0].querySelector(arg.selectors.videoSelector).poster
+			}
+
+			if (baseSelector[0].querySelector(arg.selectors.postImageSelector)) {
+				data.imgUrl = baseSelector[0].querySelector(arg.selectors.postImageSelector).src
+			}
+
+			if (baseSelector[1].querySelector(arg.selectors.pubDateSelector)) {
+				data.pubDate = baseSelector[1].querySelector(arg.selectors.pubDateSelector).dateTime
+			}
+
+			if (document.querySelector(arg.selectors.location)) {
+				data.location = document.querySelector(arg.selectors.location).textContent.trim()
+			}
+
+			cb(null, data)
+		}, { selectors: SCRAPING_SELECTORS, query })
+
+		const isLikeSelectorInDOM = await tab.evaluate((arg, cb) => {
+			let isInDOM = document.querySelector("header ~ div section span[role=\"button\"]")
+			cb(null, isInDOM !== null ? true : false)
+		})
+
+		// Sometimes the selector used to get likes count for a Instagram video isn't present
+		if (scrapedData.postVideo && isLikeSelectorInDOM) {
+			scrapedData.views = scrapedData.likes
+			await tab.click("section span[role=\"button\"]")
+			const likesSelectors = [ "section span[role=\"button\"] ~ div span", "section span[role=\"button\"] ~ div > div:last-of-type" ]
+			const foundSelector = await tab.waitUntilVisible(likesSelectors, 7500, "or")
+			scrapedData.likeCount = await tab.evaluate((arg, cb) => {
+				cb(null, parseInt(document.querySelector(arg.selector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10))
+			}, { selector: foundSelector })
+		}
+
+		scrapedData.postUrl = await tab.getUrl()
+		return scrapedData
+	}
 
 	// only keep the instagram.com/profile of a profile URL, and convert @profile to an URL
 	cleanInstagramUrl(str) {

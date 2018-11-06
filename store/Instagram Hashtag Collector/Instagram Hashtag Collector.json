@@ -3,7 +3,7 @@
 	"description": "Extract the most recent posts for any hashtags or locations on Instagram",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
 	"hidden": false,
-	"new": false,
+	"updated": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentDescription": "",
@@ -62,11 +62,8 @@
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
 						"inputType": "number",
-						"helpers": [
-							"By default, the API will scrape a maximum of 250 posts per hashtag",
-							"You are limited to a maximum of 1000 posts per hashtag"
-						],
-						"placeholder": 250
+						"helper": "All of them if empty (until hitting Instagram rate limit)",
+						"placeholder": 5000
 					},
 					"csvName": {
 						"label": "Output CSV name",
@@ -95,9 +92,7 @@
 			},
 			"maxPosts": {
 				"type": "number",
-				"default": 250,
-				"maximum": 1000,
-				"minimum": 1
+				"default": 5000
 			}
 		},
 		"oneOf": [
