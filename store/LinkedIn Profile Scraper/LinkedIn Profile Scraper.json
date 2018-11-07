@@ -53,7 +53,7 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single LinkedIn Profile URL",
 							"<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
 						],
 						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/3112/linkedin-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"

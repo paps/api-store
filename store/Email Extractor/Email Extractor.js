@@ -60,7 +60,7 @@ const scrapeMails = async (tab, url, waitTime) => {
 	let result = { mails: [], url }
 	try {
 		const [ httpCode ] = await tab.open(url)
-		if ((httpCode >= 300) || (httpCode < 200)) {
+		if (httpCode && (httpCode >= 300 || httpCode < 200)) {
 			utils.log(`${url} didn't opened properly got HTTP code ${httpCode}`, "warning")
 			result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
 			return result

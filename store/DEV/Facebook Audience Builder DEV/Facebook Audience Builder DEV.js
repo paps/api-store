@@ -31,7 +31,24 @@ const Google = require("./lib-Google-DEV")
 const Dropcontact = require("./lib-Dropcontact")
 const dropcontact = new Dropcontact("nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi")
 const { URL } = require("url")
+
 // }
+
+/**
+ * @description Remove emojis on firstName / lastName / fullName in the bundle parameter
+ * @param {Array<Object>} bundle
+ */
+const cleanUpEmojis = bundle => {
+	const EMOJI_PATTERN = /\u{1F3F4}(?:\u{E0067}\u{E0062}(?:\u{E0065}\u{E006E}\u{E0067}|\u{E0077}\u{E006C}\u{E0073}|\u{E0073}\u{E0063}\u{E0074})\u{E007F}|\u200D\u2620\uFE0F)|\u{1F469}\u200D\u{1F469}\u200D(?:\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}])|\u{1F468}(?:\u200D(?:\u2764\uFE0F\u200D(?:\u{1F48B}\u200D)?\u{1F468}|[\u{1F468}\u{1F469}]\u200D(?:\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}])|\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}]|[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|[\u{1F3FB}-\u{1F3FF}]\u200D[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|\u{1F469}\u200D(?:\u2764\uFE0F\u200D(?:\u{1F48B}\u200D[\u{1F468}\u{1F469}]|[\u{1F468}\u{1F469}])|[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|\u{1F469}\u200D\u{1F466}\u200D\u{1F466}|(?:\u{1F441}\uFE0F\u200D\u{1F5E8}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]\u200D[\u2695\u2696\u2708]|\u{1F468}(?:[\u{1F3FB}-\u{1F3FF}]\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}]\uFE0F|[\u{1F46F}\u{1F93C}\u{1F9DE}\u{1F9DF}])\u200D[\u2640\u2642]|[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}][\u{1F3FB}-\u{1F3FF}]\u200D[\u2640\u2642]|[\u{1F3C3}\u{1F3C4}\u{1F3CA}\u{1F46E}\u{1F471}\u{1F473}\u{1F477}\u{1F481}\u{1F482}\u{1F486}\u{1F487}\u{1F645}-\u{1F647}\u{1F64B}\u{1F64D}\u{1F64E}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F926}\u{1F937}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B8}\u{1F9B9}\u{1F9D6}-\u{1F9DD}](?:[\u{1F3FB}-\u{1F3FF}]\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\u{1F469}\u200D[\u2695\u2696\u2708])\uFE0F|\u{1F469}\u200D\u{1F467}\u200D[\u{1F466}\u{1F467}]|\u{1F469}\u200D\u{1F469}\u200D[\u{1F466}\u{1F467}]|\u{1F468}(?:\u200D(?:[\u{1F468}\u{1F469}]\u200D[\u{1F466}\u{1F467}]|[\u{1F466}\u{1F467}])|[\u{1F3FB}-\u{1F3FF}])|\u{1F3F3}\uFE0F\u200D\u{1F308}|\u{1F469}\u200D\u{1F467}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]\u200D[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}]|\u{1F469}\u200D\u{1F466}|\u{1F1F6}\u{1F1E6}|\u{1F1FD}\u{1F1F0}|\u{1F1F4}\u{1F1F2}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]|\u{1F1ED}[\u{1F1F0}\u{1F1F2}\u{1F1F3}\u{1F1F7}\u{1F1F9}\u{1F1FA}]|\u{1F1EC}[\u{1F1E6}\u{1F1E7}\u{1F1E9}-\u{1F1EE}\u{1F1F1}-\u{1F1F3}\u{1F1F5}-\u{1F1FA}\u{1F1FC}\u{1F1FE}]|\u{1F1EA}[\u{1F1E6}\u{1F1E8}\u{1F1EA}\u{1F1EC}\u{1F1ED}\u{1F1F7}-\u{1F1FA}]|\u{1F1E8}[\u{1F1E6}\u{1F1E8}\u{1F1E9}\u{1F1EB}-\u{1F1EE}\u{1F1F0}-\u{1F1F5}\u{1F1F7}\u{1F1FA}-\u{1F1FF}]|\u{1F1F2}[\u{1F1E6}\u{1F1E8}-\u{1F1ED}\u{1F1F0}-\u{1F1FF}]|\u{1F1F3}[\u{1F1E6}\u{1F1E8}\u{1F1EA}-\u{1F1EC}\u{1F1EE}\u{1F1F1}\u{1F1F4}\u{1F1F5}\u{1F1F7}\u{1F1FA}\u{1F1FF}]|\u{1F1FC}[\u{1F1EB}\u{1F1F8}]|\u{1F1FA}[\u{1F1E6}\u{1F1EC}\u{1F1F2}\u{1F1F3}\u{1F1F8}\u{1F1FE}\u{1F1FF}]|\u{1F1F0}[\u{1F1EA}\u{1F1EC}-\u{1F1EE}\u{1F1F2}\u{1F1F3}\u{1F1F5}\u{1F1F7}\u{1F1FC}\u{1F1FE}\u{1F1FF}]|\u{1F1EF}[\u{1F1EA}\u{1F1F2}\u{1F1F4}\u{1F1F5}]|\u{1F1F8}[\u{1F1E6}-\u{1F1EA}\u{1F1EC}-\u{1F1F4}\u{1F1F7}-\u{1F1F9}\u{1F1FB}\u{1F1FD}-\u{1F1FF}]|\u{1F1EE}[\u{1F1E8}-\u{1F1EA}\u{1F1F1}-\u{1F1F4}\u{1F1F6}-\u{1F1F9}]|\u{1F1FF}[\u{1F1E6}\u{1F1F2}\u{1F1FC}]|\u{1F1EB}[\u{1F1EE}-\u{1F1F0}\u{1F1F2}\u{1F1F4}\u{1F1F7}]|\u{1F1F5}[\u{1F1E6}\u{1F1EA}-\u{1F1ED}\u{1F1F0}-\u{1F1F3}\u{1F1F7}-\u{1F1F9}\u{1F1FC}\u{1F1FE}]|\u{1F1E9}[\u{1F1EA}\u{1F1EC}\u{1F1EF}\u{1F1F0}\u{1F1F2}\u{1F1F4}\u{1F1FF}]|\u{1F1F9}[\u{1F1E6}\u{1F1E8}\u{1F1E9}\u{1F1EB}-\u{1F1ED}\u{1F1EF}-\u{1F1F4}\u{1F1F7}\u{1F1F9}\u{1F1FB}\u{1F1FC}\u{1F1FF}]|\u{1F1E7}[\u{1F1E6}\u{1F1E7}\u{1F1E9}-\u{1F1EF}\u{1F1F1}-\u{1F1F4}\u{1F1F6}-\u{1F1F9}\u{1F1FB}\u{1F1FC}\u{1F1FE}\u{1F1FF}]|[#*0-9]\uFE0F\u20E3|\u{1F1F1}[\u{1F1E6}-\u{1F1E8}\u{1F1EE}\u{1F1F0}\u{1F1F7}-\u{1F1FB}\u{1F1FE}]|\u{1F1E6}[\u{1F1E8}-\u{1F1EC}\u{1F1EE}\u{1F1F1}\u{1F1F2}\u{1F1F4}\u{1F1F6}-\u{1F1FA}\u{1F1FC}\u{1F1FD}\u{1F1FF}]|\u{1F1F7}[\u{1F1EA}\u{1F1F4}\u{1F1F8}\u{1F1FA}\u{1F1FC}]|\u{1F1FB}[\u{1F1E6}\u{1F1E8}\u{1F1EA}\u{1F1EC}\u{1F1EE}\u{1F1F3}\u{1F1FA}]|\u{1F1FE}[\u{1F1EA}\u{1F1F9}]|[\u{1F3C3}\u{1F3C4}\u{1F3CA}\u{1F46E}\u{1F471}\u{1F473}\u{1F477}\u{1F481}\u{1F482}\u{1F486}\u{1F487}\u{1F645}-\u{1F647}\u{1F64B}\u{1F64D}\u{1F64E}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F926}\u{1F937}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B8}\u{1F9B9}\u{1F9D6}-\u{1F9DD}][\u{1F3FB}-\u{1F3FF}]|[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}][\u{1F3FB}-\u{1F3FF}]|[\u261D\u270A-\u270D\u{1F385}\u{1F3C2}\u{1F3C7}\u{1F442}\u{1F443}\u{1F446}-\u{1F450}\u{1F466}\u{1F467}\u{1F470}\u{1F472}\u{1F474}-\u{1F476}\u{1F478}\u{1F47C}\u{1F483}\u{1F485}\u{1F4AA}\u{1F574}\u{1F57A}\u{1F590}\u{1F595}\u{1F596}\u{1F64C}\u{1F64F}\u{1F6C0}\u{1F6CC}\u{1F918}-\u{1F91C}\u{1F91E}\u{1F91F}\u{1F930}-\u{1F936}\u{1F9B5}\u{1F9B6}\u{1F9D1}-\u{1F9D5}][\u{1F3FB}-\u{1F3FF}]|[\u261D\u26F9\u270A-\u270D\u{1F385}\u{1F3C2}-\u{1F3C4}\u{1F3C7}\u{1F3CA}-\u{1F3CC}\u{1F442}\u{1F443}\u{1F446}-\u{1F450}\u{1F466}-\u{1F469}\u{1F46E}\u{1F470}-\u{1F478}\u{1F47C}\u{1F481}-\u{1F483}\u{1F485}-\u{1F487}\u{1F4AA}\u{1F574}\u{1F575}\u{1F57A}\u{1F590}\u{1F595}\u{1F596}\u{1F645}-\u{1F647}\u{1F64B}-\u{1F64F}\u{1F534}\u{1F535}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F6C0}\u{1F6CC}\u{1F918}-\u{1F91C}\u{1F91E}\u{1F91F}\u{1F926}\u{1F930}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B5}\u{1F9B6}\u{1F9B8}\u{1F9B9}\u{1F9D1}-\u{1F9DD}][\u{1F3FB}-\u{1F3FF}]?|[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55\u{1F004}\u{1F0CF}\u{1F18E}\u{1F191}-\u{1F19A}\u{1F1E6}-\u{1F1FF}\u{1F201}\u{1F21A}\u{1F22F}\u{1F232}-\u{1F236}\u{1F238}-\u{1F23A}\u{1F250}\u{1F251}\u{1F300}-\u{1F320}\u{1F32D}-\u{1F335}\u{1F337}-\u{1F37C}\u{1F37E}-\u{1F393}\u{1F3A0}-\u{1F3CA}\u{1F3CF}-\u{1F3D3}\u{1F3E0}-\u{1F3F0}\u{1F3F4}\u{1F3F8}-\u{1F43E}\u{1F440}\u{1F442}-\u{1F4FC}\u{1F4FF}-\u{1F53D}\u{1F54B}-\u{1F54E}\u{1F550}-\u{1F567}\u{1F57A}\u{1F595}\u{1F596}\u{1F5A4}\u{1F5FB}-\u{1F64F}\u{1F680}-\u{1F6C5}\u{1F6CC}\u{1F6D0}-\u{1F6D2}\u{1F6EB}\u{1F6EC}\u{1F6F4}-\u{1F6F9}\u{1F910}-\u{1F93A}\u{1F93C}-\u{1F93E}\u{1F940}-\u{1F945}\u{1F947}-\u{1F970}\u{1F973}-\u{1F976}\u{1F97A}\u{1F97C}-\u{1F9A2}\u{1F9B0}-\u{1F9B9}\u{1F9C0}-\u{1F9C2}\u{1F9D0}-\u{1F9FF}]|[#*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299\u{1F004}\u{1F0CF}\u{1F170}\u{1F171}\u{1F17E}\u{1F17F}\u{1F18E}\u{1F191}-\u{1F19A}\u{1F1E6}-\u{1F1FF}\u{1F201}\u{1F202}\u{1F21A}\u{1F22F}\u{1F232}-\u{1F23A}\u{1F250}\u{1F251}\u{1F300}-\u{1F321}\u{1F324}-\u{1F393}\u{1F396}\u{1F397}\u{1F399}-\u{1F39B}\u{1F39E}-\u{1F3F0}\u{1F3F3}-\u{1F3F5}\u{1F3F7}-\u{1F4FD}\u{1F4FF}-\u{1F53D}\u{1F549}-\u{1F54E}\u{1F550}-\u{1F567}\u{1F56F}\u{1F570}\u{1F573}-\u{1F57A}\u{1F587}\u{1F58A}-\u{1F58D}\u{1F590}\u{1F595}\u{1F596}\u{1F5A4}\u{1F5A5}\u{1F5A8}\u{1F5B1}\u{1F5B2}\u{1F5BC}\u{1F5C2}-\u{1F5C4}\u{1F5D1}-\u{1F5D3}\u{1F5DC}-\u{1F5DE}\u{1F5E1}\u{1F5E3}\u{1F5E8}\u{1F5EF}\u{1F5F3}\u{1F5FA}-\u{1F64F}\u{1F680}-\u{1F6C5}\u{1F6CB}-\u{1F6D2}\u{1F6E0}-\u{1F6E5}\u{1F6E9}\u{1F6EB}\u{1F6EC}\u{1F6F0}\u{1F6F3}-\u{1F6F9}\u{1F910}-\u{1F93A}\u{1F93C}-\u{1F93E}\u{1F940}-\u{1F945}\u{1F947}-\u{1F970}\u{1F973}-\u{1F976}\u{1F97A}\u{1F97C}-\u{1F9A2}\u{1F9B0}-\u{1F9B9}\u{1F9C0}-\u{1F9C2}\u{1F9D0}-\u{1F9FF}]\uFE0F?/gu
+	
+	const fields = [ "firstName", "lastName" , "name" ]
+	for (const field of fields) {
+		if (bundle[field]) {
+			bundle[field] = bundle[field].replace(EMOJI_PATTERN, "").trim()
+		}
+	}
+	return bundle
+}
 
 const forgeUrl = (url, section) => {
 	if (url.includes("profile.php?id=")) {
@@ -92,7 +109,7 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 }
 
 const getResultCount = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-testid") === "browse-result-content").length)
+	cb(null, Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-xt")&& el.getAttribute("data-xt").includes("ENTITY_USER") && el.getAttribute("data-testid") === "browse-result-content").length)
 }
 
 const getFirstResultUrl = (arg, cb) => {
@@ -105,12 +122,19 @@ const getFirstResultUrl = (arg, cb) => {
 	cb(null, url)
 }
 
+// check if we got results as People with our FB search
+const fbSearchHasPeopleResult = (arg, cb) => {
+	cb(null, Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-xt") && el.getAttribute("data-xt").includes("ENTITY_USER")).length)
+}
+
 const searchFacebookProfile = async (tab, profile) => {
-	const searchOrder = [ { location: true, company: true, school: true }, { location: true, company: true }, { location: true }, { company: true }, {}]
+	console.log("searchingProfile with", profile)
+	const searchOrder = [ { company: true, type: "top" }, { company: true, type: "people" }, { location: true, type: "top" }, { location: true, type: "people" }, { type: "top" }]
 	let allResultsFound
 	let resultCount
 	for (const search of searchOrder) {
-		let searchUrl = `https://www.facebook.com/search/people/?q=${profile.name}`
+		let searchUrl = `https://www.facebook.com/search/${search.type}/?q=${profile.name}`
+		
 		if (search.location) {
 			searchUrl += ` ${profile.location}`
 		}
@@ -126,12 +150,15 @@ const searchFacebookProfile = async (tab, profile) => {
 		const selector = await tab.waitUntilVisible(["#BrowseResultsContainer", "#empty_result_error"], "or", 15000)
 		console.log("selector", selector)
 		if (selector === "#BrowseResultsContainer") {
-			await tab.screenshot(`${Date.now()}getResultCount.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}getResultCount.html`)
-			resultCount = await tab.evaluate(getResultCount)
-			allResultsFound = await tab.isPresent("#browse_end_of_results_footer")
-			utils.log(`Getting ${!allResultsFound ? "at least" : "exactly"} ${resultCount} result${resultCount > 1 ? "s" : ""}.`, "done")
-			break
+			await tab.screenshot(`${Date.now()}results.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}results.html`)
+			if (await tab.evaluate(fbSearchHasPeopleResult)) {
+				resultCount = await tab.evaluate(getResultCount)
+				break
+			}
+
+			// allResultsFound = await tab.isPresent("#browse_end_of_results_footer")
+			// utils.log(`Getting ${!allResultsFound ? "at least" : "exactly"} ${resultCount} result${resultCount > 1 ? "s" : ""}.`, "done")
 		}
 	}
 	const facebookProfileUrl = facebook.cleanProfileUrl(await tab.evaluate(getFirstResultUrl))
@@ -145,6 +172,13 @@ const searchFacebookProfile = async (tab, profile) => {
 	}
 	if (fbData.age) {
 		profile.age = fbData.age
+	}
+	if (fbData.uId) {
+		profile.uId = fbData.uId
+	}
+	if (fbData.twitterName) {
+		profile.twitterUrl = `https://twitter.com/${fbData.twitterName}`
+		console.log("getting ", profile.twitterUrl, " from facebook !")
 	}
 	return profile
 }
@@ -199,7 +233,7 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 	const partialEmail = partialData.email
 	let emailHandle = partialEmail.split("@")[0]
 	const domain = partialEmail.split("@")[1]
-	const domainList = [ "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "hotmail.co.uk", "hotmail.fr", "msn.com", "yahoo.fr", "wanadoo.fr", "orange.fr", "comcast.net", "yahoo.co.uk", "yahoo.com.br", "live.com", "rediffmail.com", "free.fr", "gmx.de", "web.de", "yandex.ru", "ymail.com", "libero.it", "outlook.com", "hec.edu"]
+	const domainList = [ "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "hotmail.co.uk", "hotmail.fr", "msn.com", "yahoo.fr", "wanadoo.fr", "orange.fr", "comcast.net", "yahoo.co.uk", "yahoo.com.br", "live.com", "rediffmail.com", "free.fr", "gmx.de", "web.de", "yandex.ru", "ymail.com", "libero.it", "outlook.com", "hec.edu", "live.fr", "sfr.fr" ]
 	let guessedDomain = domain
 	for (const testedDomain of domainList) {
 		if (twitter.matchEmail(domain, testedDomain)) {
@@ -222,8 +256,10 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 		} else if (emailHandle.charAt(0) === lastName.charAt(0)) {
 			emailHandle = lastName + separator + firstName
 		}
-	} else if (emailHandle.charAt(0) === firstName.charAt (0) && emailHandle.charAt(1) === lastName.charAt(0) && lengthDiff === 1 - lastName.length) { // testing firstNameFirstLetter + lastName@domain
+	} else if (emailHandle.charAt(0) === firstName.charAt(0) && emailHandle.charAt(1) === lastName.charAt(0) && lengthDiff === 1 - lastName.length) { // testing firstNameFirstLetter + lastName@domain
 		emailHandle = firstName.charAt(0) + lastName
+	} else if (emailHandle.charAt(0) === firstName.charAt(0) && emailHandle.charAt(1) === firstName.charAt(1) && lengthDiff === 1 - lastName.length) { // testing firstName + lastNameFirstLetter@domain
+		emailHandle = firstName + lastName.charAt(0)
 	}
 	let twitterEmail = emailHandle + "@" + guessedDomain
 	if (!twitterEmail.includes("*")) { // if there's no * in the twitterEmail, we test it again on twitter
@@ -240,22 +276,65 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 }
 
 const findTwitterData = async (tab, scrapedData, company = null) => {
-	const google = new Google(tab, buster)
-	console.log("Searching Twitter for...", `site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
-	const twitterResults = await google.search(`site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
-	const firstResult = twitterResults.results[0]
-	if (firstResult && firstResult.title.endsWith("Twitter")) {
-		let twitterUrl = firstResult.link
+	let twitterUrl
+
+	if (!scrapedData.twitterUrl) {
+		const google = new Google(tab, buster)
+		console.log("Searching Twitter for...", `site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
+		const twitterResults = await google.search(`site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
+		const firstResult = twitterResults.results[0]
+		if (firstResult && firstResult.title.endsWith("Twitter")) {
+			await tab.screenshot(`${Date.now()}google.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}google.html`)
+			twitterUrl = firstResult.link
+			// only keep the twitter.com/profile of a profile URL
+		
+			let path = new URL(twitterUrl).pathname
+			path = path.slice(1)
+			if (path.includes("/")) {
+				path = path.slice(0, path.indexOf("/"))
+			}
+			twitterUrl = "https://www.twitter.com/" + path
+	
+			console.log("Twitter URL found by Goole:", twitterUrl)
+		} else {
+			console.log("searching through Twitter:")
+			const twitterSearchUrl = `https://twitter.com/search?f=users&q=${scrapedData.name} ${company ? company : ""}`
+			await tab.open(twitterSearchUrl)
+			await tab.waitUntilVisible("#page-container")
+			await tab.screenshot(`${Date.now()}twitterSearch.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}twitterSearch.html`)
+			twitterUrl = await tab.evaluate((arg, cb) => {
+				if (document.querySelector(".GridTimeline-items > div > div a")) {
+					cb(null, document.querySelector(".GridTimeline-items > div > div a").href)
+				} else {
+					cb(null, null)
+				}
+			})
+			console.log("twitterUrl found by twitter:", twitterUrl)
+			if (!twitter && scrapedData.lkTwitterUrl) {
+				twitterUrl = scrapedData.lkTwitterUrl
+				console.log("using twitterUrl from Lk")
+			}
+		}
+	} else {
+		console.log("already got a twitter Url!")
+		twitterUrl = scrapedData.twitterUrl
+	}
+	
+	
+	if (twitterUrl) {
+		// let twitterUrl = twitterUrl.link
 		// only keep the twitter.com/profile of a profile URL
 	
-		let path = new URL(twitterUrl).pathname
-		path = path.slice(1)
-		if (path.includes("/")) {
-			path = path.slice(0, path.indexOf("/"))
-		}
-		twitterUrl = "https://www.twitter.com/" + path
+		// let path = new URL(twitterUrl).pathname
+		// path = path.slice(1)
+		// if (path.includes("/")) {
+		// 	path = path.slice(0, path.indexOf("/"))
+		// }
+		// twitterUrl = "https://www.twitter.com/" + path
 
-		console.log("Twitter URL found:", twitterUrl)
+		// console.log("Twitter URL found:", twitterUrl)
 		const urlObject = new URL(twitterUrl)
 		const twitterHandle = urlObject.pathname.substr(1)
 		const partialTwitterData = await twitter.checkEmail(tab, twitterHandle)
@@ -274,7 +353,7 @@ const findTwitterData = async (tab, scrapedData, company = null) => {
 const extractLinkedInData = (json, profileUrl) => {
 	// console.log("json", json)
 	const main = json.general
-	const filteredData = { name: main.fullName, headline: main.headline, firstName: main.firstName, lastName: main.lastName, company: main.company, school: main.school, location: main.location, linkedinUrl: profileUrl }
+	const filteredData = { name: main.fullName, headline: main.headline, firstName: main.firstName, lastName: main.lastName, company: main.company, school: main.school, location: main.location, query: profileUrl }
 	if (json.details.twitter) {
 		filteredData.lkTwitterUrl = `https://twitter.com/${json.details.twitter}`
 	}
@@ -288,15 +367,16 @@ const useDropcontact = async (scrapedData) => {
 	const dropcontactData = { first_name:scrapedData.firstName, last_name: scrapedData.lastName, company: scrapedData.company }
 	const result = await dropcontact.clean(dropcontactData)
 	console.log("result:", result)
+	return result
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookieliAt, sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, numberOfLinesPerLaunch} = utils.validateArguments()
+	let {sessionCookieliAt, sessionCookieCUser, sessionCookieXs, sessionCookieAuthToken, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
 	let profileUrls
-	let results = await utils.getDb("result.csv")
-	console.log(`results: ${JSON.stringify(results, null, 4)}`)
-	console.log("IP:", await utils.getIP())
+	let results = await utils.getDb(csvName + ".csv")
+	// console.log(`results: ${JSON.stringify(results, null, 4)}`)
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} catch (err) {
@@ -305,7 +385,7 @@ const useDropcontact = async (scrapedData) => {
 	if (!numberOfLinesPerLaunch) {
 		numberOfLinesPerLaunch = profileUrls.length
 	}
-	profileUrls = profileUrls.filter(str => utils.checkDb(str, results, "linkedinUrl"))
+	profileUrls = profileUrls.filter(str => str && utils.checkDb(str, results, "query"))
 							 .slice(0, numberOfLinesPerLaunch)
 
 
@@ -317,15 +397,19 @@ const useDropcontact = async (scrapedData) => {
 	await linkedIn.login(tabLk, sessionCookieliAt)
 	const tabFb = await nick.newTab()
 	await facebook.login(tabFb, sessionCookieCUser, sessionCookieXs)
+	const tabTwt = await nick.newTab()
+	await twitter.login(tabTwt, sessionCookieAuthToken)
 
 	for (const profileUrl of profileUrls) {
 		utils.log(`Processing ${profileUrl}`, "loading")
 		let scrapedData = {}
 		if (linkedIn.isLinkedInProfile(profileUrl)) {
-			const scrapingUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
+			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
 			scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
 			scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
+			scrapedData = cleanUpEmojis(scrapedData)
+			console.log("scrapedData")
 			try {
 				scrapedData = await searchFacebookProfile(tabFb, scrapedData)
 			} catch (err) {
@@ -346,15 +430,19 @@ const useDropcontact = async (scrapedData) => {
 		}
 		console.log("scrapedData", scrapedData)
 		const initDate = new Date()
+		let dropcontactData
 		try {
-			await useDropcontact(scrapedData)
+			dropcontactData = await useDropcontact(scrapedData)
+			if (dropcontactData.email) {
+				scrapedData.dropcontactEmail = dropcontactData.email
+			}
 		} catch (err) {
 			console.log("err:", err)
 		}
 		console.log("elapsed: ", new Date() - initDate)
 		// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
 		try {
-			let twitterData = await findTwitterData(tabLk, scrapedData, scrapedData.company)
+			let twitterData = await findTwitterData(tabTwt, scrapedData, scrapedData.company)
 			if (!twitterData) {
 				console.log("noresults twitter")
 				await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
@@ -375,7 +463,7 @@ const useDropcontact = async (scrapedData) => {
 		results.push(scrapedData)
 	}
 
-	await utils.saveResults(results, results)
+	await utils.saveResults(results, results, csvName)
 	nick.exit(0)
 })()
 .catch(err => {

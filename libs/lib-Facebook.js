@@ -119,6 +119,18 @@ class Facebook {
 			if (document.querySelector(".FriendRequestAdd")) {
 				scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
 			}
+
+			// extracting social media links
+			try {
+				Array.from(Array.from(document.querySelectorAll("ul.uiList")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0].querySelectorAll(".inlineLabel")).map(el => {
+					const text = el.parentElement.textContent
+					const slug = text.slice(0, text.indexOf("("))
+					const site = text.slice(text.indexOf("(") + 1, text.indexOf(")")).toLowerCase() + "Name"
+					scrapedData[site] = slug
+				})
+			} catch (err) {
+				//
+			}
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
 				const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")

@@ -91,6 +91,11 @@ class Facebook {
 			}
 			if (document.querySelector(".cover img")) {
 				scrapedData.coverPictureUrl = document.querySelector(".cover img").src
+				try {
+					scrapedData.uId = new URL(document.querySelector(".cover img").parentElement.href).searchParams.get("fbid")
+				} catch (err) {
+					//
+				}
 			}
 			if (document.querySelector(".photoContainer a")) {
 				const picUrl = document.querySelector(".photoContainer a").href
@@ -115,39 +120,56 @@ class Facebook {
 				scrapedData.friendsCount = friendsCount
 			}
 		
+			// extracting social media links
+			try {
+				Array.from(Array.from(document.querySelectorAll("ul.uiList")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0].querySelectorAll(".inlineLabel")).map(el => {
+					const text = el.parentElement.textContent
+					const slug = text.slice(0, text.indexOf("("))
+					const site = text.slice(text.indexOf("(") + 1, text.indexOf(")")).toLowerCase() + "Name"
+					scrapedData[site] = slug
+				})
+			} catch (err) {
+				//
+			}
+
 			// if Add friend button is hidden, we're already friend
 			if (document.querySelector(".FriendRequestAdd")) {
 				scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
 			}
 		
-			if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
-				const workAndEducationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div"))
-				const extractData = node => {
-					const data = {}
-					if (node.querySelector("a")) {
-						data.url = node.querySelector("a").href
-						if (node.querySelectorAll("a")[1] && node.querySelectorAll("a")[1].parentElement) {
-							data.name = node.querySelectorAll("a")[1].parentElement.textContent
+			try {
+				if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
+					const workAndEducationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div"))
+					const extractData = node => {
+						const data = {}
+						if (node.querySelector("a")) {
+							data.url = node.querySelector("a").href
+							if (node.querySelectorAll("a")[1] && node.querySelectorAll("a")[1].parentElement) {
+								data.name = node.querySelectorAll("a")[1].parentElement.textContent
+							}
+							try {
+								data.description = node.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
+							} catch (err) {
+								//
+							}
 						}
-						try {
-							data.description = node.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
-						} catch (err) {
-							//
+						return data
+					}
+					if (workAndEducationDiv) {
+						const work = extractData(workAndEducationDiv[0])
+						if (work) {
+							scrapedData.works = work
+						}
+						const education = extractData(workAndEducationDiv[1])
+						if (education) {
+							scrapedData.educations = education
 						}
 					}
-					return data
 				}
-				if (workAndEducationDiv) {
-					const work = extractData(workAndEducationDiv[0])
-					if (work) {
-						scrapedData.works = work
-					}
-					const education = extractData(workAndEducationDiv[1])
-					if (education) {
-						scrapedData.educations = education
-					}
-				}
+			} catch (err) {
+				//
 			}
+			
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.placesLived) {
 				const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
@@ -222,8 +244,12 @@ class Facebook {
 			scrapedData.timestamp = (new Date()).toISOString()
 			cb(null, scrapedData)
 		}
-
-		const scrapedData = await tab.evaluate(scrapePage, arg)
+		let scrapedData
+		try {
+			scrapedData = await tab.evaluate(scrapePage, arg)
+		} catch (err) {
+			console.log("erri", err)
+		}
 
 		if (scrapedData.birthday) {
 			const moment = require("moment")
