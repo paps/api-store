@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const Messaging = require("./lib-Messaging")
@@ -56,16 +56,16 @@ const cleanUpEmojis = bundle => {
 	}
 }
 
-// Check if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-		if (str === line.baseUrl || str.match(regex)) {
-			return false
-		}
-	}
-	return true
-}
+// // Check if a url is already in the csv
+// const checkDb = (str, db) => {
+// 	for (const line of db) {
+// 		const regex = new RegExp(`/in/${line.profileId}($|/)`)
+// 		if (str === line.baseUrl || str.match(regex)) {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
 const getInviteesUrls = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
@@ -87,7 +87,6 @@ const getInviteesUrls = (arg, cb) => {
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
 const validateInvitations = async (invitations, sentCount) => {
-	console.log("invitations: ", invitations)
 	let matches = []
 	const withdrawTab = await nick.newTab()
 	try {
@@ -334,10 +333,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	}
 
 	let browserUrl = await tab.getUrl()
-	if (!checkDb(browserUrl, db)) {
-		utils.log(`Already added ${browserUrl}.`, "done")
-		return null
-	}
+	// if (!checkDb(browserUrl, db)) {
+	// 	utils.log(`Already added ${browserUrl}.`, "done")
+	// 	return null
+	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 
 	if (disableScraping && message) {
@@ -464,7 +463,6 @@ nick.newTab().then(async (tab) => {
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(DB_NAME)
-
 	let rows = []
 	let columns = []
 	if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -480,7 +478,6 @@ nick.newTab().then(async (tab) => {
 			columnName = "0"
 		}
 	}
-
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
@@ -510,10 +507,10 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	/**
-		* Issue #117
-		* "Successfull" invitations are stored here,
-		* in order to check later in the script execution if they're sent
-		*/
+	 * Issue #117
+	 * "Successfull" invitations are stored here,
+	 * in order to check later in the script execution if they're sent
+	 */
 	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds

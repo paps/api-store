@@ -56,16 +56,16 @@ const cleanUpEmojis = bundle => {
 	}
 }
 
-// Check if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-		if (str === line.baseUrl || str.match(regex)) {
-			return false
-		}
-	}
-	return true
-}
+// // Check if a url is already in the csv
+// const checkDb = (str, db) => {
+// 	for (const line of db) {
+// 		const regex = new RegExp(`/in/${line.profileId}($|/)`)
+// 		if (str === line.baseUrl || str.match(regex)) {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
 const getInviteesUrls = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
@@ -333,10 +333,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	}
 
 	let browserUrl = await tab.getUrl()
-	if (!checkDb(browserUrl, db)) {
-		utils.log(`Already added ${browserUrl}.`, "done")
-		return null
-	}
+	// if (!checkDb(browserUrl, db)) {
+	// 	utils.log(`Already added ${browserUrl}.`, "done")
+	// 	return null
+	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 
 	if (disableScraping && message) {
