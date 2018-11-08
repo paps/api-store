@@ -60,6 +60,11 @@ const isMessageThread = url => {
 	}
 }
 
+/**
+ * 
+ * @param {String} url 
+ * @return {String|null}
+ */
 const extractThreadId = url => {
 	try {
 		let rep = new URL(url)
