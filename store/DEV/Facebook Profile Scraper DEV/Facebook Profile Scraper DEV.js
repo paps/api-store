@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -320,10 +321,15 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		}
 
 	}
-	if (await tab.evaluate(checkIfPage)) {
-		utils.log("Page URL, not a Profile URL", "warning")
-		return { profileUrl, error: "Page URL, not handled"}
+	try {
+		if (await tab.evaluate(checkIfPage)) {
+			utils.log("Page URL, not a Profile URL", "warning")
+			return { profileUrl, error: "Page URL, not handled"}
+		}
+	} catch (err) {
+		console.log("err:", err)
 	}
+
 	try {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
@@ -343,6 +349,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		result = await facebook.scrapeAboutPage(tab, { profileUrl, pagesToScrape })
 	} catch (err) {
 		utils.log(`Error scraping first page: ${err}`, "error")
+		await tab.screenshot(`err${new Date()}.png`)
+		await buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
 		return null
 	}
 
@@ -416,8 +424,8 @@ nick.newTab().then(async (tab) => {
 			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
 			try {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)
-				tempResult.timestamp = (new Date()).toISOString()
 				if (tempResult && tempResult.profileUrl) {
+					tempResult.timestamp = (new Date()).toISOString()
 					const tempCsvResult = craftCsvObject(tempResult)
 					result.push(tempResult)
 					db.push(tempCsvResult)
