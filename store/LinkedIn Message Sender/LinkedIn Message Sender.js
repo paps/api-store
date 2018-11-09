@@ -229,11 +229,12 @@ const sendMessage = async (tab, message, tags) => {
 		buster.progressHint((step++) / rows.length, `Sending message to ${row[columnName]}`)
 		utils.log(`Loading ${row[columnName]}...`, "loading")
 		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+		let profile = null
 		try {
 			if (disableScraping) {
 				await linkedInScraper.visitProfile(tab, url)
 			} else {
-				const profile = await linkedInScraper.scrapeProfile(tab, url)
+				profile = await linkedInScraper.scrapeProfile(tab, url)
 				row = Object.assign({}, profile.csv, row)
 			}
 			// Can't send a message to yourself ...
@@ -245,7 +246,10 @@ const sendMessage = async (tab, message, tags) => {
 			utils.log(`${row[columnName]} loaded`, "done")
 			utils.log(`Sending message to: ${row[columnName]}`, "info")
 			await loadChat(tab)
-			const payload = await sendMessage(tab, message, row)
+			let payload = await sendMessage(tab, message, row)
+			if (profile !== null) {
+				payload = Object.assign({}, profile.csv, payload)
+			}
 			result.push(payload)
 		} catch (err) {
 			utils.log(`Can't load profile: ${url}`, "warning")
