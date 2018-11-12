@@ -1,5 +1,5 @@
 // Phantombuster configuration {
-"phantombuster dependencies: lib-Hunter.js"
+"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact.js"
 // }
 const { URL } = require ("url")
 
@@ -500,6 +500,7 @@ const craftCsvObject = infos => {
 	const hasDetails = infos.hasOwnProperty("details")
 	const hasGeneral = infos.hasOwnProperty("general")
 	const hasHunter = infos.hasOwnProperty("hunter")
+	const hasDropcontact = infos.hasOwnProperty("dropcontact")
 
 	return {
 		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
@@ -541,6 +542,8 @@ const craftCsvObject = infos => {
 		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
 		twitterFromHunter: (hasHunter) ? (infos.hunter.twitter || null) : null,
 		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
+		mailFromDropcontact: (hasDetails) ? (infos.details.mailFromDropcontact || null) : null,
+		mailQualificationFromDropContact: (hasDropcontact) ? (infos.dropcontact["email qualification"] || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
@@ -594,6 +597,8 @@ const defaultCsvResult = {
 	positionFromHunter:  null,
 	twitterFromHunter: null,
 	phoneNumberFromHunter:  null,
+	mailFromDropcontact: null,
+	mailQualificationFromDropContact: null,
 	phoneNumber: null,
 	twitter: null,
 	companyWebsite: null,
@@ -636,11 +641,11 @@ class LinkedInScraper {
 	 * @constructor
 	 * @param {StoreUtilities} utils -- StoreUtilities instance}
 	 * @param {String} [hunterApiKey] -- Hunter API key}
+	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
 	 * @param {Object} [nick] -- Nickjs instance}
 	 * @param {Object} [buster] -- buster instance}
-
 	 */
-	constructor(utils, hunterApiKey = null, nick = null, buster = null) {
+	constructor(utils, hunterApiKey = null, dropcontactApiKey = null, nick = null, buster = null) {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
@@ -648,6 +653,10 @@ class LinkedInScraper {
 		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
+		}
+		if ((typeof(dropcontactApiKey) === "string") && (dropcontactApiKey.trim().length > 0)) {
+			require("coffee-script/register")
+			this.dropcontact = new (require("./lib-Dropcontact"))(dropcontactApiKey.trim())
 		}
 	}
 
@@ -666,6 +675,8 @@ class LinkedInScraper {
 	 * if HunterApiKey was passed to the constructor, this method will also look for professional email
 	 * @param {Tab} tab -- Nick tab logged as a LinkedIn user}
 	 * @param {String} url -- LinkedIn Profile URL}
+	 * @param {Boolean} saveImg -- if true, save the profile picture as a jpeg}
+	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
 	async scrapeProfile(tab, url = null, saveImg, takeScreenshot) {
@@ -688,13 +699,14 @@ class LinkedInScraper {
 			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
 		}
 
-		if (this.hunter && result.jobs.length > 0) {
+		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
 			try {
 				let companyUrl = null
 				if (this.nick) {
 					const companyTab = await this.nick.newTab()
 					companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
 					await companyTab.close()
+					result.details.companyWebsite = companyUrl || ""
 				}
 				const hunterPayload = {}
 				if (result.general.firstName && result.general.lastName) {
@@ -709,11 +721,19 @@ class LinkedInScraper {
 					hunterPayload.domain = companyUrl
 				}
 				//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
-				const hunterSearch = await this.hunter.find(hunterPayload)
-				this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
-				result.details.mailFromHunter = hunterSearch.email
-				result.details.companyWebsite = companyUrl || ""
-				result.hunter = Object.assign({}, hunterSearch)
+				if (this.hunter) {
+					const hunterSearch = await this.hunter.find(hunterPayload)
+					this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
+					result.details.mailFromHunter = hunterSearch.email
+					result.hunter = Object.assign({}, hunterSearch)
+				}
+				if (this.dropcontact) {
+					hunterPayload.company = result.jobs[0].companyName
+					const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
+					this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
+					result.details.mailFromDropcontact = dropcontactSearch.email
+					result.dropcontact = Object.assign({}, dropcontactSearch)
+				}
 			} catch (err) {
 				this.utils.log(err.toString(), "error")
 				result.details.mailFromHunter = ""

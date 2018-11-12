@@ -67,6 +67,10 @@
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
+					"dropcontactApiKey": {
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io"
+					},
 					"numberOfAddsPerLaunch": {
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
@@ -97,6 +101,10 @@
 				"type": "string"
 			},
 			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"dropcontactApiKey": {
 				"type": "string",
 				"maxLength": 50
 			},

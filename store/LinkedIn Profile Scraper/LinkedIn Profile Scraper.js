@@ -107,7 +107,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -133,7 +133,7 @@ const removeLinkedinSubdomains = url => {
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, dropcontactApiKey, nick, buster)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 
