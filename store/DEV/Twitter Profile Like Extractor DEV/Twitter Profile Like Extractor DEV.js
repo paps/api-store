@@ -36,6 +36,19 @@ const isUrl = url => {
 	}
 }
 
+const isTwitterUrl = url => {
+	try {
+		return (new URL(url)).hostname === "twitter.com"
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * @description Add /likes in an URL pathname
+ * @param {String} url
+ * @return {String} url parameter with applied modification if needed
+ */
 const appendLikesPages = url => {
 	try {
 		let tmp = new URL(url)
@@ -50,6 +63,11 @@ const appendLikesPages = url => {
 	}
 }
 
+/**
+ * @param {Object} arg
+ * @param {Function} cb
+ * @return {Promise<Number>} likes count
+ */
 const getLikesCount = (arg, cb) => {
 	// Easy way to get the tweets count for a profile
 	const countSelector = "a[data-nav=\"favorites\"] > span.ProfileNav-value"
@@ -57,19 +75,31 @@ const getLikesCount = (arg, cb) => {
 	cb(null, anchor ? parseInt(anchor.dataset.count, 10) : 0)
 }
 
-const getLoadedLikesCount = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
-}
+/**
+ * @param {Object} arg
+ * @param {Function} cb
+ * @return {Promise<Number>} - Loaded likes count
+ */
+const getLoadedLikesCount = (arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
 
+/**
+ * @description wait while the timeline is the loading state
+ * @throws on data loading failure
+ * @param {{ prevCount: Number }} arg - previous loaded likes count
+ * @param {Function} cb
+ * @return {Promise<String>}
+ */
 const waitWhileLoading = (arg, cb) => {
 	const idleStartTime = Date.now()
 	const idle = () => {
 		const loadedTweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length
-		if (!document.querySelector(".stream-container").dataset.minPosition) {
+		// the bottom timeline has 3 CSS classes: .timeline-end, .has-more-items, .has-items
+		// When you loaded the entire timeline, .has-more-items is removed
+		if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
 			cb(null, "DONE")
 		} else if (loadedTweets <= arg.prevCount) {
 			if (Date.now() - idleStartTime >= 30000) {
-				cb(null, "DONE")
+				cb("No likes loaded after 30s")
 			}
 			setTimeout(idle, 100)
 		} else {
@@ -79,6 +109,12 @@ const waitWhileLoading = (arg, cb) => {
 	idle()
 }
 
+/**
+ * @description scrape all likes elements in DOM
+ * @param {Object} arg
+ * @param {Function} cb
+ * @return {Promise<Array<Object>>} scraped likes
+ */
 const scrapeLikes = (arg, cb) => {
 	const tweetScraper = el => {
 		const res = {}
@@ -97,8 +133,16 @@ const scrapeLikes = (arg, cb) => {
 	cb(null, content)
 }
 
+/**
+ * @async
+ * @description Load / and scrape a certain amount of likes
+ * @param {Object} tab - Nickjs tab instance
+ * @param {Number} [count] - number of elements to loade
+ * @return {Promise<Array<Object>>} Scraped likes
+ */
 const loadLikes = async (tab, count = Infinity) => {
 	let likesCount = 0
+	let lastCount = 0
 
 	try {
 		likesCount = await tab.evaluate(getLikesCount)
@@ -114,8 +158,12 @@ const loadLikes = async (tab, count = Infinity) => {
 	utils.log(`Loading ${likesCount} likes...`, "loading")
 	let loadedCount = await tab.evaluate(getLoadedLikesCount)
 
-	while (loadedCount < likesCount || likesCount >= loadedCount) {
+	while (loadedCount <= likesCount || likesCount >= loadedCount) {
 		loadedCount = await tab.evaluate(getLoadedLikesCount)
+		if (loadedCount - lastCount >= 100) {
+			utils.log(`${loadedCount} likes loaded`, "info")
+			lastCount = loadedCount
+		}
 		buster.progressHint(loadedCount / likesCount, `Likes loaded: ${loadedCount}/${likesCount}`)
 		await tab.scrollToBottom()
 		try {
@@ -124,11 +172,12 @@ const loadLikes = async (tab, count = Infinity) => {
 				break
 			}
 		} catch (err) {
-			utils.log(`Error during loading of likes: ${err.message || err}`, "info")
+			utils.log(`Error during loading of likes: ${err.message || err}`, "warning")
 			break
 		}
 	}
 	const scrapeData = await tab.evaluate(scrapeLikes, { count })
+	utils.log(`${scrapeData.length} like${ scrapeData.length === 1 ? "" : "s" } scraped`, "done")
 	return scrapeData
 }
 
@@ -144,7 +193,7 @@ const loadLikes = async (tab, count = Infinity) => {
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
 		}
