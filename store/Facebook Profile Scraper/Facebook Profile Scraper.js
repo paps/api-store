@@ -120,6 +120,9 @@ const craftCsvObject = data => {
 	if (data.age) {
 		csvResult.age = data.age
 	}
+	if (data.uid) {
+		csvResult.uid = data.uid
+	}
 	return csvResult
 }
 
