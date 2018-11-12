@@ -1,0 +1,116 @@
+{
+	"slug": "linkedin-message-followup",
+	"description": "",
+	"image": "",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "",
+	"defaultArgumentAllowed": false,
+	"hidden": true,
+	"new": true,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"message": "Hey #firstName#,\n\nI sent you this message thanks to an awesome Phantombuster API: https://phantombuster.com/api-store/9227/linkedin-message-sender!\n\nCan't wait to know more about you!\n\nBest regards"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of profiles",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name where profile URLs are stored",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"profilesPerLaunch": {
+						"label": "Number of profiles to send messages per launch",
+						"inputType": "number",
+						"helper": "You can leave this field empty if you want to send a message to all profiles"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result",
+						"helper": "If empty, all results are stored in <b>result.csv</b>"
+					},
+					"sendAfter": {
+						"label": "Send a message after a certain amount of time",
+						"inputType": "number"
+					},
+					"message": {
+						"label": "Message",
+						"type": "textarea",
+						"helpers": [
+							"You are limited by LinkedIn to 7000 characters",
+							"Use #firstName# to insert the firstname of the person in your message",
+							"You can use custom tags in this API"
+						]
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
+					},
+					"disableScraping": {
+						"rightLabel": "<b>Disable profile scraping</b> (not recommended — speeds up the API but prevents email discovery and tags other than #firstName#)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"sendAfter": {
+				"type": "number",
+				"minimum": 1
+			},
+			"message": {
+				"type": "string",
+				"minLength": 2,
+				"maxLength": 7000
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"disableScraping": {
+				"type": "boolean"
+			}
+		}
+	}
+}
