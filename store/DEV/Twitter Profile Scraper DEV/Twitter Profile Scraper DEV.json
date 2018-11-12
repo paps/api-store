@@ -26,7 +26,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Twitter auth_token session cookie</a>",
+						"label": "Twitter auth_token session cookie<a target=\"_target\" href=\"/api-store/9375/twitter-profile-scraper#section_5getyourtwittersessioncookie\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
@@ -34,7 +34,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 						],
-						"label": "Spreadsheet URL of profiles to scrape"
+						"label": "Spreadsheet URL of profiles to scrape <a target=\"_blank\" href=\"/api-store/9375/twitter-profile-scraper#section_4aimaspecifictwitteraccountorseveralatatime\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Profile URLs column name",
@@ -42,7 +42,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberProfilesPerLaunch": {
-						"label": "Number of profiles to visit per launch",
+						"label": "Number of profiles to visit per launch<a target=\"_blank\" href=\"api-store/9375/twitter-profile-scraper#section_repetition_setup\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					}
