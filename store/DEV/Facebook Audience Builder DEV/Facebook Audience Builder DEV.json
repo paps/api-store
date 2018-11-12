@@ -29,30 +29,38 @@
 				"fields": {
 					"sessionCookieliAt": {
                         "label": "LinkedIn session cookie li-at <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
+                        "placeholder": "Paste your LinkedIn li_at session cookie here"
                     },
 					"sessionCookieCUser": {
                         "label": "Facebook session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
+                        "placeholder": "Paste your Facebook c_user session cookie here"
                     },
                     "sessionCookieXs": {
                         "label": "Facebook session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
+                        "placeholder": "Paste your xs Facebook session cookie here"
+                    },
+                    "sessionCookieAuthToken": {
+                        "label": "Twitter session cookie auth_token <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your auth_token Twitter session cookie here"
                     },
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
 					},
 					"columnName": {
-						"label": "Column name from which Twitter profile URLs",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
-						"placeholder": "Facebook Profile"
+						"label": "Column name where LinkedIn/Facebook profile URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "LinkedIn or Facebook Profile"
 					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					}
 				}
 			}
@@ -76,6 +84,11 @@
                 "required": true,
                 "minLength": 15
             },
+            "sessionCookieAuthToken": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
             "spreadsheetUrl": {
 				"type": "string",
 				"required": true
@@ -86,6 +99,10 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			}
 		}
 	}
