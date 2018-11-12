@@ -111,7 +111,7 @@ const removeElements = (arg, cb) => {
 const getMembersCount = (arg, cb) => {
 	let count = document.querySelector("artdeco-typeahead h1") || 0
 	if (!count) cb(null, count)
-	count = parseInt(count.textContent.trim().replace(/\s/g, "").match(/([\d,. ]+)/).find(el => !isNaN(parseInt(el, 10))), 10)
+	count = parseInt(count.textContent.trim().replace(/([\s,. ]+)/g, "").match(/([\d,. ]+)/).find(el => !isNaN(parseInt(el, 10))), 10)
 	cb(null, count)
 }
 
@@ -122,6 +122,8 @@ const getMembersCount = (arg, cb) => {
  * @return {Promise<Number>}
  */
 const getDomElementsCount = (arg, cb) => cb(null, document.querySelectorAll(arg.sel).length)
+
+const isStillLoading = (arg, cb) => cb(null, document.querySelector("div.artdeco-spinner") !== null)
 
 /**
  * @async
@@ -135,6 +137,7 @@ const getMembers = async tab => {
 	// Wait until the result list is visible
 	await tab.waitUntilVisible("artdeco-typeahead-results-list.groups-members-list__results-list", 15000)
 	const count = await tab.evaluate(getMembersCount)
+	await tab.screenshot(`${Date.now()}-wtf.jpg`)
 	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < count) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -163,7 +166,16 @@ const getMembers = async tab => {
 			await tab.waitUntilVisible("div.artdeco-spinner", 30000)
 			await tab.waitWhileVisible("div.artdeco-spinner", 30000)
 		} catch (err) {
-			break
+			const isLoading = await tab.evaluate(isStillLoading)
+			if (isLoading) {
+				try {
+					await tab.waitWhilePresent("div.artdeco-spinner", 30000)
+				} catch (err) {
+					break
+				}
+			} else {
+				break
+			}
 		}
 	}
 	utils.log(`${members.length + 1} members scraped`, "done")
