@@ -137,7 +137,6 @@ const getMembers = async tab => {
 	// Wait until the result list is visible
 	await tab.waitUntilVisible("artdeco-typeahead-results-list.groups-members-list__results-list", 15000)
 	const count = await tab.evaluate(getMembersCount)
-	await tab.screenshot(`${Date.now()}-wtf.jpg`)
 	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < count) {
 		const timeLeft = await utils.checkTimeLeft()
