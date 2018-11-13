@@ -86,3 +86,5 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
 
 Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).
+
+Also there's a limit on how many members we can access from a group (despite the total amount shown by Facebook being way higher). That amount may vary depending on the group you're scraping (~around 10k for a 100k members group).
