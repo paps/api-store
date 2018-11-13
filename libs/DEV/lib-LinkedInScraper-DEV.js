@@ -544,6 +544,15 @@ const craftCsvObject = infos => {
 		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
 		mailFromDropcontact: (hasDetails) ? (infos.details.mailFromDropcontact || null) : null,
 		mailQualificationFromDropContact: (hasDropcontact) ? (infos.dropcontact["email qualification"] || null) : null,
+		naf5CodeFromDropContact: (hasDropcontact) ? (infos.dropcontact.naf5_code || null) : null,
+		naf5DesFromDropContact: (hasDropcontact) ? (infos.dropcontact.naf5_des || null) : null,
+		nbEmployeesFromDropContact: (hasDropcontact) ? (infos.dropcontact.nb_employees || null) : null,
+		sirenFromDropContact: (hasDropcontact) ? (infos.dropcontact.siren || null) : null,
+		siretFromDropContact: (hasDropcontact) ? (infos.dropcontact.siret || null) : null,
+		siretAddressFromDropContact: (hasDropcontact) ? (infos.dropcontact.siret_address || null) : null,
+		siretZipFromDropContact: (hasDropcontact) ? (infos.dropcontact.siret_zip || null) : null,
+		vatFromDropContact: (hasDropcontact) ? (infos.dropcontact.vat || null) : null,
+		websiteFromDropContact: (hasDropcontact) ? (infos.dropcontact.website || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
@@ -599,6 +608,15 @@ const defaultCsvResult = {
 	phoneNumberFromHunter:  null,
 	mailFromDropcontact: null,
 	mailQualificationFromDropContact: null,
+	naf5CodeFromDropContact: null,
+	naf5DesFromDropContact: null,
+	nbEmployeesFromDropContact: null,
+	sirenFromDropContact: null,
+	siretFromDropContact: null,
+	siretAddressFromDropContact: null,
+	siretZipFromDropContact: null,
+	vatFromDropContact: null,
+	websiteFromDropContact: null,
 	phoneNumber: null,
 	twitter: null,
 	companyWebsite: null,
@@ -729,6 +747,7 @@ class LinkedInScraper {
 				}
 				if (this.dropcontact) {
 					hunterPayload.company = result.jobs[0].companyName
+					hunterPayload.siren = true
 					const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
 					this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
 					result.details.mailFromDropcontact = dropcontactSearch.email
