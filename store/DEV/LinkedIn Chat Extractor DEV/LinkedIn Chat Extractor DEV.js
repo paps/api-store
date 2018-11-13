@@ -34,8 +34,9 @@ const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button",
 	chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
 	closeChatButton: "button[data-control-name=\"overlay.close_conversation_window\"]",
-	messages: "ul.msg-s-message-list",
-	spinners: "li-icon > .artdeco-spinner"
+	messages: ["ul.msg-s-message-list", "ul.msg-s-message-list-content"],
+	spinners: "li-icon > .artdeco-spinner",
+	addRequestNote: "header.send-invite__header"
 }
 const ajaxBundle = { convId: -1, date: Date.now(), headers: null }
 let interceptSuccess = false
@@ -44,6 +45,10 @@ let interceptSuccess = false
 
 // }
 
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
 const isLinkedInProfile = url => {
 	try {
 		return (new URL(url)).pathname.startsWith("/in/")
@@ -52,6 +57,10 @@ const isLinkedInProfile = url => {
 	}
 }
 
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
 const isMessageThread = url => {
 	try {
 		return (new URL(url)).pathname.startsWith("/messaging/thread/")
@@ -61,8 +70,7 @@ const isMessageThread = url => {
 }
 
 /**
- * 
- * @param {String} url 
+ * @param {String} url
  * @return {String|null}
  */
 const extractThreadId = url => {
@@ -176,12 +184,15 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false,
 	let conversation = []
 	let loadAgain = true
 	if (!isThread) {
-		await tab.click(SELECTORS.conversationTrigger)
-		await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
 		try {
-			await tab.waitUntilVisible(SELECTORS.messages, 15000)
+			await tab.click(SELECTORS.conversationTrigger)
+			await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
+			await tab.waitUntilVisible(SELECTORS.messages, "or" ,15000)
 			await tab.waitWhileVisible(SELECTORS.spinners, 15000)
 		} catch (err) {
+			if (await tab.isVisible(SELECTORS.addRequestNote)) {
+				throw "Request network is pending OR you're not connected with the user, can't scrape messages"
+			}
 			throw `Can't open conversation due to: ${err.message || err}`
 		}
 	}
@@ -295,7 +306,7 @@ const jsonToCsvOutput = json => {
 		try {
 			conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder, isThreadURL)
 		} catch (err) {
-			utils.log(`No messages in ${convUrl}`, "warning")
+			utils.log(`No messages in ${convUrl} (${err.message || err})`, "warning")
 			currentScraping.push({ url: convUrl, error: `${err.message || err}`, messages: [ { error: `${err.message || err}` } ] })
 			continue
 		}
