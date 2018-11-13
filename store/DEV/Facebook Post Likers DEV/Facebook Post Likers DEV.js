@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -16,11 +15,12 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 
 // }
@@ -214,7 +214,7 @@ const scrapeLikers = (arg, cb) => {
 					cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 				})
 				} catch (err) {
-					await tab.wait(5000)
+					await tab.wait(10000)
 					urlToGo = await tab.evaluate((arg, cb) => {
 						cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
 					})
