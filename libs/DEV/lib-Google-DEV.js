@@ -21,66 +21,6 @@ const _defaultEngines = [
 		"linkSelector": "a",
 		"descriptionSelector": "span.st",
 		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.ca",
-		"codename": "G(ca)",
-		"baseUrl": "https://www.google.ca/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.au",
-		"codename": "G(com.au)",
-		"baseUrl": "https://www.google.com.au/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.ie",
-		"codename": "G(ie)",
-		"baseUrl": "https://www.google.ie/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.jm",
-		"codename": "G(com.jm)",
-		"baseUrl": "https://www.google.com.jm/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.jm",
-		"codename": "G(com.jm)",
-		"baseUrl": "https://www.google.com.jm/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.co.nz",
-		"codename": "G(co.nz)",
-		"baseUrl": "https://www.google.co.nz/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
 	}
 ]
 
@@ -215,7 +155,7 @@ class WebSearch {
 		this.nbRequestsBeforeDeletingCookies = Math.round(50 + Math.random() * 50) // 50 <=> 100
 	}
 
-	static engines () { return _defaultEngines }
+	static engines() { return _defaultEngines }
 
 	/**
 	 * @async
@@ -279,8 +219,8 @@ class WebSearch {
 				// slow down a little
 				const waitTime = this.enginesDown.length * (1500 + (Math.random() * 500))
 				console.log("waitTime=", waitTime)
-				await this.tab.screenshot(`${Date.now()}noresultsTwitter.png`)
-				await this.buster.saveText(await this.tab.getContent(), `${Date.now()}noresultsTwitter.html`)
+				await this.tab.screenshot(`${Date.now()}noresultGoogle.png`)
+				await this.buster.saveText(await this.tab.getContent(), `${Date.now()}noresultGoogle.html`)
 				await this.tab.wait(waitTime)			
 			}
 		}

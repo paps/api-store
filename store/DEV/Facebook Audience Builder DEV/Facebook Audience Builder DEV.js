@@ -32,7 +32,7 @@ const Google = require("./lib-Google-DEV")
 const Dropcontact = require("./lib-Dropcontact")
 const dropcontact = new Dropcontact("nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi")
 const { URL } = require("url")
-const stateList = [ { countryCode: "US", state: "Alabama", stateCode:  "AL" }, { countryCode: "US", state: "Alaska", stateCode: "AK" }, { countryCode: "US", state: "Arizona", stateCode: "AZ" }, { countryCode: "US", state: "Arkansas", stateCode: "AR" }, { countryCode: "US", state: "California", stateCode: "CA" }, { countryCode: "US", state: "Colorado", stateCode: "CO" }, { countryCode: "US", state: "Connecticut", stateCode: "CT" }, { countryCode: "US", state: "Delaware", stateCode: "DE" }, { countryCode: "US", state: "Florida", stateCode: "FL" }, { countryCode: "US", state: "Georgia", stateCode: "GA" }, { countryCode: "US", state: "Hawaii", stateCode: "HI" }, { countryCode: "US", state: "Idaho", stateCode: "ID" }, { countryCode: "US", state: "Illinois", stateCode: "IL" }, { countryCode: "US", state: "Indiana", stateCode: "IN" }, { countryCode: "US", state: "Iowa", stateCode: "IA" }, { countryCode: "US", state: "Kansas", stateCode: "KS" }, { countryCode: "US", state: "Kentucky", stateCode: "KY" }, { countryCode: "US", state: "Louisiana", stateCode: "LA" }, { countryCode: "US", state: "Maine", stateCode: "ME" }, { countryCode: "US", state: "Maryland", stateCode: "MD" }, { countryCode: "US", state: "Massachusetts", stateCode: "MA" }, { countryCode: "US", state: "Michigan", stateCode: "MI" }, { countryCode: "US", state: "Minnesota", stateCode: "MN" }, { countryCode: "US", state: "Mississippi", stateCode: "MS" }, { countryCode: "US", state: "Missouri", stateCode: "MO" }, { countryCode: "US", state: "Montana", stateCode: "MT" }, { countryCode: "US", state: "Nebraska", stateCode: "NE" }, { countryCode: "US", state: "Nevada", stateCode: "NV" }, { countryCode: "US", state: "New Hampshire", stateCode: "NH" }, { countryCode: "US", state: "New Jersey", stateCode: "NJ" }, { countryCode: "US", state: "New Mexico", stateCode: "NM" }, { countryCode: "US", state: "New York", stateCode: "NY" }, { countryCode: "US", state: "North Carolina", stateCode: "NC" }, { countryCode: "US", state: "North Dakota", stateCode: "ND" }, { countryCode: "US", state: "Ohio", stateCode: "OH" }, { countryCode: "US", state: "Oklahoma", stateCode: "OK" }, { countryCode: "US", state: "Oregon", stateCode: "OR" }, { countryCode: "US", state: "Pennsylvania", stateCode: "PA" }, { countryCode: "US", state: "Rhode Island", stateCode: "RI" }, { countryCode: "US", state: "South Carolina", stateCode: "SC" }, { countryCode: "US", state: "South Dakota", stateCode: "SD" }, { countryCode: "US", state: "Tennessee", stateCode: "TN" }, { countryCode: "US", state: "Texas", stateCode: "TX" }, { countryCode: "US", state: "Utah", stateCode: "UT" }, { countryCode: "US", state: "Vermont", stateCode: "VT" }, { countryCode: "US", state: "Virginia", stateCode: "VA" }, { countryCode: "US", state: "Washington", stateCode: "WA" }, { countryCode: "US", state: "West Virginia", stateCode: "WV" }, { countryCode: "US", state: "Wisconsin", stateCode: "WI" }, { countryCode: "US", state: "Wyoming", stateCode: "WY" }, { countryCode: "AU", state: "Australia", stateCode: "" }, { countryCode: "BE", state: "Belgium", stateCode: "" }, { countryCode: "BR", state: "Brazil" }, { countryCode: "CA", state: "Canada" }, { countryCode: "CN", state: "China" }, { countryCode: "FR", state: "France" }, { countryCode: "IN", state: "India" }, { countryCode: "ID", state: "Indonesia" }, { countryCode: "IL", state: "Israel" }, { countryCode: "RU", state: "Russia" }, { countryCode: "UK", state: "United Kindgom" } ]
+const stateList = [ { countryCode: "US", state: "Alabama", stateCode:  "AL" }, { countryCode: "US", state: "Alaska", stateCode: "AK" }, { countryCode: "US", state: "Arizona", stateCode: "AZ" }, { countryCode: "US", state: "Arkansas", stateCode: "AR" }, { countryCode: "US", state: "California", stateCode: "CA" }, { countryCode: "US", state: "Colorado", stateCode: "CO" }, { countryCode: "US", state: "Connecticut", stateCode: "CT" }, { countryCode: "US", state: "Delaware", stateCode: "DE" }, { countryCode: "US", state: "Florida", stateCode: "FL" }, { countryCode: "US", state: "Georgia", stateCode: "GA" }, { countryCode: "US", state: "Hawaii", stateCode: "HI" }, { countryCode: "US", state: "Idaho", stateCode: "ID" }, { countryCode: "US", state: "Illinois", stateCode: "IL" }, { countryCode: "US", state: "Indiana", stateCode: "IN" }, { countryCode: "US", state: "Iowa", stateCode: "IA" }, { countryCode: "US", state: "Kansas", stateCode: "KS" }, { countryCode: "US", state: "Kentucky", stateCode: "KY" }, { countryCode: "US", state: "Louisiana", stateCode: "LA" }, { countryCode: "US", state: "Maine", stateCode: "ME" }, { countryCode: "US", state: "Maryland", stateCode: "MD" }, { countryCode: "US", state: "Massachusetts", stateCode: "MA" }, { countryCode: "US", state: "Michigan", stateCode: "MI" }, { countryCode: "US", state: "Minnesota", stateCode: "MN" }, { countryCode: "US", state: "Mississippi", stateCode: "MS" }, { countryCode: "US", state: "Missouri", stateCode: "MO" }, { countryCode: "US", state: "Montana", stateCode: "MT" }, { countryCode: "US", state: "Nebraska", stateCode: "NE" }, { countryCode: "US", state: "Nevada", stateCode: "NV" }, { countryCode: "US", state: "New Hampshire", stateCode: "NH" }, { countryCode: "US", state: "New Jersey", stateCode: "NJ" }, { countryCode: "US", state: "New Mexico", stateCode: "NM" }, { countryCode: "US", state: "New York", stateCode: "NY" }, { countryCode: "US", state: "North Carolina", stateCode: "NC" }, { countryCode: "US", state: "North Dakota", stateCode: "ND" }, { countryCode: "US", state: "Ohio", stateCode: "OH" }, { countryCode: "US", state: "Oklahoma", stateCode: "OK" }, { countryCode: "US", state: "Oregon", stateCode: "OR" }, { countryCode: "US", state: "Pennsylvania", stateCode: "PA" }, { countryCode: "US", state: "Rhode Island", stateCode: "RI" }, { countryCode: "US", state: "South Carolina", stateCode: "SC" }, { countryCode: "US", state: "South Dakota", stateCode: "SD" }, { countryCode: "US", state: "Tennessee", stateCode: "TN" }, { countryCode: "US", state: "Texas", stateCode: "TX" }, { countryCode: "US", state: "Utah", stateCode: "UT" }, { countryCode: "US", state: "Vermont", stateCode: "VT" }, { countryCode: "US", state: "Virginia", stateCode: "VA" }, { countryCode: "US", state: "Washington", stateCode: "WA" }, { countryCode: "US", state: "West Virginia", stateCode: "WV" }, { countryCode: "US", state: "Wisconsin", stateCode: "WI" }, { countryCode: "US", state: "Wyoming", stateCode: "WY" }, { countryCode: "AU", state: "Australia", stateCode: "" }, { countryCode: "BE", state: "Belgium" }, { countryCode: "BR", state: "Brazil" }, { countryCode: "CA", state: "Canada" }, { countryCode: "CN", state: "China" }, { countryCode: "FR", state: "France" }, { countryCode: "DE", state: "Germany" }, { countryCode: "IN", state: "India" }, { countryCode: "ID", state: "Indonesia" }, { countryCode: "IL", state: "Israel" }, { countryCode: "IT", state: "Italy" }, { countryCode: "JP", state: "Japan" }, { countryCode: "RU", state: "Russia" }, { countryCode: "UK", state: "United Kindgom" } ]
 const EMOJI_PATTERN = /\u{1F3F4}(?:\u{E0067}\u{E0062}(?:\u{E0065}\u{E006E}\u{E0067}|\u{E0077}\u{E006C}\u{E0073}|\u{E0073}\u{E0063}\u{E0074})\u{E007F}|\u200D\u2620\uFE0F)|\u{1F469}\u200D\u{1F469}\u200D(?:\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}])|\u{1F468}(?:\u200D(?:\u2764\uFE0F\u200D(?:\u{1F48B}\u200D)?\u{1F468}|[\u{1F468}\u{1F469}]\u200D(?:\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}])|\u{1F466}\u200D\u{1F466}|\u{1F467}\u200D[\u{1F466}\u{1F467}]|[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|[\u{1F3FB}-\u{1F3FF}]\u200D[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|\u{1F469}\u200D(?:\u2764\uFE0F\u200D(?:\u{1F48B}\u200D[\u{1F468}\u{1F469}]|[\u{1F468}\u{1F469}])|[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}])|\u{1F469}\u200D\u{1F466}\u200D\u{1F466}|(?:\u{1F441}\uFE0F\u200D\u{1F5E8}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]\u200D[\u2695\u2696\u2708]|\u{1F468}(?:[\u{1F3FB}-\u{1F3FF}]\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}]\uFE0F|[\u{1F46F}\u{1F93C}\u{1F9DE}\u{1F9DF}])\u200D[\u2640\u2642]|[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}][\u{1F3FB}-\u{1F3FF}]\u200D[\u2640\u2642]|[\u{1F3C3}\u{1F3C4}\u{1F3CA}\u{1F46E}\u{1F471}\u{1F473}\u{1F477}\u{1F481}\u{1F482}\u{1F486}\u{1F487}\u{1F645}-\u{1F647}\u{1F64B}\u{1F64D}\u{1F64E}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F926}\u{1F937}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B8}\u{1F9B9}\u{1F9D6}-\u{1F9DD}](?:[\u{1F3FB}-\u{1F3FF}]\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\u{1F469}\u200D[\u2695\u2696\u2708])\uFE0F|\u{1F469}\u200D\u{1F467}\u200D[\u{1F466}\u{1F467}]|\u{1F469}\u200D\u{1F469}\u200D[\u{1F466}\u{1F467}]|\u{1F468}(?:\u200D(?:[\u{1F468}\u{1F469}]\u200D[\u{1F466}\u{1F467}]|[\u{1F466}\u{1F467}])|[\u{1F3FB}-\u{1F3FF}])|\u{1F3F3}\uFE0F\u200D\u{1F308}|\u{1F469}\u200D\u{1F467}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]\u200D[\u{1F33E}\u{1F373}\u{1F393}\u{1F3A4}\u{1F3A8}\u{1F3EB}\u{1F3ED}\u{1F4BB}\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}\u{1F9B0}-\u{1F9B3}]|\u{1F469}\u200D\u{1F466}|\u{1F1F6}\u{1F1E6}|\u{1F1FD}\u{1F1F0}|\u{1F1F4}\u{1F1F2}|\u{1F469}[\u{1F3FB}-\u{1F3FF}]|\u{1F1ED}[\u{1F1F0}\u{1F1F2}\u{1F1F3}\u{1F1F7}\u{1F1F9}\u{1F1FA}]|\u{1F1EC}[\u{1F1E6}\u{1F1E7}\u{1F1E9}-\u{1F1EE}\u{1F1F1}-\u{1F1F3}\u{1F1F5}-\u{1F1FA}\u{1F1FC}\u{1F1FE}]|\u{1F1EA}[\u{1F1E6}\u{1F1E8}\u{1F1EA}\u{1F1EC}\u{1F1ED}\u{1F1F7}-\u{1F1FA}]|\u{1F1E8}[\u{1F1E6}\u{1F1E8}\u{1F1E9}\u{1F1EB}-\u{1F1EE}\u{1F1F0}-\u{1F1F5}\u{1F1F7}\u{1F1FA}-\u{1F1FF}]|\u{1F1F2}[\u{1F1E6}\u{1F1E8}-\u{1F1ED}\u{1F1F0}-\u{1F1FF}]|\u{1F1F3}[\u{1F1E6}\u{1F1E8}\u{1F1EA}-\u{1F1EC}\u{1F1EE}\u{1F1F1}\u{1F1F4}\u{1F1F5}\u{1F1F7}\u{1F1FA}\u{1F1FF}]|\u{1F1FC}[\u{1F1EB}\u{1F1F8}]|\u{1F1FA}[\u{1F1E6}\u{1F1EC}\u{1F1F2}\u{1F1F3}\u{1F1F8}\u{1F1FE}\u{1F1FF}]|\u{1F1F0}[\u{1F1EA}\u{1F1EC}-\u{1F1EE}\u{1F1F2}\u{1F1F3}\u{1F1F5}\u{1F1F7}\u{1F1FC}\u{1F1FE}\u{1F1FF}]|\u{1F1EF}[\u{1F1EA}\u{1F1F2}\u{1F1F4}\u{1F1F5}]|\u{1F1F8}[\u{1F1E6}-\u{1F1EA}\u{1F1EC}-\u{1F1F4}\u{1F1F7}-\u{1F1F9}\u{1F1FB}\u{1F1FD}-\u{1F1FF}]|\u{1F1EE}[\u{1F1E8}-\u{1F1EA}\u{1F1F1}-\u{1F1F4}\u{1F1F6}-\u{1F1F9}]|\u{1F1FF}[\u{1F1E6}\u{1F1F2}\u{1F1FC}]|\u{1F1EB}[\u{1F1EE}-\u{1F1F0}\u{1F1F2}\u{1F1F4}\u{1F1F7}]|\u{1F1F5}[\u{1F1E6}\u{1F1EA}-\u{1F1ED}\u{1F1F0}-\u{1F1F3}\u{1F1F7}-\u{1F1F9}\u{1F1FC}\u{1F1FE}]|\u{1F1E9}[\u{1F1EA}\u{1F1EC}\u{1F1EF}\u{1F1F0}\u{1F1F2}\u{1F1F4}\u{1F1FF}]|\u{1F1F9}[\u{1F1E6}\u{1F1E8}\u{1F1E9}\u{1F1EB}-\u{1F1ED}\u{1F1EF}-\u{1F1F4}\u{1F1F7}\u{1F1F9}\u{1F1FB}\u{1F1FC}\u{1F1FF}]|\u{1F1E7}[\u{1F1E6}\u{1F1E7}\u{1F1E9}-\u{1F1EF}\u{1F1F1}-\u{1F1F4}\u{1F1F6}-\u{1F1F9}\u{1F1FB}\u{1F1FC}\u{1F1FE}\u{1F1FF}]|[#*0-9]\uFE0F\u20E3|\u{1F1F1}[\u{1F1E6}-\u{1F1E8}\u{1F1EE}\u{1F1F0}\u{1F1F7}-\u{1F1FB}\u{1F1FE}]|\u{1F1E6}[\u{1F1E8}-\u{1F1EC}\u{1F1EE}\u{1F1F1}\u{1F1F2}\u{1F1F4}\u{1F1F6}-\u{1F1FA}\u{1F1FC}\u{1F1FD}\u{1F1FF}]|\u{1F1F7}[\u{1F1EA}\u{1F1F4}\u{1F1F8}\u{1F1FA}\u{1F1FC}]|\u{1F1FB}[\u{1F1E6}\u{1F1E8}\u{1F1EA}\u{1F1EC}\u{1F1EE}\u{1F1F3}\u{1F1FA}]|\u{1F1FE}[\u{1F1EA}\u{1F1F9}]|[\u{1F3C3}\u{1F3C4}\u{1F3CA}\u{1F46E}\u{1F471}\u{1F473}\u{1F477}\u{1F481}\u{1F482}\u{1F486}\u{1F487}\u{1F645}-\u{1F647}\u{1F64B}\u{1F64D}\u{1F64E}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F926}\u{1F937}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B8}\u{1F9B9}\u{1F9D6}-\u{1F9DD}][\u{1F3FB}-\u{1F3FF}]|[\u26F9\u{1F3CB}\u{1F3CC}\u{1F575}][\u{1F3FB}-\u{1F3FF}]|[\u261D\u270A-\u270D\u{1F385}\u{1F3C2}\u{1F3C7}\u{1F442}\u{1F443}\u{1F446}-\u{1F450}\u{1F466}\u{1F467}\u{1F470}\u{1F472}\u{1F474}-\u{1F476}\u{1F478}\u{1F47C}\u{1F483}\u{1F485}\u{1F4AA}\u{1F574}\u{1F57A}\u{1F590}\u{1F595}\u{1F596}\u{1F64C}\u{1F64F}\u{1F6C0}\u{1F6CC}\u{1F918}-\u{1F91C}\u{1F91E}\u{1F91F}\u{1F930}-\u{1F936}\u{1F9B5}\u{1F9B6}\u{1F9D1}-\u{1F9D5}][\u{1F3FB}-\u{1F3FF}]|[\u261D\u26F9\u270A-\u270D\u{1F385}\u{1F3C2}-\u{1F3C4}\u{1F3C7}\u{1F3CA}-\u{1F3CC}\u{1F442}\u{1F443}\u{1F446}-\u{1F450}\u{1F466}-\u{1F469}\u{1F46E}\u{1F470}-\u{1F478}\u{1F47C}\u{1F481}-\u{1F483}\u{1F485}-\u{1F487}\u{1F4AA}\u{1F574}\u{1F575}\u{1F57A}\u{1F590}\u{1F595}\u{1F596}\u{1F645}-\u{1F647}\u{1F64B}-\u{1F64F}\u{1F534}\u{1F535}\u{1F6A3}\u{1F6B4}-\u{1F6B6}\u{1F6C0}\u{1F6CC}\u{1F918}-\u{1F91C}\u{1F91E}\u{1F91F}\u{1F926}\u{1F930}-\u{1F939}\u{1F93D}\u{1F93E}\u{1F9B5}\u{1F9B6}\u{1F9B8}\u{1F9B9}\u{1F9D1}-\u{1F9DD}][\u{1F3FB}-\u{1F3FF}]?|[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55\u{1F004}\u{1F0CF}\u{1F18E}\u{1F191}-\u{1F19A}\u{1F1E6}-\u{1F1FF}\u{1F201}\u{1F21A}\u{1F22F}\u{1F232}-\u{1F236}\u{1F238}-\u{1F23A}\u{1F250}\u{1F251}\u{1F300}-\u{1F320}\u{1F32D}-\u{1F335}\u{1F337}-\u{1F37C}\u{1F37E}-\u{1F393}\u{1F3A0}-\u{1F3CA}\u{1F3CF}-\u{1F3D3}\u{1F3E0}-\u{1F3F0}\u{1F3F4}\u{1F3F8}-\u{1F43E}\u{1F440}\u{1F442}-\u{1F4FC}\u{1F4FF}-\u{1F53D}\u{1F54B}-\u{1F54E}\u{1F550}-\u{1F567}\u{1F57A}\u{1F595}\u{1F596}\u{1F5A4}\u{1F5FB}-\u{1F64F}\u{1F680}-\u{1F6C5}\u{1F6CC}\u{1F6D0}-\u{1F6D2}\u{1F6EB}\u{1F6EC}\u{1F6F4}-\u{1F6F9}\u{1F910}-\u{1F93A}\u{1F93C}-\u{1F93E}\u{1F940}-\u{1F945}\u{1F947}-\u{1F970}\u{1F973}-\u{1F976}\u{1F97A}\u{1F97C}-\u{1F9A2}\u{1F9B0}-\u{1F9B9}\u{1F9C0}-\u{1F9C2}\u{1F9D0}-\u{1F9FF}]|[#*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299\u{1F004}\u{1F0CF}\u{1F170}\u{1F171}\u{1F17E}\u{1F17F}\u{1F18E}\u{1F191}-\u{1F19A}\u{1F1E6}-\u{1F1FF}\u{1F201}\u{1F202}\u{1F21A}\u{1F22F}\u{1F232}-\u{1F23A}\u{1F250}\u{1F251}\u{1F300}-\u{1F321}\u{1F324}-\u{1F393}\u{1F396}\u{1F397}\u{1F399}-\u{1F39B}\u{1F39E}-\u{1F3F0}\u{1F3F3}-\u{1F3F5}\u{1F3F7}-\u{1F4FD}\u{1F4FF}-\u{1F53D}\u{1F549}-\u{1F54E}\u{1F550}-\u{1F567}\u{1F56F}\u{1F570}\u{1F573}-\u{1F57A}\u{1F587}\u{1F58A}-\u{1F58D}\u{1F590}\u{1F595}\u{1F596}\u{1F5A4}\u{1F5A5}\u{1F5A8}\u{1F5B1}\u{1F5B2}\u{1F5BC}\u{1F5C2}-\u{1F5C4}\u{1F5D1}-\u{1F5D3}\u{1F5DC}-\u{1F5DE}\u{1F5E1}\u{1F5E3}\u{1F5E8}\u{1F5EF}\u{1F5F3}\u{1F5FA}-\u{1F64F}\u{1F680}-\u{1F6C5}\u{1F6CB}-\u{1F6D2}\u{1F6E0}-\u{1F6E5}\u{1F6E9}\u{1F6EB}\u{1F6EC}\u{1F6F0}\u{1F6F3}-\u{1F6F9}\u{1F910}-\u{1F93A}\u{1F93C}-\u{1F93E}\u{1F940}-\u{1F945}\u{1F947}-\u{1F970}\u{1F973}-\u{1F976}\u{1F97A}\u{1F97C}-\u{1F9A2}\u{1F9B0}-\u{1F9B9}\u{1F9C0}-\u{1F9C2}\u{1F9D0}-\u{1F9FF}]\uFE0F?/gu
 
 // }
@@ -51,6 +51,7 @@ const cleanUpEmojis = bundle => {
 	return bundle
 }
 
+// forge a Facebook profile About URL
 const forgeUrl = (url, section) => {
 	if (url.includes("profile.php?id=")) {
 		return url + "&sk=about&section=" + section
@@ -59,6 +60,7 @@ const forgeUrl = (url, section) => {
 	}
 }
 
+// check if a facebook profile is unavailable
 const checkUnavailable = (arg, cb) => {
 	cb(null, (document.querySelector(".UIFullPage_Container img") && document.querySelector(".UIFullPage_Container img").src.startsWith("https://static.xx.fbcdn.net")))
 }
@@ -74,6 +76,7 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 	cb(null, true)
 }
 
+// load a facebook profile and extract data
 const loadFacebookProfile = async (tab, profileUrl) => {
 	// let blocked
 	console.log("profileUrl:", profileUrl)
@@ -83,8 +86,7 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
-			utils.log(`${profileUrl} page is not available.`, "error")
-			return { profileUrl, error: "The profile page isn't available"}
+			return { profileUrl, error: "Profile page not available"}
 		}
 	}
 	if (selector === "#content > div.uiBoxWhite") {
@@ -93,8 +95,7 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 			// blocked = true
 			return null
 		} else { // profile has blocked us
-			utils.log("Profile page isn't visible!", "warning")
-			return { profileUrl, error: "The profile page isn't visible" }
+			return { profileUrl, error: "Profile page not visible" }
 		}
 
 	}
@@ -110,10 +111,7 @@ const loadFacebookProfile = async (tab, profileUrl) => {
 	return fbData
 }
 
-// const getResultCount = (arg, cb) => {
-// 	cb(null, Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-xt")&& el.getAttribute("data-xt").includes("ENTITY_USER") && el.getAttribute("data-testid") === "browse-result-content").length)
-// }
-
+// get the first result of a facebook search
 const getFirstResultUrl = (arg, cb) => {
 	let url
 	try {
@@ -137,6 +135,7 @@ const fbSearchHasPeopleResult = (arg, cb) => {
 	}
 }
 
+// search a facebook profile from a name/company/location
 const searchFacebookProfile = async (tab, profile) => {
 	console.log("searchingProfile with", profile)
 	const searchOrder = [ { company: true, type: "top" }, { company: true, type: "people" }, { location: true, type: "top" }, { location: true, type: "people" }, { type: "top" }]
@@ -192,6 +191,8 @@ const searchFacebookProfile = async (tab, profile) => {
 	}
 	return profile
 }
+
+// search for a linkedin profile from a name
 const searchLinkedInProfile = async (tab, scrapedData) => {
 	let search = scrapedData.name
 	if (scrapedData.works && scrapedData.works.name) {
@@ -229,6 +230,7 @@ const searchLinkedInProfile = async (tab, scrapedData) => {
 	}
 }
 
+// scrape the first result on a linkedin search
 const scrapeLinkedinresults = (arg, cb) => {
 	const firstResult = document.querySelector(".search-result__wrapper")
 	let foundUrl
@@ -238,6 +240,7 @@ const scrapeLinkedinresults = (arg, cb) => {
 	cb(null, foundUrl)
 }
 
+// guess an email from a user's name
 const guessEmail = async (tab, partialData, scrapedData) => {
 	console.log("partialData", partialData)
 	const partialEmail = partialData.email
@@ -290,6 +293,7 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 	return twitterEmail
 }
 
+// find a twitter profile from name&company
 const findTwitterUrl = async (tab, scrapedData, company = null) => {
 	let twitterUrl
 
@@ -339,6 +343,7 @@ const findTwitterUrl = async (tab, scrapedData, company = null) => {
 	return twitterUrl
 }
 
+// get and guess a user email from his twitter profile
 const getTwitterEmail = async (tab, twitterUrl, scrapedData) => {
 	// let twitterUrl = twitterUrl.link
 	// only keep the twitter.com/profile of a profile URL
@@ -372,11 +377,12 @@ const extractLinkedInData = (json, profileUrl) => {
 		filteredData.lkTwitterUrl = `https://twitter.com/${json.details.twitter}`
 	}
 	if (json.details.mail) {
-		filteredData.lkMail = json.details.mail
+		filteredData.lkEmail = json.details.mail
 	}
 	return filteredData
 }
 
+// extract a US Zip code from a location
 const findZipCode = async (tab, location, locationData) => {
 	const searchUrl = `https://www.melissa.com/lookups/ZipCityPhone.asp?InData=${location}`
 	await tab.open(searchUrl)
@@ -399,6 +405,7 @@ const findZipCode = async (tab, location, locationData) => {
 	return locationData
 }
 
+// guess a location (codes and other data) from a LinkedIn location
 const guessLocation = async (tab, scrapedData) => {
 	const filterLocation = (location, locationData) => {
 		const res = stateList.filter((current) => location.includes(current.state) ? current.countryCode : "")
@@ -429,6 +436,7 @@ const guessLocation = async (tab, scrapedData) => {
 	return locationData
 } 
 
+// call to Dropcontact API
 const useDropcontact = async (scrapedData) => {
 	const dropcontactData = { query: scrapedData.query, first_name:scrapedData.firstName, last_name: scrapedData.lastName, company: scrapedData.company }
 	const result = await dropcontact.clean(dropcontactData)
@@ -436,8 +444,9 @@ const useDropcontact = async (scrapedData) => {
 	return result
 }
 
+// extract and format all final data
 const extractFinalResult = scrapedData => {
-	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, uid: scrapedData.uid, query: scrapedData.query }
+	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, uid: scrapedData.uid, query: scrapedData.query, timestamp: (new Date()).toISOString() }
 	if (scrapedData.birthday) {
 		results.dob = scrapedData.birthday
 	}
@@ -463,6 +472,17 @@ const extractFinalResult = scrapedData => {
 	if (scrapedData.lkTwitterEmail && scrapedData.lkTwitterEmail !== scrapedData.dropcontactEmail && scrapedData.lkTwitterEmail !== scrapedData.twitterEmail) {
 		results.email3 = scrapedData.lkTwitterEmail
 	}
+	if (scrapedData.lkEmail) {
+		if (!results.email1) {
+			results.email1 = scrapedData.lkEmail
+		} else if (!results.email2) {
+			results.email2 = scrapedData.lkEmail
+		} else if (!results.email3) {
+			results.email3 = scrapedData.lkEmail
+		} else {
+			results.email4 = scrapedData.lkEmail
+		}
+	}
 	if (scrapedData.locationData) {
 		if (scrapedData.locationData.countryCode) {
 			results.country = scrapedData.locationData.countryCode
@@ -477,6 +497,98 @@ const extractFinalResult = scrapedData => {
 			results.zip = scrapedData.locationData.zipCode
 		}
 	}
+	return results
+}
+
+// main function that handles all profile processing
+const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
+	const results = []
+	utils.log(`Processing ${profileUrl}`, "loading")
+	let scrapedData = {}
+	if (linkedIn.isLinkedInProfile(profileUrl)) {
+		const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
+
+		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
+		if (await tabLk.getUrl() === "https://www.linkedin.com/in/unavailable/") {
+			throw "Profile unavailable"
+		}
+		if (!scrapedData.csv.fullName) {
+			throw "No profile found"
+		}
+		scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
+		scrapedData = cleanUpEmojis(scrapedData)
+		try {
+			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
+		} catch (err) {
+			console.log("err: ", err)
+			await tabFb.screenshot(`${Date.now()}sU.png`)
+			await buster.saveText(await tabFb.getContent(), `${Date.now()}sU.html`)
+		}
+	} else if (facebook.isFacebookUrl(profileUrl)) {
+		const fbData = await loadFacebookProfile(tabFb, profileUrl)
+		console.log("scrapedDatafromFacebook: ", fbData)
+		if (fbData.error) {
+			throw fbData.error
+		}
+		const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
+		if (profileLinkedinUrl) {
+			console.log("Found LinkedIn Profile!", profileLinkedinUrl)
+			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl)
+			scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
+			scrapedData.facebookUrl = profileUrl
+		}
+	} else {
+		throw "Not a LinkedIn or Facebook profile URL"
+	}
+	console.log("scrapedData", scrapedData)
+	const initDate = new Date()
+	let dropcontactData
+	try {
+		dropcontactData = await useDropcontact(scrapedData)
+		if (dropcontactData.email) {
+			scrapedData.dropcontactEmail = dropcontactData.email
+			scrapedData.dropcontactCivility = dropcontactData.civility
+		}
+	} catch (err) {
+		console.log("err:", err)
+	}
+	console.log("elapsed: ", new Date() - initDate)
+	// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
+	try {
+		let twitterUrl = await findTwitterUrl(tabTwt, scrapedData, scrapedData.company)
+		if (!twitterUrl) {
+			console.log("noresults twitter")
+			await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
+			await buster.saveText(await tabLk.getContent(), `${Date.now()}noresultsTwitter.html`)
+			twitterUrl = await findTwitterUrl(tabLk, scrapedData)
+		}
+		if (twitterUrl) {
+			const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
+			scrapedData.twitterUrl = twitterUrl
+			if (twitterData.twitterEmail) {
+				scrapedData.twitterEmail = twitterData.twitterEmail
+			}
+		}
+		console.log("f1Email:", scrapedData.lkTwitterUrl)
+		console.log("f2Email:", twitterUrl)
+		if (scrapedData.lkTwitterUrl && scrapedData.lkTwitterUrl !== twitterUrl) { // if we got a different twitter URL from LinkedIn 
+			console.log("checking twitter email from linkedin")
+			const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
+			if (twitterData.twitterEmail) {
+				scrapedData.lkTwitterEmail = twitterData.twitterEmail
+			}
+		}
+	} catch (err) {
+		console.log("errTwitter:", err)
+		await tabLk.screenshot(`${Date.now()}errtwitter.png`)
+		await buster.saveText(await tabLk.getContent(), `${Date.now()}errtwitter.html`)
+	}
+	scrapedData.locationData = await guessLocation(tabLk, scrapedData)
+
+	console.log("avantextractFinal", scrapedData)
+	const finalResult = extractFinalResult(scrapedData)
+	console.log("finalResult: ", finalResult)
+	results.push(finalResult)
 	return results
 }
 
@@ -511,82 +623,12 @@ const extractFinalResult = scrapedData => {
 	await twitter.login(tabTwt, sessionCookieAuthToken)
 
 	for (const profileUrl of profileUrls) {
-		utils.log(`Processing ${profileUrl}`, "loading")
-		let scrapedData = {}
-		if (linkedIn.isLinkedInProfile(profileUrl)) {
-			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
-
-			scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
-			scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
-			scrapedData = cleanUpEmojis(scrapedData)
-			console.log("scrapedData")
-			try {
-				scrapedData = await searchFacebookProfile(tabFb, scrapedData)
-			} catch (err) {
-				console.log("err: ", err)
-				await tabFb.screenshot(`${Date.now()}sU.png`)
-				await buster.saveText(await tabFb.getContent(), `${Date.now()}sU.html`)
-			}
-		} else if (facebook.isFacebookUrl(profileUrl)) {
-			const fbData = await loadFacebookProfile(tabFb, profileUrl)
-			console.log("scrapedDatafromFacebook: ", scrapedData)
-			const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
-			if (profileLinkedinUrl) {
-				console.log("Found LinkedIn Profile!", profileLinkedinUrl)
-				scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl)
-				scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
-				scrapedData.facebookUrl = profileUrl
-			}
-		}
-		console.log("scrapedData", scrapedData)
-		const initDate = new Date()
-		let dropcontactData
 		try {
-			dropcontactData = await useDropcontact(scrapedData)
-			if (dropcontactData.email) {
-				scrapedData.dropcontactEmail = dropcontactData.email
-				scrapedData.dropcontactCivility = dropcontactData.civility
-			}
-		} catch (err) {
-			console.log("err:", err)
+			results = results.concat(await processProfile(tabLk, tabFb, tabLk, profileUrl))
+		} catch (error) {
+			results.push({ query: profileUrl, error, timestamp: (new Date()).toISOString() })
+			utils.log(`Error processing ${profileUrl}: ${error}`, "error")
 		}
-		console.log("elapsed: ", new Date() - initDate)
-		// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
-		try {
-			let twitterUrl = await findTwitterUrl(tabTwt, scrapedData, scrapedData.company)
-			if (!twitterUrl) {
-				console.log("noresults twitter")
-				await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
-				await buster.saveText(await tabLk.getContent(), `${Date.now()}noresultsTwitter.html`)
-				twitterUrl = await findTwitterUrl(tabLk, scrapedData)
-			}
-			if (twitterUrl) {
-				const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
-				scrapedData.twitterUrl = twitterUrl
-				if (twitterData.twitterEmail) {
-					scrapedData.twitterEmail = twitterData.twitterEmail
-				}
-			}
-			console.log("f1Email:", scrapedData.lkTwitterUrl)
-			console.log("f2Email:", twitterUrl)
-			if (scrapedData.lkTwitterUrl && scrapedData.lkTwitterUrl !== twitterUrl) { // if we got a different twitter URL from LinkedIn 
-				console.log("checking twitter email from linkedin")
-				const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
-				if (twitterData.twitterEmail) {
-					scrapedData.lkTwitterEmail = twitterData.twitterEmail
-				}
-			}
-		} catch (err) {
-			console.log("errTwitter:", err)
-			await tabLk.screenshot(`${Date.now()}errtwitter.png`)
-			await buster.saveText(await tabLk.getContent(), `${Date.now()}errtwitter.html`)
-		}
-		scrapedData.locationData = await guessLocation(tabLk, scrapedData)
-
-		console.log("avantextractFinal", scrapedData)
-		const finalResult = extractFinalResult(scrapedData)
-		console.log("finalResult: ", finalResult)
-		results.push(finalResult)
 	}
 
 	await utils.saveResults(results, results, csvName)

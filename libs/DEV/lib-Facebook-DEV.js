@@ -91,19 +91,18 @@ class Facebook {
 			}
 			if (document.querySelector(".cover img")) {
 				scrapedData.coverPictureUrl = document.querySelector(".cover img").src
+			}
+			if (document.querySelector(".photoContainer a")) {
 				try {
-					scrapedData.uid = new URL(document.querySelector(".cover img").parentElement.href).searchParams.get("fbid")
+					const picUrl = document.querySelector(".photoContainer a").href
+					const urlObject = new URL(picUrl)
+					if (urlObject.searchParams.get("referrer_profile_id")) {
+						scrapedData.uid = urlObject.searchParams.get("referrer_profile_id")
+					}
 				} catch (err) {
 					//
 				}
 			}
-			// if (document.querySelector(".photoContainer a")) {
-			// 	const picUrl = document.querySelector(".photoContainer a").href
-			// 	const urlObject = new URL(picUrl)
-			// 	if (urlObject.searchParams.get("referrer_profile_id")) {
-			// 		scrapedData.uid = urlObject.searchParams.get("referrer_profile_id")
-			// 	}
-			// }
 			if (document.querySelector("#fb-timeline-cover-name")) {
 				scrapedData.name = document.querySelector("#fb-timeline-cover-name").textContent
 				const nameArray = scrapedData.name.split(" ")
