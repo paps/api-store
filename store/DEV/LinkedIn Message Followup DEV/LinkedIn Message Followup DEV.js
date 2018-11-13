@@ -18,7 +18,7 @@ const nick = new Nick({
 })
 
 const StoreUtilites = require("./lib-StoreUtilities")
-const utils = new StoreUtilites(buster, nick)
+const utils = new StoreUtilites(nick, buster)
 
 const LinkedIn = require("./lib-LinkedIn")
 const linkedin = new LinkedIn(buster, nick, utils)
