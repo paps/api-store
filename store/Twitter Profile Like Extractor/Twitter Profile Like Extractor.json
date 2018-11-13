@@ -1,11 +1,11 @@
 {
 	"slug": "twitter-profile-like-extractor",
-	"description": "Automatically find liked tweets by a person",
+	"description": "Extract every Tweet liked by any Twitter User",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Profile+Like+Extractor/Twitter+Profile+Like+Extractor.png",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"updated": false,
 	"defaultArgument": {
@@ -26,11 +26,11 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Twitter session cookie",
+						"label": "Twitter session cookie <a target=\"_blank\" href=\"/api-store/9807/twitter-profile-like-extractor#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter profile URL",
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"/api-store/9807/twitter-profile-like-extractor#section_4aimaspecifictwitteraccountorseveralatatime\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
 					},
 					"columnName": {

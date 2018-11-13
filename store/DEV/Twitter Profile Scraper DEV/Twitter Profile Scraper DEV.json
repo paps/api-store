@@ -2,7 +2,7 @@
 	"slug": "twitter-profile-scraper",
 	"description": "Collect every Public Infos out of a Twitter Profile",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Profile+Scraper/Twitter+Profile+Scraper.png",
-	"hidden": true,
+	"hidden": false,
 	"updated": false,
 	"new": true,
 	"gradientBegin": "#E1F5C4",

@@ -8,7 +8,7 @@
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
 	"hidden": true,
-	"new": true,
+	"new": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)/",

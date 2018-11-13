@@ -1,12 +1,9 @@
-# Extract every single piece of media content off a list of Twitter Profiles 🐦
+# Extract every public info off a list of Twitter Profiles 🐦
 
-Let's say you follow a few people whose Twitter are a goldmine of cool videos & images..
-Or you might be interested in what your competitors are publishing.
+Basically, this tool will extract **every piece of public info** out of a list of Twitter Profiles:
+That means the name, description, handle, URL, accounts' age and numbers of Tweets, Followers, Followee & Likes.
 
-Give us a list of these people and **we will extract the URLs** where each piece of content is hosted for you.
-And everything about it at the precise moment: **viewcounts, durations, description**, etc.
-
-What you do with this content is up to you. 
+Great if you're looking specific keywords or do stats based on those numbers.
 
 # What will you need? ⚙️ 
 - **"Twitter account or Spreadsheet URL"**: Choose a sepcific twitter account like `@phbuster` or choose an **open** spreadsheet url
@@ -85,12 +82,19 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 This API will output CSV and/or JSON containing the following fields:
 
-    twitterPostUrl (Tweet URL)
-    tweetContent
-    query (Original query (most of the time the Twitter profile / Twitter handle))
-    pubImage (Tweet images URLs (if available))
-    mediaUrl (External media URL)
-    mediaDescription (Description of the external media)
-    duration (Video duration (if available in ms))
-    views (Video views (if available))
-    videoUrl (URL to download the video (if available))
+    name
+    twitterProfile
+    handle
+    bio
+    location
+    website
+    joinDate
+    profilePicture
+    twitterId
+    alternativeProfileUrl
+    tweetsCount
+    followers
+    following
+    likes
+    birthday
+    query

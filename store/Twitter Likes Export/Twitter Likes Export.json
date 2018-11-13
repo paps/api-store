@@ -9,7 +9,7 @@
 	"defaultArgumentAllowed": false,
 	"hidden": false,
 	"updated": false,
-	"new": true,
+	"new": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)/",
