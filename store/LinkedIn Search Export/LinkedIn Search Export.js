@@ -128,8 +128,8 @@ const scrapeResultsAll = (arg, callback) => {
 					if (result.querySelector("figure.search-result__image > img")) {
 						newInfos.name = result.querySelector("figure.search-result__image > img").alt
 						/**
-						 * NOTE: If the script a CSS class named .ghost-person it means that the profile doesnt't contain an image
-						 */
+							* NOTE: If the script a CSS class named .ghost-person it means that the profile doesnt't contain an image
+							*/
 						if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 							newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
 						}
@@ -188,21 +188,21 @@ const scrapeResultsAll = (arg, callback) => {
 
 }
 /**
- * @description Extract &page= value if present in the URL
- * @param {String} url - URL to inspect
- * @return {Number} Page index found in the given url (if not found return 1)
- */
+	* @description Extract &page= value if present in the URL
+	* @param {String} url - URL to inspect
+	* @return {Number} Page index found in the given url (if not found return 1)
+	*/
 const extractPageIndex = url => {
 	let parsedUrl = new URL(url)
 	return parsedUrl.searchParams.get("page") ? parseInt(parsedUrl.searchParams.get("page"), 10) : 1
 }
 
 /**
- * @description Tiny wrapper used to easly change the page index of LinkedIn search results
- * @param {String} url
- * @param {Number} index - Page index
- * @return {String} URL with the new page index
- */
+	* @description Tiny wrapper used to easly change the page index of LinkedIn search results
+	* @param {String} url
+	* @param {Number} index - Page index
+	* @return {String} URL with the new page index
+	*/
 const overridePageIndex = (url, index) => {
 	try {
 		let parsedUrl = new URL(url)
@@ -313,6 +313,35 @@ const scrapeAndRemove = (arg, cb) => {
 	cb(null, scrapedData)
 }
 
+// Content scraping and removing function
+const scrapeNetworkProfiles = (arg, cb) => {
+	const results = document.querySelectorAll("artdeco-tabpanel li")
+	const scrapedData = []
+	for (const result of results) {
+		const scrapedObject = { query: arg.query, timestamp: (new Date()).toISOString() }
+		if (result.querySelector(".feed-shared-actor__name")) {
+			scrapedObject.name = result.querySelector(".feed-shared-actor__name").innerText
+		}
+		if (result.querySelector("a")) {
+			scrapedObject.profileUrl = result.querySelector("a").href
+		}
+		if (result.querySelector("a img") && !result.querySelector("a img").classList.contains("ghost-person")) {
+			scrapedObject.profileImageUrl = result.querySelector("a img").src
+		}
+		if (result.querySelector(".mn-discovery-person-card__name")) {
+			scrapedObject.name = result.querySelector(".mn-discovery-person-card__name").innerText
+		}
+		if (result.querySelector(".mn-discovery-person-card__occupation")) {
+			scrapedObject.title = result.querySelector(".mn-discovery-person-card__occupation").innerText
+		}
+		if (result.querySelector(".member-insights__count")) {
+			scrapedObject.mutualConnections = parseInt(result.querySelector(".member-insights__count").textContent.replace(/\D/g,""), 10)
+		}
+		scrapedData.push(scrapedObject)
+	}
+	cb(null, scrapedData)
+}
+
 // handle loading and scraping of Content
 const loadContentAndScrape = async (tab, numberOfPost, query) => {
 	let result = []
@@ -338,14 +367,12 @@ const loadContentAndScrape = async (tab, numberOfPost, query) => {
 						if (document.querySelector(`li.search-content__result:nth-child(${arg.i})`)) {
 							callback(null, document.querySelector(`li.search-content__result:nth-child(${arg.i})`).scrollIntoView())
 						} else {
-							callback(null, "coucou")
+							callback(null, "hi")
 						}
 					}, { i })
 					await tab.wait(300)
 				} catch (err) {
 					utils.log(`Scrolling took too long!${err}`, "warning")
-					await buster.saveText(await tab.getContent(), `${Date.now()}scrollIntoView.html`)
-					await tab.screenshot(`${Date.now()}scrollIntoView.png`)
 					break
 				}
 			}
@@ -361,7 +388,46 @@ const loadContentAndScrape = async (tab, numberOfPost, query) => {
 	result = result.concat(await tab.evaluate(scrapeAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfPost)
 	if (result.length && scrapeCount === 0) { // if we scraped posts without more loading
-		utils.log(`Scrapsed ${Math.min(result.length, numberOfPost)} posts.`, "done")
+		utils.log(`Scraped ${Math.min(result.length, numberOfPost)} posts.`, "done")
+	}
+	if (!result.length) {
+		utils.log("No results found!", "warning")
+	}
+	return result
+}
+
+// return the number of Networks profiles visible on the page
+const getNetworkCount = (arg, cb) => cb(null, document.querySelectorAll("artdeco-tabpanel li").length)
+
+// handle loading and scraping of Network profiles
+const loadNetworkAndScrape = async (tab, numberOfPages, query) => {
+	utils.log("Loading Network profiles...", "loading")
+	const numberOfProfiles = numberOfPages * 10
+	let result = []
+	let scrapeCount = 0
+	let networkCount = 0
+	let lastDate = new Date()
+	do {
+		const newNetworkCount = await tab.evaluate(getNetworkCount)
+		if (newNetworkCount > networkCount) {
+			networkCount = newNetworkCount
+			buster.progressHint(Math.min(networkCount, numberOfProfiles) / numberOfProfiles, `${Math.min(networkCount, numberOfProfiles)} profiles loaded`)
+			utils.log(`Loading ${Math.min(networkCount, numberOfProfiles)} profiles...`, "loading")
+			lastDate = new Date()
+			await tab.scroll(0, -2000)
+			await tab.wait(400)
+			await tab.scrollToBottom()
+		}
+		if (new Date() - lastDate > 15000) {
+			utils.log("Scrolling took too long!", "warning")
+			break
+		}
+		await tab.wait(1000)
+	} while (networkCount < numberOfProfiles)
+	result = result.concat(await tab.evaluate(scrapeNetworkProfiles, { query }))
+	result = result.slice(0, numberOfProfiles)
+	if (result.length && scrapeCount === 0) { // if we scraped posts without more loading
+		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} profiles.`, "done")
 	}
 	if (!result.length) {
 		utils.log("No results found!", "warning")
@@ -375,13 +441,22 @@ const getContentPosts = async (tab, searchUrl, numberOfPost, query) => {
 	try {
 		await tab.open(searchUrl)
 		await tab.waitUntilVisible(".search-results__list")
-		await buster.saveText(await tab.getContent(), `${Date.now()}getContent.html`)
-		await tab.screenshot(`${Date.now()}getContent.png`)
 		result = await loadContentAndScrape(tab, numberOfPost, query)
 	} catch (err) {
 		utils.log(`Error getting Content:${err}`, "error")
-		await buster.saveText(await tab.getContent(), `${Date.now()}Error getting Content.html`)
-		await tab.screenshot(`${Date.now()}Error getting Content.png`)
+	}
+	return result
+}
+
+// handle scraping of Network profiles
+const getNetwork = async (tab, searchUrl, numberOfPost, query) => {
+	let result = []
+	try {
+		await tab.open(searchUrl)
+		await tab.waitUntilVisible("artdeco-tabpanel")
+		result = await loadNetworkAndScrape(tab, numberOfPost, query)
+	} catch (err) {
+		utils.log(`Error getting Network:${err}`, "error")
 	}
 	return result
 }
@@ -395,6 +470,10 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	}
 	if (searchCat === "content") {
 		const result = await getContentPosts(tab, searchUrl, numberOfPage, query)
+		return result
+	}
+	if (searchCat === "network") {
+		const result = await getNetwork(tab, searchUrl, numberOfPage, query)
 		return result
 	}
 	let result = []
@@ -469,7 +548,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 								if (document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`)) {
 									callback(null, document.querySelector(`${arg.selectorList}:nth-child(${arg.i})`).scrollIntoView())
 								} else {
-									callback(null, "coucou")
+									callback(null, "hi")
 								}
 							}, { i, selectorList })
 							await tab.wait(100)
@@ -532,6 +611,8 @@ const isLinkedInSearchURL = (targetUrl) => {
 			if (urlObject.pathname.includes("jobs")) { return "jobs" } // Jobs search
 			if (urlObject.pathname.includes("content")) { return "content" } // Content search
 			if (urlObject.pathname.includes("people") || urlObject.pathname.includes("all")) { return "people" } // People search
+		} else if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname === "/mynetwork/") {
+			return "network"
 		}
 	}
 	return 0

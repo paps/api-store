@@ -1,6 +1,8 @@
 # Launch a LinkedIn search and export its results
 
-UPDATE: Now handles more search categories! People, Content, Jobs, Companies, groups, and even schools!
+UPDATE: Now handles more search categories: People, Jobs, Content, Companies, Groups, and even Schools!
+
+Also, scrape your Network Suggestions by using "https://www.linkedin.com/mynetwork/" as input.
 
 You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results..? 
 
@@ -89,7 +91,7 @@ If you enter specific search terms (not search URLs), you can specify which cate
 
 ## 8. How many pages of results?
 
-Define here the number of pages you want to bot to scrape.
+Define here the number of pages you want the bot to scrape.
 _Remember_  that the bot connects to your account in order to execute those scraping operations. In order to not exceed LinkedIn daily user's requests, Phantombuster advises you to use this API wisely.
 
 **See <a href="https://www.linkedin.com/help/linkedin/answer/52950", target="_blank">LinkedIn Commercial Use Limit</a>.**
@@ -101,12 +103,3 @@ Note: We noticed that LinkedIn will not return more than 100 result pages.
 It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-Once changing your arguments, this will launch the bot and create your CSV.
-
-
-<center>---</center>
-
-
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
