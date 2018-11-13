@@ -32,18 +32,8 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.profileUrl) {
-			return false
-		}
-	}
-	return true
-}
-
 const scrapePage = (arg, callback) => {
-	const data = { profileUrl: arg.url }
+	const data = { query: arg.url, profileUrl: arg.profileUrl }
 	let postsCount = 0
 	let followersCount = 0
 	let followingCount = 0
@@ -127,7 +117,7 @@ const scrapePage = (arg, callback) => {
 			numberOfProfilesPerLaunch = urls.length
 		}
 		result = await utils.getDb(csvName + ".csv")
-		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberOfProfilesPerLaunch)
+		urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
 	}
 
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
@@ -152,7 +142,8 @@ const scrapePage = (arg, callback) => {
 				result.push({ profileUrl: url, error: "Broken link or page has been removed" })
 				continue
 			}
-			result = result.concat(await tab.evaluate(scrapePage, { url }))
+			const profileUrl = await tab.getUrl()
+			result = result.concat(await tab.evaluate(scrapePage, { url, profileUrl }))
 
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")

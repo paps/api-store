@@ -390,7 +390,9 @@ class Instagram {
 			let path = new URL(str).pathname
 			path = path.slice(1)
 			let id = path
-			if (path.includes("/")) { id = path.slice(0, path.indexOf("/")) }
+			if (!id.startsWith("web/friendships") && path.includes("/")) {
+				id = path.slice(0, path.indexOf("/"))
+			}
 			if (id !== "p") { // not a picture url
 				return "https://www.instagram.com/" + id
 			}
