@@ -498,6 +498,7 @@ nick.newTab().then(async (tab) => {
 				const newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
+					invitationResult.timestamp = (new Date()).toISOString()
 					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
 				}
 			} catch (error) {
