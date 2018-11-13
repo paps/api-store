@@ -73,16 +73,17 @@ const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim(
 /**
  * @description Compare list received with file saved to know what profile to add
  * @param {String} spreadsheetUrl
+ * @param {String} columnName
  * @param {Array<Object>} db
  * @param {Number} numberOfAddsPerLaunch
  * @return {Array<String>} Contains all profiles to add
  */
-const getProfilesToAdd = async (spreadsheetUrl, db, numberOfAddsPerLaunch) => {
+const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerLaunch) => {
 	let result = []
 	if (spreadsheetUrl.indexOf("twitter.com") > -1) {
 		result = [spreadsheetUrl]
 	} else if (spreadsheetUrl.indexOf("docs.google.com") > -1 || spreadsheetUrl.indexOf("https://") > -1 || spreadsheetUrl.indexOf("http://") > -1) {
-		result = await utils.getDataFromCsv(spreadsheetUrl)
+		result = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else {
 		result = [spreadsheetUrl]
 	}
@@ -234,7 +235,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, u
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, sessionCookie, numberOfAddsPerLaunch, whiteList, unfollowProfiles } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, whiteList, unfollowProfiles } = utils.validateArguments()
 	if (!whiteList) {
 		whiteList = []
 	}
@@ -242,7 +243,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, u
 		numberOfAddsPerLaunch = 20
 	}
 	let db = await utils.getDb(dbFileName)
-	let profiles = await getProfilesToAdd(spreadsheetUrl, db, numberOfAddsPerLaunch)
+	let profiles = await getProfilesToAdd(spreadsheetUrl, columnName, db, numberOfAddsPerLaunch)
 	await twitter.login(tab, sessionCookie)
 	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, unfollowProfiles)
 	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${unfollowProfiles ? "unfollowed" : "added" }.`, "done")

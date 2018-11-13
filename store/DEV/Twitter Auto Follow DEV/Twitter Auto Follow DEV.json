@@ -23,12 +23,17 @@
 		"alpaca": {
 			"options": {
 				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie auth_token <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_5getyourtwittersessioncookie\">(?)</a>"
+					},
 					"spreadsheetUrl": {
 						"label": "Twitter account or Spreadsheet URL <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_4createanicespreadsheet\">(?)</a>",
 						"helper": "Make sure your spreadsheet is public!"
 					},
-					"sessionCookie": {
-						"label": "Session cookie auth_token <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_5getyourtwittersessioncookie\">(?)</a>"
+					"columnName": {
+						"label": "Column name where Twitter profile are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Twitter Profile"
 					},
 					"numberOfAddsPerLaunch": {
 						"label": "Number of follows per launch (max. 50) <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_6configurerepetitivelaunches\">(?)</a>",
@@ -45,15 +50,18 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"minLength": 1,
+				"required": true
+			},
 			"spreadsheetUrl": {
 				"type": "string",
 				"minLength": 1,
 				"required": true
 			},
-			"sessionCookie": {
-				"type": "string",
-				"minLength": 1,
-				"required": true
+			"columnName": {
+				"type": "string"
 			},
 			"numberOfAddsPerLaunch": {
 				"type": "number",
