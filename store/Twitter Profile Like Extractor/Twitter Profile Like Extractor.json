@@ -1,7 +1,7 @@
 {
 	"slug": "twitter-profile-like-extractor",
 	"description": "Automatically find liked tweets by a person",
-	"image": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Profile+Like+Extractor/Twitter+Profile+Like+Extractor.png",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
