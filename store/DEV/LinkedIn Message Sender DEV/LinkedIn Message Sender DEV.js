@@ -252,7 +252,7 @@ const sendMessage = async (tab, message, tags) => {
 			}
 			result.push(payload)
 		} catch (err) {
-			utils.log(`Can't load profile: ${url}`, "warning")
+			utils.log(`Can't load profile: ${url} due to: ${err.message || err}`, "warning")
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
 		}
 	}
