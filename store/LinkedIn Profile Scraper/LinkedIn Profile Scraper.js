@@ -133,7 +133,7 @@ const removeLinkedinSubdomains = url => {
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, dropcontactApiKey, nick, buster)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 

@@ -126,9 +126,9 @@ You can also enter a CSV file URL, it will work the same :)
 
 ## 6. Email discovery (optional) { email_discovery }
 
-**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+**Thanks to our friends at [Hunter](https://hunter.io) and [Dropcontact](https://www.dropcontact.io/email)  (email discovery services), this API can guess the email of each profile it visits.**
 
-To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up) or Dropcontact [here](https://www.dropcontact.io/email). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
 
 <center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
 

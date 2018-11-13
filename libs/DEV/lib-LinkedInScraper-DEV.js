@@ -641,11 +641,11 @@ class LinkedInScraper {
 	 * @constructor
 	 * @param {StoreUtilities} utils -- StoreUtilities instance}
 	 * @param {String} [hunterApiKey] -- Hunter API key}
-	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
 	 * @param {Object} [nick] -- Nickjs instance}
 	 * @param {Object} [buster] -- buster instance}
+ 	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
 	 */
-	constructor(utils, hunterApiKey = null, dropcontactApiKey = null, nick = null, buster = null) {
+	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null) {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick

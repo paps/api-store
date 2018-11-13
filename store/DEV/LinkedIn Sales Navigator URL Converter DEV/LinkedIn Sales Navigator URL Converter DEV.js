@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +19,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 
 // }
@@ -76,10 +76,13 @@ const craftObjectFromCsv = (csv, header = true) => {
 	}
 	await linkedIn.login(tab, sessionCookie)
 	csvObject = filterCsvObject(csvObject, result, columnName).slice(0, numberOfLinesPerLaunch)
+	console.log("csvO:", csvObject)
+	console.log("columnName:", columnName)
 	let i
 	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
 			const convertedObject = csvObject[i]
+			console.log("convertedObject", convertedObject)
 
 			try {
 				convertedObject.defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
@@ -97,7 +100,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 		}
 		buster.progressHint(i / csvObject.length, `${i} URL converted`)
 	}
-	utils.log(`${i + 1} URLs converted.`, "done")
+	utils.log(`${i} URLs converted.`, "done")
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
