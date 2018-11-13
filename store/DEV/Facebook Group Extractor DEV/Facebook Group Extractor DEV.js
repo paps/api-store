@@ -2,7 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
+// "phantombuster flags: save-folder"
 
 const { parse } = require("url")
 
@@ -262,8 +262,8 @@ const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape, numberAlreadyScraped) => {
 	console.log("ajaxUrl", ajaxUrl)
 	// if (!ajaxUrl) {
-		await buster.saveText(await tab.getContent(), `${Date.now()}scrollIntoView.html`)
-		await tab.screenshot(`${Date.now()}scrollIntoView.png`)
+		// await buster.saveText(await tab.getContent(), `${Date.now()}scrollIntoView.html`)
+		// await tab.screenshot(`${Date.now()}scrollIntoView.png`)
 	// }
 	let jsonResponse
 	try {
