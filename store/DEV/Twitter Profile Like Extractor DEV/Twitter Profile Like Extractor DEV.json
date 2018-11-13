@@ -1,6 +1,6 @@
 {
 	"slug": "twitter-profile-like-extractor",
-	"description": "Automatically find liked tweets by a person",
+	"description": "Extract every Tweet liked by any Twitter User",
 	"image": "",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
