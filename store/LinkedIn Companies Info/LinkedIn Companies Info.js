@@ -43,21 +43,82 @@ const scrapeCompanyInfo = (arg, callback) => {
 	const result = {}
 	result.link = arg.link
 	result.query = arg.query
-	if (document.querySelector("h1.org-top-card-module__name")) { result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim() }
-	if (document.querySelector("span.company-industries")) { result.industry = document.querySelector("span.company-industries").textContent.trim() }
-	if (document.querySelector("span.org-top-card-module__location")) { result.location = document.querySelector("span.org-top-card-module__location").textContent.trim() }
+	if (document.querySelector(".org-page-navigation")) { // new layout
+		if (document.querySelector(".org-top-card-primary-content__title")) {
+			result.name = document.querySelector(".org-top-card-primary-content__title").textContent.trim()
+		}
+		if (document.querySelector(".org-top-card-primary-content img")) {
+			result.logo = document.querySelector(".org-top-card-primary-content img").src
+		}
+		if (document.querySelector(".org-grid__core-rail section p")) {
+			result.description = document.querySelector(".org-grid__core-rail section p").textContent.trim()
+		}
+		if (document.querySelector(".org-top-card-primary-content__follower-count")) {
+			result.followerCount = document.querySelector(".org-top-card-primary-content__follower-count").textContent.trim().replace(/\D/g, "")
+		}
+		if (document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]")) {
+			result.website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[1]) {
+			result.industry = document.querySelectorAll(".org-page-details__definition-text")[1].textContent.trim()
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[2]) {
+			result.size = document.querySelectorAll(".org-page-details__definition-text")[2].textContent.trim()
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[3]) {
+			result.location = document.querySelectorAll(".org-page-details__definition-text")[3].textContent.trim()
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[4]) {
+			result.type = document.querySelectorAll(".org-page-details__definition-text")[4].textContent.trim()
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[5]) {
+			result.yearFounded = document.querySelectorAll(".org-page-details__definition-text")[5].textContent.trim()
+		}
+		if (document.querySelectorAll(".org-page-details__definition-text")[6]) {
+			result.specialities = document.querySelectorAll(".org-page-details__definition-text")[6].textContent.trim()
+		}
+	} else {
+		if (document.querySelector("h1.org-top-card-module__name")) {
+			result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim()
+		}
+		if (document.querySelector("span.company-industries")) {
+			result.industry = document.querySelector("span.company-industries").textContent.trim()
+		}
+		if (document.querySelector(".org-top-card-module__followers-count")) {
+			result.followerCount = document.querySelector(".org-top-card-module__followers-count").textContent.trim().replace(/\D/g, "")
+		}
+		if (document.querySelector("span.org-top-card-module__location")) {
+			result.location = document.querySelector("span.org-top-card-module__location").textContent.trim()
+		}
+		if (document.querySelector("p.org-about-us-organization-description__text")) {
+			result.description = document.querySelector("p.org-about-us-organization-description__text").textContent.trim()
+		}
+		if (document.querySelector("a.org-about-us-company-module__website")) {
+			result.website = document.querySelector("a.org-about-us-company-module__website").href
+		}
+		if (document.querySelector("p.org-about-company-module__company-staff-count-range")) {
+			result.size = document.querySelector("p.org-about-company-module__company-staff-count-range").textContent.trim()
+		}
+		if (document.querySelector("img.org-top-card-module__logo")) {
+			result.logo = document.querySelector("img.org-top-card-module__logo").src
+		}
+		if (document.querySelector("p.org-about-company-module__specialities")) {
+			result.specialities = document.querySelector("p.org-about-company-module__specialities").textContent.trim()
+		}
+		if (document.querySelector("p.org-about-company-module__founded")) {
+			result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim()
+		}
+	}
+
+
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
 							.map(selector => selector.querySelector("p[dir=ltr]") ? selector.querySelector("p[dir=ltr]").textContent.trim() : null)
 							.filter(address => address)
 		result.companyAddress = addresses.join(" | ")
 	}
-	if (document.querySelector("p.org-about-us-organization-description__text")) { result.description = document.querySelector("p.org-about-us-organization-description__text").textContent.trim() }
-	if (document.querySelector("a.org-about-us-company-module__website")) { result.website = document.querySelector("a.org-about-us-company-module__website").href }
-	if (document.querySelector("p.org-about-company-module__company-staff-count-range")) { result.size = document.querySelector("p.org-about-company-module__company-staff-count-range").textContent.trim() }
-	if (document.querySelector("img.org-top-card-module__logo")) { result.logo = document.querySelector("img.org-top-card-module__logo").src }
-	if (document.querySelector("p.org-about-company-module__specialities")) { result.specialities = document.querySelector("p.org-about-company-module__specialities").textContent.trim() }
-	if (document.querySelector("p.org-about-company-module__founded")) { result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim() }
+
+
 	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link")) {
 		/**
 		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
@@ -118,7 +179,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 
 const getCompanyInfo = async (tab, link, query) => {
 	try {
-		await tab.open(link)
+		await tab.open(link + "about")
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {
 			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
@@ -161,6 +222,7 @@ const isLinkedUrl = target => {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
 	}
+	console.log(`URLs to scrape: ${JSON.stringify(companies, null, 4)}`)
 	await linkedIn.login(tab, sessionCookie)
 	for (const company of companies) {
 		if (company.length > 0) {
