@@ -14,7 +14,8 @@
 			"facebook.com",
 			"google.com",
 			"findthecompany.com"
-		]
+		],
+		"numberOfLinesPerLaunch": 100
 	},
 	"outputDescription": {
 		"query": "Provided company name",
@@ -52,6 +53,16 @@
 						"items": {
 							"placeholder": "domain.com"
 						}
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will process 100 lines per launch",
+						"inputType": "number",
+						"placeholder": 100
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					}
 				}
 			}
@@ -71,6 +82,14 @@
 				"items": {
 					"type": "string"
 				}
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			}
 		},
 		"oneOf": [

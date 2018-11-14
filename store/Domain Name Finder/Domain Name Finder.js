@@ -27,8 +27,6 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const DB_NAME = "result.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
 /* global psl */
 
 // }
@@ -149,8 +147,9 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 
 // Main function to launch everything and handle errors
 ;(async () => {
-	let {spreadsheetUrl, companies, columnName, blacklist} = utils.validateArguments()
-	let db = await utils.getDb(DB_NAME)
+	let {spreadsheetUrl, companies, columnName, blacklist, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let db = await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl) {
 		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -163,6 +162,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	 * since getDomainName return the query in lowercase
 	 */
 	companies = companies.filter(el => db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
+						 .slice(0, numberOfLinesPerLaunch)
 	if (companies.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
@@ -202,7 +202,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		i++
 	}
 	db.push(...result)
-	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(result, db, csvName)
 	nick.exit()
 })()
 .catch(err => {
