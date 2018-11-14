@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse, URL } = require("url")
 
@@ -118,11 +119,11 @@ const scrapeResultsAll = (arg, callback) => {
 					}
 				}
 				if ((url !== window.location.href + "#") && (url.indexOf("www.linkedin.com/in") > -1)) {
-					if (currentJob && !pastJob) {
+					if (currentJob && currentJob !== "none" && !pastJob) {
 						newInfos.currentJob = currentJob
 					} else if (pastJob && !currentJob) {
 						newInfos.pastJob = pastJob
-					} else {
+					} else if (currentJob !== "none") {
 						newInfos.currentJob = currentJob
 					}
 					if (result.querySelector("figure.search-result__image > img")) {
@@ -512,6 +513,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 				let selector
 				try {
 					selector = await tab.waitUntilVisible(selectors, 15000, "or")
+					await tab.screenshot(`${Date.now()}sU1.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
 				} catch (err) {
 					// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 					utils.log(err.message || err, "warning")

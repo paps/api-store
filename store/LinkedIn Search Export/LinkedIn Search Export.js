@@ -118,11 +118,11 @@ const scrapeResultsAll = (arg, callback) => {
 					}
 				}
 				if ((url !== window.location.href + "#") && (url.indexOf("www.linkedin.com/in") > -1)) {
-					if (currentJob && !pastJob) {
+					if (currentJob && currentJob !== "none" && !pastJob) {
 						newInfos.currentJob = currentJob
 					} else if (pastJob && !currentJob) {
 						newInfos.pastJob = pastJob
-					} else {
+					} else if (currentJob !== "none") {
 						newInfos.currentJob = currentJob
 					}
 					if (result.querySelector("figure.search-result__image > img")) {
