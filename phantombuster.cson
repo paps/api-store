@@ -13,6 +13,7 @@
 		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
 		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
 		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
+		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -23,6 +24,7 @@
 		'Email To LinkedIn Profile URL Finder DEV.js': 'store/DEV/Email To LinkedIn Profile URL Finder DEV/Email To LinkedIn Profile URL Finder DEV.js'
 		'Facebook Audience Builder DEV.js': 'store/DEV/Facebook Audience Builder DEV/Facebook Audience Builder DEV.js'
 		'Facebook Auto Liker DEV.js': 'store/DEV/Facebook Auto Liker DEV/Facebook Auto Liker DEV.js'
+		'Facebook Birthday Wisher DEV.js': 'store/DEV/Facebook Birthday Wisher DEV/Facebook Birthday Wisher DEV.js'
 		'Facebook Event Guests Exporter DEV.js': 'store/DEV/Facebook Event Guests Exporter DEV/Facebook Event Guests Exporter DEV.js'
 		'Facebook Group Extractor DEV.js': 'store/DEV/Facebook Group Extractor DEV/Facebook Group Extractor DEV.js'
 		'Facebook ID Finder DEV.js': 'store/DEV/Facebook ID Finder DEV/Facebook ID Finder DEV.js'
@@ -58,14 +60,16 @@
 		'LinkedIn Post Likers DEV.js': 'store/DEV/LinkedIn Post Likers DEV/LinkedIn Post Likers DEV.js'
 		'LinkedIn Profile Scraper DEV.js': 'store/DEV/LinkedIn Profile Scraper DEV/LinkedIn Profile Scraper DEV.js'
 		'LinkedIn Profile URL Finder DEV.js': 'store/DEV/LinkedIn Profile URL Finder DEV/LinkedIn Profile URL Finder DEV.js'
-		'LinkedIn Sales Navigator URL Converter DEV.js': 'store/DEV/LinkedIn Sales Navigator URL Converter DEV/LinkedIn Sales Navigator URL Converter DEV.js'
+		'LinkedIn Sales Navigator Profile Scraper DEV.js': 'store/DEV/LinkedIn Sales Navigator Profile Scraper DEV/LinkedIn Sales Navigator Profile Scraper DEV.js'
 		'LinkedIn Sales Navigator Search Export DEV.js': 'store/DEV/LinkedIn Sales Navigator Search Export DEV/LinkedIn Sales Navigator Search Export DEV.js'
+		'LinkedIn Sales Navigator URL Converter DEV.js': 'store/DEV/LinkedIn Sales Navigator URL Converter DEV/LinkedIn Sales Navigator URL Converter DEV.js'
 		'LinkedIn Search Export DEV.js': 'store/DEV/LinkedIn Search Export DEV/LinkedIn Search Export DEV.js'
 		'Medium Post Clappers DEV.js': 'store/DEV/Medium Post Clappers DEV/Medium Post Clappers DEV.js'
 		'Pinterest Profile URL Finder DEV.js': 'store/DEV/Pinterest Profile URL Finder DEV/Pinterest Profile URL Finder DEV.js'
 		'Quora Topics Influencers DEV.js': 'store/DEV/Quora Topics Influencers DEV/Quora Topics Influencers DEV.js'
 		'Twitter Auto Follow DEV.js': 'store/DEV/Twitter Auto Follow DEV/Twitter Auto Follow DEV.js'
 		'Twitter Auto Liker DEV.js': 'store/DEV/Twitter Auto Liker DEV/Twitter Auto Liker DEV.js'
+		'Twitter Email Checker DEV.js': 'store/DEV/Twitter Email Checker DEV/Twitter Email Checker DEV.js'
 		'Twitter Follower Collector DEV.js': 'store/DEV/Twitter Follower Collector DEV/Twitter Follower Collector DEV.js'
 		'Twitter Following Collector DEV.js': 'store/DEV/Twitter Following Collector DEV/Twitter Following Collector DEV.js'
 		'Twitter Likes Export DEV.js': 'store/DEV/Twitter Likes Export DEV/Twitter Likes Export DEV.js'

@@ -277,7 +277,12 @@ class Twitter {
 				await tab.waitUntilVisible("form")
 				await tab.sendKeys("form input", input, { reset: true })
 				await tab.click(".Button")
-				const selector = await tab.waitUntilVisible(["strong", ".is-errored"], "or", 10000)
+				let selector
+				try {
+					selector = await tab.waitUntilVisible(["strong", ".is-errored"], "or", 10000)
+				} catch (err) {
+					return null
+				}
 				await tab.screenshot(`${Date.now()}-selector".png`)
 				await this.buster.saveText(await tab.getContent(), `${Date.now()}- selector".html`)
 				console.log("selector=", selector)

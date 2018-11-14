@@ -240,6 +240,8 @@ class Facebook {
 			const age = moment().diff(moment(scrapedData.birthday, "LL"), "years")
 			 if (age) { // if year isn't displayed, age = 0 
 				 scrapedData.age = age
+				 scrapedData.birthYear = moment(scrapedData.birthday, "LL").year()
+				 scrapedData.birthday = moment(scrapedData.birthday, "LL").format()
 			}
 			delete scrapedData.language
 		}

@@ -19,6 +19,7 @@
 		'lib-Twitter.js': 'libs/lib-Twitter.js'
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
 		'lib-Messaging.js': 'libs/lib-Messaging.js'
+		'lib-Google.js': 'libs/lib-Google.js'
 
 
 		# API store
@@ -28,6 +29,7 @@
 		'Chrome Extension Review Extractor.js': '/store/Chrome Extension Review Extractor/Chrome Extension Review Extractor.js'
 		'Email Extractor.js': 'store/Email Extractor/Email Extractor.js'
 		'Email To LinkedIn Profile URL Finder.js': 'store/Email To LinkedIn Profile URL Finder/Email To LinkedIn Profile URL Finder.js'
+		'Facebook Audience Builder.js': 'store/Facebook Audience Builder/Facebook Audience Builder.js'
 		'Facebook Auto Liker.js': 'store/Facebook Auto Liker/Facebook Auto Liker.js'
 		'Facebook Event Guests Exporter.js': 'store/Facebook Event Guests Exporter/Facebook Event Guests Exporter.js'
 		'Facebook Group Extractor.js': 'store/Facebook Group Extractor/Facebook Group Extractor.js'
