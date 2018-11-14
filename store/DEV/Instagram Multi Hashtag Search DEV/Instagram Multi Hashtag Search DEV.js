@@ -282,6 +282,11 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			}
 		}
 		do {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+				break
+			}
 			let minValue = sortArray[0].resultCount
 			let minPos = 0
 			for (let i = 1; i < sortArray.length; i++) { // finding the least popular term
@@ -344,6 +349,11 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			const filteredResults = removeDuplicates(filterResults(scrapedResult, terms, leastTerm))
 			utils.log(`Got ${filteredResults.length} matching posts.`, "done")
 			for (const post of filteredResults) {
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+					break
+				}
 				try {
 					utils.log(`Scraping matching post ${post.postUrl}`, "info")
 					buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
