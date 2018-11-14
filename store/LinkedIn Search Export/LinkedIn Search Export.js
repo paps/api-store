@@ -141,6 +141,15 @@ const scrapeResultsAll = (arg, callback) => {
 							newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
 						}
 					}
+					if (newInfos.name) {
+						const nameArray = newInfos.name.split(" ")
+						const firstName = nameArray.shift()
+						const lastName = nameArray.join(" ")
+						newInfos.firstName = firstName
+						if (lastName) {
+							newInfos.lastName = lastName
+						}
+					}
 				} else {
 					newInfos.error = "Profile out of your network."
 				}

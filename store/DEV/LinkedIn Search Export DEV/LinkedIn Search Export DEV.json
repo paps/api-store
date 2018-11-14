@@ -25,6 +25,8 @@
 		"url": "LinkedIn profile URL",
 		"currentJob": "",
 		"name": "",
+		"firstName": "",
+		"lastName": "",
 		"job": "",
 		"location": "",
 		"query": "Corresponding search query that lead to this result"

@@ -19,6 +19,8 @@
 		"url": "LinkedIn Sales Navigator profile URL",
 		"currentJob": "",
 		"name": "Full name of the person",
+		"firstName": "",
+		"lastName": "",
 		"companyName": "",
 		"title": "Title of the job",
 		"duration": "",

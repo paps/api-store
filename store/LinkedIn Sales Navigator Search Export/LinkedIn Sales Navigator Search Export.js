@@ -61,7 +61,18 @@ const scrapeResults = (arg, callback) => {
 		if (result.querySelector(".name-link.profile-link")) {
 			const profileUrl = result.querySelector(".name-link.profile-link").href
 			let newData = { profileUrl }
-			newData.name = result.querySelector(".name a").title.trim()
+			if (result.querySelector(".name a")) {
+				newData.name = result.querySelector(".name a").title.trim()
+				if (newData.name) {
+					const nameArray = newData.name.split(" ")
+					const firstName = nameArray.shift()
+					const lastName = nameArray.join(" ")
+					newData.firstName = firstName
+					if (lastName) {
+						newData.lastName = lastName
+					}
+				}
+			}
 			if (result.querySelector(".details-container abbr")) { newData.degree = result.querySelector(".details-container abbr").textContent.trim() }
 			newData.profileImageUrl = result.querySelector(".entity-image") ? result.querySelector(".entity-image").src : result.querySelector(".person-ghost").src
 			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newData.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
@@ -103,7 +114,18 @@ const scrapeResultsLeads = (arg, callback) => {
 		if (result.querySelector(".result-lockup__name")) {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
 			let newData = { profileUrl }
-			newData.name = result.querySelector(".result-lockup__name").textContent.trim()
+			if (result.querySelector(".result-lockup__name")) {
+				newData.name = result.querySelector(".result-lockup__name").textContent.trim()
+				if (newData.name) {
+					const nameArray = newData.name.split(" ")
+					const firstName = nameArray.shift()
+					const lastName = nameArray.join(" ")
+					newData.firstName = firstName
+					if (lastName) {
+						newData.lastName = lastName
+					}
+				}
+			}
 			if (result.querySelector(".result-lockup__highlight-keyword > span")) {
 				newData.title = result.querySelector(".result-lockup__highlight-keyword > span").innerText
 				if (result.querySelector(".result-lockup__position-company > a > span")) {
