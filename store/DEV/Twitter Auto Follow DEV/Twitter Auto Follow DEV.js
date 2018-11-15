@@ -113,10 +113,10 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
  * @param {Object} tab
  * @param {String} url
  * @param {Array<String>} whitelist
- * @param {Boolean} unfollow
+ * @param {String} action
  * @throws if url is not a valid URL, or the daily follow limit is reached
  */
-const subscribe = async (tab, url, whitelist, unfollow) => {
+const subscribe = async (tab, url, whitelist, action) => {
 	utils.log(`Adding ${url}...`, "loading")
 	const followingSelector = ".ProfileNav-item .following-text"
 	const followSelector = ".ProfileNav-item .follow-text"
@@ -130,7 +130,7 @@ const subscribe = async (tab, url, whitelist, unfollow) => {
 	}
 
 	if (selector === followSelector) {
-		if (unfollow) {
+		if (action === "unfollow" || action === "unfollowback") {
 			return utils.log(`You need to follow ${url} before sending an unfollow request`, "warning")
 		}
 		await tab.click(followSelector)
@@ -157,7 +157,10 @@ const subscribe = async (tab, url, whitelist, unfollow) => {
 		}
 
 	} else if (selector === followingSelector) {
-		if (unfollow) {
+		if (action === "unfollow" || action === "unfollowback") {
+			if (action === "unfollowback" && await tab.isVisible("span.FollowStatus")) {
+				return utils.log(`Unfollow request can't be done: ${url} is following you back`, "warning")
+			}
 			await tab.click(followingSelector)
 			const selectorFound = await tab.waitUntilVisible([ followingSelector, followSelector ], 5000, "or")
 			await tab.wait(1000)
@@ -180,10 +183,10 @@ const subscribe = async (tab, url, whitelist, unfollow) => {
  * @param {Array<String>} profiles
  * @param {Number} numberOfAddsPerLaunch
  * @param {Array<String>} whitelist
- * @param {Boolean} unfollow
+ * @param {String} action - action to perform (follow, unfollow, unfollow if profile doesn't follow back)
  * @return {Array<{ url: String, handle: String, ?error: String }>} Contains profile added
  */
-const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, unfollow) => {
+const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, action) => {
 	const added = []
 	let i = 1
 	for (let profile of profiles) {
@@ -210,7 +213,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, u
 			newAdd.handle = profile
 		}
 		try {
-			await subscribe(tab, newAdd.url, whitelist, unfollow)
+			await subscribe(tab, newAdd.url, whitelist, action)
 			if (!newAdd.handle) {
 				const url = await tab.getUrl()
 				newAdd.handle = url.match(getUsernameRegex)[1]
@@ -235,7 +238,21 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, u
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, whiteList, unfollowProfiles } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, whiteList, unfollowProfiles, actionToPerform } = utils.validateArguments()
+
+	// Default action to perform
+	if (!actionToPerform) {
+		if (typeof unfollowProfiles === "boolean") {
+			/**
+			 * DEPRECATED: using actionToPerform argument is strongly recommended
+			 * unfollowProfiles can be used (equivalent of follow & unfollow)
+			 */
+			actionToPerform = unfollowProfiles ? "unfollow" : "follow"
+		} else {
+			actionToPerform = "follow"
+		}
+	}
+
 	if (!whiteList) {
 		whiteList = []
 	}
@@ -245,8 +262,8 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, u
 	let db = await utils.getDb(dbFileName)
 	let profiles = await getProfilesToAdd(spreadsheetUrl, columnName, db, numberOfAddsPerLaunch)
 	await twitter.login(tab, sessionCookie)
-	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, unfollowProfiles)
-	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${unfollowProfiles ? "unfollowed" : "added" }.`, "done")
+	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, actionToPerform)
+	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${actionToPerform === "unfollow" || actionToPerform === "unfollowback" ? "unfollowed" : "added" }.`, "done")
 	db = db.concat(added)
 	await utils.saveResult(db, dbFileName.split(".").shift())
 	nick.exit()

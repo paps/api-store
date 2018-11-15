@@ -69,6 +69,12 @@ That is why this API will only send up to **50 follow requests per launch**. To 
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 
+## 7. Choose what the API should do 
+The API can perform 3 specifics actions:
+- Follow
+- Unfollow
+- Unfollow back (Unfollow only if the profile hasn't followed back)
+
 <center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
 Then, select a frequency:
