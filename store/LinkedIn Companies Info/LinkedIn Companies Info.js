@@ -29,16 +29,6 @@ const scrapeCompanyLink = (arg, callback) => {
 	callback(null, document.querySelector("li.search-result a.search-result__result-link") ? document.querySelector("li.search-result a.search-result__result-link").href : null)
 }
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.query) {
-			return false
-		}
-	}
-	return true
-}
-
 const scrapeCompanyInfo = (arg, callback) => {
 	const result = {}
 	result.link = arg.link
@@ -209,9 +199,9 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, companies, companiesPerLaunch } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch } = utils.validateArguments()
 	if (typeof spreadsheetUrl === "string") {
-		companies = await utils.getDataFromCsv(spreadsheetUrl, null, false)
+		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
 	if (!companies) {
 		companies = []
@@ -219,13 +209,13 @@ const isLinkedUrl = target => {
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb("result.csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
-	companies = companies.filter(el => checkDb(el, result)).slice(0, companiesPerLaunch)
+	companies = companies.filter(el => utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
 	utils.log(`Processing ${companies.length} lines...`, "info")
 	if (companies.length < 1) {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(companies, null, 4)}`)
+	console.log(`Companies to scrape: ${JSON.stringify(companies, null, 4)}`)
 	await linkedIn.login(tab, sessionCookie)
 	for (const company of companies) {
 		if (company.length > 0) {

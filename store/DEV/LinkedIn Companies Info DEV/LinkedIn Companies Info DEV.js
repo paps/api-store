@@ -29,16 +29,6 @@ const scrapeCompanyLink = (arg, callback) => {
 	callback(null, document.querySelector("li.search-result a.search-result__result-link") ? document.querySelector("li.search-result a.search-result__result-link").href : null)
 }
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.query) {
-			return false
-		}
-	}
-	return true
-}
-
 const scrapeCompanyInfo = (arg, callback) => {
 	const result = {}
 	result.link = arg.link
@@ -209,9 +199,9 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, companies, companiesPerLaunch } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch } = utils.validateArguments()
 	if (typeof spreadsheetUrl === "string") {
-		companies = await utils.getDataFromCsv(spreadsheetUrl, null, false)
+		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
 	if (!companies) {
 		companies = []

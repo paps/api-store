@@ -51,6 +51,11 @@
 						],
 						"label": "Spreadsheet URL of companies to scrape <a href=\"/api-store/3296/linkedin-companies-info#section_spreadsheet\" target=\"_blank\">(?)</a>"
 					},
+					"columnName": {
+						"label": "Column name where LinkedIn companies URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Companies"
+					},
 					"companiesPerLaunch": {
 						"type": "number",
 						"inputType": "number",
@@ -69,6 +74,9 @@
 				"minLength": 15
 			},
 			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
 				"type": "string"
 			},
 			"companiesPerLaunch": {
