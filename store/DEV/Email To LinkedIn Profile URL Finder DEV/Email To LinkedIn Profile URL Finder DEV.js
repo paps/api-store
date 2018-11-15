@@ -62,9 +62,10 @@ const findProfile = async (tab, email) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch} = utils.validateArguments()
+	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
 	let emails = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	const result = await utils.getDb("result.csv")
+	const result = await utils.getDb(csvName + ".csv")
 	emails = emails.filter(str => utils.checkDb(str, result, "email"))
 					.slice(0, numberOfLinesPerLaunch)
 	if (emails.length < 1) {
@@ -88,7 +89,7 @@ const findProfile = async (tab, email) => {
 		}
 		result.push(tempResult)
 	}
-	await utils.saveResults(result, result)
+	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {

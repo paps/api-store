@@ -17,8 +17,11 @@
     },
     "outputDescription": {
 		"profileURL": "Facebook profile URL",
-		"imageURL": "Profile picture URL",
-		"name": "Full name",
+        "imageURL": "Profile picture URL",
+        "uid": "Facebook Unique ID",
+        "name": "Full name",
+        "firstName": "",
+        "lastName": "",
 		"additionalData": "Profile data such as job or location",
         "groupName": "Name of the Facebook Group"
 	},

@@ -4,8 +4,9 @@ Get to know any Facebook member that shares the same interests as you. Use any F
 
 1. Facebook profile links
 2. Names
-3. Profile pictures
-4. Current job/location
+3. Facebook Unique ID
+4. Profile pictures
+5. Current job/location
 
 # What will you need? ⚙️ 
 

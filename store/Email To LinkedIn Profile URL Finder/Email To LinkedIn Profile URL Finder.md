@@ -1,6 +1,7 @@
 # Extract LinkedIn profiles from emails
 
-Got a list of emails and want to quickly find whose LinkedIn profiles they belong to? We have a tool for that!
+Got a list of emails and want to quickly find whose LinkedIn profiles they belong to?
+We have a tool for that!
 
 # What will you need? ⚙️ 
 
@@ -53,8 +54,7 @@ _// How to access your cookies with <a href="https://developer.mozilla.org/en-US
 ## 5. Add a Google Spreadsheet 📑
 Below your session cookie you’ll find _Spreadsheet URL_
 
-Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
-<center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
+Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_
 
 Add every email in column A (**one link per row**)
 

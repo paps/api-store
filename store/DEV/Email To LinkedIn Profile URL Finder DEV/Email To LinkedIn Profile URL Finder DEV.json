@@ -1,9 +1,9 @@
 {
-	"slug": "email-profile-finder",
+	"slug": "email-to-linked-profile-url-finder",
 	"description": "Find LinkedIn Profiles from a list of emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Email-Extractor/Email+Extractor+-+Logo.png",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
@@ -28,7 +28,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie <a href=\"/api-store/9058/email-profile-finder#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie <a href=\"/api-store/9058/email-to-linked-profile-url-finder#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
@@ -37,7 +37,7 @@
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 							"<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
 						],
-						"label": "Spreadsheet URL of emails to process <a href=\"/api-store/9058/email-profile-finder#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of emails to process <a href=\"/api-store/9058/email-to-linked-profile-url-finder#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
@@ -45,9 +45,13 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9058/email-profile-finder#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9058/email-to-linked-profile-url-finder#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					}
 				}
 			}
@@ -69,6 +73,10 @@
 			},
 			"numberOfLinesPerLaunch": {
 				"type": "number"
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			}
 		}
 	}
