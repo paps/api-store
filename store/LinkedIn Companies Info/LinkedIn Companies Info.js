@@ -179,6 +179,9 @@ const scrapeCompanyInfo = (arg, callback) => {
 
 const getCompanyInfo = async (tab, link, query) => {
 	try {
+		if (!link.endsWith("/")) {
+			link = `${link}/`
+		}
 		await tab.open(link + "about")
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {

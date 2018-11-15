@@ -133,6 +133,14 @@ const scrapeFirstMembers = (arg, callback) => {
 			// a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
 			let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			let newData = { profileUrl }
+			try {
+				let id = result.id
+				if (id.includes("recently_joined")) {
+					newData.uid = id.slice(16)
+				}
+			} catch (err) {
+				//
+			}
 			if (result.querySelector("img")) {
 				newData.profilePicture = result.querySelector("img").src
 				newData.name = result.querySelector("img").getAttribute("aria-label")
@@ -154,7 +162,7 @@ const scrapeFirstMembers = (arg, callback) => {
 				newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
 			}
 			newData.timestamp = (new Date()).toISOString()
-	
+
 			data.push(newData)
 		}		
 	} 
@@ -179,12 +187,21 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 	profileList.shift()
 	const result = []
 	for (const profile of profileList) {
+		// console.log("prof:", profile)
 		const data = {}
 		const chr = cheerio.load(profile)
 		const url = chr("a").attr("href")
 		if (url) {
 			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			data.profileUrl = profileUrl
+		}
+		try {
+			const uid = profile.slice(profile.indexOf("GroupMember") + 12).slice(0, profile.slice(profile.indexOf("GroupMember") + 12).indexOf("\""))
+			if (uid) {
+				data.uid = uid
+			}
+		} catch (err) {
+			//
 		}
 		const name = chr("img").attr("aria-label")
 		data.name = name
@@ -251,8 +268,8 @@ const forgeNewUrl = (cursorUrl, scrapeCount, membersToScrape) => {
 
 const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 	const urlObject = new URL(url)
-	let numberToScrape = 500
-	if (scrapeCount + 500 > membersToScrape) { 
+	let numberToScrape = 400
+	if (scrapeCount + 400 > membersToScrape) { 
 		numberToScrape = membersToScrape - scrapeCount
 	}
 	urlObject.searchParams.set("limit", numberToScrape)
