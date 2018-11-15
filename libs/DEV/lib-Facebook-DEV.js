@@ -98,6 +98,8 @@ class Facebook {
 					const urlObject = new URL(picUrl)
 					if (urlObject.searchParams.get("referrer_profile_id")) {
 						scrapedData.uid = urlObject.searchParams.get("referrer_profile_id")
+					} else if (urlObject.searchParams.get("profile_id")) {
+						scrapedData.uid = urlObject.searchParams.get("profile_id")
 					}
 				} catch (err) {
 					//

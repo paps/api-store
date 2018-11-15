@@ -167,22 +167,28 @@ const searchFacebookProfile = async (tab, profile) => {
 		profile.facebookUrl = facebookProfileUrl
 	}
 	const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
+	profile = extractFacebookData(profile, fbData)
+	return profile
+}
+
+// extract the data we want from Facebook
+const extractFacebookData = (scrapedData, fbData) => {
 	if (fbData.gender) {
-		profile.gender = fbData.gender
+		scrapedData.gender = fbData.gender
 	}
 	if (fbData.age) {
-		profile.age = fbData.age
-		profile.doby = fbData.birthYear
-		profile.birthday = fbData.birthday
+		scrapedData.age = fbData.age
+		scrapedData.doby = fbData.birthYear
+		scrapedData.birthday = fbData.birthday
 	}
 	if (fbData.uid) {
-		profile.uid = fbData.uid
+		scrapedData.uid = fbData.uid
 	}
 	if (fbData.twitterName) {
-		profile.twitterUrl = `https://twitter.com/${fbData.twitterName}`
-		console.log("getting ", profile.twitterUrl, " from facebook !")
-	}
-	return profile
+		scrapedData.twitterUrl = `https://twitter.com/${fbData.twitterName}`
+		utils.log(`Found Twitter URL ${scrapedData.twitterUrl} on Facebook.`, "done")
+	}	
+	return scrapedData
 }
 
 // search for a linkedin profile from a name
@@ -278,6 +284,8 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 		} else {
 			utils.log(`Email found from Twitter: ${twitterEmail}`, "done")
 		}
+	} else {
+		utils.log(`Only got a partial email from Twitter: ${twitterEmail}`, "info")
 	}
 	return twitterEmail
 }
@@ -286,7 +294,6 @@ const guessEmail = async (tab, partialData, scrapedData) => {
 const findTwitterUrl = async (tab, scrapedData, company = null) => {
 	let twitterUrl
 	if (!scrapedData.twitterUrl) {
-		utils.log(`Searching a Twitter profile for ${scrapedData.name}...`, "loading")
 		const google = new Google(tab, buster)
 		const twitterResults = await google.search(`site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
 		const firstResult = twitterResults.results[0]
@@ -315,8 +322,9 @@ const findTwitterUrl = async (tab, scrapedData, company = null) => {
 					cb(null, null)
 				}
 			})
-			utils.log(`Twitter URL found on Twitter: ${twitterUrl}`, "info")
-			if (!twitter && scrapedData.lkTwitterUrl) {
+			if (twitterUrl) {
+				utils.log(`Twitter URL found on Twitter: ${twitterUrl}`, "info")
+			} else if (scrapedData.lkTwitterUrl) {
 				twitterUrl = scrapedData.lkTwitterUrl
 				console.log("using twitterUrl from Lk")
 			}
@@ -372,7 +380,7 @@ const findZipCode = async (tab, location, locationData) => {
 		locationData.cityName = melissaData.cityName
 		locationData.stateName = melissaData.stateName
 		locationData.zipCode = melissaData.zipCode
-		utils.log(`Found city ${locationData.cityName}, state ${locationData.stateName} and zipcode:${locationData.zipCode}`, "done")
+		utils.log(`Found city ${locationData.cityName}, state ${locationData.stateName} and ZIP code ${locationData.zipCode}`, "done")
 	}
 	return locationData
 }
@@ -444,7 +452,7 @@ const extractFinalResult = scrapedData => {
 	if (scrapedData.dropcontactEmail && scrapedData.dropcontactEmail !== scrapedData.twitterEmail) {
 		results.email2 = scrapedData.dropcontactEmail
 	}
-	if (scrapedData.lkTwitterEmail && scrapedData.lkTwitterEmail !== scrapedData.dropcontactEmail && scrapedData.lkTwitterEmail !== scrapedData.twitterEmail) {
+	if (scrapedData.lkTwitterEmail && !scrapedData.lkTwitterEmail.includes("*") && scrapedData.lkTwitterEmail !== scrapedData.dropcontactEmail && scrapedData.lkTwitterEmail !== scrapedData.twitterEmail) {
 		results.email3 = scrapedData.lkTwitterEmail
 	}
 	if (scrapedData.lkEmail && scrapedData.lkEmail !== scrapedData.dropcontactEmail && scrapedData.lkEmail !== scrapedData.twitterEmail && scrapedData.lkEmail !== scrapedData.lkTwitterEmail) {
@@ -483,7 +491,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 	if (linkedIn.isLinkedInProfile(profileUrl)) {
 		const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
-		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
+		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl, null, null, false)
 		if (await tabLk.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			throw "Profile unavailable"
 		}
@@ -505,10 +513,11 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 		const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
 		if (profileLinkedinUrl) {
 			console.log("Found LinkedIn Profile!", profileLinkedinUrl)
-			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl)
+			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl, null, null, false)
 			scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
 			scrapedData.facebookUrl = profileUrl
 		}
+		scrapedData = extractFacebookData(scrapedData, fbData)
 	} else {
 		throw "Not a LinkedIn or Facebook profile URL"
 	}
@@ -523,6 +532,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 		//
 	}
 	try {
+		utils.log(`Searching a Twitter profile for ${scrapedData.name}...`, "loading")
 		let twitterUrl = await findTwitterUrl(tabTwt, scrapedData, scrapedData.company)
 		if (!twitterUrl) {
 			twitterUrl = await findTwitterUrl(tabLk, scrapedData)
@@ -560,7 +570,6 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 	if (!csvName) { csvName = "result" }
 	let profileUrls
 	let results = await utils.getDb(csvName + ".csv")
-	// console.log(`results: ${JSON.stringify(results, null, 4)}`)
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} catch (err) {

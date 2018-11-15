@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper.js, lib-Google-DEV.js, lib-Twitter-DEV.js, lib-Dropcontact.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper-DEV.js, lib-Google-DEV.js, lib-Twitter-DEV.js, lib-Dropcontact.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -24,7 +24,7 @@ const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
@@ -174,22 +174,28 @@ const searchFacebookProfile = async (tab, profile) => {
 	}
 	const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
 	console.log("fbData, ", fbData)
+	profile = extractFacebookData(profile, fbData)
+	return profile
+}
+
+// extract the data we want from Facebook
+const extractFacebookData = (scrapedData, fbData) => {
 	if (fbData.gender) {
-		profile.gender = fbData.gender
+		scrapedData.gender = fbData.gender
 	}
 	if (fbData.age) {
-		profile.age = fbData.age
-		profile.doby = fbData.birthYear
-		profile.birthday = fbData.birthday
+		scrapedData.age = fbData.age
+		scrapedData.doby = fbData.birthYear
+		scrapedData.birthday = fbData.birthday
 	}
 	if (fbData.uid) {
-		profile.uid = fbData.uid
+		scrapedData.uid = fbData.uid
 	}
 	if (fbData.twitterName) {
-		profile.twitterUrl = `https://twitter.com/${fbData.twitterName}`
-		console.log("getting ", profile.twitterUrl, " from facebook !")
-	}
-	return profile
+		scrapedData.twitterUrl = `https://twitter.com/${fbData.twitterName}`
+		utils.log(`Found Twitter URL ${scrapedData.twitterUrl} on Facebook.`, "done")
+	}	
+	return scrapedData
 }
 
 // search for a linkedin profile from a name
@@ -330,8 +336,9 @@ const findTwitterUrl = async (tab, scrapedData, company = null) => {
 					cb(null, null)
 				}
 			})
-			console.log("twitterUrl found by twitter:", twitterUrl)
-			if (!twitter && scrapedData.lkTwitterUrl) {
+			if (twitterUrl) {
+				utils.log(`Twitter URL found on Twitter: ${twitterUrl}`, "info")
+			} else if (scrapedData.lkTwitterUrl) {
 				twitterUrl = scrapedData.lkTwitterUrl
 				console.log("using twitterUrl from Lk")
 			}
@@ -469,7 +476,7 @@ const extractFinalResult = scrapedData => {
 	if (scrapedData.dropcontactEmail && scrapedData.dropcontactEmail !== scrapedData.twitterEmail) {
 		results.email2 = scrapedData.dropcontactEmail
 	}
-	if (scrapedData.lkTwitterEmail && scrapedData.lkTwitterEmail !== scrapedData.dropcontactEmail && scrapedData.lkTwitterEmail !== scrapedData.twitterEmail) {
+	if (scrapedData.lkTwitterEmail && !scrapedData.lkTwitterEmail.includes("*") && scrapedData.lkTwitterEmail !== scrapedData.dropcontactEmail && scrapedData.lkTwitterEmail !== scrapedData.twitterEmail) {
 		results.email3 = scrapedData.lkTwitterEmail
 	}
 	if (scrapedData.lkEmail && scrapedData.lkEmail !== scrapedData.dropcontactEmail && scrapedData.lkEmail !== scrapedData.twitterEmail && scrapedData.lkEmail !== scrapedData.lkTwitterEmail) {
@@ -508,7 +515,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 	if (linkedIn.isLinkedInProfile(profileUrl)) {
 		const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
-		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl)
+		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl, null, null, false)
 		if (await tabLk.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			throw "Profile unavailable"
 		}
@@ -533,10 +540,11 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 		const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
 		if (profileLinkedinUrl) {
 			console.log("Found LinkedIn Profile!", profileLinkedinUrl)
-			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl)
+			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl, null, null, false)
 			scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
 			scrapedData.facebookUrl = profileUrl
 		}
+		scrapedData = extractFacebookData(scrapedData, fbData)
 	} else {
 		throw "Not a LinkedIn or Facebook profile URL"
 	}
@@ -598,7 +606,6 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 	if (!csvName) { csvName = "result" }
 	let profileUrls
 	let results = await utils.getDb(csvName + ".csv")
-	// console.log(`results: ${JSON.stringify(results, null, 4)}`)
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} catch (err) {

@@ -375,7 +375,12 @@ const scrapeInfos = (arg, callback) => {
 			} else {
 				infos.skills = []
 			}
-
+			// Delete tel: for the phone
+			if (infos.details.phone) {
+				infos.details.phone = infos.details.phone.replace("tel:", "")
+			}
+		}
+		if (infos.general && infos.general.fullName && infos.general.hasAccount) {
 			// Get the first name from the page (and the last name)
 			if (infos.general.fullName && infos.general.hasAccount) {
 				const nameTab = infos.general.fullName.split(" ")
@@ -394,18 +399,13 @@ const scrapeInfos = (arg, callback) => {
 			}
 			// Delete this (only needed to determine the first name)
 			delete infos.general.hasAccount
-
-			// Delete tel: for the phone
-			if (infos.details.phone) {
-				infos.details.phone = infos.details.phone.replace("tel:", "")
-			}
 		}
 	}
 	callback(null, infos)
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot) => {
+const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, fullLoad) => {
 	const [httpCode] = await tab.open(url)
 	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
@@ -419,21 +419,22 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot)
 	} catch (error) {
 		throw ("Could not load the profile.")
 	}
-	try {
-		utils.log("Scrolling to load all data of the profile...", "loading")
-		await fullScroll(tab)
-	} catch (error) {
-		utils.log("Error during the scroll of the page.", "warning")
+	if (fullLoad) {
+		try {
+			utils.log("Scrolling to load all data of the profile...", "loading")
+			await fullScroll(tab)
+		} catch (error) {
+			utils.log("Error during the scroll of the page.", "warning")
+		}
+		try {
+			await loadProfileSections(tab)
+	
+			utils.log("All data loaded", "done")
+		} catch (error) {
+			utils.log("Error during the loading of data.", "warning")
+		}
+		utils.log("Scraping page...", "loading")
 	}
-	try {
-		await loadProfileSections(tab)
-
-		utils.log("All data loaded", "done")
-	} catch (error) {
-		utils.log("Error during the loading of data.", "warning")
-	}
-	utils.log("Scraping page...", "loading")
-
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
@@ -697,11 +698,11 @@ class LinkedInScraper {
 	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url = null, saveImg, takeScreenshot) {
+	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, fullLoad = true) {
 		let result = {}
 		let csvResult = {}
 		try {
-			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot)
+			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, fullLoad)
 			/**
 			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser

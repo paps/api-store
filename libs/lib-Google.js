@@ -181,7 +181,7 @@ class WebSearch {
 		 * No need to continue if all engines are down
 		 */
 		if (this.allEnginesDown()) {
-			console.log("No more search engines available")
+			// console.log("No more search engines available")
 			results = Object.assign({}, emptyResult)
 			results.engine = this.engines[this.engineUsed].name
 			results.codename = this.engines[this.engineUsed].codename
@@ -203,10 +203,10 @@ class WebSearch {
 				codenameList += this.engines[this.engineUsed].codename
 				break
 			} catch (e) {
-				console.log(`-- Switching to a new engine because exception: ${e}`)
+				// console.log(`-- Switching to a new engine because exception: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				if (this.allEnginesDown()) {
-					console.log("No more search engines available")
+					// console.log("No more search engines available")
 					results = Object.assign({}, emptyResult)
 					results.engine = this.engines[this.engineUsed].name
 					results.codename = this.engines[this.engineUsed].codename
@@ -216,9 +216,6 @@ class WebSearch {
 				this.engineUsed = _switchEngine.call(this)
 				// slow down a little
 				const waitTime = this.enginesDown.length * (1500 + (Math.random() * 500))
-				console.log("waitTime=", waitTime)
-				await this.tab.screenshot(`${Date.now()}noresultGoogle.png`)
-				await this.buster.saveText(await this.tab.getContent(), `${Date.now()}noresultGoogle.html`)
 				await this.tab.wait(waitTime)			
 			}
 		}
