@@ -21,7 +21,7 @@ const StoreUtilites = require("./lib-StoreUtilities")
 const utils = new StoreUtilites(nick, buster)
 
 const LinkedIn = require("./lib-LinkedIn")
-const linkedin = new LinkedIn(buster, nick, utils)
+const linkedin = new LinkedIn(nick, buster, utils)
 
 const LinkedInScraper = require("./lib-LinkedInScraper")
 
@@ -30,6 +30,8 @@ const inflater = new Messaging(utils)
 
 const DEFAULT_DB = "result"
 const DEFAULT_PER_LAUNCH = 2
+const DEFAULT_DETLA = 86400000
+const DEFAULT_WAIT = 1
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
@@ -183,13 +185,17 @@ const sendMessage = async (tab, message, tags) => {
 	const result = []
 
 	if (!sendAfter) {
-		sendAfter = 1
+		sendAfter = DEFAULT_WAIT
 	}
 	if (!csvName) {
 		csvName = DEFAULT_DB
 	}
 	if (!message || !message.trim()) {
 		throw "no message found in the API"
+	}
+
+	if (!columnName) {
+		columnName = "0"
 	}
 
 	if (!profilesPerLaunch) {
@@ -210,10 +216,16 @@ const sendMessage = async (tab, message, tags) => {
 		utils.log("Spreadsheet is empty OR everybody is processed", "warning")
 		nick.exit(0)
 	}
-	// rows = rows.slice(0, profilesPerLaunch)
-	rows = rows.filter(el => el.timestamp && ((new Date()).getTime() - (new Date(el.timestamp)).getTime()) >= (86400000 * sendAfter))
-
-	console.log(JSON.stringify(rows, null, 4))
+	// TODO: first filter with the DB
+	// TODO: does the query is stored with baseUrl?
+	const followpsFromDB = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl && ((new Date(el.timestamp)).getTime()) >= (DEFAULT_DETLA * sendAfter)))
+	rows = rows.filter(el => el.timestamp && ((new Date()).getTime() - (new Date(el.timestamp)).getTime()) >= (DEFAULT_DETLA * sendAfter))
+	const tmp = utils.filterRightOuter(rows, followpsFromDB)
+	rows.push(...tmp)
+	rows = rows.slice(0, 2)
+	utils.log(`URLs to send messages: ${JSON.stringify(rows.map(el => el[columnName]), null, 4)}`, "done")
+	// console.log(JSON.stringify(rows))
+	// nick.exit()
 	await linkedin.login(tab, sessionCookie)
 	for (let row of rows) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -245,6 +257,7 @@ const sendMessage = async (tab, message, tags) => {
 	db.push(...result)	// TODO: edit the DB result instead of append
 	await utils.saveResults(db, [], csvName + ".csv", null, false)
 	await linkedin.saveCookie()
+	nick.exit()
 })()
 .catch(err => {
 	utils.log(`${err.message || err}`, "error")
