@@ -131,6 +131,14 @@ const scrapeFirstMembers = (arg, callback) => {
 			// a few profiles don't have a name and are just www.facebook.com/profile.php?id=IDNUMBER&fref..
 			let profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			let newData = { profileUrl }
+			try {
+				let id = result.id
+				if (id.includes("recently_joined")) {
+					newData.uid = id.slice(16)
+				}
+			} catch (err) {
+				//
+			}
 			if (result.querySelector("img")) {
 				newData.profilePicture = result.querySelector("img").src
 				newData.name = result.querySelector("img").getAttribute("aria-label")
@@ -183,6 +191,14 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		if (url) {
 			const profileUrl = (url.indexOf("profile.php?") > -1) ? url.slice(0, url.indexOf("&")) : url.slice(0, url.indexOf("?"))
 			data.profileUrl = profileUrl
+		}
+		try {
+			const uid = profile.slice(profile.indexOf("GroupMember") + 12).slice(0, profile.slice(profile.indexOf("GroupMember") + 12).indexOf("\""))
+			if (uid) {
+				data.uid = uid
+			}
+		} catch (err) {
+			//
 		}
 		const name = chr("img").attr("aria-label")
 		data.name = name
