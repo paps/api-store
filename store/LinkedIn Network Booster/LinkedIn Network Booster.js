@@ -87,6 +87,11 @@ const getInviteesUrls = (arg, cb) => {
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
 const validateInvitations = async (invitations, sentCount) => {
+	invitations.forEach(el => { 
+		if (el.profileUrl.endsWith("/")) { 
+			el.profileUrl = el.profileUrl.slice(0, -1)
+		}
+	})
 	let matches = []
 	const withdrawTab = await nick.newTab()
 	try {
@@ -94,7 +99,7 @@ const validateInvitations = async (invitations, sentCount) => {
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
-		matches = invitations.filter(invitation => urls.includes(invitation.linkedinProfile))
+		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
 	} catch (err) {
 		utils.log(`Error while double checking invitations: ${err.message || err}`, "error")
 	}
@@ -338,6 +343,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	// 	return null
 	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
+	invitation.profileUrl = browserUrl
 
 	if (disableScraping && message) {
 		if (!invitation.firstName) {
@@ -355,16 +361,16 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		case selectors[0]: {
 			// Invitation already sent, but still in pending
 			if (await tab.isPresent(selectors[7])) {
-				utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+				utils.log(`Invitation for ${browserUrl} already sent, still pending`, "warning")
 				invitation.error = "Invitation already sent"
 				return invitation
 			} else {
 				try {
 					await connectTo(selector, tab, message)
-					utils.log(`${url} added`, "done")
+					utils.log(`${browserUrl} added`, "done")
 				} catch (err) {
 					invitation.error = err.message || err
-					utils.log(`Could not add ${url} due to: ${invitation.error}`, "error")
+					utils.log(`Could not add ${browserUrl} due to: ${invitation.error}`, "error")
 					return invitation
 				}
 			}
@@ -382,13 +388,13 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 						selector = ".pv-s-profile-actions--connect"
 					}
 					await connectTo(selector, tab, message)
-					utils.log(`${url} added`, "done")
+					utils.log(`${browserUrl} added`, "done")
 				} else {
 					invitation.error = "Invitation already sent"
 				}
 			} catch (err) {
 				invitation.error = err.message || err
-				utils.log(`Could not add ${url} due to: ${invitation.error}`, "error")
+				utils.log(`Could not add ${browserUrl} due to: ${invitation.error}`, "error")
 			}
 			break
 		}
@@ -397,23 +403,23 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		case selectors[2]: {
 			// No message sent, LinkedIn will automatically accept the invitation
 			await tab.click(selector)
-			utils.log(`${url} accepted`, "done") // Message slightly different to let know if LinkedIn let this action possible
+			utils.log(`${browserUrl} accepted`, "done") // Message slightly different to let know if LinkedIn let this action possible
 			break
 		}
 		// 4- Case when this people have only the message button visible
 		case selectors[3]: {
-			utils.log(`${url} seems to already be in your network (only message button visible).`, "warning")
+			utils.log(`${browserUrl} seems to already be in your network (only message button visible).`, "warning")
 			invitation.error = "Already in network"
 			break
 		}
 		// 5- Case when this people have only the follow button visible
 		case selectors[4]: {
-			utils.log(`Can't connect to ${url} (only follow button visible)`, "warning")
+			utils.log(`Can't connect to ${browserUrl} (only follow button visible)`, "warning")
 			break
 		}
 		// 6- Case when the "pending" status is present (already added)
 		case selectors[5]: {
-			utils.log(`Invitation for ${url} already sent, still pending`, "warning")
+			utils.log(`Invitation for ${browserUrl} already sent, still pending`, "warning")
 			invitation.error = "Invitation still pending"
 			break
 		}
@@ -518,7 +524,7 @@ nick.newTab().then(async (tab) => {
 		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
 		for (const invit of invitations) {
-			let index = foundInvitations.findIndex(el => el.url === invit.url)
+			let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
 			if (index < 0) {
 				invit.error = "shadow ban"
 				utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
