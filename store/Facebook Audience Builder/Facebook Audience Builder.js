@@ -165,9 +165,11 @@ const searchFacebookProfile = async (tab, profile) => {
 	if (facebookProfileUrl) {
 		utils.log(`Facebook Profile found: ${facebookProfileUrl}`, "done")
 		profile.facebookUrl = facebookProfileUrl
+		const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
+		profile = extractFacebookData(profile, fbData)
+	} else {
+		utils.log("No Facebook Profile found!", "warning")
 	}
-	const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
-	profile = extractFacebookData(profile, fbData)
 	return profile
 }
 
@@ -423,15 +425,20 @@ const useDropcontact = async (scrapedData) => {
 	const result = await dropcontact.clean(dropcontactData)
 	if (result.email) {
 		utils.log(`Dropcontact found email: ${result.email}`, "done")
+	} else if (result.full_name) {
+		utils.log("Profile found on Dropcontact, but with no email associated", "info")
 	}
 	return result
 }
 
 // extract and format all final data
 const extractFinalResult = scrapedData => {
-	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, uid: scrapedData.uid, query: scrapedData.query, timestamp: (new Date()).toISOString() }
+	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, query: scrapedData.query, timestamp: (new Date()).toISOString() }
 	if (scrapedData.birthday) {
 		results.dob = scrapedData.birthday
+	}
+	if (scrapedData.uid) {
+		results.uid = scrapedData.uid
 	}
 	if (scrapedData.birthday) {
 		const moment = require("moment")
@@ -499,7 +506,12 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 			throw "No profile found"
 		}
 		scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
-		scrapedData = cleanUpEmojis(scrapedData)
+		cleanUpEmojis(scrapedData)
+		if (!scrapedData.firstName) { // if there's no first Name then fullName is in lastName, we need to split it again
+			const name = facebook.getFirstAndLastName(scrapedData.name)
+			scrapedData.firstName = name.firstName
+			scrapedData.lastName = name.lastName
+		}
 		try {
 			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
 		} catch (err) {
@@ -512,7 +524,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 		}
 		const profileLinkedinUrl = await searchLinkedInProfile(tabLk, fbData)
 		if (profileLinkedinUrl) {
-			console.log("Found LinkedIn Profile!", profileLinkedinUrl)
+			utils.log(`Found LinkedIn Profile: ${profileLinkedinUrl}`, "done")
 			scrapedData = await linkedInScraper.scrapeProfile(tabLk, profileLinkedinUrl, null, null, false)
 			scrapedData = extractLinkedInData(scrapedData.json, profileLinkedinUrl)
 			scrapedData.facebookUrl = profileUrl

@@ -138,7 +138,7 @@ const fbSearchHasPeopleResult = (arg, cb) => {
 // search a facebook profile from a name/company/location
 const searchFacebookProfile = async (tab, profile) => {
 	console.log("searchingProfile with", profile)
-	const searchOrder = [ { company: true, type: "top" }, { company: true, type: "people" }, { location: true, type: "top" }, { location: true, type: "people" }, { type: "top" }]
+	const searchOrder = [ { company: true, type: "top" }, { company: true, type: "people" }, { location: true, type: "top" }, { location: true, type: "people" }, { type: "top" } ]
 	let type
 	for (const search of searchOrder) {
 		type = search.type
@@ -171,10 +171,13 @@ const searchFacebookProfile = async (tab, profile) => {
 	if (facebookProfileUrl) {
 		utils.log(`Facebook Profile found: ${facebookProfileUrl}`, "done")
 		profile.facebookUrl = facebookProfileUrl
+		const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
+		console.log("fbData, ", fbData)
+		profile = extractFacebookData(profile, fbData)
+	} else {
+		console.log("no fb profile found!")
 	}
-	const fbData = await loadFacebookProfile(tab, facebookProfileUrl)
-	console.log("fbData, ", fbData)
-	profile = extractFacebookData(profile, fbData)
+
 	return profile
 }
 
@@ -447,15 +450,22 @@ const guessLocation = async (tab, scrapedData) => {
 const useDropcontact = async (scrapedData) => {
 	const dropcontactData = { query: scrapedData.query, first_name:scrapedData.firstName, last_name: scrapedData.lastName, company: scrapedData.company }
 	const result = await dropcontact.clean(dropcontactData)
-	console.log("result:", result)
+	if (result.email) {
+		utils.log(`Dropcontact found email: ${result.email}`, "done")
+	} else if (result.full_name) {
+		utils.log("Profile found on Dropcontact, but with no email associated", "info")
+	}
 	return result
 }
 
 // extract and format all final data
 const extractFinalResult = scrapedData => {
-	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, uid: scrapedData.uid, query: scrapedData.query, timestamp: (new Date()).toISOString() }
+	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, query: scrapedData.query, timestamp: (new Date()).toISOString() }
 	if (scrapedData.birthday) {
 		results.dob = scrapedData.birthday
+	}
+	if (scrapedData.uid) {
+		results.uid = scrapedData.uid
 	}
 	if (scrapedData.birthday) {
 		const moment = require("moment")
@@ -516,6 +526,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 		const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
 		scrapedData = await linkedInScraper.scrapeProfile(tabLk, scrapingUrl, null, null, false)
+		console.log("sctap", scrapedData)
 		if (await tabLk.getUrl() === "https://www.linkedin.com/in/unavailable/") {
 			throw "Profile unavailable"
 		}
@@ -523,7 +534,12 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 			throw "No profile found"
 		}
 		scrapedData = extractLinkedInData(scrapedData.json, scrapingUrl)
-		scrapedData = cleanUpEmojis(scrapedData)
+		cleanUpEmojis(scrapedData)
+		if (!scrapedData.firstName) { // if there's no first Name then fullName is in lastName, we need to split it again
+			const name = facebook.getFirstAndLastName(scrapedData.name)
+			scrapedData.firstName = name.firstName
+			scrapedData.lastName = name.lastName
+		}
 		try {
 			scrapedData = await searchFacebookProfile(tabFb, scrapedData)
 		} catch (err) {

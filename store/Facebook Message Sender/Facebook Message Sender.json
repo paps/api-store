@@ -56,13 +56,10 @@
                     "message": {
 						"label": "Message <a href=\"/api-store/8852/facebook-message-sender#section_6personalizeyourmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
-						"helpers": [
-							"Use #fbFirstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Other tags are available.</a>",
-							"Leave empty to send invites without message"
-						]
+						"helper": "Use #fbFirstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Other tags are available.</a>"
                     },
                     "profilesPerLaunch": {
-						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8852/facebook-message-sender#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to process per launch - if none will try to send messages to all of them  <a href=\"/api-store/8852/facebook-message-sender#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {
