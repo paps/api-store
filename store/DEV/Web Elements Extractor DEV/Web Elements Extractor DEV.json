@@ -16,8 +16,8 @@
 				"link": "https://phantombuster.com",
 				"selectors": [
 					{
-						"label": "Phantombuster Title",
-						"selector": "h1"
+						"selector": "h1",
+						"label": "Phantombuster Title"
 					}
 				],
 				"timeToWaitSelector": 5000
@@ -29,57 +29,61 @@
 		"alpaca": {
 			"schema": {
 				"properties": {
-					"pageToScrapePerLaunch": {
-						"type": "number"
-					},
 					"urls": {
 						"required": true,
 						"type": "array",
 						"items": {
 							"type": "object"
 						}
+					},
+					"pageToScrapePerLaunch": {
+						"type": "number"
 					}
 				}
 			},
 			"options": {
 				"fields": {
-					"pageToScrapePerLaunch": {
-						"label": "Amount of pages to scrape for every API launchs",
-						"helper": "Leaving this field empty will make the API scrape 2 pages for each launch",
-						"inputType": "number"
-					},
 					"urls": {
 						"label": "Elements to scrape",
-						"actionbarStyle": "top",
+						"actionbarStyle": "bottom",
 						"collapsible": true,
 						"toolbarSticky": true,
 						"hideToolbarWithChildren": true,
 						"items": {
 							"fields": {
 								"link": {
-									"label": "CSV/Spreadsheet URLs",
-									"helper": "You can use one or more CSV files or directly write all URLs to visit"
+									"label": "URL or CSV/Spreadsheet URLs",
+									"helper": "If you set either a Google Spreadsheet URL or a CSV URL make sure your file is publicly available"
 								},
 								"selectors": {
+									"actionbarStyle": "bottom",
+									"collapsible": true,
+									"toolbarSticky": true,
+									"hideToolbarWithChildren": true,
 									"items": {
 										"fields": {
-											"label": {
-												"label": "Field name when saving the value",
-												"helper": "Examples: Price, Article, Title, ..."
-											},
 											"selector": {
-												"label": "CSS selectors to use for the given URL",
+												"label": "CSS selectors <a target=\"_blank\" href=\"https://developer.mozilla.org/fr/docs/Web/CSS/S%C3%A9lecteurs_CSS\">(?)</a>",
 												"helper": "The API will return all text found in the given selectors"
+											},
+											"label": {
+												"label": "Name",
+												"helper": "Give a name to the associated selector"
 											}
 										}
 									}
 								},
 								"timeToWaitSelector": {
-									"label": "Time to wait until the given selector will appear in the page",
-									"helper": "time in milliseconds (ms)"
+									"label": "Milliseconds to wait for the given selector to appear",
+									"helper": "Time in milliseconds (ms)"
 								}
 							}
 						}
+					},
+					"pageToScrapePerLaunch": {
+						"label": "Amount of pages to scrape for every API launchs",
+						"helper": "Leaving this field empty will make the API scrape all pages in one run",
+						"inputType": "number"
 					}
 				}
 			}
@@ -88,10 +92,6 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"pageToScrapePerLaunch": {
-				"type": "number",
-				"minimun": 1
-			},
 			"urls": {
 				"type": "array",
 				"items": {
@@ -105,14 +105,15 @@
 							"items": {
 								"type": "object",
 								"properties": {
-									"label": {
+									"selector": {
 										"type": "string"
 									},
-									"selector": {
+									"label": {
 										"type": "string"
 									}
 								},
-								"minLength": 1
+								"minLength": 1,
+								"minItems": 1
 							}
 						},
 						"timeToWaitSelector": {
@@ -121,8 +122,13 @@
 							"default": 5000
 						}
 					},
-					"minLength": 1
+					"minLength": 1,
+					"minItems": 1
 				}
+			},
+			"pageToScrapePerLaunch": {
+				"type": "number",
+				"minimum": 1
 			}
 		}
 	}

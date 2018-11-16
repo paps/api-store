@@ -170,10 +170,9 @@ const filterArgumentsBySelector = (db, argv) => {
 		nick.exit(0)
 	}
 
-	if (typeof pageToScrapePerLaunch !== "number") {
-		pageToScrapePerLaunch = DEFAULT_ELEMENTS_LAUNCH
+	if (typeof pageToScrapePerLaunch === "number") {
+		urls = urls.slice(0, pageToScrapePerLaunch)
 	}
-	urls = urls.slice(0, pageToScrapePerLaunch)
 
 	for (const el of urls) {
 		utils.log(`Scraping selectors on page: ${el.link}`, "loading")
