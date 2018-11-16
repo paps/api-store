@@ -53,7 +53,7 @@
 							"fields": {
 								"link": {
 									"label": "URL or CSV/Spreadsheet URLs",
-									"helper": "If you set either a Google Spreadsheet URL or a CSV URL make sure your file is publicly available"
+									"helper": "If you set either a Google Spreadsheet URL or a CSV UR make sure your file is publicly available"
 								},
 								"selectors": {
 									"actionbarStyle": "bottom",
