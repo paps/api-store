@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse, URL } = require("url")
 
@@ -522,8 +521,6 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 				let selector
 				try {
 					selector = await tab.waitUntilVisible(selectors, 15000, "or")
-					await tab.screenshot(`${Date.now()}sU1.png`)
-					await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
 				} catch (err) {
 					// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 					utils.log(err.message || err, "warning")
@@ -616,6 +613,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 	const urlObject = parse(targetUrl)
 
 	if (urlObject && urlObject.hostname) {
+		if (urlObject.pathname.startsWith("/sales/search")) { return "salesnavigator" } // Sales Navigator search
 		if (urlObject.hostname === "www.linkedin.com" && (urlObject.pathname.startsWith("/search/results/") || urlObject.pathname.startsWith("/jobs/search/"))) {
 			if (urlObject.pathname.includes("companies")) { return "companies" } // Companies search
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
@@ -646,7 +644,11 @@ const isLinkedInSearchURL = (targetUrl) => {
 		if (search.includes("mynetwork/invite-connect/connections")) { // if it's the first connections list page, we replace it by the equivalent search URL
 			search = "https://www.linkedin.com/search/results/people/v2/?facetNetwork=%5B%22F%22%5D&origin=FACETED_SEARCH"
 		}
-		if (typeof isLinkedInSearchURL(search) === "string") {
+		const typeOfSearch = isLinkedInSearchURL(search)
+		if (typeof typeOfSearch === "string") {
+			if (typeOfSearch === "salesnavigator") {
+				throw "It seems you used a Sales Navigator Search URL, this API only handles regular LinkedIn URLs.\n Please use our other API LinkedIn Sales Navigator Search Export for this type of URL."
+			}
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv(search)

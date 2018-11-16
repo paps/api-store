@@ -613,6 +613,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 	const urlObject = parse(targetUrl)
 
 	if (urlObject && urlObject.hostname) {
+		if (urlObject.pathname.startsWith("/sales/search")) { return "salesnavigator" } // Sales Navigator search
 		if (urlObject.hostname === "www.linkedin.com" && (urlObject.pathname.startsWith("/search/results/") || urlObject.pathname.startsWith("/jobs/search/"))) {
 			if (urlObject.pathname.includes("companies")) { return "companies" } // Companies search
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
@@ -643,7 +644,11 @@ const isLinkedInSearchURL = (targetUrl) => {
 		if (search.includes("mynetwork/invite-connect/connections")) { // if it's the first connections list page, we replace it by the equivalent search URL
 			search = "https://www.linkedin.com/search/results/people/v2/?facetNetwork=%5B%22F%22%5D&origin=FACETED_SEARCH"
 		}
-		if (typeof isLinkedInSearchURL(search) === "string") {
+		const typeOfSearch = isLinkedInSearchURL(search)
+		if (typeof typeOfSearch === "string") {
+			if (typeOfSearch === "salesnavigator") {
+				throw "It seems you used a Sales Navigator Search URL, this API only handles regular LinkedIn URLs.\n Please use our other API LinkedIn Sales Navigator Search Export for this type of URL."
+			}
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv(search)
