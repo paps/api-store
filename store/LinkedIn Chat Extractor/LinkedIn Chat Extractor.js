@@ -292,12 +292,13 @@ const jsonToCsvOutput = json => {
 			break
 		}
 		buster.progressHint((step++) + 1 / queries.length, `Conversation: ${convUrl}`)
-		let convRes = { conversationUrl: convUrl }
+		let convRes = { conversationUrl: convUrl, messages: [] }
 		const isThreadURL = isMessageThread(convUrl)
 		tab.driver.client.addListener("Network.requestWillBeSent", isThreadURL ? getThreadHeaders : httpSendInterceptor)
 		let tmp = await isRealProfile(tab, convUrl, isThreadURL)
 		if (typeof tmp === "string" || (typeof tmp === "boolean" && !tmp)) {
 			convRes.error = typeof tmp === "string" ? tmp : "Unavailable profile"
+			convRes.messages.push({ error: convRes.error })
 			currentScraping.push(convRes)
 			continue
 		}
