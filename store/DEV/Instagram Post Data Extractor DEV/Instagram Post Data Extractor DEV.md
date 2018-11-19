@@ -59,7 +59,6 @@ _// How to access your cookies with <a href="https://developer.mozilla.org/en-US
 Below your session cookie you’ll find _Spreadsheet URL_.
 
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
-<center>![](https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrrpr_spreadsheet.png)</center>
 
 Your spreadsheet should contain a list of Instagram Posts URLs (**one link per row**).
 You can specify the name of the column that contains the post links. Simply enter the column name in the next text field.

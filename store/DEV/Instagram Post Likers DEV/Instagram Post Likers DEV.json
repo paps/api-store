@@ -1,6 +1,6 @@
 {
-	"slug": "instagram-post-data-extractor",
-	"description": "Extract all data from an Instagram Post",
+	"slug": "instagram-post-likers",
+	"description": "Extract all data from a Instagram Post",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
 	"gradientBegin": "#FCCF6B",
@@ -41,6 +41,10 @@
 						"placeholder": "Instagram Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
+					"numberOfLikers": {
+						"label": "Number of likers to collect per post - if none will try to scrape all of them",
+						"inputType": "number"
+					},
 					"numberOfProfilesPerLaunch": {
 						"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
@@ -58,7 +62,8 @@
 		"type": "object",
 		"properties": {
 			"sessionCookie": {
-				"type": "string"
+				"type": "string",
+				"required": true
 			},
 			"spreadsheetUrl": {
 				"type": "string",
@@ -66,6 +71,10 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"numberOfLikers": {
+				"type": "number",
+				"minimum": 1
 			},
 			"numberOfProfilesPerLaunch": {
 				"type": "number",
