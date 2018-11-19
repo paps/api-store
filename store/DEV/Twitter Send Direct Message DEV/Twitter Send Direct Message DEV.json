@@ -1,0 +1,113 @@
+{
+	"slug": "twitter-send-direct-message",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "session_cookie"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Twitter auth_token cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
+					},
+					"columnName": {
+						"label": "Column name where Twitter profile URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Twitter Profile"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"message": {
+						"label": "Message",
+						"type": "textarea"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfProfilesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"message": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
