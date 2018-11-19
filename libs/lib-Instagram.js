@@ -258,7 +258,7 @@ class Instagram {
 		// Sometimes the selector used to get likes count for a Instagram video isn't present
 		if (scrapedData.postVideo && isLikeSelectorInDOM) {
 			scrapedData.views = scrapedData.likes
-			await tab.click("section span[role=\"button\"]")
+			await tab.click("section span[role=\"button\"][tabindex]")
 			const likesSelectors = [ "section span[role=\"button\"] ~ div span", "section span[role=\"button\"] ~ div > div:last-of-type" ]
 			const foundSelector = await tab.waitUntilVisible(likesSelectors, 7500, "or")
 			scrapedData.likes = await tab.evaluate((arg, cb) => {
