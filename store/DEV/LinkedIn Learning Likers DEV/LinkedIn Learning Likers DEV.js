@@ -120,14 +120,13 @@ const scrollToLast = (arg, cb) => cb(null, document.querySelector(arg.sel) ? doc
 
 /**
  * @async
- * @param {Object} tab
- * @return {Promise<Array<Object>>} Likers
+ * @param {Object} tab - Nickjs tab
+ * @return {Promise<{ pageUrl: String, likers: Array<Object> }>} Likers
  */
 const getLikes = async tab => {
-	let res = []
+	const res = { pageUrl: await tab.getUrl(), likers: [] }
 	let likersCount = 0
 	let loadedCount = 0
-	const pageUrl = await tab.getUrl()
 	try {
 		await tab.click(SELECTORS.popUpTrigger)
 		await tab.waitUntilVisible([ SELECTORS.likersPopUp, SELECTORS.likerElement ], "and", 30000)
@@ -145,10 +144,22 @@ const getLikes = async tab => {
 			utils.log(`${loadedCount} likers loaded`, "loading")
 		}
 	} catch (err) {
-		utils.log(`Can't scrape more likers at ${pageUrl} due to: ${err.message || err}`, "warning")
+		utils.log(`Can't scrape more likers at ${res.pageUrl} due to: ${err.message || err}`, "warning")
 	}
-	res = await tab.evaluate(scrapeLikers, { sel: `ul.entity-feed-list ${SELECTORS.likerElement}` })
-	utils.log(`${res.length} likers scraped`, "done")
+	res.likers = await tab.evaluate(scrapeLikers, { sel: `ul.entity-feed-list ${SELECTORS.likerElement}` })
+	utils.log(`${res.likers.length} likers scraped`, "done")
+	return res
+}
+
+const createCsvOutput = json => {
+	const res = []
+	for (const el of json) {
+		let tmp = el.likers.map(liker => {
+			liker.pageUrl = el.pageUrl
+			return liker
+		})
+		res.push(...tmp)
+	}
 	return res
 }
 
@@ -165,19 +176,26 @@ const getLikes = async tab => {
 	db = await utils.getDb(csvName + ".csv")
 	if (isLinkedInURL(spreadsheetUrl)) {
 		pageUrls = [ spreadsheetUrl ]
-	} else {
+	} else if (spreadsheetUrl) {
 		pageUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	}
+	utils.log(`Pages to scrape: ${JSON.stringify(pageUrls, null, 2)}`, "done")
 	await linkedin.login(tab, sessionCookie)
 	for (const url of pageUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
 			}
-		await loadLearningPage(tab, url)
-		res.push(...await getLikes(tab))
+		utils.log(`Scraping ${url}`, "info")
+		try {
+			await loadLearningPage(tab, url)
+			res.push(await getLikes(tab))
+		} catch (err) {
+			utils.log(`Can't scrape ${url} due to: ${err.message || err}`, "warning")
+			res.push({ pageUrl: url, likers: [] })
+		}
 	}
-	db.push(...utils.filterRightOuter(db, res))
+	db.push(...utils.filterRightOuter(db, createCsvOutput(res)))
 	await linkedin.saveCookie()
 	await utils.saveResults(res, db, csvName, null, true)
 	nick.exit()
