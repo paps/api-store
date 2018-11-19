@@ -49,7 +49,7 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 const filterResults = (results, terms, leastTerm) => {
 	let filterResult = []
-	const regex = /#[a-zA-Z\u00C0-\u024F]+/gu
+	const regex = /#[a-zA-Z0-9\u00C0-\u024F]+/gu
 	for (const term of terms) {
 		if (term !== leastTerm) {
 			for (const result of results) {

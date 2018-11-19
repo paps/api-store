@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js, lib-WebSearch.js"
 
 const url = require("url")
 const { URL } = require("url")
@@ -20,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram")
+const Instagram = require("./lib-Instagram-DEV")
 const instagram = new Instagram(nick, buster, utils)
 const WebSearch = require("./lib-WebSearch")
 
@@ -49,7 +49,7 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 const filterResults = (results, terms, leastTerm) => {
 	let filterResult = []
-	const regex = /#[a-zA-Z\u00C0-\u024F]+/gu
+	const regex = /#[a-zA-Z0-9\u00C0-\u024F]+/gu
 	for (const term of terms) {
 		if (term !== leastTerm) {
 			for (const result of results) {
