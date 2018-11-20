@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-learning-likers",
-	"description": "",
+	"description": "Extract a list of people who liked a course on LinkedIn Learning Platform",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Learning_Likers/LinkedIn+Learning+Likers.png",
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
@@ -30,9 +30,9 @@
 						"label": "Session cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL of profiles",
+						"label": "URL of one course or of a Spreadsheet of courses' URLs",
 						"type": "url",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+						"helper": "Enter either a URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
 						"label": "Column name where profile URLs are stored",

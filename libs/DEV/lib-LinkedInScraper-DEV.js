@@ -193,7 +193,7 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections" } // Issue #52
 			// { key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
 		])
-		infos.general.profileUrl = arg.url
+		infos.general.profileUrl = document.location.href
 
 		const sel = document.querySelector(".pv-profile-section.pv-top-card-section .pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections")
 		if (sel) {
@@ -407,6 +407,7 @@ const scrapeInfos = (arg, callback) => {
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, fullLoad) => {
 	const [httpCode] = await tab.open(url)
+	console.log("opening ", url)
 	if (httpCode !== 200 && httpCode !== 999 && httpCode !== null) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
@@ -435,7 +436,10 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		}
 		utils.log("Scraping page...", "loading")
 	}
+	const actUrl = await tab.getUrl()
+	console.log("actUrl", actUrl)
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
+	console.log("infos", infos)
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = infos.general.profileUrl.slice(28)
@@ -840,12 +844,22 @@ class LinkedInScraper {
 				try {
 					let location = await tab.getUrl()
 					if (location !== newUrl) {
+						if (location === "https://www.linkedin.com/m/login/" || location === "chrome-error://chromewebdata/") {
+							this.utils.log(`Can't convert ${url}: Disconnected by LinkedIn`, "warning")
+							await tab.close()
+							return newUrl
+						}
 						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location
 					} else {
 						await tab.wait(10000)
 						location = await tab.getUrl()
+						if (location === "https://www.linkedin.com/m/login/" || location === "chrome-error://chromewebdata/") {
+							this.utils.log(`Can't convert ${url}: Disconnected by LinkedIn`, "warning")
+							await tab.close()
+							return newUrl
+						}
 						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location

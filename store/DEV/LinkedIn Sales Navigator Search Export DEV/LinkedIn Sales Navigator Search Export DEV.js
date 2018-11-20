@@ -175,7 +175,12 @@ const extractDefaultUrls = async results => {
 	for (let i = 0; i < results.length; i++) {
 		if (results[i].profileUrl) {
 			try {
-				results[i].defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
+				const convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(results[i].profileUrl)
+				if (convertedUrl === results[i].profileUrl) { // exiting if we got logged out LinkedIn
+					utils.log("Stopping converting process...", "warning")
+					break
+				}
+				results[i].defaultProfileUrl = convertedUrl
 			} catch (err) {
 				utils.log(`Error converting Sales Navigator URL... ${err}`, "error")
 			}
@@ -239,6 +244,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			}
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
+					await buster.saveText(await tab.getContent(), `${Date.now()}Lead Search.html`)
 					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
 				} catch (err) {
 					//
