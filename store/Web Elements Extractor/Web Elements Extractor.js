@@ -19,7 +19,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_SHORT_NAME = "result"
 const DB_NAME = DB_SHORT_NAME + ".csv"
-const DEFAULT_ELEMENTS_LAUNCH = 2
 // }
 
 const doScraping = (arg, cb) => {
