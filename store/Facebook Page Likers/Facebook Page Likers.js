@@ -193,6 +193,15 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 			userInfo.lastName = extractedNames.lastName
 		}
 		userInfo.profileUrl = facebook.cleanProfileUrl(profileUrl)
+		try {
+			if (userInfo.profileUrl.includes("profile.php")) {
+				const urlObject = new URL(userInfo.profileUrl)
+				const id = urlObject.searchParams.get("id")
+				userInfo.facebookID = id
+			}
+		} catch (err) {
+			//
+		}
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend
 		userInfo.highlight = userInfos[1]
@@ -393,6 +402,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 								break
 							} else if (_.isNull(firstChild)) {
 								isEndOfPage = true
+								utils.log("All likers that could be retrieved have been scraped.", "done")
 								break
 							}
 						}

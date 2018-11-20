@@ -1,5 +1,5 @@
 # Get highly qualified active Facebook members
-Wether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about all the likers.
+Whether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers, up to around 10k profiles per page.
 
 # What will you need? ⚙️ 
 
@@ -78,3 +78,4 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
 
 Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).
+Also there's a limit on how many likers can be extracted, around 10k Facebook profiles, even when the total count displayed by Facebook is higher.

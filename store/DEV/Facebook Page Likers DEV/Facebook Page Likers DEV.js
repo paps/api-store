@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -22,7 +22,7 @@ const _ = require("lodash")
 const cheerio = require("cheerio")
 const URL = require("url").URL
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
@@ -193,6 +193,15 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 			userInfo.lastName = extractedNames.lastName
 		}
 		userInfo.profileUrl = facebook.cleanProfileUrl(profileUrl)
+		try {
+			if (userInfo.profileUrl.includes("profile.php")) {
+				const urlObject = new URL(userInfo.profileUrl)
+				const id = urlObject.searchParams.get("id")
+				userInfo.facebookID = id
+			}
+		} catch (err) {
+			//
+		}
 		userInfo.imageUrl = imageUrl
 		userInfo.isFriend = isFriend
 		userInfo.highlight = userInfos[1]
@@ -217,7 +226,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		urlTemplateData["cursor"] = nextCursor
 		urlTemplateData["page_number"] = nextPageNumber
 		urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
-
+		console.log("urlTemplate", urlTemplate)
 		let responseContent
 
 		const onResponse = async (e) => {
@@ -377,6 +386,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 			if (processError) {
 				error = true
+				console.log("processError", processError)
 				break
 			}
 			currentLikesScrapped += likesScrapped
@@ -387,12 +397,15 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 					if (request.indexOf("BrowseScrollingPager") !== -1){
 						for (let param of request) {
 							let firstChild = param[0]
+							console.log("firstChild:", firstChild)
 							if (_.isObject(firstChild) && (!_.isUndefined(firstChild.cursor))) {
 
 								nextCursor = firstChild.cursor;
 								break
 							} else if (_.isNull(firstChild)) {
 								isEndOfPage = true
+								utils.log("All likers that could be retrieved have been scraped.", "done")
+								console.log("_.isNull(firstChild)")
 								break
 							}
 						}
@@ -402,6 +415,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 				++nextPageNumber
 			} else {
 				isEndOfPage = true
+				console.log("urlTemplateVide")
 			}
 
 			if (likesScrapped > 0) {
