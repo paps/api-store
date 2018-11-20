@@ -193,7 +193,7 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "connections", attribute: "textContent", selector: ".pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections" } // Issue #52
 			// { key: "description", attribute: "textContent", selector: ".pv-top-card-section__summary-text"},
 		])
-		infos.general.profileUrl = arg.url
+		infos.general.profileUrl = document.location.href
 
 		const sel = document.querySelector(".pv-profile-section.pv-top-card-section .pv-top-card-v2-section__entity-name.pv-top-card-v2-section__connections")
 		if (sel) {
@@ -504,7 +504,7 @@ const craftCsvObject = infos => {
 	const hasDropcontact = infos.hasOwnProperty("dropcontact")
 
 	return {
-		linkedinProfile: (hasDetails) ? (infos.details.linkedinProfile || null) : null,
+		linkedinProfile: (hasDetails) ? (infos.details.profileUrl || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
@@ -840,12 +840,22 @@ class LinkedInScraper {
 				try {
 					let location = await tab.getUrl()
 					if (location !== newUrl) {
+						if (location === "https://www.linkedin.com/m/login/" || location === "chrome-error://chromewebdata/") {
+							this.utils.log(`Can't convert ${url}: Disconnected by LinkedIn`, "warning")
+							await tab.close()
+							return newUrl
+						}
 						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location
 					} else {
 						await tab.wait(10000)
 						location = await tab.getUrl()
+						if (location === "https://www.linkedin.com/m/login/" || location === "chrome-error://chromewebdata/") {
+							this.utils.log(`Can't convert ${url}: Disconnected by LinkedIn`, "warning")
+							await tab.close()
+							return newUrl
+						}
 						this.utils.log(`Converting ${url} to ${location}`, "info")
 						await tab.close()
 						return location
@@ -860,7 +870,6 @@ class LinkedInScraper {
 		}
 		return newUrl
 	}
-
 }
 
 module.exports = LinkedInScraper

@@ -90,9 +90,13 @@ const craftObjectFromCsv = (csv, header = true) => {
 	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
 			const convertedObject = csvObject[i]
-
 			try {
-				convertedObject.defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
+				const convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
+				if (convertedUrl === csvObject[i][columnName]) { // exiting if we got logged out LinkedIn
+					utils.log("Stopping converting process...", "warning")
+					break
+				}
+				convertedObject.defaultProfileUrl = convertedUrl
 			} catch (err) {
 				utils.log(`Error converting Sales Navigator URL... ${err}`, "warning")
 				convertedObject.error = "Error converting URL"
