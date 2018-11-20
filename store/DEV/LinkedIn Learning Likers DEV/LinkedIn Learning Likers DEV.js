@@ -47,6 +47,19 @@ const isLinkedInURL = url => {
 	}
 }
 
+
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
+const isLearningUrl = url => {
+	try {
+		return (new URL(url)).pathname.startsWith("/learning")
+	} catch (err) {
+		return false
+	}
+}
+
 /**
  * @async
  * @param {Object} tab - Nickjs tab
@@ -58,6 +71,9 @@ const loadLearningPage = async (tab, url) => {
 		await tab.open(url)
 		await tab.waitUntilVisible([ SELECTORS.pageLoader, SELECTORS.popUpTrigger ], "and", 15000)
 	} catch (err) {
+		if (!await tab.isPresent(SELECTORS.popUpTrigger)) {
+			throw "No likers found"
+		}
 		throw `Can't load ${url} due to ${err.message || err}`
 	}
 }
@@ -97,18 +113,18 @@ const scrapeLikers = (arg, cb) => {
 }
 
 /**
- * @param {{ sel: String, prevCount: number }} arg
+ * @param {{ sel: String, prevCount: number, maxCount: number }} arg
  * @param {Function} cb
  */
 const waitWhileLoading = (arg, cb) => {
 	const startTime = Date.now()
 	const idle = () => {
 		const count = document.querySelectorAll(arg.sel).length
-		if (count > arg.prevCount) {
+		if (count > arg.prevCount || count >= arg.maxCount) {
 			cb(null)
 		} else {
 			if ((Date.now() - startTime) >= 30000) {
-				return cb("Likers can't be loaded after 30s")
+				return cb(`Likers can't be loaded after 30s, count: ${count}`)
 			}
 			setTimeout(idle, 200)
 		}
@@ -120,6 +136,7 @@ const scrollToLast = (arg, cb) => cb(null, document.querySelector(arg.sel) ? doc
 
 /**
  * @async
+ * @description gather all likers from a specific LinkedIn learning page
  * @param {Object} tab - Nickjs tab
  * @return {Promise<{ pageUrl: String, likers: Array<Object> }>} Likers
  */
@@ -131,6 +148,7 @@ const getLikes = async tab => {
 		await tab.click(SELECTORS.popUpTrigger)
 		await tab.waitUntilVisible([ SELECTORS.likersPopUp, SELECTORS.likerElement ], "and", 30000)
 		likersCount = await tab.evaluate(getLikersCount, { sel: SELECTORS.likersCount })
+		utils.log(`Scraping ${likersCount} likers`, "info")
 		while (loadedCount < likersCount - 1) {
 			loadedCount = await tab.evaluate(getLoadedLikers, { sel: `ul.entity-feed-list ${SELECTORS.likerElement}` })
 			const timeLeft = await utils.checkTimeLeft()
@@ -139,13 +157,17 @@ const getLikes = async tab => {
 				break
 			}
 			await tab.evaluate(scrollToLast, { sel: `${SELECTORS.likerElement}:last-of-type` })
-			await tab.evaluate(waitWhileLoading, { sel: SELECTORS.likerElement, prevCount: loadedCount })
+			await tab.evaluate(waitWhileLoading, { sel: SELECTORS.likerElement, prevCount: loadedCount, maxCount: likersCount })
 			loadedCount = await tab.evaluate(getLoadedLikers, { sel: `ul.entity-feed-list ${SELECTORS.likerElement}` })
 			utils.log(`${loadedCount} likers loaded`, "loading")
 		}
 	} catch (err) {
 		res.error = err.message || err
-		utils.log(`Can't scrape more likers at ${res.pageUrl} due to: ${res.error}`, "warning")
+		if (!await tab.isPresent(SELECTORS.popUpTrigger)) {
+			utils.log(`No likers found in ${res.pageUrl}`, "warning")
+		} else {
+			utils.log(`Can't scrape more likers at ${res.pageUrl} due to: ${res.error}`, "warning")
+		}
 	}
 	res.likers = await tab.evaluate(scrapeLikers, { sel: `ul.entity-feed-list ${SELECTORS.likerElement}` })
 	utils.log(`${res.likers.length} likers scraped`, "done")
@@ -187,6 +209,12 @@ const createCsvOutput = json => {
 			if (!timeLeft.timeLeft) {
 				break
 			}
+		if (!isLearningUrl(url)) {
+			let err = `${url} doesn't represent a LinkedIn learning page, url skipped` 
+			utils.log(err, "warning")
+			res.push({ pageUrl: url, likers:[], error: err })
+			continue
+		}
 		utils.log(`Scraping ${url}`, "info")
 		try {
 			await loadLearningPage(tab, url)
