@@ -122,7 +122,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		extractedData.commentCount = node.edge_media_to_comment.count
 		extractedData.likeCount = node.edge_liked_by.count
 		extractedData.ownerId = node.owner.id
-		extractedData.takenAt = new Date(node.taken_at_timestamp * 1000).toISOString()
+		extractedData.pudDate = new Date(node.taken_at_timestamp * 1000).toISOString()
 		extractedData.postId = node.id
 		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}`
 		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`

@@ -15,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -26,13 +27,11 @@ const { URL } = require("url")
 
 let headers
 let graphqlUrl
-let requestSingleId
 let agentObject
 let interrupted
-let rateLimited
 let lastQuery
 let nextUrl
-let alreadyScraped
+let rateLimited
 
 // }
 
@@ -55,8 +54,7 @@ const ajaxCall = (arg, cb) => {
 }
 
 const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200) {
-		requestSingleId = e.requestId
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && e.response.url.includes("include_reel") && !e.response.url.includes("logged_out")) {
 		graphqlUrl = e.response.url
 		console.log("graphUrl", graphqlUrl)
 	}
@@ -86,6 +84,9 @@ const getpostUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 
 const extractDataFromJson = (json) => {
 	// console.log("json", json.data.shortcode_media.edge_liked_by)
+	if (!json.data) {
+		console.log("jsonData:", json)
+	}
 	const jsonData = json.data.shortcode_media.edge_liked_by
 	let endCursor = jsonData.page_info.end_cursor
 	// console.log("endCursor", endCursor)
@@ -156,28 +157,58 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	await tab.inject("../injectables/jquery-3.0.0.min.js")
 	let results = []
 	let likerCount = 0
 	let url = graphqlUrl
+	lastQuery = postUrl
 	do {
-		const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
-		const [ tempResult, endCursor ] = extractDataFromJson(interceptedData)
-		results = results.concat(tempResult)
-		likerCount = results.length
-		if (!endCursor) {
-			console.log("plus de endcursor")
-			break
+		nextUrl = url
+		try {
+			await tab.inject("../injectables/jquery-3.0.0.min.js")
+			const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
+			// console.log("interceptedData", interceptedData)
+
+			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData)
+			results = results.concat(tempResult)
+			likerCount = results.length
+			if (!endCursor) {
+				console.log("plus de endcursor")
+				break
+			}
+			console.log("results.length", results.length)
+			url = forgeNewUrl(url, endCursor)
+		} catch (err) {
+			console.log("errr", err)
+			await tab.open(url)
+			let instagramJsonCode = await tab.getContent()
+			const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
+			instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+			console.log("instagramJsonCode", instagramJsonCode)
+			if (instagramJsonCode.message === "execution failure") {
+				console.log("execution failure")
+				rateLimited = true
+				break
+			}
+			const [ tempResult, endCursor ] = extractDataFromJson(instagramJsonCode)
+			results = results.concat(tempResult)
+			likerCount = results.length
+			if (!endCursor) {
+				console.log("plus de endcursor")
+				break
+			}
+			console.log("results.length", results.length)
+			url = forgeNewUrl(url, endCursor)
 		}
-		console.log("results.length", results.length)
-		url = forgeNewUrl(url, endCursor)
+		
+	
+		
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			interrupted = true
 			break
 		}
 	} while (!numberOfLikers || likerCount < numberOfLikers)
-
 	console.log("results.length", results.length)
 	return results
 }
@@ -234,7 +265,13 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 			result = result.concat(await loadAndScrapeLikers(tab, postUrl, numberOfLikers))
 		} catch (err) {
 			utils.log(`Can't scrape post at ${postUrl} due to: ${err.message || err}`, "warning")
+			await tab.screenshot(`${Date.now()}Can't scrape post.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}Can't scrape post.html`)
 		}
+	}
+	if (rateLimited) {
+		interrupted = true
+		
 	}
 
 	if (result.length !== initialResultLength) {
