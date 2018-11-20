@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-learning-likers",
-	"description": "",
+	"description": "Extract a list of people who liked a course on LinkedIn Learning Platform",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Learning_Likers/LinkedIn+Learning+Likers.png",
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
@@ -27,12 +27,12 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie"
+						"label": "Session cookie <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_argument\">(?)</a>"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL of profiles",
+						"label": "URL of one course or of a Spreadsheet of courses' URLs <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_posturl\">(?)</a>",
 						"type": "url",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+						"helper": "Enter either a URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
 						"label": "Column name where profile URLs are stored",
@@ -40,7 +40,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"csvName": {
-						"label": "Name of resulting CSV file",
+						"label": "Name of resulting CSV file <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_5nameyourfuturecsv\">(?)</a>",
 						"placeholder": "result",
 						"helper": "If empty, all results are stored in <b>result.csv</b>"
 					}

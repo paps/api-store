@@ -27,10 +27,10 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie"
+						"label": "Session cookie <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_argument\">(?)</a>"
 					},
 					"spreadsheetUrl": {
-						"label": "URL of one course or of a Spreadsheet of courses' URLs",
+						"label": "URL of one course or of a Spreadsheet of courses' URLs <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_posturl\">(?)</a>",
 						"type": "url",
 						"helper": "Enter either a URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
@@ -40,7 +40,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"csvName": {
-						"label": "Name of resulting CSV file",
+						"label": "Name of resulting CSV file <a target=\"_blank\" href=\"/api-store/10139/linkedin-learning-likers#section_5nameyourfuturecsv\">(?)</a>",
 						"placeholder": "result",
 						"helper": "If empty, all results are stored in <b>result.csv</b>"
 					}
