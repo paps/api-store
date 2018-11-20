@@ -59,8 +59,19 @@ const craftObjectFromCsv = (csv, header = true) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, spreadsheetUrl, columnName, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
+	if (spreadsheetUrl && spreadsheetUrl.includes("linkedin.com/sales/search/")) {
+		throw "Input URL is a Search URL and not a Spreadsheet URL. Please use LinkedIn Sales Navigator Search Export first to extract profiles from a search URL."
+	}
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
+	await linkedIn.login(tab, sessionCookie)
+	if (spreadsheetUrl.includes("linkedin.com/sales/profile/") || spreadsheetUrl.includes("linkedin.com/sales/people/")) { // single profile URL
+		const defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(spreadsheetUrl)
+		result.push({ profileUrl: spreadsheetUrl, defaultProfileUrl, timestamp: (new Date()).toISOString() })
+		utils.log("1 URL converted.", "done")
+		await utils.saveResults(result, result, csvName)
+		nick.exit(0)
+	}
 	let csvObject, csv
 	try {
 		csv = await utils.getRawCsv(spreadsheetUrl)
@@ -74,15 +85,11 @@ const craftObjectFromCsv = (csv, header = true) => {
 		csvObject = craftObjectFromCsv(csv, false)
 		columnName = "profileUrl"
 	}
-	await linkedIn.login(tab, sessionCookie)
 	csvObject = filterCsvObject(csvObject, result, columnName).slice(0, numberOfLinesPerLaunch)
-	console.log("csvO:", csvObject)
-	console.log("columnName:", columnName)
 	let i
 	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
 			const convertedObject = csvObject[i]
-			console.log("convertedObject", convertedObject)
 
 			try {
 				convertedObject.defaultProfileUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
