@@ -1,9 +1,10 @@
 {
 	"slug": "linkedin-activities-extractor",
-	"description": "Extract posts from LinkedIn Activity's page",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Activities_Extractor/LinkedIn+Activities+Extractor.png",
-	"hidden": true,
+	"description": "Extract every single post and like from a LinkedIn Profile's Activity's page",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
+	"hidden": false,
 	"new": true,
+	"updated": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
