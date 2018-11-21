@@ -176,33 +176,34 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
-	if (message && message.length > 0) {
-		try {
-			await tab.click(".send-invite__actions > button:nth-child(1)")
-			// Write the message
-			await tab.waitUntilVisible("#custom-message")
-			await tab.evaluate((arg, callback) => {
-				document.getElementById("custom-message").value = arg.message
-				callback()
-			}, {message})
-			await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
-			utils.log(`Message sent: ${message}`, "done")
-		} catch (err) {
-			utils.log(`Error while sending message: ${err}`, "error")
-		}
-	}
-	await tab.click(".send-invite__actions > button:nth-child(2)")
-	try {
-		// Sometimes this alert isn't shown but the user is still added
-		await tab.waitUntilVisible([
-			".mn-invite-alert__svg-icon--success",
-			".mn-heathrow-toast__icon--success",
-			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
-			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
-		], 10000, "or")
-	} catch (error) {
-		utils.log("Button clicked but could not verify if the user was added.", "warning")
-	}
+	console.log("message:", message)
+	// if (message && message.length > 0) {
+	// 	try {
+	// 		await tab.click(".send-invite__actions > button:nth-child(1)")
+	// 		// Write the message
+	// 		await tab.waitUntilVisible("#custom-message")
+	// 		await tab.evaluate((arg, callback) => {
+	// 			document.getElementById("custom-message").value = arg.message
+	// 			callback()
+	// 		}, {message})
+	// 		await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
+	// 		utils.log(`Message sent: ${message}`, "done")
+	// 	} catch (err) {
+	// 		utils.log(`Error while sending message: ${err}`, "error")
+	// 	}
+	// }
+	// await tab.click(".send-invite__actions > button:nth-child(2)")
+	// try {
+	// 	// Sometimes this alert isn't shown but the user is still added
+	// 	await tab.waitUntilVisible([
+	// 		".mn-invite-alert__svg-icon--success",
+	// 		".mn-heathrow-toast__icon--success",
+	// 		"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
+	// 		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+	// 	], 10000, "or")
+	// } catch (error) {
+	// 	utils.log("Button clicked but could not verify if the user was added.", "warning")
+	// }
 }
 
 /**
@@ -345,15 +346,14 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
 
-	if (disableScraping && message) {
-		if (!invitation.firstName) {
-			const firstname = await tab.evaluate(getFirstName)
-			invitation.firstName = firstname
-		}
+	if (message && !invitation.firstName) {
+		const firstname = await tab.evaluate(getFirstName)
+		invitation.firstName = firstname
 	}
+	console.log("invitation:", invitation)
 	cleanUpEmojis(invitation)
 	if (message) {
-		message = inflater.forgeMessage(message, invitation)
+		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
 	switch (selector) {

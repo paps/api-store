@@ -345,15 +345,13 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
 
-	if (disableScraping && message) {
-		if (!invitation.firstName) {
-			const firstname = await tab.evaluate(getFirstName)
-			invitation.firstName = firstname
-		}
+	if (message && !invitation.firstName) {
+		const firstname = await tab.evaluate(getFirstName)
+		invitation.firstName = firstname
 	}
 	cleanUpEmojis(invitation)
 	if (message) {
-		message = inflater.forgeMessage(message, invitation)
+		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
 	switch (selector) {
