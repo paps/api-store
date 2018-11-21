@@ -11,7 +11,8 @@
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1qWQ5t-pFaibQQoltH05uH0uw_t_fArpZoYTAYh4k1Gg",
 		"saveImg": false,
-		"takeScreenshot": false
+		"takeScreenshot": false,
+		"takePartialScreenshot": false
 	},
 	"outputDescription": {
 		"linkedinProfile": "LinkedIn profile URL",
@@ -80,7 +81,10 @@
 						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
 					},
 					"takeScreenshot": {
-						"rightLabel": "<b>Take a screenshot of the profile</b>"
+						"rightLabel": "<b>Take a full size screenshot of the profile</b>"
+					},
+					"takePartialScreenshot": {
+						"rightLabel": "<b>Take a partial size screenshot of the profile</b>"
 					}
 				}
 			}
@@ -117,6 +121,9 @@
 				"type": "boolean"
 			},
 			"takeScreenshot": {
+				"type": "boolean"
+			},
+			"takePartialScreenshot": {
 				"type": "boolean"
 			}
 		},

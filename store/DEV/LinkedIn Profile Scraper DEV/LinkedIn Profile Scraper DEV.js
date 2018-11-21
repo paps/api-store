@@ -14,7 +14,8 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 30000
+	timeout: 30000,
+	heigth: 800
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -107,7 +108,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot, takePartialScreenshot } = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -148,7 +149,7 @@ const removeLinkedinSubdomains = url => {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(url)
 			if (linkedIn.isLinkedInProfile(scrapingUrl)) {
 				utils.log(`Opening page ${scrapingUrl}`, "loading")
-				const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot)
+				const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot, takePartialScreenshot)
 				/**
 				 * the csv output from the lib is no more used in this API,
 				 * since the issue #40 require to give more than 3 skills & their endorsements count

@@ -86,11 +86,11 @@ const getDetails = (arg, callback) => {
 				 * we remove those parts of the result string: url(" & ")
 				 */
 				result[info.key] =
-				                   selector.querySelector(info.selector)
-				                           .style[info.style]
-				                           .trim()
-				                           .replace("url(\"", "")
-				                           .replace("\")", "")
+									selector.querySelector(info.selector)
+											.style[info.style]
+											.trim()
+											.replace("url(\"", "")
+											.replace("\")", "")
 			}
 		}
 		return result
@@ -207,7 +207,7 @@ const scrapeInfos = (arg, callback) => {
 		if (document.querySelector(".dist-value")) {
 			infos.general.connectionDegree = document.querySelector(".dist-value").textContent
 		}
-
+		
 		// extract the vmid from the page code
 		try {
 			const entityUrn = JSON.parse(Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("urn:li:fs_memberBadges"))[0].textContent).data.entityUrn
@@ -405,10 +405,9 @@ const scrapeInfos = (arg, callback) => {
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, fullLoad) => {
+const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad) => {
 	const [httpCode] = await tab.open(url)
-	console.log("opening ", url)
-	if (httpCode !== 200 && httpCode !== 999 && httpCode !== null) {
+	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {
@@ -436,25 +435,37 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		}
 		utils.log("Scraping page...", "loading")
 	}
-	const actUrl = await tab.getUrl()
-	console.log("actUrl", actUrl)
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
-	console.log("infos", infos)
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = infos.general.profileUrl.slice(28)
 			slug = slug.slice(0, slug.indexOf("/"))
-			if (saveImg) {
-				infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+			try {
+				if (saveImg) {
+					infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+				}
+			} catch (err) {
+				//
 			}
-			if (takeScreenshot) {
-				infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+			try {
+				if (takeScreenshot) {
+					infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+				}
+			} catch (err) {
+				//
+			}
+			try {
+				if (takePartialScreenshot) {
+					infos.general.partialScreenshot = await buster.save((await tab.screenshot(`partial_screenshot_${slug}.jpeg`, { fullPage: false })))
+				}
+			} catch (err) {
+				//
 			}
 		}
 	} catch (err) {
 		utils.log(`Couldn't save picture :${err}`, "warning")
 	}
-	
+
 	const UI_SELECTORS = {
 		trigger: "a[data-control-name=\"contact_see_more\"]",
 		overlay: "artdeco-modal-overlay",
@@ -508,7 +519,7 @@ const craftCsvObject = infos => {
 	const hasDropcontact = infos.hasOwnProperty("dropcontact")
 
 	return {
-		linkedinProfile: (hasGeneral) ? (infos.general.profileUrl || null) : null,
+		linkedinProfile: (hasDetails) ? (infos.details.profileUrl || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
@@ -519,6 +530,7 @@ const craftCsvObject = infos => {
 		vmid: (hasGeneral) ? (infos.general.vmid || null) : null,
 		savedImg: (hasGeneral) ? (infos.general.savedImg || null) : null,
 		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
+		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
@@ -583,6 +595,7 @@ const defaultCsvResult = {
 	vmid: null,
 	savedImg: null,
 	screenshot: null,
+	partialScreenshot: null,
 	company: null,
 	companyUrl: null,
 	jobTitle:  null,
@@ -666,7 +679,7 @@ class LinkedInScraper {
 	 * @param {String} [hunterApiKey] -- Hunter API key}
 	 * @param {Object} [nick] -- Nickjs instance}
 	 * @param {Object} [buster] -- buster instance}
- 	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
+		 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
 	 */
 	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null) {
 		this.utils = utils
@@ -699,22 +712,24 @@ class LinkedInScraper {
 	 * @param {Tab} tab -- Nick tab logged as a LinkedIn user}
 	 * @param {String} url -- LinkedIn Profile URL}
 	 * @param {Boolean} saveImg -- if true, save the profile picture as a jpeg}
-	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
+	 * @param {Boolean} takeScreenshot -- if true, take a full size screenshot of the profile}
+	 * @param {Boolean} takePartialScreenshot -- if true, take a partial screenshot of the profile}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, fullLoad = true) {
+	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, takePartialScreenshot, fullLoad = true) {
 		let result = {}
 		let csvResult = {}
 		try {
-			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, fullLoad)
+			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad)
 			/**
 			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser
 			 */
+			const currentUrl = await tab.getUrl()
 			if (!result.details.linkedinProfile) {
-				result.details.linkedinProfile = await tab.getUrl()
+				result.details.linkedinProfile = currentUrl
 			}
-			this.utils.log(`${url} successfully scraped.`, "done")
+			this.utils.log(`${currentUrl} successfully scraped.`, "done")
 		} catch (err) {
 			result.details = {}
 			result.jobs = []
@@ -779,7 +794,7 @@ class LinkedInScraper {
 	 */
 	async visitProfile(tab, url, verbose = false) {
 		const [httpCode] = await tab.open(url)
-		if (httpCode !== 200) {
+		if (httpCode !== 200 && httpCode !== null) {
 			throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 		}
 		try {

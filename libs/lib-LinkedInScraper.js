@@ -405,7 +405,7 @@ const scrapeInfos = (arg, callback) => {
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, fullLoad) => {
+const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad) => {
 	const [httpCode] = await tab.open(url)
 	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
@@ -440,11 +440,26 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = infos.general.profileUrl.slice(28)
 			slug = slug.slice(0, slug.indexOf("/"))
-			if (saveImg) {
-				infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+			try {
+				if (saveImg) {
+					infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+				}
+			} catch (err) {
+				//
 			}
-			if (takeScreenshot) {
-				infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+			try {
+				if (takeScreenshot) {
+					infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+				}
+			} catch (err) {
+				//
+			}
+			try {
+				if (takePartialScreenshot) {
+					infos.general.partialScreenshot = await buster.save((await tab.screenshot(`partial_screenshot_${slug}.jpeg`, { fullPage: false })))
+				}
+			} catch (err) {
+				//
 			}
 		}
 	} catch (err) {
@@ -515,6 +530,7 @@ const craftCsvObject = infos => {
 		vmid: (hasGeneral) ? (infos.general.vmid || null) : null,
 		savedImg: (hasGeneral) ? (infos.general.savedImg || null) : null,
 		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
+		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
@@ -579,6 +595,7 @@ const defaultCsvResult = {
 	vmid: null,
 	savedImg: null,
 	screenshot: null,
+	partialScreenshot: null,
 	company: null,
 	companyUrl: null,
 	jobTitle:  null,
@@ -696,21 +713,23 @@ class LinkedInScraper {
 	 * @param {String} url -- LinkedIn Profile URL}
 	 * @param {Boolean} saveImg -- if true, save the profile picture as a jpeg}
 	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
+	 * @param {Boolean} takePartialScreenshot -- if true, take a partial screenshot of the profile}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, fullLoad = true) {
+	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, takePartialScreenshot, fullLoad = true) {
 		let result = {}
 		let csvResult = {}
 		try {
-			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, fullLoad)
+			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad)
 			/**
 			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser
 			 */
+			const currentUrl = await tab.getUrl()
 			if (!result.details.linkedinProfile) {
-				result.details.linkedinProfile = await tab.getUrl()
+				result.details.linkedinProfile = currentUrl
 			}
-			this.utils.log(`${url} successfully scraped.`, "done")
+			this.utils.log(`${currentUrl} successfully scraped.`, "done")
 		} catch (err) {
 			result.details = {}
 			result.jobs = []
