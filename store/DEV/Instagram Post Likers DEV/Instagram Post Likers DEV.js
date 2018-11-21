@@ -28,6 +28,7 @@ const { URL } = require("url")
 let headers
 let graphqlUrl
 let agentObject
+let alreadyScraped = 0
 let interrupted
 let lastQuery
 let nextUrl
@@ -53,12 +54,29 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.postUrl && (line.postUrl !== agentObject.lastQuery)) {
+			return false
+		}
+	}
+	return true
+}
+
+
 const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.status === 200 && e.response.url.includes("include_reel") && !e.response.url.includes("logged_out")) {
-		graphqlUrl = e.response.url
-		console.log("graphUrl", graphqlUrl)
+	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.url.includes("include_reel") && !e.response.url.includes("logged_out")) {
+		if (e.response.status === 200) {
+			graphqlUrl = e.response.url
+			console.log("graphUrl", graphqlUrl)
+		} else if (e.response.status === 429) {
+			rateLimited = true
+			utils.log("Still rate limited by Instagram.", "warning")
+		}
 	}
 }
+
 
 const onHttpRequest = (e) => {
 	if (e.request.url.indexOf("graphql/query/?query_hash") > -1) {
@@ -67,7 +85,12 @@ const onHttpRequest = (e) => {
 }
 
 const forgeNewUrl = (url, endCursor) => {
-	const newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+	let newUrl
+	if (endCursor) {
+		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+	} else {
+		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50") + encodeURIComponent("}")
+	}
 	return newUrl
 }
 
@@ -76,7 +99,7 @@ const getpostUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
-		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		utils.log("Input spreadsheet is empty OR we already scraped from all the posts of this spreadsheet.", "warning")
 		nick.exit()
 	}
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
@@ -94,7 +117,7 @@ const extractDataFromJson = (json) => {
 	// console.log("likers: ", likers)
 	const results = []
 	for (const liker of likers) {
-		const scrapedData = {}
+		const scrapedData = { postUrl: lastQuery }
 		const data = liker.node
 		scrapedData.instagramID = data.id
 		scrapedData.username = data.username
@@ -120,46 +143,115 @@ const extractDataFromJson = (json) => {
 	return [results, endCursor]
 }
 
-const getLikeCount = (arg, cb) => {
-	cb(null, parseInt(document.querySelector("article header ~ div section > div span").textContent.replace(/\D+/g, ""), 10))
+// get the like count and username of poster
+const getLikeCountAndUsername = (arg, cb) => {
+	let likeCount = 0
+	let username
+	if (document.querySelector("header h2 a")) {
+		username = document.querySelector("header h2 a").textContent
+	}
+	try {
+		likeCount = parseInt(document.querySelector("article header ~ div section > div span").textContent.replace(/\D+/g, ""), 10)
+	} catch (err) {
+		//
+	}
+	cb(null, { likeCount, username }) 
 }
 
-const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
-	utils.log(`Scraping post ${postUrl}`, "loading")
-	await tab.open(postUrl)
-	await tab.waitUntilVisible("article section")
-	let likeCount
-	try {
-		likeCount = await tab.evaluate(getLikeCount)
-		utils.log(`${likeCount} likers found for this post.`, "info")
-	} catch (err) {
-		console.log("err", err)
+// check if we're scraping a video (non-clickable Like Count)
+const checkIfVideo = (arg, cb) => {
+	if (document.querySelector("a[href=\"javascript:;\"]")) {
+		cb(null, true)
+	} else {
+		cb(null, false)
 	}
-	await tab.screenshot(`${Date.now()}sU1.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
-	graphqlUrl = null
+}
+
+// trying to click manually on a video to access likers
+const tryOpeningVideo = async (tab, postUrl, username) => {
+	const pageUrl = `https://www.instagram.com/${username}`
+	const postPath = new URL(postUrl).pathname
+	await tab.open(pageUrl)
+	await tab.waitUntilVisible("section article")
+	const postSelector = `a[href="${postPath}"`
+	if (await tab.isVisible(postSelector)) {
+		console.log("clicking on post")
+		await tab.click(postSelector)
+		await tab.waitUntilVisible("a[href=\"javascript:;\"]")
+		await clickLikeButton(tab)
+	}
+}
+
+const clickLikeButton = async (tab) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	await tab.click("article header ~ div section > div span")
 	const initDate = new Date()
 	do {
-		if (graphqlUrl) {
+		if (graphqlUrl || rateLimited) {
 			break
 		}
 		await tab.wait(100)
 	} while (new Date() - initDate < 10000)
 	await tab.screenshot(`${Date.now()}sU2.png`)
 	await buster.saveText(await tab.getContent(), `${Date.now()}sU2s.html`)
+	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
+	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+}
+
+const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
+	try {
+		await tab.open(postUrl)
+		await tab.waitUntilVisible("article section")
+	} catch (err) {
+		utils.log("Couldn't access post, profile may be private.", "warning")
+		return ({ postUrl, error: "Couldn't access post"})
+	}
+	let likeCountAndUsername
+	let username
+	let likeCount
+	try {
+		likeCountAndUsername = await tab.evaluate(getLikeCountAndUsername)
+		likeCount = likeCountAndUsername.likeCount
+		username = likeCountAndUsername.username
+		if (likeCount === 0) {
+			utils.log("No likers found for this post.", "warning")
+			return ({ postUrl, error: "No likers found"})
+		}
+		utils.log(`${likeCount} likers found for this post ${username ? "by " + username : ""}.`, "info")
+	} catch (err) {
+		console.log("err", err)
+	}
+	await tab.screenshot(`${Date.now()}sU1.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
+	let likerCount = 0
+	if (!resuming) {
+		graphqlUrl = null
+		await clickLikeButton(tab)
+	} else {
+		graphqlUrl = agentObject.nextUrl
+		likerCount = alreadyScraped
+	}
+	if (rateLimited) {
+		return []
+	}
 	// const scrapedData = await instagram.scrapePost(tab)
 	// if (!hasCookie) {
 	// 	delete scrapedData.likes
 	// }
 
-	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
-	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+
+	if (!graphqlUrl) {
+		if (await tab.evaluate(checkIfVideo)) {
+			await tryOpeningVideo(tab, postUrl, username)
+		}
+		if (!graphqlUrl) {
+			utils.log("Can't access likers list.", "warning")
+			return ({ postUrl, error: "Can't access likers list"})
+		}
+	}
 	let results = []
-	let likerCount = 0
-	let url = graphqlUrl
+	let url = forgeNewUrl(graphqlUrl)
 	lastQuery = postUrl
 	do {
 		nextUrl = url
@@ -167,15 +259,16 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
 			// console.log("interceptedData", interceptedData)
-
+			console.log("extracting with url", url)
 			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData)
 			results = results.concat(tempResult)
 			likerCount = results.length
 			if (!endCursor) {
-				console.log("plus de endcursor")
+				utils.log(`All likers of ${postUrl} have been scraped.`, "done")
 				break
 			}
-			console.log("results.length", results.length)
+			utils.log(`Got ${likerCount + alreadyScraped} profiles.`, "done")
+			buster.progressHint((likerCount + alreadyScraped) / likeCount, `${likerCount + alreadyScraped} likers scraped`)
 			url = forgeNewUrl(url, endCursor)
 		} catch (err) {
 			console.log("errr", err)
@@ -186,6 +279,13 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 			console.log("instagramJsonCode", instagramJsonCode)
 			if (instagramJsonCode.message === "execution failure") {
 				console.log("execution failure")
+				console.log("date: ", (new Date()).toISOString())
+				rateLimited = true
+				break
+			}
+			if (instagramJsonCode.message === "rate limited") {
+				console.log("rate limited")
+				console.log("date: ", (new Date()).toISOString())
 				rateLimited = true
 				break
 			}
@@ -224,10 +324,12 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 
 	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
+	console.log("initialResultLength", initialResultLength)
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
-			alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
+			alreadyScraped = result.filter(el => el.postUrl === agentObject.lastQuery).length
+			console.log("alreadyScraped", alreadyScraped)
 		} catch (err) {
 			utils.log("Could not access agent Object.", "warning")
 		}
@@ -240,7 +342,8 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 		if (!numberOfProfilesPerLaunch) {
 			numberOfProfilesPerLaunch = postUrls.length
 		}
-		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "postUrl")), numberOfProfilesPerLaunch)
+		console.log("postUrls:", postUrls)
+		postUrls = getpostUrlsToScrape(postUrls.filter(el => checkDb(el, result)), numberOfProfilesPerLaunch)
 	}
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
@@ -248,6 +351,13 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 
 	let postCount = 0
 	for (let postUrl of postUrls) {
+		let resuming = false
+		if (agentObject && postUrl === agentObject.lastQuery) {
+			utils.log(`Resuming likers of ${postUrl}...`, "info")
+			resuming = true
+		} else {
+			utils.log(`Scraping likers of ${postUrl}`, "loading")
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -261,19 +371,21 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 				continue
 			}
 			postCount++
-			buster.progressHint(postCount / postUrls.length, `${postCount} post${postCount > 1 ? "s" : ""} scraped`)
-			result = result.concat(await loadAndScrapeLikers(tab, postUrl, numberOfLikers))
+			result = result.concat(await loadAndScrapeLikers(tab, postUrl, numberOfLikers, resuming))
+			if (rateLimited) {
+				break
+			}
 		} catch (err) {
 			utils.log(`Can't scrape post at ${postUrl} due to: ${err.message || err}`, "warning")
 			await tab.screenshot(`${Date.now()}Can't scrape post.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}Can't scrape post.html`)
 		}
+		alreadyScraped = 0
 	}
 	if (rateLimited) {
 		interrupted = true
-		
 	}
-
+	console.log("resultLF:", result.length)
 	if (result.length !== initialResultLength) {
 		if (interrupted) { 
 			await buster.setAgentObject({ nextUrl, lastQuery })
@@ -288,3 +400,4 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers) => {
 	utils.log(err, "error")
 	nick.exit(1)
 })
+ 

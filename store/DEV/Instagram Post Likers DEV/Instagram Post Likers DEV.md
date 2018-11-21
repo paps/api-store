@@ -1,6 +1,6 @@
-# Extract info from Instagram posts
+# Extract likers from Instagram posts
 
-You have a list of Instagram posts and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Instagram posts you're targeting in a CSV file.
+You have a list of Instagram posts and need to extract the list of who liked them? We have the tools for it!
 
 # Our Solution
 
@@ -10,7 +10,9 @@ Launch an automated agent that will connect as yourself on Instagram. It will th
 # What will you need? ⚙️ 
 
 - **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram post URLs in it.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in it.
+- **Number of likers per post**: The number of likers you want to collect per post. If left empty, the API will scrape all likiers.
+- **Number of posts per launch**: The number of posts to process per API launch. 
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 

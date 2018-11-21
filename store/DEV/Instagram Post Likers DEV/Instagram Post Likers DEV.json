@@ -11,13 +11,15 @@
 	},
 	"outputDescription": {
 		"postUrl": "Instagram post URL",
+		"instagramID": "Instagram unique ID",
 		"profileUrl": "Instagram profile URL",
-		"profileName": "Instagram username",
-		"likes": "Post like count",
-		"description": "",
-		"postImage": "Post image URL",
-		"pubDate": "Publication date",
-		"location": "Post location"
+		"profilePictureUrl": "",
+		"username": "Instagram username",
+		"fullName": "",
+		"isPrivate": "If the profile is private",
+		"isVerified": "If the profile is verified",
+		"followedByViewer": "If you follow this profile",
+		"requestedByViewer": "If you sent a follow request to this viewer"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -42,8 +44,9 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberOfLikers": {
-						"label": "Number of likers to collect per post - if none will try to scrape all of them",
-						"inputType": "number"
+						"label": "Number of likers to collect per post",
+						"inputType": "number",
+						"helper": "If empty, the API will try to scrape all of them"
 					},
 					"numberOfProfilesPerLaunch": {
 						"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
