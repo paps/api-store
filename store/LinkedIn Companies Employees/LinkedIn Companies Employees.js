@@ -38,6 +38,19 @@ const jsonToCsv = json => {
 	return csv
 }
 
+const isLinkedUrl = target => {
+	try {
+		let urlObject = new URL(target)
+		return urlObject.hostname.indexOf("linkedin.com") > -1
+	} catch (err) {
+		return false
+	}
+}
+
+const scrapeCompanyLink = (arg, callback) => {
+	callback(null, document.querySelector("li.search-result a.search-result__result-link") ? document.querySelector("li.search-result a.search-result__result-link").href : null)
+}
+
 const scrapeResults = (args, callback) => {
 	const results = document.querySelectorAll("ul.results-list > li, ul.search-results__list > li")
 	const linkedInUrls = []
@@ -144,6 +157,20 @@ const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url, 10))) {
 		return parseInt(url, 10)
 	} else {
+		utils.log(`Searching ID of company: ${url}`, "loading")
+		if (!isLinkedUrl(url)) {
+			await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${url}`)
+			await tab.waitUntilVisible("div.search-results-container")
+			await tab.screenshot(`${Date.now()}cdiv.search-results-container ${url}.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}cdiv.search-results-container ${url}.html`)
+			url = await tab.evaluate(scrapeCompanyLink)
+			if (!url) {
+				throw "No company found."
+			} else {
+				const id = new URL(url).pathname.slice(9).replace(/\D+/g, "")
+				return id
+			}
+		}
 		/**
 		 * Redirecting /sales/company/xxx URLs to /company/xxx URLs
 		 */

@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
 
@@ -36,6 +37,19 @@ const jsonToCsv = json => {
 		}
 	}
 	return csv
+}
+
+const isLinkedUrl = target => {
+	try {
+		let urlObject = new URL(target)
+		return urlObject.hostname.indexOf("linkedin.com") > -1
+	} catch (err) {
+		return false
+	}
+}
+
+const scrapeCompanyLink = (arg, callback) => {
+	callback(null, document.querySelector("li.search-result a.search-result__result-link") ? document.querySelector("li.search-result a.search-result__result-link").href : null)
 }
 
 const scrapeResults = (args, callback) => {
@@ -144,6 +158,20 @@ const getIdFromUrl = async (url, tab) => {
 	if (!isNaN(parseInt(url, 10))) {
 		return parseInt(url, 10)
 	} else {
+		utils.log(`Searching ID of company: ${url}`, "loading")
+		if (!isLinkedUrl(url)) {
+			await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${url}`)
+			await tab.waitUntilVisible("div.search-results-container")
+			await tab.screenshot(`${Date.now()}cdiv.search-results-container ${url}.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}cdiv.search-results-container ${url}.html`)
+			url = await tab.evaluate(scrapeCompanyLink)
+			if (!url) {
+				throw "No company found."
+			} else {
+				const id = new URL(url).pathname.slice(9).replace(/\D+/g, "")
+				return id
+			}
+		}
 		/**
 		 * Redirecting /sales/company/xxx URLs to /company/xxx URLs
 		 */
@@ -176,6 +204,8 @@ const getIdFromUrl = async (url, tab) => {
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
 		} else {
+			await tab.screenshot(`${Date.now()}could not get id ${url}.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}could not get id ${url}.html`)
 			throw "could not get id from " + url
 		}
 	}
@@ -224,7 +254,7 @@ const getIdFromUrl = async (url, tab) => {
 			res.url = companyUrl
 			result.push(res)
 		} catch (error) {
-			utils.log(`Could not scrape company ${companyUrl} because ${error}`, "error")
+			utils.log(`Could not scrape company ${companyUrl}: ${error}`, "error")
 			// Saving bad entries in order to not retry on next launch
 			result.push({ url: companyUrl, employees: [{ url: "none", name: "none", job: "none", location: "none", currentJob: "none", companyUrl: "none" }] })
 		}
