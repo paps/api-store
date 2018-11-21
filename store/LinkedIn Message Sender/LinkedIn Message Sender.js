@@ -217,7 +217,7 @@ const sendMessage = async (tab, message, tags) => {
 	if (!profilesPerLaunch) {
 		profilesPerLaunch = PROFILES_PER_LAUNCH
 	}
-	rows.slice(0, profilesPerLaunch)
+	rows = rows.slice(0, profilesPerLaunch)
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
 	for (let row of rows) {
