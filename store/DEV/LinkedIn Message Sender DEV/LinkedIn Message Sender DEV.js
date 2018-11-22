@@ -209,7 +209,7 @@ const sendMessage = async (tab, message, tags) => {
 	let step = 0
 	const result = []
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl && !line.error) < 0)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
