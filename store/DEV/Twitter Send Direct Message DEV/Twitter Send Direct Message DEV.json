@@ -68,7 +68,7 @@
 			"columnName": {
 				"type": "string"
 			},
-			"numberOfProfilesPerLaunch": {
+			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
 				"maximum": 10,

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4" // TODO: upgrade to package 5 for production (package 4 is better when debugging)
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster package: 4" // BUG: package 5 doesn't handle properly emojis
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js, lib-Messaging.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -23,10 +23,12 @@ const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 
+const Messaging = require("./lib-Messaging")
+const inflater = new Messaging(utils)
+
 const { URL } = require("url")
 
 const DEFAULT_DB = "result"
-
 const MESSAGE_URL = "https://www.twitter.com/messages"
 
 const SELECTORS = {
@@ -121,7 +123,9 @@ const openMessagesPage = async (tab, loadMsgComposer = false) => {
 	const [ httpCode ] = await tab.open(MESSAGE_URL)
 
 	if (httpCode === 404) {
-		throw "Can't open the messages URL"
+		utils.log("Can't open the messages URL", "error")
+		//throw "Can't open the messages URL"
+		return false
 	}
 	await tab.waitUntilVisible([ SELECTORS.inboxSelector, SELECTORS.composeMessageSelector ], 15000, "and")
 	if (loadMsgComposer) {
@@ -135,6 +139,7 @@ const openMessagesPage = async (tab, loadMsgComposer = false) => {
  * TODO: check if the handle is correctly written
  */
 const startConversation = async (tab, handle) => {
+	//await tab.sendKeys(SELECTORS.msgDestinationSelector, handle, { reset: true, keepFocus: true })
 	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.sel).value = arg.handle), {sel: SELECTORS.msgDestinationSelector, handle })
 	await tab.screenshot(`composer-${Date.now()}.jpg`)
 	await tab.click(SELECTORS.initConvSelector)
@@ -146,8 +151,9 @@ const startConversation = async (tab, handle) => {
 	await tab.waitUntilVisible([ SELECTORS.textEditSelector, SELECTORS.sendSelector ], 15000, "and")
 }
 
-const sendMessage = async (tab, message) => {
-	//let chuncks = message.split("\n").filter(el => el)
+const sendMessage = async (tab, message, tags) => {
+	message = inflater.forgeMessage(message, tags)
+	utils.log(`Sending message: ${message}`, "info")
 	try {
 		await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.sendSelector })
 		await tab.sendKeys(SELECTORS.textEditSelector, message, { reset: true, keepFocus: true })
@@ -165,7 +171,7 @@ const sendMessage = async (tab, message) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let db
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch, csvName, message, queries } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
@@ -187,8 +193,10 @@ const sendMessage = async (tab, message) => {
 		queries = [ queries ]
 	}
 
-	if (typeof numberOfProfilesPerLaunch === "number") {
-		queries = queries.slice(0, numberOfProfilesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line[columnName] === el) < 0)
+
+	if (typeof numberOfLinesPerLaunch === "number") {
+		queries = queries.slice(0, numberOfLinesPerLaunch)
 	}
 
 	if (queries.length < 1) {
@@ -196,17 +204,22 @@ const sendMessage = async (tab, message) => {
 		nick.exit()
 	}
 
+	utils.log(`Sending messages to: ${JSON.stringify(queries, null, 2)}`, "done")
+
 	await twitter.login(tab, sessionCookie)
 	for (const one of queries) {
-		const profile = await twitter.scrapeProfile(tab, isUrl(one) ? one : `https://www.twitter.com/${one}` , true)
-		console.log("Sending message to:", profile.handle)
+		const profile = await twitter.scrapeProfile(tab, isUrl(one) && isTwitterUrl(one) ? one : `https://www.twitter.com/${one}`, true)
 		try {
-			await openMessagesPage(tab, true)
+			const isOpen = await openMessagesPage(tab, true)
+			if (!isOpen) {
+				continue
+			}
+			utils.log(`Opening a conversation for ${profile.handle}`, "loading")
 			await startConversation(tab, profile.handle)
-			await sendMessage(tab, message)
+			await sendMessage(tab, message, profile)
+			utils.log(`Message successfully sent to ${profile.handle}`, "done")
 			// TODO: wait until a new message appears in the thread
 			await tab.wait(15000)
-			console.log(JSON.stringify(profile, null, 4))
 		} catch (err) {
 			console.log(err.message || err)
 			console.log(err.stack || "no stack")
