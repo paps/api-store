@@ -14,68 +14,8 @@ const { URL } = require("url")
 const _defaultEngines = [
 	{
 		"name": "google.com",
-		"codename": "G(com)",
+		"codename": "G",
 		"baseUrl": "https://www.google.com/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.ca",
-		"codename": "G(ca)",
-		"baseUrl": "https://www.google.ca/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.au",
-		"codename": "G(com.au)",
-		"baseUrl": "https://www.google.com.au/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.ie",
-		"codename": "G(ie)",
-		"baseUrl": "https://www.google.ie/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.jm",
-		"codename": "G(com.jm)",
-		"baseUrl": "https://www.google.com.jm/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.com.jm",
-		"codename": "G(com.jm)",
-		"baseUrl": "https://www.google.com.jm/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "google.co.nz",
-		"codename": "G(co.nz)",
-		"baseUrl": "https://www.google.co.nz/search?q=",
 		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
 		"titleSelector": "a > h3",
 		"linkSelector": "a",
@@ -142,14 +82,15 @@ const _defaultEngines = [
 		}
 	},
 	{
-		"name": "yandex",
-		"codename": "Я",
-		"baseUrl": "https://www.yandex.com/search/?lang=en&text=",
-		"baseSelector": "ul.serp-list > li.serp-item",
-		"titleSelector" : "a.link",
-		"linkSelector": "a.link",
-		"descriptionSelector": "div.text-container",
-		"noResultsSelector": "div.misspell"
+		"name": "qwant",
+		"codename": "Q",
+		"baseUrl": "https://www.qwant.com/?q=",
+		"baseSelector": "div.result_fragment > div.result",
+		"titleSelector" : "span.result--web--title",
+		"linkSelector": "a.result--web--link",
+		"descriptionSelector": "p",
+		"noResultsSelector": "div.no_result",
+		"recaptcha": "div.anti_robot"
 	}
 ]
 
@@ -201,7 +142,7 @@ const _scrapeResults = (argv, cb) => {
  * @param {String} search - The query to use the web engine
  * @return {Promise<Array>}
  */
-const _doSearch = async function (query) {
+const _doSearch = async function(query) {
 	let result = Object.assign({}, emptyResult)
 	const engine = this.engines[this.engineUsed]
 	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
@@ -217,10 +158,17 @@ const _doSearch = async function (query) {
 		throw `Cannot open the page ${engine.baseUrl}${query}`
 	}
 
-	// TODO have a selector for blocked search to match quicker
-	await this.tab.untilVisible([engine.baseSelector, engine.noResultsSelector], 10000, "or")
+	const selectors = [engine.baseSelector, engine.noResultsSelector]
+	if (engine.recaptcha) {
+		selectors.push(engine.recaptcha)
+	}
+	const selector = await this.tab.untilVisible(selectors, 7000, "or")
 
-	if (await this.tab.isPresent(engine.noResultsSelector)) {
+	if (selector === engine.recaptcha) {
+		throw "Anti-robot filter"
+	}
+
+	if (selector === engine.noResultsSelector) {
 		return result
 	}
 
@@ -238,7 +186,7 @@ const _doSearch = async function (query) {
  * @description Function used to choose which engine will be used for a next research
  * @return {Number}
  */
-const _switchEngine = function () {
+const _switchEngine = function() {
 	if (typeof this.lockEngine === "string") {
 		this.verbose && console.log("-- _switchEngine(): using test parameter")
 		const engine = this.engines.findIndex(el => el.name === this.lockEngine)
