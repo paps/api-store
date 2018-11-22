@@ -27,10 +27,10 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie"
+						"label": "Session cookie <a target=\"_blank\" href=\"/api-store/9227/linkedin-message-sender#section_argument\">(?)</a>"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL of profiles",
+						"label": "Spreadsheet URL of profiles <a target=\"_blank\" href=\"/api-store/9227/linkedin-message-sender#section_5addagooglespreadsheet\">(?)</a>",
 						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
@@ -42,10 +42,10 @@
 					"profilesPerLaunch": {
 						"label": "Number of profiles to send messages per launch (max: 10)",
 						"inputType": "number",
-						"helper": "You can leave this field empty if you want to send a message to all profiles"
+						"helper": "Leaving this field empty will process 10 URLs"
 					},
 					"message": {
-						"label": "Message",
+						"label": "Message <a target=\"_blank\" href=\"/api-store/9227/linkedin-message-sender#section_6personalizeyourmessage\">(?)</a>",
 						"type": "textarea",
 						"helpers": [
 							"You are limited by LinkedIn to 7000 characters",
