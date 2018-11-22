@@ -40,7 +40,7 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
 					},
 					"columnName": {
-						"label": "Column name from which Twitter profile URLs",
+						"label": "Column name from to get Facebook profile URLs",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
 						"placeholder": "Facebook Profile"
 					},
