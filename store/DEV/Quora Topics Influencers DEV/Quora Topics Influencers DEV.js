@@ -1,7 +1,6 @@
 // Phantombuster configuration {
-
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
@@ -18,10 +17,11 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const argv = buster.argument
+
+const DEFAULT_DB = "Quora influencers"
+const { URL } = require("url")
 
 /* global $ */
-
 // }
 
 
@@ -154,44 +154,109 @@ const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 		utils.log("You're not connected in Quora, please check your session cookies", "warning")
 		return false
 	}
-	utils.log("Topic found", "info")
 	return true
+}
+
+const isUrl = url => {
+	try {
+		return (new URL(url)) !== null
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
+const isQuoraUrl = url => {
+	if (!url.startsWith("http")) {
+		url = "https://" + url
+	}
+	try {
+		return (new URL(url)).hostname.indexOf("quora.com") > -1
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * @description
+ * @param {String} url
+ * @return {String} - the topic name if found otherwise the url parameter
+ */
+const handleUrl = url => {
+	let isUrl = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)((\/\w+)*\/)([\w\-.]+[^#?\s]+)(.*)?(#[\w-]+)?$/g.test(url)
+	let res = null
+	if (isUrl) {
+		let tmp = url.split("/")
+		res = tmp.pop()
+		if (res.indexOf("writers") >= 0) {
+			res = tmp.pop()
+		}
+	} else {
+		res = url
+	}
+	return res
+}
+
+const createCsvOutput = json => {
+	let res = []
+	for (const el of json) {
+		if (Array.isArray(el.profiles)) {
+			const tmp = el.profiles.map(profile => {
+				profile.topic = el.topic
+				return profile
+			})
+			res.push(...tmp)
+		} else {
+			res.push(el)
+		}
+	}
+	return res
 }
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let isUrl = /^((http[s]?|ftp):\/)?\/?([^:/\s]+)((\/\w+)*\/)([\w\-.]+[^#?\s]+)(.*)?(#[\w-]+)?$/g.test(argv.topic)
-	let topic = ""
+	const res = []
+	let { ms, mb, topic, columnName, csvName } = utils.validateArguments()
 
-	if (isUrl) {
-		let tmp = argv.topic.split("/")
-		topic = tmp.pop()
-		if (topic.indexOf("writers") >= 0) {
-			topic = tmp.pop()
-		}
-	} else {
-		topic = argv.topic
-	}
-
-	await logToQuora(tab, `https://www.quora.com/topic/${topic}/writers`, argv.ms, argv.mb)
-	try {
-		await tab.untilVisible("div.LeaderboardMain")
-	} catch (e) {
-		if (tab.isPresent("div.ErrorMain")) {
-			utils.log("Topic cannot be loaded ! Please be carfull topics name are case sensitive", "error")
-			nick.exit(1)
+	if (typeof topic === "string") {
+		if (isUrl(topic)) {
+			topic = isQuoraUrl(topic) ? [ topic ] : await utils.getDataFromCsv(topic, columnName)
+		} else {
+			topic = [ topic ]
 		}
 	}
-	await tab.inject("http://code.jquery.com/jquery-3.2.1.min.js")
 
-	const urls = await tab.evaluate(getWritersOfTopics, null)
-	utils.log(`Scraping Top 10 ${topic} topic writers`, "loading")
-	const profiles = await loopThroughtProfiles(tab, urls)
-	await utils.saveResult(profiles, "Quora influencers")
-})()
-.then(() => {
+	if (!csvName) {
+		csvName = DEFAULT_DB
+	}
+
+	await logToQuora(tab, "https://www.quora.com/", ms, mb)
+	utils.log(`Topics to scrape: ${JSON.stringify(topic, null, 2)}`, "info")
+	for (const one of topic) {
+		await tab.open(`https://www.quora.com/topic/${handleUrl(one)}/writers`)
+		try {
+			await tab.untilVisible("div.LeaderboardMain")
+		} catch (e) {
+			if (tab.isPresent("div.ErrorMain")) {
+				let error = `Topic ${one} cannot be loaded ! Please be carfull topics name are case sensitive`
+				utils.log(error, "error")
+				res.push({ error })
+				continue
+			}
+		}
+		await tab.inject("http://code.jquery.com/jquery-3.2.1.min.js")
+		utils.log("Topic found", "info")
+		const urls = await tab.evaluate(getWritersOfTopics, null)
+		utils.log(`Scraping Top 10 ${one} topic writers`, "loading")
+		const profiles = await loopThroughtProfiles(tab, urls)
+		res.push({ topic: one, profiles })
+	}
+	await utils.saveResult(createCsvOutput(res), csvName)
 	nick.exit(0)
-})
+})()
 .catch((err) => {
 	utils.log(err, "error")
 	nick.exit(1)

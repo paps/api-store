@@ -19,17 +19,33 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-					"topic": {
-						"type": "text",
-						"placeholder": "Quora topic"
-					},
 					"ms": {
 						"type": "text",
-						"placeholder": "Cookie used by Quora website (name: m-s)"
+						"placeholder": "Cookie used by Quora website (name: m-s)",
+						"label": "<b>m-s</b> Quora cookie <a target=\"_blank\" href=\"api-store/4223/quora-topics-influencers#section_5quoraauthentication\">(?)</a>"
 					},
 					"mb": {
 						"type": "text",
-						"placeholder": "Cookie used by Quora website (name: m-b)"
+						"placeholder": "Cookie used by Quora website (name: m-b)",
+						"label": "<b>m-b</b> Quora cookie <a target=\"_blank\" href=\"api-store/4223/quora-topics-influencers#section_5quoraauthentication\">(?)</a>"
+
+					},
+					"topic": {
+						"type": "text",
+						"placeholder": "Quora topic / Spreadsheet URL",
+						"label": "Quora topic (be carefull, the topic is case sensitive) / Spreadsheet URL <a target=\"_blank\" href=\"/api-store/4223/quora-topics-influencers#section_argument\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL, CSV URL (make sure your file is publicly available) make sure your file is publicly available"
+					},
+					"columnName": {
+						"type": "text",
+						"placeholder": "Quora URLs",
+						"label": "Colum name where Quora topics URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used"
+					},
+					"csvName": {
+						"type": "text",
+						"placeholder": "Quora influencers",
+						"label": "Name of resulting CSV file"
 					}
 				}
 			}
@@ -62,20 +78,23 @@
 	"argumentSchemaTest": {
 		"type": "object",
 		"properties": {
-			"topic": {
-				"type": "string",
-				"title": "Topic name (be carefull, the topic is case sensitive)",
-				"required": true
-			},
 			"ms": {
 				"type": "string",
-				"title": "Session cookie ms (Quora cookie named m-s)",
 				"required": true
 			},
 			"mb": {
 				"type": "string",
-				"title": "Session cookie mb (Quora cookie named m-b)",
 				"required": true
+			},
+			"topic": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}
