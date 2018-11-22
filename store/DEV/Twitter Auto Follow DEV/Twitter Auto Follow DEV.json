@@ -4,7 +4,7 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/twitter_auto_follow.png",
 	"hidden": false,
 	"new": false,
-	"updated": true,
+	"updated": false,
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",

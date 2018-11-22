@@ -4,7 +4,7 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Profile+Scraper/Twitter+Profile+Scraper.png",
 	"hidden": false,
 	"updated": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentHelpAnchor": "#section_argument",
