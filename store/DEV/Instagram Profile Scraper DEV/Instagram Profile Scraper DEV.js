@@ -32,67 +32,7 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
-const scrapePage = (arg, callback) => {
-	const data = { query: arg.url, profileUrl: arg.profileUrl }
-	let postsCount = 0
-	let followersCount = 0
-	let followingCount = 0
-	data.profileName = document.querySelector("header > section > div > h1").textContent
-	data.imageUrl = document.querySelector("header > div img").src
-	if (document.querySelector("main header section div:nth-of-type(2) h1")) {
-		data.fullName = document.querySelector("main header section div:nth-of-type(2) h1").textContent
-	}
-	if (document.querySelector(".coreSpriteVerifiedBadge")) {
-		data.verified = "Verified"
-	}
-	if (document.querySelector("main header section div:nth-of-type(2) span")) {
-		data.bio = document.querySelector("main header section div:nth-of-type(2) span").textContent
-	}
-	if (document.querySelector("main header section div:nth-of-type(2) > a")) {
-		const url = document.querySelector("main header section div:nth-of-type(2) > a").href
-		let website = new URL(url)
-		website = website.searchParams.get("u")
-		data.website = website
-	}
-	if (document.querySelector("main ul li:nth-child(1) span > span")) {
-		postsCount = document.querySelector("main ul li:nth-child(1) span > span").textContent
-	}
-	if (document.querySelector("main ul li:nth-child(2) span").getAttribute("title")) { // lots of followers
-		followersCount = document.querySelector("main ul li:nth-child(2) span").getAttribute("title")
-	} else if (document.querySelector("main ul li:nth-child(2) span > span")) { // private account
-		followersCount = document.querySelector("main ul li:nth-child(2) span > span").textContent
-	} else if (document.querySelector("main ul li:nth-child(2) span")) { // default case
-		followersCount = document.querySelector("main ul li:nth-child(2) span").textContent
-	}
-	if (document.querySelector("main ul li:nth-child(3) span > span")) {
-		followingCount = document.querySelector("main ul li:nth-child(3) span > span").textContent
-	} else {
-		followingCount = document.querySelector("main ul li:nth-child(3) span").textContent
-	}
-	if (document.querySelector("main header section div:nth-of-type(2) span:nth-of-type(2)")) {
-		data.inCommon = document.querySelector("main header section div:nth-of-type(2) span:nth-of-type(2)").textContent
-	}
-	if (document.querySelector("article h2")) {
-		data.private = "Private"
-	}
-	if (document.querySelector("button")) {
-		if (document.querySelector("button").textContent.includes("Unblock")) {
-			data.status = "Blocked"
-		}
-		if (document.querySelector("button").textContent.includes("Following")) {
-			data.status = "Following"
-		}
-	}
-	postsCount = parseInt(postsCount.replace(/,/g, ""), 10)
-	followersCount = parseInt(followersCount.replace(/,/g, ""), 10)
-	followingCount = parseInt(followingCount.replace(/,/g, ""), 10)
-	data.postsCount = postsCount
-	data.followersCount = followersCount
-	data.followingCount = followingCount
-	data.timestamp = (new Date()).toISOString()
-	callback(null, data)
-}
-
+// main scraping function using the profile/?__a=1 trick
 const scrapeData = async (tab, query, profileUrl) => {
 	const jsonUrl = `${profileUrl}?__a=1`
 	await tab.open(jsonUrl)
@@ -125,10 +65,10 @@ const scrapeData = async (tab, query, profileUrl) => {
 		scrapedData.businessCategory = data.business_category_name
 	}
 	if (data.business_email) {
-		scrapedData.businessCategoryName = data.business_email
+		scrapedData.businessEmail = data.business_email
 	}
 	if (data.business_phone_number) {
-		scrapedData.Phone = data.phone_number
+		scrapedData.PhoneNumber = data.phone_number
 	}
 	if (data.business_address_json) {
 		const businessAddress = JSON.parse(data.business_address_json)
@@ -219,14 +159,12 @@ const scrapeData = async (tab, query, profileUrl) => {
 				continue
 			}
 			const profileUrl = await tab.getUrl()
-			result = result.concat(await tab.evaluate(scrapePage, { url, profileUrl }))
-			console.log("r1", result)
 			result = result.concat(await scrapeData(jsonTab, url, profileUrl))
-			console.log("r2", result)
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
+		await tab.wait(2500 + Math.random() * 2000)
 	}
 
 	await utils.saveResults(result, result, csvName)
