@@ -15,6 +15,7 @@
 		"profileUrl": "Instagram profile URL",
 		"imageUrl": "Profile picture URL",
 		"profileName ": "Instagram username",
+		"instagramID": "Instagram unique ID",
 		"fullName": "Full name of the person",
 		"postsCount": "How many publications they made",
 		"followersCount": "How many followers they have",

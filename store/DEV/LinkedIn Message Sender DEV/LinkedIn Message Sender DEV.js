@@ -205,7 +205,11 @@ const sendMessage = async (tab, message, tags) => {
 			columnName = "0"
 		}
 	}
-
+	rows.forEach(el => {
+		if (el[columnName] && !el[columnName].endsWith("/")) {
+			el[columnName] += "/"
+		}
+	})
 	let step = 0
 	const result = []
 	utils.log(`Got ${rows.length} lines from csv.`, "done")

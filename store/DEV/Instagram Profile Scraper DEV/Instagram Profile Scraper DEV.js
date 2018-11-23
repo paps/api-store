@@ -32,82 +32,6 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
-// main scraping function using the profile/?__a=1 trick
-const scrapeData = async (tab, query, profileUrl) => {
-	const jsonUrl = `${profileUrl}?__a=1`
-	await tab.open(jsonUrl)
-	let instagramJsonCode = await tab.getContent()
-	const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
-	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
-	const data = instagramJsonCode.graphql.user
-	const scrapedData = { query, profileUrl }
-	scrapedData.bio = data.biography
-	if (data.blocked_by_viewer) {
-		scrapedData.status = "Blocked"
-	}
-	scrapedData.followersCount = data.edge_followed_by.count
-	scrapedData.followingCount = data.edge_follow.count
-	if (data.followed_by_viewer) {
-		scrapedData.status = "Following"
-	}
-	if (data.follows_viewer) {
-		scrapedData.followsViewer = "Follows you"
-	}
-	scrapedData.fullName = data.full_name
-	scrapedData.instagramID = data.id
-	if (data.is_business_account) {
-		scrapedData.businessAccount = "Business Account"
-	}
-	if (data.is_joined_recently) {
-		scrapedData.joinedRecently = "Joined Recently"
-	}
-	if (data.business_category_name) {
-		scrapedData.businessCategory = data.business_category_name
-	}
-	if (data.business_email) {
-		scrapedData.businessEmail = data.business_email
-	}
-	if (data.business_phone_number) {
-		scrapedData.PhoneNumber = data.phone_number
-	}
-	if (data.business_address_json) {
-		const businessAddress = JSON.parse(data.business_address_json)
-		if (businessAddress.street_address) {
-			scrapedData.businessStreetAddress = businessAddress.street_address
-		}
-		if (businessAddress.zip_code) {
-			scrapedData.businessZipCode = businessAddress.zip_code
-		}
-		if (businessAddress.city_name) {
-			scrapedData.businessCity = businessAddress.city_name
-		}
-		if (businessAddress.region_name) {
-			scrapedData.businessRegion = businessAddress.region_name
-		}
-		if (businessAddress.country_code) {
-			scrapedData.businessCountryCode = businessAddress.country_code
-		}
-	}
-	if (data.is_private) {
-		scrapedData.private = "Private"
-	}
-	if (data.is_verified) {
-		scrapedData.verified = "Verified"
-	}
-	scrapedData.mutualFollowersCount = data.edge_mutual_followed_by.count
-	scrapedData.imageUrl = data.profile_pic_url_hd
-	if (data.requested_by_viewer) {
-		scrapedData.requestedByViewer = "Requested"
-	}
-	scrapedData.postsCount = data.edge_owner_to_timeline_media.count
-	scrapedData.profileName = data.username
-	if (data.external_url) {
-		scrapedData.website = data.external_url
-	}
-	scrapedData.timestamp = (new Date()).toISOString()
-	return scrapedData
-}
-
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
@@ -159,7 +83,7 @@ const scrapeData = async (tab, query, profileUrl) => {
 				continue
 			}
 			const profileUrl = await tab.getUrl()
-			result = result.concat(await scrapeData(jsonTab, url, profileUrl))
+			result = result.concat(await instagram.scrapeProfile(jsonTab, url, profileUrl))
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
