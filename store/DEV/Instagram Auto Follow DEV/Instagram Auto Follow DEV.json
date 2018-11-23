@@ -1,0 +1,86 @@
+{
+	"slug": "instagram-auto-follow",
+	"description": "Automatically follow a list of Instagram profiles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
+	"hidden": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "instagram_profile_urls"
+	},
+	"outputDescription": {
+		"profileUrl": "Instagram profile URL",
+		"imageUrl": "Profile picture URL",
+		"profileName ": "Instagram username",
+		"fullName": "Full name of the person",
+		"postsCount": "How many publications they made",
+		"followersCount": "How many followers they have",
+		"followingCount": "How many accounts they follow",
+		"bio": "",
+		"website": "",
+		"verified": "If Instagram has confirmed it's an authentic account",
+		"inCommon": "If some of your Instagram friends follow that account",
+		"private": "If the account is private",
+		"status": "If you follow or have blocked that account"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/10274/instagram-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here (sessionid)"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) OR a single Instagram profile URL",
+						"label": "Spreadsheet URL of profiles to follow <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "Instagram Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfProfilesPerLaunch": {
+						"label": "Number of profiles to follow per launch <a href=\"/api-store/10274/instagram-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfProfilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}

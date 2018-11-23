@@ -519,7 +519,7 @@ const craftCsvObject = infos => {
 	const hasDropcontact = infos.hasOwnProperty("dropcontact")
 
 	return {
-		linkedinProfile: (hasDetails) ? (infos.details.profileUrl || null) : null,
+		linkedinProfile: (hasGeneral) ? (infos.general.profileUrl || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
