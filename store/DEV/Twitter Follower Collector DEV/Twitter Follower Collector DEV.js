@@ -278,7 +278,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let {spreadsheetUrl, sessionCookie, followersPerAccount, numberofProfilesperLaunch} = utils.validateArguments()
+	let {sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch} = utils.validateArguments()
 	let result = await utils.getDb("result.csv")
 	const initialResultLength = result.length
 	if (result.length) {
@@ -314,7 +314,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	for (let i = 0; i < twitterUrls.length; i++) { // converting (@)username to https://twitter.com/username
 		if (!isUrl(twitterUrls[i])) {
-			if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = twitterUrls[i].substr(1)	}
+			if (twitterUrls[i].startsWith("@")) { 
+				console.log("twitterUrls[i]", twitterUrls[i])
+				twitterUrls[i] = twitterUrls[i].substr(1)	
+			}
 			twitterUrls[i] = `https://twitter.com/${twitterUrls[i]}`.trim()
 		}
 	}
@@ -331,10 +334,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (agentObject && url === lastSavedQuery) {
-			if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
-				utils.log("Still rate limited, try later.", "info")
-				nick.exit()
-			}
+			// if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
+			// 	utils.log("Still rate limited, try later.", "info")
+			// 	nick.exit()
+			// }
 			utils.log(`Resuming scraping for ${url}...`, "info")
 			resuming = true
 		} else {

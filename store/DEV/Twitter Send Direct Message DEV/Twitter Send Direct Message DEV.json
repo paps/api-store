@@ -9,7 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "session_cookie"
+		"sessionCookie": "your_session_cookie"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

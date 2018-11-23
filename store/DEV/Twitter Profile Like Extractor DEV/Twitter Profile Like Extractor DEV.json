@@ -9,7 +9,7 @@
 	"new": false,
 	"updated": false,
 	"defaultArgument": {
-		"sessionCookie": "session_cookie",
+		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "phbuster"
 	},
 	"defaultArgumentAllowed": false,
