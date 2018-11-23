@@ -22,7 +22,10 @@ class LinkedIn {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
 		}
-
+		if (cookie === "your_session_cookie") {
+			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
+			this.nick.exit(1)
+		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
 				const path = cookie.replace("from-global-object:", "")

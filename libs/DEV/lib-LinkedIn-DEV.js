@@ -22,7 +22,10 @@ class LinkedIn {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
 		}
-
+		if (cookie === "your_session_cookie") {
+			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
+			this.nick.exit(1)
+		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
 				const path = cookie.replace("from-global-object:", "")
@@ -106,10 +109,19 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
-			await this.buster.saveText(await tab.getContent(), "login-err.html")
-			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(1)
+			this.utils.log(`Can't connect to LinkedIn with this session cookieagain.${error}`, "error")
+			try {
+				const loginResult = await _login()
+				if (loginResult !== null) {
+					throw loginResult
+				}
+			} catch (err) {
+				this.utils.log(`Can't connect to LinkedIn with this session cookie.${err}`, "error")
+				await this.buster.saveText(await tab.getContent(), "login-err.html")
+				await this.buster.save(await tab.screenshot("login-err.jpg"))
+				this.nick.exit(1)
+			}
+			
 		}
 	}
 
@@ -163,7 +175,7 @@ class LinkedIn {
 			}
 			const { URL } = require("url")
 			let urlObject = new URL(url)
-			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && urlObject.pathname.startsWith("/in/"))
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/")))
 		} catch (err) {
 			return false
 		}

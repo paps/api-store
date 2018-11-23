@@ -284,7 +284,14 @@ class Facebook {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
 		}
-
+		if (cookieCUser === "your_c-user_session_cookie") {
+			this.utils.log("You didn't enter your Facebook c_user session cookie into the API Configuration.", "error")
+			this.nick.exit(1)
+		}
+		if (cookieXs === "your_xs_session_cookie") {
+			this.utils.log("You didn't enter your Facebook xs session cookie into the API Configuration.", "error")
+			this.nick.exit(1)
+		}
 		if (cookieCUser.indexOf("from-global-object:") === 0) {
 			try {
 				const path = cookieCUser.replace("from-global-object:", "")
