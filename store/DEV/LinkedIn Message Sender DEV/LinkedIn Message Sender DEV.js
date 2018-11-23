@@ -253,6 +253,7 @@ const sendMessage = async (tab, message, tags) => {
 			let payload = await sendMessage(tab, message, row)
 			if (profile !== null) {
 				payload = Object.assign({}, profile.csv, payload)
+				payload.profileUrl = row[columnName]
 			}
 			result.push(payload)
 		} catch (err) {
