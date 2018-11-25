@@ -50,6 +50,12 @@
 						"placeholder": 10,
 						"inputType": "number"
 					},
+					"action": {
+						"label": "Follow/Unfollow action",
+						"helper": "Choose between Follow / Unfollow / Unfollow only if they don't follow you",
+						"removeDefaultNone": true,
+						"sort": false
+					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
@@ -76,6 +82,10 @@
 			"numberOfProfilesPerLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"action": {
+				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you"],
+				"default": "Follow"
 			},
             "csvName": {
 				"type": "string",

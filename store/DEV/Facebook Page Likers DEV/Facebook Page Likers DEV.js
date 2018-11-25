@@ -1,14 +1,15 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: false,
+	loadImages: true,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
@@ -22,7 +23,7 @@ const _ = require("lodash")
 const cheerio = require("cheerio")
 const URL = require("url").URL
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
@@ -124,22 +125,42 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
 
-		await tab.scrollToBottom()
-
 		const initDate = new Date()
-		while (!firstRequestUrl) {
-			await new Promise((resolve) => {
-				setTimeout(() => {
-					resolve()
-				}, 50)
-			})
+		do {
+			await tab.scroll(0, - 1000)
+			await tab.scrollToBottom()
+			await tab.wait(500)
 			if ((new Date() - initDate) > 10000) {
 				break
 			}
+		} while (!firstRequestUrl)
+		console.log("elapsed:", new Date() - initDate)
+		await tab.screenshot(`${Date.now()}sU1.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
+		if (!firstRequestUrl) {
+			console.log("toujorus rien")
+			await tab.evaluate((arg, cb) => cb(null, document.location.reload))
+			await tab.wait(5000)
+			const initDate2 = new Date()
+			do {
+				await tab.scroll(0, - 1000)
+				await tab.scrollToBottom()
+				await tab.wait(500)
+				if ((new Date() - initDate2) > 10000) {
+					break
+				}
+			} while (!firstRequestUrl)
+			console.log("elapsed:", new Date() - initDate2)
+			await tab.screenshot(`${Date.now()}sU2.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}sU2.html`)
+
 		}
-
+		
+		
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
-
+		await tab.wait(10000)
+		await tab.screenshot(`${Date.now()}sU3.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}sU3.html`)
 		if (firstRequestUrl) {
 			urlTemplate = new URL(firstRequestUrl)
 			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
@@ -226,7 +247,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		urlTemplateData["cursor"] = nextCursor
 		urlTemplateData["page_number"] = nextPageNumber
 		urlTemplate.searchParams.set("data", JSON.stringify(urlTemplateData))
-		console.log("urlTemplate", urlTemplate)
+
 		let responseContent
 
 		const onResponse = async (e) => {
@@ -386,7 +407,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 			if (processError) {
 				error = true
-				console.log("processError", processError)
 				break
 			}
 			currentLikesScrapped += likesScrapped
@@ -397,7 +417,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 					if (request.indexOf("BrowseScrollingPager") !== -1){
 						for (let param of request) {
 							let firstChild = param[0]
-							console.log("firstChild:", firstChild)
 							if (_.isObject(firstChild) && (!_.isUndefined(firstChild.cursor))) {
 
 								nextCursor = firstChild.cursor;
@@ -405,7 +424,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 							} else if (_.isNull(firstChild)) {
 								isEndOfPage = true
 								utils.log("All likers that could be retrieved have been scraped.", "done")
-								console.log("_.isNull(firstChild)")
 								break
 							}
 						}
@@ -415,7 +433,6 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 				++nextPageNumber
 			} else {
 				isEndOfPage = true
-				console.log("urlTemplateVide")
 			}
 
 			if (likesScrapped > 0) {

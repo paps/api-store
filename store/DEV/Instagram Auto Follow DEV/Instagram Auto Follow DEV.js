@@ -22,6 +22,7 @@ const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 
 let followSuccessCount = 0
+let unfollowSuccessCount = 0
 let followRequestCount = 0
 let rateLimited
 // }
@@ -44,45 +45,82 @@ const interceptInstagramApiCalls = e => {
 }
 
 // function to follow a profile
-const followProfile = async (tab, tabJson, query, profileUrl) => {
+const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction) => {
 	const scrapedData = await instagram.scrapeProfile(tabJson, query, profileUrl)
-	if (scrapedData.status === "Following") {
-		utils.log(`You already follow ${scrapedData.profileName}!`, "warning")
-		scrapedData.error = "Already following"
-		return scrapedData
+	console.log("scrapedData", scrapedData)
+	let action
+	if (conditionalAction.startsWith("Follow")) {
+		action = "Follow"
+	} else {
+		action = "Unfollow"
 	}
-	if (scrapedData.requestedByViewer === "Requested") {
-		utils.log(`You already sent a request to ${scrapedData.profileName}!`, "warning")
-		scrapedData.error = "Already requested"
-		return scrapedData
+	console.log("action", action)
+	if (action === "Follow") {
+		if (scrapedData.status === "Following") {
+			utils.log(`You already follow ${scrapedData.profileName}!`, "warning")
+			scrapedData.error = "Already following"
+			return scrapedData
+		}
+		if (scrapedData.requestedByViewer === "Requested") {
+			utils.log(`You already sent a request to ${scrapedData.profileName}!`, "warning")
+			scrapedData.error = "Already requested"
+			return scrapedData
+		}
+	} else {
+		if (!scrapedData.status && !scrapedData.requestedByViewer) {
+			utils.log(`You don't follow ${scrapedData.profileName}!`, "warning")
+			scrapedData.error = "Already unfollowed"
+			return scrapedData
+		}
+		if (conditionalAction === "Unfollow only if they don't follow you" && scrapedData.followsViewer) {
+			utils.log(`No need to unfollow ${scrapedData.profileName}, they follow you back.`, "warning")
+			scrapedData.error = "No need to unfollow"
+			return scrapedData
+		}
 	}
 	if (scrapedData.status === "Blocked") {
-		utils.log(`Can't follow ${scrapedData.profileName} as you blocked their profile!`, "warning")
+		utils.log(`Can't ${action === "Unfollow" ? "un" : ""}follow ${scrapedData.profileName} as you blocked their profile!`, "warning")
 		scrapedData.error = "Blocking"
 		return scrapedData
 	}
 	await tab.click("main section button")
+	if (action === "Unfollow") {
+		await tab.waitUntilVisible("div[role=\"dialog\"]")
+		await tab.click("div[role=\"dialog\"] button")
+	}
 	await tab.wait(2000)
+
+	
 	const checkFollowData = await instagram.scrapeProfile(tabJson, query, profileUrl)
-	if (checkFollowData.status === "Following") {
-		utils.log(`Successfully followed ${checkFollowData.profileName}.`, "done")
-		checkFollowData.followAction = "Success"
-		followSuccessCount++
-		return checkFollowData
-	} else if (checkFollowData.requestedByViewer === "Requested") {
-		utils.log(`Private account, successfully sent a request to ${checkFollowData.profileName}.`, "done")
-		checkFollowData.followAction = "Request"
-		followRequestCount++
+	if (action === "Follow") {
+		if (checkFollowData.status === "Following") {
+			utils.log(`Successfully followed ${checkFollowData.profileName}.`, "done")
+			checkFollowData.followAction = "Success"
+			followSuccessCount++
+			return checkFollowData
+		} else if (checkFollowData.requestedByViewer === "Requested") {
+			utils.log(`Private account, successfully sent a request to ${checkFollowData.profileName}.`, "done")
+			checkFollowData.followAction = "Request"
+			followRequestCount++
+			return checkFollowData
+		} else {
+			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			return null
+		}
+	} else if (!checkFollowData.status) {
+		utils.log(`Successfully unfollowed ${checkFollowData.profileName}.`, "done")
+		checkFollowData.unfollowAction = "Success"
+		unfollowSuccessCount++
 		return checkFollowData
 	} else {
-		utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+		utils.log(`Fail to unfollow ${checkFollowData.profileName}!`, "warning")
 		return null
 	}
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch, action, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let urls, result
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
@@ -105,8 +143,13 @@ const followProfile = async (tab, tabJson, query, profileUrl) => {
 		}
 		result = await utils.getDb(csvName + ".csv")
 		urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
+		if (urls.length < 1) {
+			utils.log("Input is empty OR all profiles have been processed.", "warning")
+			nick.exit(0)
+		}
 	}
 	followSuccessCount = result.filter(el => el.followAction === "Success").length
+	unfollowSuccessCount = result.filter(el => el.unfollowAction === "Success").length
 	followRequestCount = result.filter(el => el.followAction === "Request").length
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
@@ -120,7 +163,8 @@ const followProfile = async (tab, tabJson, query, profileUrl) => {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-			break
+				utils.log(`In total ${followSuccessCount} profiles followed, ${followRequestCount} requests sent.`, "done")
+				break
 		}
 		try {
 			utils.log(`Opening page ${url}`, "loading")
@@ -134,11 +178,15 @@ const followProfile = async (tab, tabJson, query, profileUrl) => {
 				continue
 			}
 			const profileUrl = await tab.getUrl()
-			const tempResult = await followProfile(tab, jsonTab, url, profileUrl)
+			const tempResult = await followProfile(tab, jsonTab, url, profileUrl, action)
 			if (tempResult) {
 				result.push(tempResult)
 			}
-			utils.log(`In total ${followSuccessCount} profiles followed, ${followRequestCount} requests sent.`, "done")
+			if (action.startsWith("Follow")) {
+				utils.log(`In total ${followSuccessCount} profiles followed, ${followRequestCount} requests sent.`, "done")
+			} else {
+				utils.log(`In total ${unfollowSuccessCount} profiles unfollowed.`, "done")
+			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue

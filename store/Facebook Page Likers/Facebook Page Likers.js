@@ -124,19 +124,14 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
 
-		await tab.scrollToBottom()
-
 		const initDate = new Date()
-		while (!firstRequestUrl) {
-			await new Promise((resolve) => {
-				setTimeout(() => {
-					resolve()
-				}, 50)
-			})
+		do {
+			await tab.scrollToBottom()
+			await tab.wait(500)
 			if ((new Date() - initDate) > 10000) {
 				break
 			}
-		}
+		} while (!firstRequestUrl)
 
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
 
