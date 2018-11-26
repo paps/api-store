@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-post-likers",
-	"description": "Extract all data from a Instagram Post",
+	"description": "Get a list of everyone liking specific Instagram pictures",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
 	"gradientBegin": "#FCCF6B",
