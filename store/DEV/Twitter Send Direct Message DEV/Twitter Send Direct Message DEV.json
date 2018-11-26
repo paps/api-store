@@ -9,7 +9,8 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "phbuster"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -38,7 +39,7 @@
 						"placeholder": "Twitter Profile"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch <b>(10 max)</b> <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10
