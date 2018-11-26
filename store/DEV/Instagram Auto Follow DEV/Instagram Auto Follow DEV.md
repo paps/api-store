@@ -98,6 +98,6 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 
 For example, 10 profiles followed per launch, 8 launches per day: you'll have a total of 80 new follows per day.
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+# 💡 Need ideas ?
 
 For more information about the best ways to set up a Follow/Unfollow strategy on Instagram, check out our [blog](https://www.phantombuster.com)!     

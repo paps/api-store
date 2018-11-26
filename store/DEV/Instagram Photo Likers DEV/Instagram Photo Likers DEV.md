@@ -1,6 +1,6 @@
 # Extract likers from Instagram posts
 
-You noticed one or multiple Instagram pictures and felt that people liking those are your niche audience. Great!
+You noticed one or multiple Instagram pictures and felt that people liking those are your niche audience? Great!
 
 Our tool will scroll down for you those pictures and get each liker's information. Once it's done, you'll receive a list of all their profiles neatly arranged in one spreadsheet.
 
@@ -90,8 +90,3 @@ Then, select a frequency:
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
-
-# Pro Tips
-
-Automation tools should be used with moderation. In order to not be confused with a bot, we recommend the following limitations: 
-**100 posts** scraped per launch, **8 launches** per day. It'll get : you'll have a total of 800 posts per day. We recommend not exceeding these values with this API as it takes some time to scrape this many posts.
