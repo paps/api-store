@@ -70,7 +70,7 @@ const openChatPage = async (tab, profileUrl) => {
 		utils.log(`Profile ${profileUrl} doesn't exist!`, "error")
 			return { profileUrl, error: "This profile doesn't exist"}
 	}
-	
+	await tab.wait(5000)
 	try {
 		const name = await tab.evaluate(getNameFromChat)
 		if (!name) {
@@ -92,12 +92,11 @@ const sendMessage = async (tab, message) => {
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
 	}
-	await tab.wait(1000)
+	await tab.wait(3000)
 	utils.log(`Sending message : ${message}`, "done")
 	await tab.evaluate(clickSendButton)
-	await tab.wait(5000)
+	await tab.wait(4000)
 	const isBanned = await tab.evaluate(checkIfBanned)
-	await buster.saveText(await tab.getContent(), `Sent${Date.now()}.html`)
 	return isBanned
 }
 
@@ -130,6 +129,9 @@ nick.newTab().then(async (tab) => {
 	if (!message || !message.trim()) {
 		utils.log("No message found!", "error")
 		nick.exit(1)
+	}
+	if (!profilesPerLaunch) {
+		profilesPerLaunch = 10
 	}
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape

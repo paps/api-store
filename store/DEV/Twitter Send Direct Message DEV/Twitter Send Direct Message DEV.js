@@ -69,27 +69,6 @@ const isTwitterUrl = url => {
 /**
  * @param {{ sel: String }} arg
  * @param {Function} cb
- * @throws String after 30s if the selector still disabled
- */
-const waitWhileDisabled = (arg, cb) => {
-	const startTime = Date.now()
-	const idle = () => {
-		const sel = document.querySelector(arg.sel)
-		if (sel && sel.classList.contains("disabled")) {
-			if ((Date.now() - startTime) >= 30000) {
-				return cb(`${arg.sel} still disabled after 30s of idle`)
-			}
-			setTimeout(idle, 200)
-		} else {
-			return cb(null)
-		}
-	}
-	idle()
-}
-
-/**
- * @param {{ sel: String }} arg
- * @param {Function} cb
  * @throws String after 30s if the selector still enabled
  */
 const waitWhileEnabled = (arg, cb) => {
@@ -158,6 +137,7 @@ const getConversationName = (arg, cb) => cb(null, document.querySelector(arg.sel
  * @param {Object} tab
  * @param {String} handle - Twitter handle
  * @throws String on CSS failure
+ * @return Promise<Boolean> true if a conversation was successfully open with the parameter handle
  */
 const startConversation = async (tab, handle) => {
 	// the sendKeys can sometimes silently fail instead of writing the handle, Twitter will open a conversation with @undefined
@@ -248,8 +228,6 @@ const sendMessage = async (tab, message) => {
 		rows = queries.map(el => ({ columnName: el }))
 	}
 
-	console.log(JSON.stringify(rows, null, 4))
-
 	// Don't process data in the DB even if it was an error
 	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName] || line.error) < 0)
 	rows = rows.slice(0, numberOfLinesPerLaunch)
@@ -282,7 +260,6 @@ const sendMessage = async (tab, message) => {
 		} catch (err) {
 			profile.error = err.message || err
 			res.push(profile)
-			await tab.wait(5000)
 			utils.log(`Error while sending message to ${one[columnName]} (${profile.error})`, "warning")
 		}
 	}
