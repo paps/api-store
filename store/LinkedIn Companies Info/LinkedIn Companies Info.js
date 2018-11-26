@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
 
 const { URL } = require("url")
 
@@ -21,7 +21,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
@@ -99,7 +99,30 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.yearFounded = document.querySelector("p.org-about-company-module__founded").textContent.trim()
 		}
 	}
-
+	try {
+		if (document.querySelector(".org-premium-insights-module")) { // premium insights
+			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-total\"] span")) {
+				let totalEmployeeCount = document.querySelector("td[headers=\"org-insights-module__a11y-summary-total\"] span").innerText
+				totalEmployeeCount = parseInt(totalEmployeeCount.replace(/\D+/g, ""), 10)
+				result.totalEmployeeCount = totalEmployeeCount
+			}
+			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span")) {
+				result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span").textContent
+			}
+			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span")) {
+				result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span").textContent
+			}
+			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span")) {
+				result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span").textContent
+			}
+			if (document.querySelector(".org-insights-module__facts strong")) {
+				result.averageTenure = document.querySelector(".org-insights-module__facts strong").textContent
+			}
+		}
+	} catch (err) {
+		//
+	}
+	
 
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
@@ -201,7 +224,11 @@ const isLinkedUrl = target => {
 	const tab = await nick.newTab()
 	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch } = utils.validateArguments()
 	if (typeof spreadsheetUrl === "string") {
-		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (spreadsheetUrl.includes("linkedin.com/company")) {
+			companies = [ spreadsheetUrl]
+		} else {
+			companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		}
 	}
 	if (!companies) {
 		companies = []
