@@ -1,10 +1,25 @@
-# Expand your Instagram network by auto following
-Your perfect audience is somewhere on Instagram. Don't waste any more time exploring each page 1 by 1, let this API do the (hard) work for you.
+# Automatically like the pictures of people you're interested in.
+
+Get noticed by the people you're interested in by liking their pictures.
 
 # Our Solution
 
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and follow each profile, also collecting data from the designated profiles.
+__You want to like specific Profiles' latest pictures:__
+Give us their instagram handles and how many of their latest pictures you want to like (up to 12).
 
+__You want to directly like Pictures:__
+Specify those pictures' URLs and we will like those for you.
+
+_It also works with a mix of both._
+
+Once your input file has been completely liked, the tool will restart from zero and like the specified profiles' new pictures.
+
+# Before you start
+
+Automation works better when done responsibly. For that purpose, it's better to follow those simple rules:
+- Rather than liking 100's of pics at once, prefer spacing those throughout the day. 
+- 3 profiles or 5 posts per launch is a good pace. 
+- Wait for 20 minutes between launches. 
 
 # What will you need? ⚙️ 
 

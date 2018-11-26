@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-auto-liker",
-	"description": "Automatically like a list of Instagram profiles and posts",
+	"description": "Automatically like a list of Instagram Profiles and/or of Instagram Posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
 	"gradientBegin": "#FCCF6B",
