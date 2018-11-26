@@ -114,10 +114,10 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
  * @param {String} url
  * @param {Array<String>} whitelist
  * @param {String} action
- * @throws if url is not a valid URL, or the daily follow limit is reached
+ * @throws String if url is not a valid URL, or the daily follow limit is reached
  */
 const subscribe = async (tab, url, whitelist, action) => {
-	utils.log(`Adding ${url}...`, "loading")
+	utils.log(`${ action === "follow" ? "Adding" : "Removing" } ${url}...`, "loading")
 	const followingSelector = ".ProfileNav-item .following-text"
 	const followSelector = ".ProfileNav-item .follow-text"
 	const pendingSelector = ".pending"
