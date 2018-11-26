@@ -1,10 +1,14 @@
 # Expand your Instagram network by auto following
-Your perfect audience is somewhere on Instagram. Don't waste any more time exploring each page 1 by 1, let this API do the (hard) work for you.
+
+Your perfect audience is somewhere on Instagram. Don't waste any more time exploring each page 1 by 1, let this Aautomation tool do the (hard) work for you.
 
 # Our Solution
 
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and follow each profile, also collecting data from the designated profiles.
+In order to get the attention of your niche audience, the most powerful way is to follow each person one-by-one. Following the basic psychology principle of Reciprocity, people you follow have a strong probability to follow you back.
 
+Instagram is a great platform for building an audience, whether you're starting a business, aim at becoming an influencer or simply want to grow your follower count.
+
+Start getting more followers today by setting up our tool in a few easy steps.
 
 # What will you need? ⚙️ 
 
@@ -93,3 +97,7 @@ Then, select a frequency:
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
 For example, 10 profiles followed per launch, 8 launches per day: you'll have a total of 80 new follows per day.
+
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+For more information about the best ways to set up a Follow/Unfollow strategy on Instagram, check out on [blog](https://www.phantombuster.com)! 
