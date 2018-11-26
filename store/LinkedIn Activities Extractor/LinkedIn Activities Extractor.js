@@ -14,6 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -131,13 +132,19 @@ const scrapeActivities = (arg, cb) => {
 		const articleArray = Array.from(result.querySelectorAll("article")).filter(el => el.getAttribute("data-id"))
 		if (articleArray[0]) {
 			let articleId = articleArray[0].getAttribute("data-id")
+			let separator
 			if (articleId.includes("ugcPost")) {
 				articleId = articleId.slice(articleId.indexOf("ugcPost") + 8, articleId.indexOf(","))
+				separator = "ugcPost"
+			} else if (articleId.includes("article")) {
+				articleId = articleId.slice(articleId.indexOf("article") + 8, articleId.indexOf(","))
+				separator = "article"
 			} else {
 				articleId = articleId.slice(articleId.indexOf("activity") + 9, articleId.indexOf(","))
+				separator = "activity"
 			}
-			const articleUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
-			scrapedData.postUrl = articleUrl
+			const postUrl = `https://www.linkedin.com/feed/update/urn:li:${separator}:${articleId}`
+			scrapedData.postUrl = postUrl
 		}
 		scrapedData.timestamp = (new Date()).toISOString()
 		activityResults.push(scrapedData)
@@ -257,7 +264,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 			break
 		}
 		try {
-			const convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(profileUrl)
+			const convertedUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
 			const activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts)
 

@@ -1,0 +1,100 @@
+{
+	"slug": "instagram-auto-liker",
+	"description": "Automatically like a list of Instagram profiles and posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
+	"hidden": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberOfPostsPerProfile": 1,
+		"action": "Like"
+	},
+	"outputDescription": {
+		"profileUrl": "Instagram profile URL",
+		"postUrl": "URL of the liked post",
+		"username ": "Instagram username",
+		"newLikeCount": "Number of new posts liked"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/10274/instagram-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here (sessionid)"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) OR a single profile or post URL",
+						"label": "Spreadsheet URL or Instagram URL (of profiles or posts to like) <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile/post URLs",
+						"placeholder": "Instagram Profile & Post Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch <a href=\"/api-store/10274/instagram-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"numberOfPostsPerProfile": {
+						"label": "Number of posts to like per profile opened <a href=\"/api-store/10274/instagram-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"placeholder": 1,
+						"helper": "The API Will like the last X posts of that profile. Maximum 12.",
+						"inputType": "number"
+					},
+					"action": {
+						"label": "Like/Unlike posts",
+						"helper": "Choose between Liking or Unliking all posts",
+						"removeDefaultNone": true,
+						"sort": false
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"numberOfPostsPerProfile": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 12
+			},
+			"action": {
+				"enum": ["Like", "Unlike"],
+				"default": "Like"
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
