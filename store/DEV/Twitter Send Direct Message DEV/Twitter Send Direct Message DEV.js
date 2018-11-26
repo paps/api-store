@@ -29,7 +29,7 @@ const { URL } = require("url")
 
 const DEFAULT_DB = "result"
 const MESSAGE_URL = "https://www.twitter.com/messages"
-
+const COLUMN = "0"
 const DEFAULT_PROFILES = 10
 
 const SELECTORS = {
@@ -42,7 +42,8 @@ const SELECTORS = {
 	sendSelector: "button.tweet-action",
 	closeSelector: "button.DMActivity-close",
 	messageSelector: "li.DirectMessage",
-	writeErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error"
+	writeErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error",
+	convNameSelector: "span.DMUpdateName-name.u-textTruncate"
 }
 
 /* global $ */
@@ -149,6 +150,9 @@ const openMessagesPage = async (tab, loadMsgComposer = false) => {
 	return true
 }
 
+
+const getConversationName = (arg, cb) => cb(null, document.querySelector(arg.sel) ? document.querySelector(arg.sel).textContent.trim() : null)
+
 /**
  * @async
  * @param {Object} tab
@@ -156,16 +160,23 @@ const openMessagesPage = async (tab, loadMsgComposer = false) => {
  * @throws String on CSS failure
  */
 const startConversation = async (tab, handle) => {
-	await tab.evaluate((arg, cb) => cb(null, document.querySelector(arg.sel).value = arg.handle), {sel: SELECTORS.msgDestinationSelector, handle })
+	// the sendKeys can sometimes silently fail instead of writing the handle, Twitter will open a conversation with @undefined
+	// To correctly open a conversation with a twitter user, let's iterate on each handle characters and wait 50ms after each input
+	const keys = handle.split("")
+	for (const key of keys) {
+		await tab.sendKeys(SELECTORS.msgDestinationSelector, key, { reset: false, keepFocus: false })
+		await tab.wait(50)
+	}
 	await tab.click(SELECTORS.initConvSelector)
 	try {
-		await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.initConvSelector })
+		await tab.waitWhileVisible(SELECTORS.initConvSelector, 30000)
 	} catch (err) {
 		utils.log(`Can't start conversation with ${handle}: ${err.message || err}`, "error")
 		return false
 	}
 	await tab.waitUntilVisible([ SELECTORS.textEditSelector, SELECTORS.sendSelector ], 15000, "and")
-	return true
+	const convName = await tab.evaluate(getConversationName, { sel: SELECTORS.convNameSelector })
+	return convName === handle
 }
 
 /**
@@ -193,51 +204,70 @@ const sendMessage = async (tab, message) => {
 	const tab = await nick.newTab()
 	let db
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries } = utils.validateArguments()
+	let csvHeaders = null
+	let rows = []
+	let msgTags = null
+	let columns = []
 	const res = []
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
 	}
 
+	if (!columnName) {
+		columnName = COLUMN
+	}
+
 	if (!message || !message.trim()) {
 		throw "No message supplied from the API configuration"
 	}
-
-	db = await utils.getDb(csvName + ".csv")
-
-	if (spreadsheetUrl && isUrl(spreadsheetUrl)) {
-		queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
-	} else if (spreadsheetUrl) {
-		queries = [ spreadsheetUrl ]
-	}
-
-	if (typeof queries === "string") {
-		queries = [ queries ]
-	}
-
-	// Don't process data in the DB even if it was an error
-	queries = queries.filter(el => db.findIndex(line => line[columnName] === el.query || el.error) < 0)
 
 	if (typeof numberOfLinesPerLaunch === "number") {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
 	}
 
-	queries = queries.slice(0, numberOfLinesPerLaunch)
+	db = await utils.getDb(csvName + ".csv")
 
-	if (queries.length < 1) {
+	if (spreadsheetUrl && isUrl(spreadsheetUrl)) {
+		if (isTwitterUrl(spreadsheetUrl)) {
+			rows = [ { [columnName]: spreadsheetUrl } ]
+		} else {
+			rows = await utils.getRawCsv(spreadsheetUrl)
+			csvHeaders = rows[0].filter(cell => !isUrl(cell))
+			msgTags = inflater.getMessageTags(message).filter(el => csvHeaders.includes(el))
+			columns = [ columnName, ...msgTags ]
+			rows = utils.extractCsvRows(rows, columns)
+		}
+	} else if (spreadsheetUrl) {
+		rows = [ { [columnName] : spreadsheetUrl } ]
+	}
+
+	if (typeof queries === "string") {
+		rows = [ { columnName: queries } ]
+	} else if (Array.isArray(queries)) {
+		rows = queries.map(el => ({ columnName: el }))
+	}
+
+	console.log(JSON.stringify(rows, null, 4))
+
+	// Don't process data in the DB even if it was an error
+	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName] || line.error) < 0)
+	rows = rows.slice(0, numberOfLinesPerLaunch)
+
+	if (rows.length < 1) {
 		utils.log("Input is empty OR all messages are send", "warning")
 		nick.exit()
 	}
 
-	utils.log(`Sending messages to: ${JSON.stringify(queries, null, 2)}`, "done")
+	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 
 	await twitter.login(tab, sessionCookie)
-	for (const one of queries) {
-		const profile = await twitter.scrapeProfile(tab, isUrl(one) && isTwitterUrl(one) ? one : `https://www.twitter.com/${one}`, true)
-		profile.query = one
-		profile.message = inflater.forgeMessage(message, profile)
+	for (const one of rows) {
+		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one : `https://www.twitter.com/${one[columnName]}`, true)
+		profile.query = one[columnName]
+		profile.message = inflater.forgeMessage(message, Object.assign({}, profile, one))
 		try {
-			const isOpen = await openMessagesPage(tab, true)
+			let isOpen = await openMessagesPage(tab, true)
 			if (!isOpen) {
 				profile.error = `Can't start a conversation with: ${one}`
 				res.push(profile)
@@ -252,7 +282,8 @@ const sendMessage = async (tab, message) => {
 		} catch (err) {
 			profile.error = err.message || err
 			res.push(profile)
-			utils.log(`Error while sending message to ${one} (${profile.error})`, "warning")
+			await tab.wait(5000)
+			utils.log(`Error while sending message to ${one[columnName]} (${profile.error})`, "warning")
 		}
 	}
 	db.push(...res)
