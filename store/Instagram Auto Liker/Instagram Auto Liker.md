@@ -1,16 +1,31 @@
-# Expand your Instagram network by auto following
-Your perfect audience is somewhere on Instagram. Don't waste any more time exploring each page 1 by 1, let this API do the (hard) work for you.
+# Automatically like the pictures of people you're interested in.
+
+Get noticed by the people you're interested in by liking their pictures.
 
 # Our Solution
 
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and follow each profile, also collecting data from the designated profiles.
+__You want to like specific Profiles' latest pictures:__
+Give us their instagram handles and how many of their latest pictures you want to like (up to 12).
 
+__You want to directly like Pictures:__
+Specify those pictures' URLs and we will like those for you.
+
+_It also works with a mix of both._
+
+Once your input file has been completely liked, the tool will restart from zero and like the specified profiles' new pictures.
+
+# Before you start
+
+Automation works better when done responsibly. For that purpose, it's better to follow those simple rules:
+- Rather than liking 100's of pics at once, prefer spacing those throughout the day. 
+- 3 profiles or 5 posts per launch is a good pace. 
+- Wait for 20 minutes between launches. 
 
 # What will you need? ⚙️ 
 
 - **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it.
-- **Number of profiles per launch**: The number of profiles to follow per launch.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs or post URLs in it.
+- **Number of lines per launch**: The number of profiles or posts to process per launch.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
@@ -61,12 +76,12 @@ Below your session cookie you’ll find _Spreadsheet URL_.
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
 <center>![](https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrrpr_spreadsheet.png)</center>
 
-Your spreadsheet should contain a list of Instagram Profile URLs (**one link per row**).
-You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
+Your spreadsheet should contain a list of Instagram Profile URLs or Post URLs (**one link per row**).
+You can specify the name of the column that contains the links. Simply enter the column name in the next text field.
 
 **Please make sure your file is publicly accessible!**
 
-You can also enter a single Instagram profile URL directly in the field.
+You can also enter a single Instagram profile or post URL directly in the field.
 
 
 
@@ -79,7 +94,7 @@ This will launch the bot and, if you didn't already change the spreadsheet URL, 
 
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to scrape per launch, or leave that field blank to scrape every profile from your list.
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
 
 To do so, simply hit the “Settings” button to define when your API is launched:
@@ -91,5 +106,3 @@ Then, select a frequency:
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
-
-For example, 10 profiles followed per launch, 8 launches per day: you'll have a total of 80 new follows per day.
