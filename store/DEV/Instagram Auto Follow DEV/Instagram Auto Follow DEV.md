@@ -1,6 +1,6 @@
 # Expand your Instagram network by auto following
 
-Your perfect audience is somewhere on Instagram. Don't waste any more time exploring each page 1 by 1, let this Aautomation tool do the (hard) work for you.
+Your perfect audience is somewhere on Instagram. Don't waste time following interesting profiles 1 by 1, our automation tool will do the (hard) work for you.
 
 # Our Solution
 
