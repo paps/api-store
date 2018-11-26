@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
 
@@ -31,6 +30,15 @@ const scrapeCompanyLink = (arg, callback) => {
 }
 
 const scrapeCompanyInfo = (arg, callback) => {
+	const camelCaser = str => {
+		str = str.toLowerCase().split(" ")
+		if (str[1]) {
+			str[1] = str[1].charAt(0).toUpperCase() + str[1].replace(/ /g,"").substr(1)
+		}
+		str = str.join("")
+		return str
+	}
+
 	const result = {}
 	result.link = arg.link
 	result.query = arg.query
@@ -50,23 +58,16 @@ const scrapeCompanyInfo = (arg, callback) => {
 		if (document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]")) {
 			result.website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
 		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[1]) {
-			result.industry = document.querySelectorAll(".org-page-details__definition-text")[1].textContent.trim()
-		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[2]) {
-			result.size = document.querySelectorAll(".org-page-details__definition-text")[2].textContent.trim()
-		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[3]) {
-			result.location = document.querySelectorAll(".org-page-details__definition-text")[3].textContent.trim()
-		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[4]) {
-			result.type = document.querySelectorAll(".org-page-details__definition-text")[4].textContent.trim()
-		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[5]) {
-			result.yearFounded = document.querySelectorAll(".org-page-details__definition-text")[5].textContent.trim()
-		}
-		if (document.querySelectorAll(".org-page-details__definition-text")[6]) {
-			result.specialities = document.querySelectorAll(".org-page-details__definition-text")[6].textContent.trim()
+		try {
+			const detailsTitle = document.querySelectorAll(".org-page-details__definition-term")
+			const details = document.querySelectorAll(".org-page-details__definition-text")
+			for (let i = 0 ; i < details.length ; i++) {
+				if (details[i] && detailsTitle[i] && detailsTitle[i].innerText) {
+					result[camelCaser(detailsTitle[i].innerText)] = details[i].innerText
+				}
+			}
+		} catch (err) {
+			//
 		}
 	} else {
 		if (document.querySelector("h1.org-top-card-module__name")) {
@@ -191,6 +192,35 @@ const scrapeCompanyInfo = (arg, callback) => {
 	callback(null, result)
 }
 
+const scrapeInsights = (arg, cb) => {
+	const result = {}
+	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-total\"] span")) {
+		let totalEmployeeCount = document.querySelector("td[headers=\"org-insights-module__a11y-summary-total\"] span").innerText
+		totalEmployeeCount = parseInt(totalEmployeeCount.replace(/\D+/g, ""), 10)
+		result.totalEmployeeCount = totalEmployeeCount
+	}
+	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span")) {
+		result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span").textContent
+	}
+	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span")) {
+		result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span").textContent
+	}
+	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span")) {
+		result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span").textContent
+	}
+	if (document.querySelector(".org-insights-module__facts strong")) {
+		result.averageTenure = document.querySelector(".org-insights-module__facts strong").textContent
+	}
+	cb(null, result)
+}
+
+const getInsights = async (tab, link) => {
+	await tab.open(link + "insights")
+	await tab.waitUntilVisible("div.organization-outlet", 15000)
+	const insights = await tab.evaluate(scrapeInsights)
+	return insights
+}
+
 const getCompanyInfo = async (tab, link, query) => {
 	try {
 		if (!link.endsWith("/")) {
@@ -205,9 +235,16 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (await tab.isVisible("div.org-screen-loader")) {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
-		await tab.screenshot(`${Date.now()}sU1.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
-		return tab.evaluate(scrapeCompanyInfo, { link, query })
+		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
+		try {
+			if (await tab.isVisible(".org-page-navigation__item")) {
+				const insights = await getInsights(tab, link, result)
+				result = Object.assign(result, insights)
+			}
+		} catch (err) {
+			//
+		}
+		return result
 	} catch (err) {
 		return { link, query, invalidResults: "Couldn't access company profile" }
 	}
