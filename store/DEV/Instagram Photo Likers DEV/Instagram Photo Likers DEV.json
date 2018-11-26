@@ -1,6 +1,6 @@
 {
-	"slug": "instagram-post-likers",
-	"description": "Get a list of everyone liking specific Instagram pictures",
+	"slug": "instagram-photo-likers",
+	"description": "Get a list of everyone who liked specific Instagram pictures",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
 	"gradientBegin": "#FCCF6B",
@@ -8,10 +8,10 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_posts_urls"
+		"spreadsheetUrl": "instagram_photos_urls"
 	},
 	"outputDescription": {
-		"postUrl": "Instagram post URL",
+		"photoUrl": "Instagram photo URL",
 		"instagramID": "Instagram unique ID",
 		"profileUrl": "Instagram profile URL",
 		"profilePictureUrl": "",
@@ -29,28 +29,27 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
-						"helpers": [
-							"Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>", "If you don't enter it, the API won't extract like Count data" ]
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/10253/instagram-photo-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value"
 					},
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
-						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7085/instagram-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single photo URL" ],
+						"label": "Spreadsheet URL of photos to scrape <a href=\"/api-store/10253/instagram-photo-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
-						"label": "Column name from which to get profile URLs",
-						"placeholder": "Instagram Profile Link",
+						"label": "Column name from which to get photo URLs",
+						"placeholder": "Instagram Photo Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberOfLikers": {
-						"label": "Number of likers to collect per post",
+						"label": "Number of likers to collect per photo",
 						"inputType": "number",
 						"helper": "If empty, the API will try to scrape all of them"
 					},
-					"numberOfProfilesPerLaunch": {
-						"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+					"numberOfPhotosPerLaunch": {
+						"label": "Number of photos to scrape per launch <a href=\"/api-store/10253/instagram-photo-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
 					},
@@ -80,7 +79,7 @@
 				"type": "number",
 				"minimum": 1
 			},
-			"numberOfProfilesPerLaunch": {
+			"numberOfPhotosPerLaunch": {
 				"type": "number",
 				"minimum": 1
 			},
