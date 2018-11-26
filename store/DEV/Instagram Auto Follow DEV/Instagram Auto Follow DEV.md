@@ -100,4 +100,4 @@ For example, 10 profiles followed per launch, 8 launches per day: you'll have a 
 
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
-For more information about the best ways to set up a Follow/Unfollow strategy on Instagram, check out our [blog](https://www.phantombuster.com)! 
+For more information about the best ways to set up a Follow/Unfollow strategy on Instagram, check out our [blog](https://www.phantombuster.com)!     
