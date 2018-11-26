@@ -306,6 +306,7 @@ const jsonToCsvOutput = json => {
 		let conversation
 		try {
 			conversation = await getMessagesByProfile(tab, messagesPerExtract, chronOrder, isThreadURL)
+			conversation.url = convUrl
 		} catch (err) {
 			utils.log(`No messages in ${convUrl} (${err.message || err})`, "warning")
 			currentScraping.push({ url: convUrl, error: `${err.message || err}`, messages: [ { error: `${err.message || err}` } ] })
