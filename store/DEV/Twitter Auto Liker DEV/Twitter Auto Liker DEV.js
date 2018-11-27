@@ -225,6 +225,49 @@ const loadProfileAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT,
 }
 
 /**
+ * @param {{ undoLikes: Boolean }} arg
+ * @param { Function } cb
+ * @return {Promise<Object>}
+ */
+const _likeTweet = (arg, cb) => {
+	let tweet = document.querySelector("div.tweet.js-actionable-tweet")
+	let like = tweet.querySelector("div.ProfileTweet-action.ProfileTweet-action--favorite button")
+	let undo = tweet.querySelector("div.ProfileTweet-action.ProfileTweet-action--favorite button.ProfileTweet-actionButtonUndo.ProfileTweet-action--unfavorite")
+	let state = getComputedStyle(arg.undoLikes ? undo : like).display
+	let timestamp = (new Date()).toISOString() 
+
+	if (arg.undoLikes) {
+		if (state === "none")
+			return cb(null, { likeCount: 0, urls: [ window.location.href ], timestamp })
+		undo.click()
+		return cb(null, { likeCount: 1, urls: [ window.location.href ], timestamp })
+	} else {
+		if (state === "none")
+			return cb(null, { likeCount: 0, urls: [ window.location.href ], timestamp })
+		like.click()
+		return cb(null, { likeCount: 1, urls: [ window.location.href ], timestamp })
+	}
+}
+
+/**
+ * @async
+ * @param {Object} tab
+ * @param {String} url
+ * @param {Boolean} [undoLikes]
+ * @throws String on page loading failure
+ * @return {Promise<{ likeCount: Number, urls: Array<String>, timestamp: String }>}
+ */
+const likeTweet = async (tab, url, undoLikes = false) => {
+	utils.log(`Loading ${url} tweet...`, "loading")
+	const [ httpCode ] = await tab.open(url)
+	if (httpCode === 404) {
+		throw `Can't open ${url}`
+	}
+	await tab.waitUntilVisible("div.tweet", 7500)
+	return tab.evaluate(_likeTweet, { undoLikes })
+}
+
+/**
  * @description Tiny function used to check if a given string represents an URL
  * @param {String} target
  * @return { Boolean } true if target represents an URL otherwise false
@@ -237,6 +280,18 @@ const isUrl = target => url.parse(target).hostname !== null
  * @return { Boolean } true if target represents an Twitter URL otherwise false
  */
 const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || url.parse(target).hostname === "mobile.twitter.com"
+
+/**
+ * @param {String} target
+ * @return {Boolean}
+ */
+const isTweetUrl = target => {
+	try {
+		return (new url.URL(target)).pathname.split("/").findIndex(el => el === "status") > 1
+	} catch (err) {
+		return false
+	}
+}
 
 /**
  * @description Main function to launch everything
@@ -264,7 +319,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 		queries = [ queries ]
 	}
 	queries = queries.map(el => {
-		return { url: getValidUrlOrHandle(el), query: getValidUrlOrHandle(el) }
+		return { url: isTweetUrl(el) ? el : getValidUrlOrHandle(el), query: isTweetUrl(el) ? el : getValidUrlOrHandle(el) }
 	})
 
 
@@ -277,7 +332,6 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 	}
 
 	const result = []
-
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
 	await twitter.login(tab, sessionCookie)
 
@@ -289,7 +343,7 @@ const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || u
 		}
 		try {
 			let profileLiked = null
-			profileLiked = await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
+			profileLiked = isTweetUrl(profile.url) ? await likeTweet(tab, profile.url, undoLikes) : await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
 			profileLiked.query = profile.query
 			likedCount += profileLiked.likeCount
 			result.push(profileLiked)
