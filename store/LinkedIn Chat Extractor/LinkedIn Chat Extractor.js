@@ -275,7 +275,14 @@ const jsonToCsvOutput = json => {
 	} else if (typeof queries === "string") {
 		queries = [ queries ]
 	}
-	queries = queries.filter(el => db.findIndex(line => line.url === el) < 0)
+
+	queries.forEach(el => {
+		if (!el.endsWith("/")) {
+			el += "/"
+		}
+	})
+
+	queries = queries.filter(el => db.findIndex(line => line.url === el || line.error) < 0)
 	if (profilesPerLaunch) {
 		queries = queries.slice(0, profilesPerLaunch)
 	}
