@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
 
@@ -143,13 +144,13 @@ const scrapeCompanyInfo = (arg, callback) => {
 		let tmp = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link").href
 		tmp = tmp.split("=").pop()
 		tmp = decodeURIComponent(tmp)
-		result.linkedinID =
-							tmp.replace("[", "")
-								.replace("]", "")
-								.replace(",","")
-								.split("\"")
-								.filter(el => (el !== "" && el !== ","))
-								.join(",")
+		const linkedinId = tmp.replace("[", "")
+							.replace("]", "")
+							.replace(",","")
+							.split("\"")
+							.filter(el => (el !== "" && el !== ","))
+		result.mainCompanyID = linkedinId[0]
+		result.linkedinID = linkedinId.join(",")
 	}
 	// "View in Sales Navigator" link, only present for LI premium users
 	if (document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn")) { result.salesNavigatorLink = document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn").href }
@@ -235,6 +236,8 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (await tab.isVisible("div.org-screen-loader")) {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
+		await tab.screenshot(`${Date.now()}getCompanyInfo.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}getCompanyInfo.html`)
 		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
 		try {
 			if (await tab.isVisible(".org-page-navigation__item")) {
@@ -244,6 +247,7 @@ const getCompanyInfo = async (tab, link, query) => {
 		} catch (err) {
 			//
 		}
+
 		return result
 	} catch (err) {
 		return { link, query, invalidResults: "Couldn't access company profile" }

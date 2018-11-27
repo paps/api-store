@@ -143,13 +143,13 @@ const scrapeCompanyInfo = (arg, callback) => {
 		let tmp = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link").href
 		tmp = tmp.split("=").pop()
 		tmp = decodeURIComponent(tmp)
-		result.linkedinID =
-							tmp.replace("[", "")
-								.replace("]", "")
-								.replace(",","")
-								.split("\"")
-								.filter(el => (el !== "" && el !== ","))
-								.join(",")
+		const linkedinId = tmp.replace("[", "")
+							.replace("]", "")
+							.replace(",","")
+							.split("\"")
+							.filter(el => (el !== "" && el !== ","))
+		result.mainCompanyID = linkedinId[0]
+		result.linkedinID = linkedinId.join(",")
 	}
 	// "View in Sales Navigator" link, only present for LI premium users
 	if (document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn")) { result.salesNavigatorLink = document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn").href }
