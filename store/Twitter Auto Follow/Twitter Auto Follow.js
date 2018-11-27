@@ -92,7 +92,7 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
 		for (const line of db) {
 			el = el.toLowerCase()
 			const regex = new RegExp(`twitter.com/${line.handle}$`)
-			if (el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex)) {
+			if (line.handle && el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex)) {
 				return false
 			}
 		}
