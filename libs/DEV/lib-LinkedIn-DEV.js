@@ -47,7 +47,7 @@ class LinkedIn {
 		// return a string in case of error, null in case of success
 		const _login = async () => {
 			const [httpCode] = await tab.open(url || "https://www.linkedin.com/feed/")
-			if (httpCode !== 200) {
+			if (httpCode !== 200 && httpCode) {
 				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
@@ -109,14 +109,14 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log(`Can't connect to LinkedIn with this session cookieagain.${error}`, "error")
+			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			try {
 				const loginResult = await _login()
 				if (loginResult !== null) {
 					throw loginResult
 				}
 			} catch (err) {
-				this.utils.log(`Can't connect to LinkedIn with this session cookie.${err}`, "error")
+				this.utils.log(`Can't connect to LinkedIn with this session cookie again.${err}`, "error")
 				await this.buster.saveText(await tab.getContent(), "login-err.html")
 				await this.buster.save(await tab.screenshot("login-err.jpg"))
 				this.nick.exit(1)
@@ -175,7 +175,7 @@ class LinkedIn {
 			}
 			const { URL } = require("url")
 			let urlObject = new URL(url)
-			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/")))
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
 		} catch (err) {
 			return false
 		}

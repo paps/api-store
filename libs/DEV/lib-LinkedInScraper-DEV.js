@@ -828,7 +828,7 @@ class LinkedInScraper {
 		}
 		try {
 			let urlObject = new URL(url)
-		if (urlObject.pathname.startsWith("/sales")) { // Sales Navigator link
+		if (urlObject.pathname.startsWith("/sales/profile") || urlObject.pathname.startsWith("/sales/people")) { // Sales Navigator link
 			if (urlObject.pathname.startsWith("/sales/profile/")) { // converting '/sales/profile' to '/sales/people
 				url = "https://linkedin.com/sales/people" + urlObject.pathname.slice(14)
 				urlObject = new URL(url)

@@ -164,7 +164,7 @@ class LinkedIn {
 			}
 			const { URL } = require("url")
 			let urlObject = new URL(url)
-			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && urlObject.pathname.startsWith("/in/"))
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
 		} catch (err) {
 			return false
 		}
