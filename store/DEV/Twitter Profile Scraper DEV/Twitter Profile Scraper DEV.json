@@ -62,7 +62,8 @@
 					"numberProfilesPerLaunch": {
 						"label": "Number of profiles to visit per launch<a target=\"_blank\" href=\"api-store/9375/twitter-profile-scraper#section_repetition_setup\">(?)</a>",
 						"placeholder": 10,
-						"inputType": "number"
+						"inputType": "number",
+						"helper": "Leaving this field empty will make the API process all profiles provided"
 					}
 				}
 			}
@@ -84,8 +85,7 @@
 			},
 			"numberProfilesPerLaunch": {
 				"type": "number",
-				"minimum": 1,
-				"maximum": 25
+				"minimum": 1
 			}
 		},
 		"oneOf": [
