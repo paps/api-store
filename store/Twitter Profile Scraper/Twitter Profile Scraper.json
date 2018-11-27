@@ -12,6 +12,24 @@
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)"
 	},
+	"outputDescription": {
+		"twitterId": "",
+		"twitterProfile": "",
+		"alternativeProfileUrl": "Twitter URL with the Twitter ID",
+		"tweetsCount": "",
+		"followers": "Followers count",
+		"following": "Following count",
+		"likes": "",
+		"lists": "",
+		"name": "",
+		"handle": "",
+		"bio": "Profile description",
+		"location": "",
+		"website": "",
+		"joindDate": "Twitter join date (if available)",
+		"birthday": "",
+		"followback": ""
+	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
