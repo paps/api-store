@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -31,20 +30,7 @@ const checkIfBirthday = (arg, cb) => {
 	}
 }
 
-const checkUpcomingBirthday = (arg, cb) => {
-// 	const nextBirthday = document.querySelector("#birthdays_upcoming_card").parentElement.querySelector("ul")
-// 	if (nextBirthday) {
-// 		const birthdays = nextBirthday.querySelectorAll("li")
-// 		const result = []
-// 		for (const birthday of birthdays) {
-// 			const birthdayData = {}
-// 			if (birthday.querySelector("a")) {
-// 				birthdayData.profileUrl = birthday.querySelector("a").href
-// 				birthdayData.fullName = birthday.querySelector("a").textContent
-// 			}
-// 			result.push(birthdayData)
-// 		}
-// 	}
+const getUpcomingBirthdayData = (arg, cb) => {
 	const upcoming = Array.from(document.querySelector("#birthdays_upcoming_card").parentElement.querySelectorAll("div[role=\"heading\"]"))
 	if (upcoming.length) {
 		let birthdays = []
@@ -77,9 +63,7 @@ const checkUpcomingBirthday = (arg, cb) => {
 const checkUpcomingBirthdays = async (tab) => {
 	await tab.open("https://www.facebook.com/events/birthdays/")
 	await tab.waitUntilVisible("#birthdays_upcoming_card")
-	await tab.screenshot(`${Date.now()}checkUpcomingBirthdays.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}checkUpcomingBirthdays.html`)
-	const upcompingBirthday = await tab.evaluate(checkUpcomingBirthday)
+	const upcompingBirthday = await tab.evaluate(getUpcomingBirthdayData)
 	if (upcompingBirthday) {
 		if (typeof upcompingBirthday === "object") {
 			upcompingBirthday.map(el => {
@@ -93,9 +77,11 @@ const checkUpcomingBirthdays = async (tab) => {
 	}
 }
 
+// send the birthday message
 const sendMessage = (arg, cb) => {
 	cb(null, document.querySelector(".enter_submit").parentElement.parentElement.parentElement.parentElement.parentElement.querySelector("button").click())
 }
+
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
@@ -113,25 +99,18 @@ nick.newTab().then(async (tab) => {
 			break
 		}
 		await tab.waitUntilPresent("#pagelet_reminders")
-		await tab.screenshot(`${Date.now()}pagelet_reminders.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}pagelet_reminders.html`)
 		const hasBirthday = await tab.evaluate(checkIfBirthday)
 		if (!hasBirthday && !hasWished) {
 			utils.log("No friends' birthday today!", "done")
 			break
 		} else {
-			console.log("birthday of:", hasBirthday)
 			const name = facebook.getFirstAndLastName(hasBirthday)
-			console.log("name:", name)
 			let forgedMessage = facebook.replaceTagsDefault(message, hasBirthday, name.firstName)
-			console.log("forgedMessage:", forgedMessage)
 			try {
 				await tab.click("a[ajaxify=\"/birthday/reminder/dialog/\"]")
 				await tab.waitUntilVisible(".enter_submit")
 				await tab.sendKeys(".enter_submit", forgedMessage)
-				await tab.screenshot(`${Date.now()}sU.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
-				// await tab.evaluate(sendMessage)
+				await tab.evaluate(sendMessage)
 				utils.log(`Wished a happy birthday to ${name} with the message: ${forgedMessage}`, "done")
 				hasWished = true
 				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
@@ -141,9 +120,7 @@ nick.newTab().then(async (tab) => {
 		}
 	} while (new Date() - init < 30000)
 	
-
 	await checkUpcomingBirthdays(tab)
-	
 	
 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
