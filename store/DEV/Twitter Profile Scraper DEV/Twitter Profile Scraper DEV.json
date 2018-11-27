@@ -64,6 +64,10 @@
 						"placeholder": 10,
 						"inputType": "number",
 						"helper": "Leaving this field empty will make the API process all profiles provided"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -86,6 +90,9 @@
 			"numberProfilesPerLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"oneOf": [

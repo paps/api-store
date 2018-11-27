@@ -43,9 +43,14 @@ const isTwitterProfile = url => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, sessionCookie, columnName, numberProfilesPerLaunch, profileUrls, noDatabase } = utils.validateArguments()
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	let { spreadsheetUrl, sessionCookie, columnName, numberProfilesPerLaunch, csvName, profileUrls, noDatabase } = utils.validateArguments()
 	const scrapingResult = []
+
+	if (!csvName) {
+		csvName = DB_SHORT_NAME
+	}
+
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl) && isTwitterProfile(spreadsheetUrl)) {
@@ -85,7 +90,7 @@ const isTwitterProfile = url => {
 		}
 	}
 	db.push(...scrapingResult)
-	await utils.saveResults(scrapingResult, db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(scrapingResult, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
