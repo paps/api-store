@@ -76,6 +76,7 @@ const _scrapeProfile = (arg, cb) => {
 		const websiteSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-url span.ProfileHeaderCard-urlText a:first-of-type")
 		const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
 		const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")
+		const followBackSelector = descriptionSelector.querySelector("span.FollowStatus")
 		res.name = screenNameSelector ? screenNameSelector.textContent.trim() : null
 		res.twitterProfile = screenNameSelector ? screenNameSelector.href : null
 		res.handle = handleSelector ? handleSelector.textContent.trim() : null
@@ -83,6 +84,7 @@ const _scrapeProfile = (arg, cb) => {
 		res.location = locationSelector ? locationSelector.textContent.trim() : null
 		res.website = websiteSelector ? websiteSelector.title : null
 		res.joinDate = null
+		res.followback = followBackSelector !== null
 		if (joinDateSelector) {
 			if (joinDateSelector.title) {
 				res.joinDate = joinDateSelector.title
