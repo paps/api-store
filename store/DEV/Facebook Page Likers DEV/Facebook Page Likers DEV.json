@@ -43,7 +43,7 @@
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
 						"placeholder": "Facebook Page link",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						"helper": "If using a spreadsheet as input. By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
