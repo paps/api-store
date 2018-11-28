@@ -131,7 +131,7 @@ nick.newTab().then(async (tab) => {
 				await tab.sendKeys(".enter_submit", forgedMessage)
 				await tab.screenshot(`${Date.now()}sU.png`)
 				await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
-				// await tab.evaluate(sendMessage)
+				await tab.evaluate(sendMessage)
 				utils.log(`Wished a happy birthday to ${name} with the message: ${forgedMessage}`, "done")
 				result.push({ name, timestamp: (new Date()).toISOString(), message: forgedMessage })
 				hasWished = true
