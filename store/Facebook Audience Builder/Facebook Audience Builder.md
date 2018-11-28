@@ -1,18 +1,14 @@
-# Collect information from any Facebook group
+# Build a Facebook Custom Audience
 
-Get to know any Facebook member that shares the same interests as you. Use any Facebook group you have access to and gather:
 
-1. Facebook profile links
-2. Names
-3. Profile pictures
-4. Current job/location
 
 # What will you need? ⚙️ 
 
+- **Session cookie li\_at**: Your _li\_at_ session cookie from LinkedIn.
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook groups URLs in it, OR the direct link of a Facebook group (unless they're public, you **must** be a member of these groups).
-- **Number of members per group**: The number of members you want to collect per group. If left empty, the API will scrape all group members.
-- **Number of members per launch**: If you want to scrape all members from a huge single group, you can choose to retrieve the data in several short launches instead of a long one. 
+- **Session cookie auth\_token**: Your _auth\_token_ session cookie from Twitter.
+- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn or Facebook profile URLs in it, OR the direct link of a LinkedIn/Facebook profile.
+- **Number of lines to process**: The number of profiles you want to process per launch. If left empty, the API will process every profile from your list.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 

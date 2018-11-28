@@ -41,7 +41,7 @@
                         "placeholder": "Paste your xs Facebook session cookie here"
                     },
                     "sessionCookieAuthToken": {
-                        "label": "Twitter session cookie auth_token <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+                        "label": "Twitter session cookie auth_token (optional) <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
                         "placeholder": "Paste your auth_token Twitter session cookie here"
                     },
 					"spreadsheetUrl": {
@@ -87,7 +87,7 @@
             },
             "sessionCookieAuthToken": {
                 "type": "string",
-                "required": true,
+                "required": false,
                 "minLength": 15
             },
             "spreadsheetUrl": {

@@ -311,6 +311,7 @@ const findTwitterUrl = async (tab, scrapedData, company = null) => {
 		console.log("Searching Twitter for...", `site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
 		const twitterResults = await google.search(`site:twitter.com ${scrapedData.name} ${company ? company : ""}`)
 		const firstResult = twitterResults.results[0]
+		console.log("twitterResults.results[0]", twitterResults.results[0])
 		if (firstResult && firstResult.title.endsWith("Twitter")) {
 			await tab.screenshot(`${Date.now()}google.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}google.html`)
@@ -518,7 +519,7 @@ const extractFinalResult = scrapedData => {
 }
 
 // main function that handles all profile processing
-const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
+const processProfile = async (tabLk, tabFb, tabTwt, profileUrl, twitterLogin) => {
 	const results = []
 	utils.log(`Processing ${profileUrl}`, "loading")
 	let scrapedData = {}
@@ -576,37 +577,40 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 	} catch (err) {
 		console.log("err:", err)
 	}
-	console.log("elapsed: ", new Date() - initDate)
-	// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
-	try {
-		let twitterUrl = await findTwitterUrl(tabTwt, scrapedData, scrapedData.company)
-		if (!twitterUrl) {
-			console.log("noresults twitter")
-			await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
-			await buster.saveText(await tabLk.getContent(), `${Date.now()}noresultsTwitter.html`)
-			twitterUrl = await findTwitterUrl(tabLk, scrapedData)
-		}
-		if (twitterUrl) {
-			const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
-			scrapedData.twitterUrl = twitterUrl
-			if (twitterData.twitterEmail) {
-				scrapedData.twitterEmail = twitterData.twitterEmail
+	if (twitterLogin) {
+		console.log("elapsed: ", new Date() - initDate)
+		// let scrapedData = { firstName: "Guillaume", lastName: "Moubeche", name: "Guillaume Moubeche"}
+		try {
+			let twitterUrl = await findTwitterUrl(tabTwt, scrapedData, scrapedData.company)
+			if (!twitterUrl) {
+				console.log("noresults twitter")
+				await tabLk.screenshot(`${Date.now()}noresultsTwitter.png`)
+				await buster.saveText(await tabLk.getContent(), `${Date.now()}noresultsTwitter.html`)
+				twitterUrl = await findTwitterUrl(tabLk, scrapedData)
 			}
-		}
-		console.log("f1Email:", scrapedData.lkTwitterUrl)
-		console.log("f2Email:", twitterUrl)
-		if (scrapedData.lkTwitterUrl && scrapedData.lkTwitterUrl !== twitterUrl) { // if we got a different twitter URL from LinkedIn 
-			console.log("checking twitter email from linkedin")
-			const twitterData = await getTwitterEmail(tabLk, scrapedData.lkTwitterUrl, scrapedData)
-			if (twitterData.twitterEmail) {
-				scrapedData.lkTwitterEmail = twitterData.twitterEmail
+			if (twitterUrl) {
+				const twitterData = await getTwitterEmail(tabLk, twitterUrl, scrapedData)
+				scrapedData.twitterUrl = twitterUrl
+				if (twitterData.twitterEmail) {
+					scrapedData.twitterEmail = twitterData.twitterEmail
+				}
 			}
+			console.log("f1Email:", scrapedData.lkTwitterUrl)
+			console.log("f2Email:", twitterUrl)
+			if (scrapedData.lkTwitterUrl && scrapedData.lkTwitterUrl !== twitterUrl) { // if we got a different twitter URL from LinkedIn 
+				console.log("checking twitter email from linkedin")
+				const twitterData = await getTwitterEmail(tabLk, scrapedData.lkTwitterUrl, scrapedData)
+				if (twitterData.twitterEmail) {
+					scrapedData.lkTwitterEmail = twitterData.twitterEmail
+				}
+			}
+		} catch (err) {
+			console.log("errTwitter:", err)
+			await tabLk.screenshot(`${Date.now()}errtwitter.png`)
+			await buster.saveText(await tabLk.getContent(), `${Date.now()}errtwitter.html`)
 		}
-	} catch (err) {
-		console.log("errTwitter:", err)
-		await tabLk.screenshot(`${Date.now()}errtwitter.png`)
-		await buster.saveText(await tabLk.getContent(), `${Date.now()}errtwitter.html`)
 	}
+
 	scrapedData.locationData = await guessLocation(tabLk, scrapedData)
 
 	console.log("avantextractFinal", scrapedData)
@@ -620,7 +624,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 ;(async () => {
 	let {sessionCookieliAt, sessionCookieCUser, sessionCookieXs, sessionCookieAuthToken, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let profileUrls
+	let profileUrls, twitterLogin
 	let results = await utils.getDb(csvName + ".csv")
 	try {
 		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -637,17 +641,24 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl) => {
 
 	// const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
 	// urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfLinesPerLaunch)
-	console.log(`URLs to scrape: ${JSON.stringify(profileUrls, null, 4)}`)
+	console.log(`URLs to process: ${JSON.stringify(profileUrls, null, 4)}`)
 	const tabLk = await nick.newTab()
 	await linkedIn.login(tabLk, sessionCookieliAt)
 	const tabFb = await nick.newTab()
 	await facebook.login(tabFb, sessionCookieCUser, sessionCookieXs)
 	const tabTwt = await nick.newTab()
-	await twitter.login(tabTwt, sessionCookieAuthToken)
+	if (sessionCookieAuthToken) {
+		try {
+			await twitter.login(tabTwt, sessionCookieAuthToken)
+			twitterLogin = true
+		} catch (err) {
+			utils.log(`${err}`, "error")
+		}
+	}
 
 	for (const profileUrl of profileUrls) {
 		try {
-			results = results.concat(await processProfile(tabLk, tabFb, tabLk, profileUrl))
+			results = results.concat(await processProfile(tabLk, tabFb, tabTwt, profileUrl, twitterLogin))
 		} catch (error) {
 			results.push({ query: profileUrl, error, timestamp: (new Date()).toISOString() })
 			utils.log(`Error processing ${profileUrl}: ${error}`, "error")
