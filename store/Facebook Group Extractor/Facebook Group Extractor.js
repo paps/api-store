@@ -480,10 +480,15 @@ nick.newTab().then(async (tab) => {
 
 	if (result.length !== initialResultLength) {
 		await utils.saveResults(result, result, csvName)
-		if (stillMoreToScrape && ajaxUrl) { 
-			await buster.setAgentObject({ nextUrl: ajaxUrl, lastQuery })
-		} else {
-			await buster.setAgentObject({})
+		if (agentObject) {
+			if (stillMoreToScrape && ajaxUrl) {
+				agentObject.nextUrl = ajaxUrl
+				agentObject.lastQuery = lastQuery
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastQuery
+			}
+			await buster.setAgentObject(agentObject)
 		}
 	}
 	utils.log("Job is done!", "done")

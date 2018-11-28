@@ -124,14 +124,32 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
 
-		const initDate = new Date()
+		let initDate = new Date()
 		do {
+			await tab.scroll(0, - 1000)
 			await tab.scrollToBottom()
 			await tab.wait(500)
 			if ((new Date() - initDate) > 10000) {
 				break
 			}
 		} while (!firstRequestUrl)
+		if (!firstRequestUrl) {
+			try {
+				await tab.evaluate((arg, cb) => cb(null, document.location.reload))
+				await tab.waitUntilVisible("#browse_result_area")
+				initDate = new Date()
+				do {
+					await tab.scroll(0, - 1000)
+					await tab.scrollToBottom()
+					await tab.wait(500)
+					if ((new Date() - initDate) > 10000) {
+						break
+					}
+				} while (!firstRequestUrl)
+			} catch (err) {
+				//
+			}
+		}
 
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
 
@@ -153,8 +171,8 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 				firstCursor = agentObject.resumeCursor
 				firstPageNumber = agentObject.resumePageNumber
 			}
-
-			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+		} else {
+			utils.log("Facebook seems to slow to respond.", "warning")
 		}
 	}
 
@@ -166,7 +184,7 @@ const scrapUserData = (pageUrl, currentResult, responseResult, chr) => {
 
 		let profileUrl = chr("div[data-testid=\"browse-result-content\"]", divUser).parent().parent().find("a").attr("href")
 
-        let name = chr("div[data-testid=\"browse-result-content\"]", divUser).find("div.clearfix > div:last-of-type a > span").html()
+		let name = chr("div[data-testid=\"browse-result-content\"]", divUser).find("div.clearfix > div:last-of-type a > span").html()
 
 		let imageUrl = chr("div > a > img", divUser).attr("src")
 		let isFriend = (chr("div.FriendButton > a", divUser).length > 0)
@@ -351,7 +369,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 		}
 
-		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
+		utils.log(`Scraping likers from ${urlToGo}...`, "loading")
 
 		let { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
 		if (requestError) {
@@ -434,13 +452,20 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 	result = result.concat(currentResult)
 
 	await utils.saveResults(result, result, csvName)
-	if (resumeCursor) {  
-		await buster.setAgentObject({ lastQuery, resumeCursor, resumePageNumber })
-	} else {
-		await buster.setAgentObject({})
+	if (agentObject) {
+		if (resumeCursor) {
+			agentObject.lastQuery = lastQuery
+			agentObject.resumeCursor = resumeCursor
+			agentObject.resumePageNumber = resumePageNumber
+		} else {
+			delete agentObject.lastQuery
+			delete agentObject.resumeCursor
+			delete agentObject.resumePageNumber
+		}
+		await buster.setAgentObject(agentObject)
 	}
 
-    nick.exit(0)
+	nick.exit(0)
 })()
 .catch(err => {
 	utils.log(err, "error")

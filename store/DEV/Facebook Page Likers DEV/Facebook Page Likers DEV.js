@@ -2,14 +2,13 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick({
-	loadImages: true,
+	loadImages: false,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
 	printResourceErrors: false,
@@ -125,7 +124,7 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 
 		tab.driver.client.on("Network.requestWillBeSent", onAjaxRequest)
 
-		const initDate = new Date()
+		let initDate = new Date()
 		do {
 			await tab.scroll(0, - 1000)
 			await tab.scrollToBottom()
@@ -134,33 +133,26 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 				break
 			}
 		} while (!firstRequestUrl)
-		console.log("elapsed:", new Date() - initDate)
-		await tab.screenshot(`${Date.now()}sU1.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
 		if (!firstRequestUrl) {
-			console.log("toujorus rien")
-			await tab.evaluate((arg, cb) => cb(null, document.location.reload))
-			await tab.wait(5000)
-			const initDate2 = new Date()
-			do {
-				await tab.scroll(0, - 1000)
-				await tab.scrollToBottom()
-				await tab.wait(500)
-				if ((new Date() - initDate2) > 10000) {
-					break
-				}
-			} while (!firstRequestUrl)
-			console.log("elapsed:", new Date() - initDate2)
-			await tab.screenshot(`${Date.now()}sU2.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}sU2.html`)
-
+			try {
+				await tab.evaluate((arg, cb) => cb(null, document.location.reload))
+				await tab.waitUntilVisible("#browse_result_area")
+				initDate = new Date()
+				do {
+					await tab.scroll(0, - 1000)
+					await tab.scrollToBottom()
+					await tab.wait(500)
+					if ((new Date() - initDate) > 10000) {
+						break
+					}
+				} while (!firstRequestUrl)
+			} catch (err) {
+				//
+			}
 		}
-		
-		
+
 		tab.driver.client.removeListener("Network.requestWillBeSent", onAjaxRequest)
-		await tab.wait(10000)
-		await tab.screenshot(`${Date.now()}sU3.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}sU3.html`)
+
 		if (firstRequestUrl) {
 			urlTemplate = new URL(firstRequestUrl)
 			let urlTemplateDataJson = urlTemplate.searchParams.get("data")
@@ -179,8 +171,8 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 				firstCursor = agentObject.resumeCursor
 				firstPageNumber = agentObject.resumePageNumber
 			}
-
-			utils.log(`First request retreived using cursor ${firstCursor} and page number ${firstPageNumber}`, "info")
+		} else {
+			utils.log("Facebook seems to slow to respond.", "warning")
 		}
 	}
 
@@ -377,7 +369,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 			}
 		}
 
-		utils.log(`Retrieving request template from ${urlToGo}...`, "loading")
+		utils.log(`Scraping likers from ${urlToGo}...`, "loading")
 
 		let { requestError, urlTemplate, urlTemplateData, firstCursor, firstPageNumber } = await interceptRequestTemplate(result, agentObject, tab, pageUrl)
 		if (requestError) {
@@ -460,12 +452,19 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 	result = result.concat(currentResult)
 
 	await utils.saveResults(result, result, csvName)
-	if (resumeCursor) {  
-		await buster.setAgentObject({ lastQuery, resumeCursor, resumePageNumber })
-	} else {
-		await buster.setAgentObject({})
+	if (agentObject) {
+		if (resumeCursor) {
+			agentObject.lastQuery = lastQuery
+			agentObject.resumeCursor = resumeCursor
+			agentObject.resumePageNumber = resumePageNumber
+		} else {
+			delete agentObject.lastQuery
+			delete agentObject.resumeCursor
+			delete agentObject.resumePageNumber
+		}
+		await buster.setAgentObject(agentObject)
 	}
-
+	
 	nick.exit(0)
 })()
 .catch(err => {

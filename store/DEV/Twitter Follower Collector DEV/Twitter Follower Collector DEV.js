@@ -278,8 +278,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let {sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch} = utils.validateArguments()
-	let result = await utils.getDb("result.csv")
+	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
 	if (result.length) {
 		try {
@@ -314,10 +315,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	for (let i = 0; i < twitterUrls.length; i++) { // converting (@)username to https://twitter.com/username
 		if (!isUrl(twitterUrls[i])) {
-			if (twitterUrls[i].startsWith("@")) { 
-				console.log("twitterUrls[i]", twitterUrls[i])
-				twitterUrls[i] = twitterUrls[i].substr(1)	
-			}
+			if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = twitterUrls[i].substr(1)	}
 			twitterUrls[i] = `https://twitter.com/${twitterUrls[i]}`.trim()
 		}
 	}
@@ -361,11 +359,16 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	}
 	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 2h.", "warning") }
 	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result)
-		if (interrupted && twitterUrl) { 
-			await buster.setAgentObject({ nextUrl: twitterUrl, timestamp: new Date() })
-		} else {
-			await buster.setAgentObject({})
+		await utils.saveResults(result, result, csvName)
+		if (agentObject) {
+			if (interrupted && twitterUrl) {
+				agentObject.nextUrl = twitterUrl
+				agentObject.timestamp = new Date()
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.timestamp
+			}
+			await buster.setAgentObject(agentObject)
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)

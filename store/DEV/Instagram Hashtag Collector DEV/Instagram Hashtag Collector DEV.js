@@ -344,12 +344,17 @@ const isUrl = target => url.parse(target).hostname !== null
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
 	if (results.length !== initialResultLength) {
-		if (!allCollected) { 
-			await buster.setAgentObject({ nextUrl, lastHashtag })
-		} else {
-			await buster.setAgentObject({})
-		}
 		await utils.saveResults(results, results, csvName)
+		if (agentObject) {
+			if (!allCollected)  {
+				agentObject.nextUrl = nextUrl
+				agentObject.lastQuery = lastHashtag
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastHashtag
+			}
+			await buster.setAgentObject(agentObject)
+		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)

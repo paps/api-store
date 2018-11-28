@@ -337,12 +337,17 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		utils.log("Stopping the agent. You should retry in 15min.", "warning")
 	}
 	if (result.length !== initialResultLength) {
-		if (interrupted) { 
-			await buster.setAgentObject({ nextUrl, lastQuery })
-		} else {
-			await buster.setAgentObject({})
-		}
 		await utils.saveResults(result, result, csvName)
+		if (agentObject) {
+			if (interrupted) {
+				agentObject.nextUrl = nextUrl
+				agentObject.lastQuery = lastQuery
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastQuery
+			}
+			await buster.setAgentObject(agentObject)
+		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)

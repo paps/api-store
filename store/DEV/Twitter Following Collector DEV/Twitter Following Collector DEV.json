@@ -28,11 +28,11 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-					"spreadsheetUrl": {
-						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
-					},
 					"sessionCookie": {
 						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_5getyourtwittersessioncookie\">?</a>)"
+					},
+					"spreadsheetUrl": {
+						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
 					},
 					"followersPerAccount": {
 						"label": "Number of followers to scrape per Twitter account",
@@ -42,6 +42,10 @@
 						"label": "Number of lines to process per launch <a href=\"/api-store/4457/twitter-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					}
 				}
 			}
@@ -50,16 +54,16 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"spreadsheetUrl": {
-				"type": "string",
-				"title": "Spreadsheet URL",
-				"minLength": 1,
-				"required": true
-			},
 			"sessionCookie": {
 				"type": "string",
 				"title": "Session Cookie",
 				"minLength": 10,
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"title": "Spreadsheet URL",
+				"minLength": 1,
 				"required": true
 			},
 			"followersPerAccount": {
@@ -70,6 +74,10 @@
 			"numberofProfilesperLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			}
 		}
 	}

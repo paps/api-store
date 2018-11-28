@@ -287,8 +287,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let {spreadsheetUrl, sessionCookie, followersPerAccount, numberofProfilesperLaunch} = utils.validateArguments()
-	let result = await utils.getDb("result.csv")
+	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
 	if (result.length) {
 		try {
@@ -365,7 +366,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	}
 
 	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result)
+		await utils.saveResults(result, result, csvName)
 		if (interrupted && twitterUrl) { 
 			await buster.setAgentObject({ nextUrl: twitterUrl })
 		} else {

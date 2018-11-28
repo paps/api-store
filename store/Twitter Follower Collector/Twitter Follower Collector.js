@@ -278,8 +278,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let {spreadsheetUrl, sessionCookie, followersPerAccount, numberofProfilesperLaunch} = utils.validateArguments()
-	let result = await utils.getDb("result.csv")
+	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
 	if (result.length) {
 		try {
@@ -331,10 +332,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (agentObject && url === lastSavedQuery) {
-			if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
-				utils.log("Still rate limited, try later.", "info")
-				nick.exit()
-			}
+			// if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
+			// 	utils.log("Still rate limited, try later.", "info")
+			// 	nick.exit()
+			// }
 			utils.log(`Resuming scraping for ${url}...`, "info")
 			resuming = true
 		} else {
@@ -358,11 +359,16 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	}
 	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 2h.", "warning") }
 	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result)
-		if (interrupted && twitterUrl) { 
-			await buster.setAgentObject({ nextUrl: twitterUrl, timestamp: new Date() })
-		} else {
-			await buster.setAgentObject({})
+		await utils.saveResults(result, result, csvName)
+		if (agentObject) {
+			if (interrupted && twitterUrl) {
+				agentObject.nextUrl = twitterUrl
+				agentObject.timestamp = new Date()
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.timestamp
+			}
+			await buster.setAgentObject(agentObject)
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
