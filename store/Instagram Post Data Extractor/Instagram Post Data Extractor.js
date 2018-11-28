@@ -24,14 +24,14 @@ const { URL } = require("url")
 
 // }
 
-const getpostUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
+const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
+	return data.slice(0, Math.min(numberOfPostsPerLaunch, maxLength)) // return the first elements
 }
 
 const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
@@ -47,7 +47,7 @@ const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfPostsPerLaunch , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let postUrls, hasCookie
 	const tab = await nick.newTab()
@@ -65,10 +65,10 @@ const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
 	} else { // CSV
 		postUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		postUrls = postUrls.filter(str => str) // removing empty lines
-		if (!numberOfProfilesPerLaunch) {
-			numberOfProfilesPerLaunch = postUrls.length
+		if (!numberOfPostsPerLaunch) {
+			numberOfPostsPerLaunch = postUrls.length
 		}
-		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "postUrl")), numberOfProfilesPerLaunch)
+		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "postUrl")), numberOfPostsPerLaunch)
 	}
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)

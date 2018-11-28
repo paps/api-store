@@ -9,19 +9,6 @@ const { URL, parse } = require("url")
 // }
 
 /**
- * @param {String} url
- * @return {Boolean}
- */
-const isUrl = url => {
-	try {
-		new URL(url)
-		return true
-	} catch (err) {
-		return false
-	}
-}
-
-/**
  * @async
  * @internal
  * @description Function used to download a CSV file from a given url
@@ -197,6 +184,19 @@ class StoreUtilities {
 	}
 
 	/**
+	 * @param {String} url
+	 * @return {Boolean}
+	 */
+	isUrl(url) {
+		try {
+			new URL(url)
+			return true
+		} catch (err) {
+			return false
+		}
+	}
+
+	/**
 	 * @async
 	 * @description Download the entire CSV
 	 * @param {String} url - URL to download
@@ -261,7 +261,7 @@ class StoreUtilities {
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
-			if (!isUrl(csv[0][0])) {
+			if (!this.isUrl(csv[0][0])) {
 				csv.shift()
 			}
 			rows = csv.map(el => {
@@ -370,6 +370,9 @@ class StoreUtilities {
 			}
 			await buster.download(url, "sheet.csv")
 			const file = fs.readFileSync("sheet.csv", "UTF-8")
+			if (!file) {
+				throw "Input spreadsheet is empty!"
+			}
 			if (file.indexOf("<!DOCTYPE html>") >= 0) {
 				throw "Could not download csv, maybe csv is not public."
 			}

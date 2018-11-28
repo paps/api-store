@@ -112,6 +112,7 @@ nick.newTab().then(async (tab) => {
 				await tab.sendKeys(".enter_submit", forgedMessage)
 				await tab.evaluate(sendMessage)
 				utils.log(`Wished a happy birthday to ${name} with the message: ${forgedMessage}`, "done")
+				result.push({ name, timestamp: (new Date()).toISOString(), message: forgedMessage })
 				hasWished = true
 				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 			} catch (err) {

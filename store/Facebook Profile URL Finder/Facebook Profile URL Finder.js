@@ -21,22 +21,27 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 
-const DB_NAME = "result.csv"
 let db
 // }
 
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
-	const {spreadsheetUrl, csvName, columnName} = utils.validateArguments()
-	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let {spreadsheetUrl, csvName, columnName} = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
+	let queries
+	if (utils.isUrl(spreadsheetUrl)) {
+		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	} else {
+		queries = [ spreadsheetUrl ]
+	}
 	const result = []
 	let i = 1
 
-	db = await utils.getDb(DB_NAME)
+	db = await utils.getDb(csvName + ".csv")
 
 	// Shorter, but less readable way to sort all processed queries
-	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	queries = queries.filter(el => el && db.findIndex(line => line.query === el) < 0)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)

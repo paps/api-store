@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 5"
+"phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
 "phantombuster flags: save-folder"
 
@@ -133,6 +133,7 @@ nick.newTab().then(async (tab) => {
 				await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 				// await tab.evaluate(sendMessage)
 				utils.log(`Wished a happy birthday to ${name} with the message: ${forgedMessage}`, "done")
+				result.push({ name, timestamp: (new Date()).toISOString(), message: forgedMessage })
 				hasWished = true
 				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 			} catch (err) {

@@ -9,19 +9,6 @@ const { URL, parse } = require("url")
 // }
 
 /**
- * @param {String} url
- * @return {Boolean}
- */
-const isUrl = url => {
-	try {
-		new URL(url)
-		return true
-	} catch (err) {
-		return false
-	}
-}
-
-/**
  * @async
  * @internal
  * @description Function used to download a CSV file from a given url
@@ -197,6 +184,19 @@ class StoreUtilities {
 	}
 
 	/**
+	 * @param {String} url
+	 * @return {Boolean}
+	 */
+	isUrl(url) {
+		try {
+			new URL(url)
+			return true
+		} catch (err) {
+			return false
+		}
+	}
+
+	/**
 	 * @async
 	 * @description Download the entire CSV
 	 * @param {String} url - URL to download
@@ -261,7 +261,7 @@ class StoreUtilities {
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
-			if (!isUrl(csv[0][0])) {
+			if (!this.isUrl(csv[0][0])) {
 				csv.shift()
 			}
 			rows = csv.map(el => {
@@ -370,6 +370,9 @@ class StoreUtilities {
 			}
 			await buster.download(url, "sheet.csv")
 			const file = fs.readFileSync("sheet.csv", "UTF-8")
+			if (!file) {
+				throw "Input spreadsheet is empty!"
+			}
 			if (file.indexOf("<!DOCTYPE html>") >= 0) {
 				throw "Could not download csv, maybe csv is not public."
 			}
@@ -455,6 +458,8 @@ class StoreUtilities {
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		this.log("Saving data...", "loading")
+		const v8 = require("v8")
+		let date
 		if (schema) {
 			const newResult = []
 			for (let i = 0; i < csvResult.length; i++) {
@@ -471,8 +476,12 @@ class StoreUtilities {
 			csvResult = newResult
 		// If no schema is supplied, the function will try to create a csv with all gaps filled
 		} else {
+			date = new Date()
 			const newResult = []
+			console.log("part1")			
 			const fields = this._getFieldsFromArray(csvResult)
+			console.log("part2:", new Date() - date)
+			date = new Date()			
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
@@ -480,22 +489,32 @@ class StoreUtilities {
 				}
 				newResult.push(newItem)
 			}
+			console.log("part3:", new Date() - date)
+			date = new Date()
 			csvResult = newResult
 		}
+		console.log("v8", v8.getHeapStatistics())
 		const csvUrl = await this.buster.saveText(await jsonexport(csvResult), name + ".csv")
 		this.log(`CSV saved at ${csvUrl}`, "done")
+		console.log("v8", v8.getHeapStatistics())
+
+		console.log("part4:", new Date() - date)
+		date = new Date()
 		const backupResultObject = { csvUrl }
 		if (saveJson) {
 			const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
 			this.log(`JSON saved at ${jsonUrl}`, "done")
+			console.log("part5:", new Date() - date)
 			backupResultObject.jsonUrl = jsonUrl
 		}
+		date = new Date()
 		try {
 			await this.buster.setResultObject(jsonResult)
 		} catch (error) {
 			await this.buster.setResultObject(backupResultObject)
 		}
 		this.log("Data successfully saved!", "done")
+		console.log("part6:", new Date() - date)
 		if (this.test) {
 			this.output += "|END|"
 			this._testResult(csvResult)

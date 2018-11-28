@@ -20,6 +20,9 @@
 					"columnName": {
 						"type": "text"
 					},
+					"csvName": {
+						"type": "text"
+					},
 					"queries": {
 						"hidden": true,
 						"disabled": true
@@ -38,6 +41,10 @@
 			"columnName": {
 				"type": "string",
 				"title": "Column name (optional)"
+			},
+			"csvName": {
+				"title": "Name of resulting CSV file",
+				"default": "result"
 			},
 			"queries": {
 				"type": "array",
