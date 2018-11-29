@@ -1,0 +1,98 @@
+{
+	"slug": "twitter-hashtag-extractor",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "...",
+		"numberOfPostsPerLaunch": 25
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter hashtag <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter hashtag"
+					},
+					"columnName": {
+						"label": "Column name where LinkedIn profile URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Facebook Profile"
+					},
+					"numberOfPostsPerLaunch": {
+						"label": "Number of posts to extract per hashtags <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "By default the API will extract 25 posts per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfPostsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
