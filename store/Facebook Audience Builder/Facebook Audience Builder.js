@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Facebook.js, lib-LinkedInScraper.js, lib-Google.js, lib-Twitter.js, lib-Dropcontact.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-Facebook.js, lib-LinkedInScraper.js, lib-WebSearch.js, lib-Twitter.js, lib-Dropcontact.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -27,7 +27,7 @@ const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
-const Google = require("./lib-Google")
+const Google = require("./lib-WebSearch")
 const Dropcontact = require("./lib-Dropcontact")
 const dropcontact = new Dropcontact("nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi")
 const { URL } = require("url")
@@ -361,7 +361,7 @@ const findZipCode = async (tab, location, locationData) => {
 	await tab.waitUntilVisible(".Tableresultborder")
 
 	const melissaData = await tab.evaluate((arg, cb) => {
-		const extractData = number => Array.from(document.querySelectorAll(".Tableresultborder tr")).filter(el => el.getAttribute("bgcolor"))[0].querySelector(`:nth-child(${number})`).textContent
+		const extractData = number => document.querySelector(".Tableresultborder tr[bgcolor]").querySelector(`:nth-child(${number})`).textContent
 		const extractedData = {}
 		extractedData.cityName = extractData(1)
 		extractedData.stateName = extractData(2)
@@ -421,8 +421,8 @@ const useDropcontact = async (scrapedData) => {
 }
 
 // extract and format all final data
-const extractFinalResult = scrapedData => {
-	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, query: scrapedData.query, timestamp: (new Date()).toISOString() }
+const extractFinalResult = (scrapedData, query) => {
+	const results = { fn: scrapedData.firstName, ln: scrapedData.lastName, query, timestamp: (new Date()).toISOString() }
 	if (scrapedData.birthday) {
 		results.dob = scrapedData.birthday
 	}
@@ -562,7 +562,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl, twitterLogin) =>
 	
 	scrapedData.locationData = await guessLocation(tabLk, scrapedData)
 
-	const finalResult = extractFinalResult(scrapedData)
+	const finalResult = extractFinalResult(scrapedData, profileUrl)
 	results.push(finalResult)
 	return results
 }
@@ -574,7 +574,7 @@ const processProfile = async (tabLk, tabFb, tabTwt, profileUrl, twitterLogin) =>
 	let profileUrls, twitterLogin
 	let results = await utils.getDb(csvName + ".csv")
 	try {
-		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	} catch (err) {
 		profileUrls = [spreadsheetUrl]
 	}
