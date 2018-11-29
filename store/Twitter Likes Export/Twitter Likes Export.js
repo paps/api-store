@@ -27,8 +27,6 @@ const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 
 const DB_SHORT_NAME = "twitter-likes-export"
-const DB_NAME = DB_SHORT_NAME + ".csv"
-
 // }
 
 /**
@@ -233,9 +231,14 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, tweetsPerLaunch, queries,noDatabase } = utils.validateArguments()
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	let { sessionCookie, spreadsheetUrl, columnName, tweetsPerLaunch, queries, csvName, noDatabase } = utils.validateArguments()
 	const execResult = []
+
+	if (!csvName) {
+		csvName = DB_SHORT_NAME
+	}
+
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
 	if (!sessionCookie) {
 		utils.log("You need to set your Twitter session cookie in your API configuration", "error")
@@ -276,7 +279,7 @@ const createCsvOutput = json => {
 		execResult.push(data)
 	}
 	db.push(...utils.filterRightOuter(db, createCsvOutput(execResult)))
-	await utils.saveResults(noDatabase ? [] : execResult, noDatabase ? [] : db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(noDatabase ? [] : execResult, noDatabase ? [] : db, csvName, null, false)
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}` ,"error")

@@ -1,13 +1,14 @@
 {
 	"slug": "twitter-likes-export",
-	"description": "Extract every Tweets liked by a list of people",
-	"image": "",
+	"description": "Retrieve the last likers of a list of Tweets",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Likes+Export/Twitter+Likes+Export.png",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
+	"hidden": false,
+	"updated": false,
 	"new": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
@@ -45,6 +46,10 @@
 						"helper": "By default the API will process every tweets",
 						"placeholder": 2,
 						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of the resulting CSV",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -67,6 +72,9 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 1
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"oneOf": [

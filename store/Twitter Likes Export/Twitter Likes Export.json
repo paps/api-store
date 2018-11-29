@@ -46,6 +46,10 @@
 						"helper": "By default the API will process every tweets",
 						"placeholder": 2,
 						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of the resulting CSV",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -68,6 +72,9 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 1
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"oneOf": [
