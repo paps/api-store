@@ -20,7 +20,6 @@ const nick = new Nick({
 const utils = new StoreUtilities(nick, buster)
 const twitter = new Twitter(nick, buster, utils)
 const DB_SHORT_NAME = "result"
-const DB_NAME = DB_SHORT_NAME + ".csv"
 const DEFAULT_ACCOUNTS_PER_LAUNCH = 2
 let requestIdVideos = []
 // }
@@ -221,9 +220,15 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let db = await utils.getDb(DB_NAME)
-	let { sessionCookie, spreadsheetUrl, columnName, accountsPerLaunch, queries } = utils.validateArguments()
+	let db = []
+	let { sessionCookie, spreadsheetUrl, columnName, accountsPerLaunch, csvName, queries } = utils.validateArguments()
 	const result = []
+
+	if (!csvName) {
+		csvName = DB_SHORT_NAME
+	}
+
+	db = await utils.getDb(csvName + ".csv")
 
 	if (!sessionCookie) {
 		utils.log("You need to add your Twitter session cookie", "error")
@@ -266,7 +271,7 @@ const createCsvOutput = json => {
 	}
 
 	db.push(...createCsvOutput(result))
-	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(result, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
