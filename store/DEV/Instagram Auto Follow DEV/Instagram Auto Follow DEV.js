@@ -31,7 +31,7 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
-		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		utils.log("Input spreadsheet is empty OR we already processed all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
@@ -47,14 +47,12 @@ const interceptInstagramApiCalls = e => {
 // function to follow a profile
 const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction) => {
 	const scrapedData = await instagram.scrapeProfile(tabJson, query, profileUrl)
-	console.log("scrapedData", scrapedData)
 	let action
 	if (conditionalAction.startsWith("Follow")) {
 		action = "Follow"
 	} else {
 		action = "Unfollow"
 	}
-	console.log("action", action)
 	if (action === "Follow") {
 		if (scrapedData.status === "Following") {
 			utils.log(`You already follow ${scrapedData.profileName}!`, "warning")
@@ -151,7 +149,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 	followSuccessCount = result.filter(el => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter(el => el.unfollowAction === "Success").length
 	followRequestCount = result.filter(el => el.followAction === "Request").length
-	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
+	console.log(`Profiles to ${action === "Follow" ? "follow" : "unfollow"}: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
@@ -162,14 +160,13 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-				utils.log(`In total ${followSuccessCount} profiles followed, ${followRequestCount} requests sent.`, "done")
-				break
+			utils.log(`Processing stopped: ${timeLeft.message}`, "warning")
+			break
 		}
 		try {
 			utils.log(`Opening page ${url}`, "loading")
 			pageCount++
-			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
+			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} proccessed`)
 			await tab.open(url)
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
@@ -188,7 +185,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 				utils.log(`In total ${unfollowSuccessCount} profiles unfollowed.`, "done")
 			}
 		} catch (err) {
-			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
+			utils.log(`Can't open the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
 		if (rateLimited) {

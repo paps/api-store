@@ -32,6 +32,15 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
+// checking if we've hit Instagram rate limits
+const checkRateLimit = (arg, cb) => {
+	if (document.querySelector("body") && document.querySelector("body").textContent.startsWith("Please wait a few minutes before you try again.")) {
+		cb(null, true)
+	} else {
+		cb(null, false)
+	}
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
@@ -85,6 +94,15 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 			const profileUrl = await tab.getUrl()
 			result = result.concat(await instagram.scrapeProfile(jsonTab, url, profileUrl))
 		} catch (err) {
+			try {
+				await tab.waitUntilVisible("body")
+				if (await tab.evaluate(checkRateLimit)) {
+					utils.log("Instagram rate limits reached, stopping the agent... You should retry in 15min.", "warning")
+					break
+				}
+			} catch (err2) {
+				//
+			}
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
