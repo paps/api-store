@@ -45,10 +45,17 @@ const findProfile = async (tab, email) => {
 		const profile = await tab.evaluate(extractProfile, { email })
 		if (profile.profileUrl) {
 			await tab.open(profile.profileUrl)
-			await tab.waitUntilVisible("#profile-content")
+			await tab.waitUntilVisible(["#profile-content", "#content-main"], "or")
 			const profileUrl = await tab.getUrl()
 			if (profileUrl.includes("linkedin.com/in/")) {
 				profile.profileUrl = profileUrl
+			} else if (profileUrl.includes("linkedin.com/sales/people")) {
+				const profileUrlSalesNav = await tab.evaluate(extractSalesNavigatorProfile)
+				if (profileUrlSalesNav) {
+					profile.profileUrl = profileUrlSalesNav
+				} else {
+					delete profile.profileUrl
+				}
 			} else {
 				delete profile.profileUrl
 			}
@@ -59,6 +66,16 @@ const findProfile = async (tab, email) => {
 		return null
 	}
 }
+
+const extractSalesNavigatorProfile = (arg, cb) => {
+	let jsonCode = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("contactInfo") && !el.textContent.includes("request"))[0]
+	if (jsonCode) {
+		jsonCode = JSON.parse(jsonCode.textContent)
+		cb(null, jsonCode.flagshipProfileUrl)
+	}
+	cb(null, null)
+}
+
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
