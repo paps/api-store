@@ -1,8 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-// "phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js"
+"phantombuster flags: save-folder"
 
 const { parse } = require("url")
 
@@ -19,7 +19,7 @@ const nick = new Nick({
 	debug: false,
 	timeout: 30000
 })
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook")
@@ -434,8 +434,17 @@ nick.newTab().then(async (tab) => {
 	} else { 
 		// Link not from Facebook, trying to get CSV
 		try {
-			groupsUrl = await utils.getDataFromCsv(groupsUrl, columnName)
-			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
+			try {
+				groupsUrl = await utils.getDataFromCsv2(groupsUrl, columnName)
+			} catch (err) {
+				console.log("err:", err)
+				// console.log("opening csv:", "http://phantombuster.com")
+				await tab.open(groupsUrl)
+				await tab.screenshot(`${Date.now()}s.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}s.html`)
+				await utils.saveResults(result, result, csvName)
+				nick.exit(0)
+			}
 			if (groupsUrl.length === 0) {
 				utils.log("Spreadsheet is empty!", "error")
 				nick.exit(1)

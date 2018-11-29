@@ -172,7 +172,7 @@ const scrapeLikers = (arg, cb) => {
 			utils.log("The given url is not a valid facebook profile url.", "error")
 		}
 	} else { // CSV
-		postsToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		postsToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		postsToScrape = postsToScrape.filter(str => str) // removing empty lines
 		for (let i = 0; i < postsToScrape.length; i++) { // cleaning all facebook entries
 			postsToScrape[i] = utils.adjustUrl(postsToScrape[i], "facebook")

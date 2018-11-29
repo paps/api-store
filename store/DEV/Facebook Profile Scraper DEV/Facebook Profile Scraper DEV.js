@@ -391,7 +391,7 @@
 		if (facebook.isFacebookUrl(spreadsheetUrl)) {
 			profilesToScrape = [ spreadsheetUrl ]
 		} else {
-			profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			profilesToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
 										   .filter(str => str) // removing empty lines

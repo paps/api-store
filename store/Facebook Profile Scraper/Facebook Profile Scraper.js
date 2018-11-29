@@ -21,8 +21,6 @@ const utils = new StoreUtilities(nick, buster)
 const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
-const { URL } = require("url")
-
 
 // Checks if a url is already in the csv
 const checkDb = (str, db) => {
@@ -393,7 +391,7 @@ nick.newTab().then(async (tab) => {
 	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ spreadsheetUrl ]
 	} else {
-		profilesToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		profilesToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	}
 	profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
 									   .filter(str => str) // removing empty lines

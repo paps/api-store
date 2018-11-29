@@ -426,7 +426,7 @@ nick.newTab().then(async (tab) => {
 	} else { 
 		// Link not from Facebook, trying to get CSV
 		try {
-			groupsUrl = await utils.getDataFromCsv(groupsUrl, columnName)
+			groupsUrl = await utils.getDataFromCsv2(groupsUrl, columnName)
 			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
 			if (groupsUrl.length === 0) {
 				utils.log("Spreadsheet is empty!", "error")

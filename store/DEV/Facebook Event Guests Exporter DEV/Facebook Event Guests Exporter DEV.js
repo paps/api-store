@@ -268,7 +268,7 @@ const checkUnavailable = (arg, cb) => {
 			utils.log("The given url is not a valid facebook profile url.", "error")
 		}
 	} else { // CSV
-		eventsToScrape = await utils.getDataFromCsv(inputUrl, columnName)
+		eventsToScrape = await utils.getDataFromCsv2(inputUrl, columnName)
 		eventsToScrape = eventsToScrape.filter(str => str) // removing empty lines
 		for (let i = 0; i < eventsToScrape.length; i++) { // cleaning all entries
 			eventsToScrape[i] = utils.adjustUrl(eventsToScrape[i], "facebook")

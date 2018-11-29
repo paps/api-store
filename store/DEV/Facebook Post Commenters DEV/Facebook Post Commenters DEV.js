@@ -91,15 +91,13 @@ const scrapeCommentsAndRemove = (arg, cb) => {
 				scrapedData.profileUrl = cleanFacebookProfileUrl(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").href)
 				if (comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody")) {
 					scrapedData.comment = comment.querySelector("span.UFICommentActorAndBody span.UFICommentBody").textContent
+				} else if (comment.querySelector(".uiScaledImageContainer img")) { // picture as only comment
+					scrapedData.comment = comment.querySelector(".uiScaledImageContainer img").src
+				} else if (comment.querySelector("video")) { // gif as only comment
+					scrapedData.comment = comment.querySelector("video").src
 				}
 				if (comment.querySelector("a > img")) {
 					scrapedData.profileImageUrl = comment.querySelector("a > img").src
-				}
-				if (comment.querySelector(".uiScaledImageContainer img")) { // picture as only comment
-					scrapedData.comment = comment.querySelector(".uiScaledImageContainer img").src
-				}
-				if (comment.querySelector("video")) { // gif as only comment
-					scrapedData.comment = comment.querySelector("video").src
 				}
 				let likeCount = 0
 				try { // converting 3K to 3000
@@ -147,6 +145,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 		}
 	}
 	let result = []
+	let totalScraped = 0
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -161,8 +160,11 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 				await tab.wait((expandedCount + 5) * 2000)
 				utils.log(`${expandedCount} comments expanded`, "done")
 			}
-
-			result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, firstComment:true }))
+			try {
+				result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, firstComment:true }))
+			} catch (err) {
+				//
+			}
 			if (totalCount) {
 				if (numberOfCommentsPerPost && numberOfCommentsPerPost < totalCount) {
 					totalCount = numberOfCommentsPerPost
@@ -170,15 +172,25 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 				buster.progressHint(result.length / totalCount, `${result.length} posts scraped`)
 			}
 			commentsCount = await tab.evaluate(getCommentsCount, { selector })
-			lastDate = new Date()
-			utils.log(`${result.length} comments scraped.`, "info")
 			if (await tab.isVisible(".UFIPagerLink")) { 
 				await tab.click(".UFIPagerLink")
 			}
+			if (result.length > totalScraped) {
+				totalScraped = result.length
+				lastDate = new Date()
+				utils.log(`${result.length} comments scraped.`, "info")
+			}
 		}
 		await tab.wait(500)
-	} while ((!numberOfCommentsPerPost || result.length < numberOfCommentsPerPost) && new Date() - lastDate < 30000)
-	result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, first:false }))
+	} while ((!numberOfCommentsPerPost || result.length < numberOfCommentsPerPost) && new Date() - lastDate < 25000)
+	if (new Date() - lastDate > 25000) {
+		utils.log("No new comments can be loaded, exiting...", "info")
+	}
+	try {
+		result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, first:false }))
+	} catch (err) {
+		//
+	}
 	if (result.length) {
 		if (numberOfCommentsPerPost) {
 			result = result.slice(0, numberOfCommentsPerPost)
@@ -218,7 +230,7 @@ const getTotalCommentsCount = (arg, cb) => {
 			utils.log("The given url is not a valid facebook profile url.", "error")
 		}
 	} else { // CSV
-		postsToScrape = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		postsToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		postsToScrape = postsToScrape.filter(str => str) // removing empty lines
 		for (let i = 0; i < postsToScrape.length; i++) { // cleaning all facebook entries
 			postsToScrape[i] = utils.adjustUrl(postsToScrape[i], "facebook")
