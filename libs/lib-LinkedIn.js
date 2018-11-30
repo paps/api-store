@@ -110,6 +110,9 @@ class LinkedIn {
 				console.log(error)
 			}
 			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
+			if (this.originalSessionCookie.length < 100) {
+				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
+			}
 			this.nick.exit(1)
 		}
 	}
