@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -22,8 +21,8 @@ const { URL } = require("url")
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Twitter = require("./lib-Twitter")
-const twitter = new Twitter(nick, buster, utils)
+//const Twitter = require("./lib-Twitter")
+//const twitter = new Twitter(nick, buster, utils)
 
 const DB_NAME = "result"
 const DEFAULT_POSTS_COUNT = 25
@@ -90,7 +89,7 @@ const waitWhileLoading = (arg, cb) => {
 	const idle = () => {
 		const loadedTweets = document.querySelectorAll("div.tweet.js-actionable-tweet").length
 		if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
-			cb(null, "DONE")
+			return cb(null, "DONE")
 		} else if (loadedTweets <= arg.prevCount) {
 			if (Date.now() - startTimestamp >= 30000) {
 				return cb("No tweets loaded after 30s")
@@ -127,6 +126,10 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 
 	tweetsCount = await tab.evaluate(getLoadedTweetsCount)
 	while (tweetsCount < maxCount) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
 		utils.log(`${tweetsCount} tweets loaded`, "loading")
 		await tab.scrollToBottom()
 		try {
@@ -142,6 +145,7 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 	}
 	res.push(...await tab.evaluate(scrapeTweets))
 	res = res.slice(0, maxCount)
+	utils.log(`${res.length} tweets scraped`, "done")
 	return res
 }
 
@@ -166,13 +170,6 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 		queries = [ queries ]
 	}
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	// TODO: LPL behaviour or TAL behaviour ?
-	/*queries = queries.filter(el => db.findIndex(line => el === line.query) < 0)
-
-	if (queries.length < 1) {
-		utils.log("Input is empty OR every queries provided", "warning")
-		nick.exit()
-	}*/
 
 	utils.log(`Hashtags to scrape: ${JSON.stringify(queries, null, 2)}`, "done")
 	for (const query of queries) {
