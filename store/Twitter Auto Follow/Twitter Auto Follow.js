@@ -21,7 +21,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
-const dbFileName = "database-twitter-auto-follow.csv"
+const dbName = "database-twitter-auto-follow"
 // }
 
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
@@ -229,6 +229,8 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
 				utils.log(error, "warning")
 			}
 		}
+		// Delay the next follow
+		await tab.wait(Math.round(25000 + Math.random() * 2500))
 	}
 	return added
 }
@@ -238,8 +240,11 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, whiteList, unfollowProfiles, actionToPerform } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, csvName, whiteList, unfollowProfiles, actionToPerform } = utils.validateArguments()
 
+	if (!csvName) {
+		csvName = dbName
+	}
 	// Default action to perform
 	if (!actionToPerform) {
 		if (typeof unfollowProfiles === "boolean") {
@@ -252,20 +257,19 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
 			actionToPerform = "follow"
 		}
 	}
-
 	if (!whiteList) {
 		whiteList = []
 	}
 	if (!numberOfAddsPerLaunch) {
 		numberOfAddsPerLaunch = 20
 	}
-	let db = await utils.getDb(dbFileName)
+	let db = await utils.getDb(csvName + ".csv")
 	let profiles = await getProfilesToAdd(spreadsheetUrl, columnName, db, numberOfAddsPerLaunch)
 	await twitter.login(tab, sessionCookie)
 	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, actionToPerform)
 	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${actionToPerform === "unfollow" || actionToPerform === "unfollowback" ? "unfollowed" : "added" }.`, "done")
 	db = db.concat(added)
-	await utils.saveResult(db, dbFileName.split(".").shift())
+	await utils.saveResult(db, csvName)
 	nick.exit()
 })()
 	.catch(err => {
