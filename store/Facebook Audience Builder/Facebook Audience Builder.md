@@ -66,10 +66,10 @@ Below your session cookies you’ll find Spreadsheet URL.
 Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**:
 <center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/spreadsheet-2.png)</center>
 
-Your spreadsheet should contain a list of Facebook Group URLs (**one link per row**).
+Your spreadsheet should contain a list of LinkedIn or Facebook profile URLs (**one link per row**).
 
 You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
-You can also enter a single Facebook group URL directly in the field.
+You can also enter a single LinkedIn or Facebook profile URL directly in the field.
 
 
 # Click on Launch & Enjoy!

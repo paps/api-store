@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper-DEV.js, lib-Google-DEV.js, lib-Twitter-DEV.js, lib-Dropcontact.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Facebook-DEV.js, lib-LinkedInScraper-DEV.js, lib-WebSearch.js, lib-Twitter-DEV.js, lib-Dropcontact.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -28,7 +28,7 @@ const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
-const Google = require("./lib-Google-DEV")
+const Google = require("./lib-WebSearch")
 const Dropcontact = require("./lib-Dropcontact")
 const dropcontact = new Dropcontact("nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi")
 const { URL } = require("url")

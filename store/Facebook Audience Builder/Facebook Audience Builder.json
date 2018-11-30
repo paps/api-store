@@ -5,7 +5,7 @@
 	"argumentDescription": "",
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
-	"hidden": false,
+	"hidden": true,
 	"new": true,
 	"defaultArgument": {
 		"sessionCookieliAt": "your_li-at_session_cookie",
@@ -14,6 +14,20 @@
 		"sessionCookieAuthToken": "your_auth-token_session_cookie",
 		"spreadsheetUrl": "linkedin_or_facebook_profile_urls",
 		"numberOfLinesPerLaunch": 10
+	},
+	"outputDescription": {
+		"fn": "First name",
+		"ln": "Last name",
+        "uid": "Facebook Unique ID",
+        "gender": "Gender",
+        "email": "Emails found",
+		"country": "Country",
+		"st": "State (if US)",
+        "ct": "City",
+        "zip": "ZIP Code",
+        "dob": "Date of birth",
+        "doby": "Year of birth",
+        "age": "Age"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

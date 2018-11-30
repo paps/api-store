@@ -80,17 +80,17 @@ const _defaultEngines = [
 				return url
 			}
 		}
-	},
-	{
-		"name": "qwant",
-		"codename": "Q",
-		"baseUrl": "https://www.qwant.com/?q=",
-		"baseSelector": "div.result_fragment > div.result",
-		"titleSelector" : "span.result--web--title",
-		"linkSelector": "a.result--web--link",
-		"descriptionSelector": "p",
-		"noResultsSelector": "div.no_result",
-		"recaptcha": "div.anti_robot"
+	// },
+	// {
+	// 	"name": "qwant",
+	// 	"codename": "Q",
+	// 	"baseUrl": "https://www.qwant.com/?q=",
+	// 	"baseSelector": "div.result_fragment > div.result",
+	// 	"titleSelector" : "span.result--web--title",
+	// 	"linkSelector": "a.result--web--link",
+	// 	"descriptionSelector": "p",
+	// 	"noResultsSelector": "div.no_result",
+	// 	"recaptcha": "div.anti_robot"
 	}
 ]
 
