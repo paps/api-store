@@ -66,7 +66,7 @@ const _handleGoogle = urlObject => {
 	let _url = null
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
 	let docIdPattern
-
+	console.log("urlO", urlObject)
 	if (urlObject.hostname === "docs.google.com") {
 		docIdPattern = "/spreadsheets/d/"
 
@@ -243,7 +243,7 @@ class StoreUtilities {
 		if (typeof columnName === "string" && columnName) {
 			column = csv[0].findIndex(el => el === columnName)
 			if (column < 0) {
-				throw `No title ${columnName} in csv file.`
+				throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
 			}
 			csv.shift()
 			rows = csv.map(line => line[column])
@@ -257,7 +257,7 @@ class StoreUtilities {
 			for (const field of columns) {
 				let index = csv[0].findIndex(cell => cell === field)
 				if (index < 0) {
-					throw `No title ${field} in csv file.`
+					throw `The Column Name is set to '${field}' but there's no column named '${field}' in your input spreadsheet.`
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
@@ -333,7 +333,7 @@ class StoreUtilities {
 				}
 			}
 			if (column !== i) {
-				throw `No title ${columnName} in csv file.`
+				throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
 			}
 			data.shift()
 		}
@@ -368,6 +368,7 @@ class StoreUtilities {
 					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
 				}
 			}
+			console.log("url:", url)
 			await buster.download(url, "sheet.csv")
 			const file = fs.readFileSync("sheet.csv", "UTF-8")
 			if (!file) {
@@ -381,7 +382,7 @@ class StoreUtilities {
 			if (columnName) {
 				column = data[0].findIndex(el => el === columnName)
 				if (column < 0) {
-					throw `No title ${columnName} in csv file.`
+					throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
 				}
 				data.shift()
 			}
