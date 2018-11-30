@@ -98,7 +98,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 			let instagramJsonCode = await tab.getContent()
 			instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
 			if (instagramJsonCode && instagramJsonCode.status === "fail") {
-				utils.log(`Error getting hashtags : ${instagramJsonCode.message}`, "error")
+				utils.log(`Error getting hashtags : ${instagramJsonCode.message}`, "warning")
 				rateLimited = true
 			}
 		} catch (err3) {

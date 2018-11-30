@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -136,6 +137,12 @@ const removeLinkedinSubdomains = url => {
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
 	const tab = await nick.newTab()
+	console.log("IP:", await utils.getIP())
+
+	await tab.open("https://www.iplocation.net/")
+	await tab.wait(5000)
+	await tab.screenshot(`${Date.now()}sU.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 	await linkedIn.login(tab, sessionCookie)
 
 	const result = []
@@ -174,6 +181,7 @@ const removeLinkedinSubdomains = url => {
 			utils.log(`Can't scrape the profile ${url}: ${err.message || err}`, "warning")
 			continue
 		}
+		await tab.wait(2500 + Math.random() * 2000)
 	}
 
 	await linkedIn.saveCookie()

@@ -62,7 +62,10 @@ const scrapeResultsAll = (arg, callback) => {
 		} else {
 			selectorAll = "ul.search-results__list > li"
 	}
-	const results = document.querySelectorAll(selectorAll)
+	let results = document.querySelectorAll(selectorAll)
+	if (arg.onlyGetFirstResult) {
+		results = [ results[0] ]
+	}
 	const data = []
 	for (const result of results) {
 		let url
@@ -155,8 +158,10 @@ const scrapeResultsAll = (arg, callback) => {
 				}
 				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
 				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
-			} else if (result.querySelector("figure.search-result__image > img")) {
+			} else if (arg.searchCat !== "groups" && result.querySelector("figure.search-result__image > img")) {
 					newInfos.name = result.querySelector("figure.search-result__image > img").alt
+			} else if (result.querySelector(".search-result__title")) {
+				newInfos.name = result.querySelector(".search-result__title").innerText
 			}
 			if (arg.searchCat === "companies") {
 				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
@@ -263,8 +268,8 @@ const getPostCount = (arg, cb) => cb(null, document.querySelectorAll("li.search-
 
 // Content scraping and removing function
 const scrapeAndRemove = (arg, cb) => {
-	const results = document.querySelectorAll("li.search-content__result")
-	const scrapedData = []
+	let results = document.querySelectorAll("li.search-content__result")
+	let scrapedData = []
 	for (let i = 0 ; i < results.length - arg.limiter ; i++) {
 		const scrapedObject = { query: arg.query }
 		if (results[i].querySelector(".feed-shared-actor__name")) {
@@ -352,7 +357,7 @@ const scrapeNetworkProfiles = (arg, cb) => {
 }
 
 // handle loading and scraping of Content
-const loadContentAndScrape = async (tab, numberOfPost, query) => {
+const loadContentAndScrape = async (tab, numberOfPost, query, onlyGetFirstResult) => {
 	let result = []
 	let scrapeCount = 0
 	let postCount = 0
@@ -360,7 +365,7 @@ const loadContentAndScrape = async (tab, numberOfPost, query) => {
 	do {
 		const newPostCount = await tab.evaluate(getPostCount)
 		if (newPostCount > postCount) {
-			const tempResult = await tab.evaluate(scrapeAndRemove, { query, limiter: 6 })
+			const tempResult = await tab.evaluate(scrapeAndRemove, { query, limiter: 6, onlyGetFirstResult })
 			result = result.concat(tempResult)
 			scrapeCount = result.length
 			if (scrapeCount) {
@@ -394,7 +399,7 @@ const loadContentAndScrape = async (tab, numberOfPost, query) => {
 		}
 		await tab.wait(1000)
 	} while (scrapeCount < numberOfPost)
-	result = result.concat(await tab.evaluate(scrapeAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
+	result = result.concat(await tab.evaluate(scrapeAndRemove, { query, limiter: 0, onlyGetFirstResult })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfPost)
 	if (result.length && scrapeCount === 0) { // if we scraped posts without more loading
 		utils.log(`Scraped ${Math.min(result.length, numberOfPost)} posts.`, "done")
@@ -445,12 +450,15 @@ const loadNetworkAndScrape = async (tab, numberOfPages, query) => {
 }
 
 // handle scraping of Content posts
-const getContentPosts = async (tab, searchUrl, numberOfPost, query) => {
+const getContentPosts = async (tab, searchUrl, numberOfPost, query, onlyGetFirstResult) => {
 	let result = []
 	try {
 		await tab.open(searchUrl)
 		await tab.waitUntilVisible(".search-results__list")
 		result = await loadContentAndScrape(tab, numberOfPost, query)
+		if (onlyGetFirstResult) {
+			result = [ result[0] ]
+		}
 	} catch (err) {
 		utils.log(`Error getting Content:${err}`, "error")
 	}
@@ -470,19 +478,22 @@ const getNetwork = async (tab, searchUrl, numberOfPost, query) => {
 	return result
 }
 
-const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category) => {
+const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category, onlyGetFirstResult) => {
 	utils.log(`Getting data for search ${query} ...`, "loading")
+	if (onlyGetFirstResult) {
+		numberOfPage = 1
+	}
 	let searchCat = isSearchURL
 	if (isSearchURL === 0) {
 		searchCat = category.toLowerCase()
 		query += ` - ${category}`
 	}
 	if (searchCat === "content") {
-		const result = await getContentPosts(tab, searchUrl, numberOfPage, query)
+		const result = await getContentPosts(tab, searchUrl, numberOfPage, query, onlyGetFirstResult)
 		return result
 	}
 	if (searchCat === "network") {
-		const result = await getNetwork(tab, searchUrl, numberOfPage, query)
+		const result = await getNetwork(tab, searchUrl, numberOfPage, query, onlyGetFirstResult)
 		return result
 	}
 	let result = []
@@ -568,7 +579,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 						}
 					}
 					if (canScroll) {
-						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat }))
+						await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
+						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat, onlyGetFirstResult }))
 					} else {
 						break
 					}
@@ -630,7 +642,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, onlyGetFirstResult } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
@@ -672,7 +684,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 			searchUrl = search
 		}
 		try {
-			const tempResult = await getSearchResults(tab, searchUrl, numberOfPage, search, isSearchURL, category)
+			const tempResult = await getSearchResults(tab, searchUrl, numberOfPage, search, isSearchURL, category, onlyGetFirstResult)
 			result = removeDuplicates(result, tempResult, category)
 
 		} catch (err) {

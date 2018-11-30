@@ -26,6 +26,7 @@ You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch th
 - **circles**: Do you want to search in your 1st, 2nd, or 3rd+ degree connections? 
 - **category**: Which category do you want to search in? (People, Jobs, Companies, Groups or Schools)
 - **Number of pages**: How many pages should the bot scrape?
+- **Only first result**: If you only want the first result of a LinkedIn search
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
