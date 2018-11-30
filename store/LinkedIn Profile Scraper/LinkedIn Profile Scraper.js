@@ -174,6 +174,7 @@ const removeLinkedinSubdomains = url => {
 			utils.log(`Can't scrape the profile ${url}: ${err.message || err}`, "warning")
 			continue
 		}
+		await tab.wait(2500 + Math.random() * 2000)
 	}
 
 	await linkedIn.saveCookie()

@@ -42,10 +42,9 @@
 					"search": {
 						"helpers": [
 							"Enter either a text search <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
-							"When using a spreadsheet/CSV URL, make sure your file is publicly available",
 							"<b>OR</b> make an advanced search on LinkedIn and paste the URL you're sent to here"
 						],
-						"label": "LinkedIn search terms <a href=\"/api-store/3149/linkedin-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
+						"label": "Search input <a href=\"/api-store/3149/linkedin-search-export#section_5decidewhichsearchyouwanttolaunch\" target=\"_blank\">(?)</a>",
 						"placeholder": "iOS developer"
 					},
 					"circles": {
@@ -72,6 +71,9 @@
 						"placeholder": 5,
 						"inputType": "number",
 						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					},
+					"onlyGetFirstResult": {
+						"rightLabel": "<b>Only get the first search result</b>"
 					}
 				}
 			}
@@ -113,6 +115,9 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
+			},
+			"onlyGetFirstResult": {
+				"type": "boolean"
 			}
 		}
 	}

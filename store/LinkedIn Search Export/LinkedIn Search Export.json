@@ -71,6 +71,9 @@
 						"placeholder": 5,
 						"inputType": "number",
 						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					},
+					"onlyGetFirstResult": {
+						"rightLabel": "<b>Only get the first search result</b>"
 					}
 				}
 			}
@@ -112,6 +115,9 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
+			},
+			"onlyGetFirstResult": {
+				"type": "boolean"
 			}
 		}
 	}
