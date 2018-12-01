@@ -39,7 +39,7 @@ const retrieveAllPageUrls = async (result, agentObject, spreadsheetUrl, columnNa
 			}
 			pageUrls.push(pageUrl)
 	} else { // CSV
-		let csvUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		let csvUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		csvUrls = csvUrls.filter(str => str) // removing empty lines
 		for (let i = 0; i < csvUrls.length; i++) { // cleaning all group entries
 			csvUrls[i] = utils.adjustUrl(csvUrls[i], "facebook")
@@ -335,7 +335,11 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 	for (let pageUrl of pageUrls) {
 		utils.log(`Page URL: ${pageUrl}`, "info")
-		
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		try {
 			await tab.open(pageUrl)
 		} catch (err1) {

@@ -26,7 +26,8 @@
 		"duration": "",
 		"location": "",
 		"degree": "Your degree of Connection with that profile",
-		"query": "Corresponding search query that lead to this result"
+		"query": "Corresponding search query that lead to this result",
+		"defaultProfileUrl": "Regular LinkedIn profile URL - if converting each profile link"
 	},
 	"argumentForm": {
 		"enabled": true,
