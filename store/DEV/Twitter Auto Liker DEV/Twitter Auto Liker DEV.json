@@ -49,6 +49,10 @@
 						"inputType": "number",
 						"placeholder": 1
 					},
+					"csvName": {
+						"label": "Name of resulting CSV",
+						"placeholder": "result"
+					},
 					"undoLikes": {
 						"rightLabel": "<b>Cancel likes</b> (if you need to undo likes)"
 					}
@@ -80,6 +84,9 @@
 				"minimum": 1,
 				"maximum": 1000,
 				"default": 1
+			},
+			"csvName": {
+				"type": "string"
 			},
 			"undoLikes": {
 				"type": "boolean",

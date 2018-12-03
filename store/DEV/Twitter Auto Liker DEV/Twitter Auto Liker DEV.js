@@ -20,9 +20,9 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
-const DB_NAME = "result.csv"
+const DB_NAME = "result"
 const DEFAULT_LIKE_COUNT = 1
-const DEFAULT_PROFILE_LAUNCH = 1
+const DEFAULT_PROFILE_LAUNCH = 10
 // }
 
 const getValidUrlOrHandle = str => {
@@ -136,7 +136,7 @@ const getLoadedTweetsCount = (arg, cb) => {
 
 /**
  * @description Function used to open a profile and like a certain amount of tweets
- * @throws if there were an error during when opening the profile or during the like procedure
+ * @throws String if there were an error during when opening the profile or during the like procedure
  * @param {Object} tab - Nickjs tab object
  * @param {String} profile - url or profile name to open
  * @param {Number} [likesCount] - Total count of tweets to like in the given profile
@@ -234,7 +234,7 @@ const _likeTweet = (arg, cb) => {
 	let like = tweet.querySelector("div.ProfileTweet-action.ProfileTweet-action--favorite button")
 	let undo = tweet.querySelector("div.ProfileTweet-action.ProfileTweet-action--favorite button.ProfileTweet-actionButtonUndo.ProfileTweet-action--unfavorite")
 	let state = getComputedStyle(arg.undoLikes ? undo : like).display
-	let timestamp = (new Date()).toISOString() 
+	let timestamp = (new Date()).toISOString()
 
 	if (arg.undoLikes) {
 		if (state === "none")
@@ -299,9 +299,13 @@ const isTweetUrl = target => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let likedCount = 0
-	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, noDatabase, undoLikes} = utils.validateArguments()
+	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, csvName, noDatabase, undoLikes} = utils.validateArguments()
 
-	let db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+
+	let db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
@@ -361,7 +365,7 @@ const isTweetUrl = target => {
 		utils.log(`Could not save result object: ${e.message || e}`, "warning")
 	}
 	if (!noDatabase) {
-		await utils.saveResults(db, db, DB_NAME.split(".").shift(), null, false)
+		await utils.saveResults(db, db, csvName, null, false)
 	}
 
 	nick.exit()
