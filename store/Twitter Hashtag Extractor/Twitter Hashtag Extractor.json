@@ -1,6 +1,6 @@
 {
 	"slug": "twitter-hashtag-extractor",
-	"description": "",
+	"description": "Turn specific hashtags in a stream of fresh leads",
 	"image": "",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
@@ -13,6 +13,12 @@
 		"numberOfPostsPerLaunch": 25
 	},
 	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"tweetUrl": "The URL of the Tweet related to those hashtags",
+		"twitterProfile": "The URL of the author of that tweet",
+		"timestamp": "The exact momoment the tweet was extracted by Phantombuster",
+		"query": "The hashtags the tweet was extracted from (in case you used multiple hashtags)"
+	},
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -26,19 +32,20 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter hashtag <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter hashtag"
+						"label": "Spreadsheet URL or Twitter hashtag(s) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter hashtag",
+						"placeholder": "#marketing #automation"
 					},
 					"columnName": {
-						"label": "Column name where LinkedIn profile URLs are stored in the spreadhsheet",
+						"label": "Name of the column containing those hashtags (if your input is a spreadhsheet)",
 						"helper": "If empty, the first column of your spreadsheet will be used",
-						"placeholder": "Facebook Profile"
+						"placeholder": "Hashtag"
 					},
 					"numberOfPostsPerLaunch": {
-						"label": "Number of posts to extract per hashtags <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "By default the API will extract 25 posts per launch",
+						"label": "Number of tweets to extract per hashtag <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "By default the API will extract 25 tweets per launch",
 						"inputType": "number",
-						"placeholder": 10
+						"placeholder": 25
 					},
 					"csvName": {
 					   "label": "Name of resulting CSV file",

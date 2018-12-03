@@ -13,6 +13,12 @@
 		"numberOfPostsPerLaunch": 25
 	},
 	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"tweetUrl": "The URL of the Tweet related to those hashtags",
+		"twitterProfile": "The URL of the author of that tweet",
+		"timestamp": "The exact momoment the tweet was extracted by Phantombuster",
+		"query": "The hashtags the tweet was extracted from (in case you used multiple hashtags)"
+	},
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
