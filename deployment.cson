@@ -88,6 +88,7 @@
 		'Twitter Profile Scraper.js': 'store/Twitter Profile Scraper/Twitter Profile Scraper.js'
 		'Twitter Profile URL Finder.js': 'store/Twitter Profile URL Finder/Twitter Profile URL Finder.js'
 		'Twitter Media Extractor.js': 'store/Twitter Media Extractor/Twitter Media Extractor.js'
+		'Twitter Message Sender.js': 'store/Twitter Message Sender/Twitter Message Sender.js'
 		'Twitter Auto Liker.js': 'store/Twitter Auto Liker/Twitter Auto Liker.js'
 		'Web Elements Extractor.js': 'store/Web Elements Extractor/Web Elements Extractor.js'
 
