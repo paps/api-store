@@ -227,6 +227,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
 				newAdd.error = error.message || error
 				added.push(newAdd)
 				utils.log(error, "warning")
+				i++ // Updated the follow counter even if it was an error
 			}
 		}
 		// Delay the next follow
