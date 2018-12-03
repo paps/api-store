@@ -1,4 +1,4 @@
-const { URL } = require("url")
+//const { URL } = require("url")
 
 /**
  * This array contains Objects storing CSS selectors in order to scrape data from results
