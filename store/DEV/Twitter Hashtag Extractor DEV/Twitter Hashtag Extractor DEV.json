@@ -32,7 +32,7 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or Twitter hashtag(s) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or Twitter hashtag(s) <a target=\"_blank\" href=\"/api-store/10622/twitter-hashtag-extractor#section_4aimataspecifictwitterhashtagorseveralatatime\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter hashtag",
 						"placeholder": "#marketing #automation"
 					},
@@ -42,7 +42,7 @@
 						"placeholder": "Hashtag"
 					},
 					"numberOfPostsPerLaunch": {
-						"label": "Number of tweets to extract per hashtag <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of tweets to extract per hashtag <a target=\"_blank\" href=\"/api-store/10622/twitter-hashtag-extractor#section_repetition_setup\">(?)</a>",
 						"helper": "By default the API will extract 25 tweets per launch",
 						"inputType": "number",
 						"placeholder": 25
