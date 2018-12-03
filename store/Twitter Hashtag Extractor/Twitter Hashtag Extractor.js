@@ -187,10 +187,11 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 		const isOpen = await loadPage(tab, searchUrl)
 		if (!isOpen) {
 			res.push({ query, error: `Can't search ${query}` })
-			await tab.screenshot(`err-${Date.now()}.jpg`)
 			continue
 		}
-		res.push(...await extractTweets(tab, numberOfPostsPerLaunch))
+		const scrapingRes = await extractTweets(tab, numberOfPostsPerLaunch)
+		scrapingRes.forEach(el => el.query = query)
+		res.push(...scrapingRes)
 	}
 	db.push(...utils.filterRightOuter(db, res))
 	await utils.saveResults(res, db, csvName, null)
@@ -198,6 +199,5 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 })()
 .catch(err => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || err)
 	nick.exit(1)
 })
