@@ -22,7 +22,6 @@ const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 const DB_SHORT_NAME = "twitter-profile-scraper"
-const DB_NAME = DB_SHORT_NAME + ".csv"
 // }
 
 const isUrl = url => {

@@ -349,7 +349,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
 
 
-	let postCount = 0
+	//	let postCount = 0
 	for (let postUrl of postUrls) {
 		let resuming = false
 		if (agentObject && postUrl === agentObject.lastQuery) {
@@ -370,7 +370,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 				result.push({ postUrl, error: "Not a post URL" })
 				continue
 			}
-			postCount++
+			//			postCount++
 			result = result.concat(await loadAndScrapeLikers(tab, postUrl, numberOfLikers, resuming))
 			if (rateLimited) {
 				break
@@ -387,7 +387,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 	}
 	console.log("resultLF:", result.length)
 	if (result.length !== initialResultLength) {
-		if (interrupted) { 
+		if (interrupted) {
 			await buster.setAgentObject({ nextUrl, lastQuery })
 		} else {
 			await buster.setAgentObject({})
@@ -400,4 +400,4 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 	utils.log(err, "error")
 	nick.exit(1)
 })
- 
+

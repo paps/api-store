@@ -56,11 +56,3 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 <center>More bots like this one will be added to Phantombuster,</center>
 <center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
 
-#Output
-
-This API will output CSV and/or JSON containing the following fields:
-
-    tweetUrl: The URL of the Tweet related to those hashtags?
-    twitterProfile: The URL of the author of that tweet.
-    timestamp: the exact momoment the tweet was extracted by Phantombuster
-    query: the hashtags the tweet was extracted from (in case you used multiple hashtags)
