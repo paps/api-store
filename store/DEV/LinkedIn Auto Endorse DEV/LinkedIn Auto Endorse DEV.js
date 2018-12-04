@@ -24,9 +24,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 
 const LinkedInScraper = require("./lib-LinkedInScraper")
 let linkedInScraper
-
-/* global $ */
-
 // }
 
 const DB_NAME = "database-linkedin-auto-endorse.csv"
@@ -53,7 +50,7 @@ const SPINNER_SELECTOR = "li-icon > .artdeco-spinner"
  * @description Function used to open a LinkedIn profile in the given Nickjs tab
  * @param {Object} tab - Nickjs tab object
  * @param {String} url - URL to open
- * @throws if the tab didn't open the given profile
+ * @throws String if the tab didn't open the given profile
  */
 const profileOpen = async (tab, url) => {
 	await tab.open(url)
@@ -91,16 +88,17 @@ const scrollDown = async (tab) => {
  * @param {Fucntion} cb
  */
 const endorseProfile = (argv, cb) => {
-	const MAX_ENDORSES = 3
+	const MAX_ENDORSES = argv.endorseCount
 	let data = []
-
-	$(argv.selectors.endorseItem).each((index, element) => {
-		// Prevent to endorse more than 3 skills, if there are more 3 skills at screen
-		if (index < MAX_ENDORSES) {
-			$(argv.selectors.endorseBtn).click()
-			data[index] = $(element).find($(argv.selectors.skillText)).text()
+	Array.from(document.querySelectorAll(argv.selectors.endorseItem)).slice(0, MAX_ENDORSES).forEach((el, idx) => {
+		const tmp = el.querySelector(argv.selectors.endorseBtn)
+		if (tmp) {
+			tmp.click()
+			let skill = el.querySelector(argv.selectors.skillText)
+			data[idx] = skill ? skill.textContent.trim() : null
 		}
 	})
+	data = data.filter(el => el)
 	cb(null, data)
 }
 
@@ -120,14 +118,16 @@ const scrollToSpinners = (argv, cb) => {
  * @description Main function that launch everything
  */
 nick.newTab().then(async (tab) => {
-	const [ sessionCookie, spreadsheetUrl, numberOfEndorsePerLaunch, columnName, hunterApiKey, disableScraping ] = utils.checkArguments([
-		{name: "sessionCookie", type: "string", length: 10},
-		{name: "spreadsheetUrl", type: "string", length: 10},
-		{name: "numberOfEndorsePerLaunch", type: "number", default: 10},
-		{name: "columnName", type: "string", default: ""},
-		{ name: "hunterApiKey", type: "string", default: "" },
-		{ name: "disableScraping", type: "boolean", default: true }
-	])
+	let [ sessionCookie, spreadsheetUrl, columnName, numberOfEndorsePerLaunch, numberOfEndorsePerProfile, csvName, hunterApiKey, disableScraping ] = utils.checkArguments([
+               { name: "sessionCookie", type: "string", length: 10 },
+               { name: "spreadsheetUrl", type: "string", length: 10 },
+               { name: "columnName", type: "string", default: "" },
+               { name: "numberOfEndorsePerLaunch", type: "number", default: 10 },
+	       { name: "numberOfEndorsePerProfile", type: "number", default: 6 },
+	       { name: "csvName", "type": "string", default: "result" },
+               { name: "hunterApiKey", type: "string", default: "" },
+               { name: "disableScraping", type: "boolean", default: true }
+       ])
 
 	const db = await utils.getDb(DB_NAME)
 	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
@@ -160,6 +160,11 @@ nick.newTab().then(async (tab) => {
 			} else {
 				await profileOpen(tab, scrapingUrl)
 				await scrollDown(tab)
+				// Whitout lib-LinkedInScraper only 3 skills are loaded in the page
+				// We need to adjust the buster argument if it's greater than 3
+				if (numberOfEndorsePerProfile > 3) {
+					numberOfEndorsePerProfile = 3
+				}
 				/**
 				 * In order to load the entire content of all sections
 				 * we need to scroll to each section and wait that the loading spinner dismiss
@@ -170,7 +175,6 @@ nick.newTab().then(async (tab) => {
 					await tab.waitWhileVisible(SPINNER_SELECTOR, 15000)
 				}
 			}
-			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			try {
 				selectorFound = await tab.waitUntilVisible([SELECTORS_1.endorseItem, SELECTORS_2.endorseItem], 15000, "or")
 			} catch (e) {
@@ -180,9 +184,9 @@ nick.newTab().then(async (tab) => {
 			}
 
 			if (selectorFound === SELECTORS_1.endorseItem) {
-				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_1})
+				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_1, endorseCount: numberOfEndorsePerProfile })
 			} else {
-				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_2 })
+				skills = await tab.evaluate(endorseProfile, { selectors: SELECTORS_2, endorseCount: numberOfEndorsePerProfile })
 			}
 
 			utils.log("Endorsed " + skills.join(", "), "info")
@@ -204,7 +208,7 @@ nick.newTab().then(async (tab) => {
 	}
 	utils.log(`Endorsed ${result.length} profiles.`, "done")
 	await linkedIn.saveCookie()
-	await utils.saveResult(result)
+	await utils.saveResult(result, csvName)
 })
 .catch((err) => {
 	console.log(err)
