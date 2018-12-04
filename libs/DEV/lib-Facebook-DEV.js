@@ -170,7 +170,6 @@ class Facebook {
 			} catch (err) {
 				//
 			}
-			
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.placesLived) {
 				const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
@@ -245,12 +244,8 @@ class Facebook {
 			scrapedData.timestamp = (new Date()).toISOString()
 			cb(null, scrapedData)
 		}
-		let scrapedData
-		try {
-			scrapedData = await tab.evaluate(scrapePage, arg)
-		} catch (err) {
-			console.log("erri", err)
-		}
+
+		const scrapedData = await tab.evaluate(scrapePage, arg)
 
 		if (scrapedData.birthday) {
 			const moment = require("moment")
@@ -279,6 +274,13 @@ class Facebook {
 		return message
 	}
 
+	// replace #firstName#, #name", #lastName" by the real values
+	replaceTagsDefault(message, name, firstName) {
+		const lastName = name.replace(firstName,"").trim()
+		message = message.replace(/#name#/g, name).replace(/#firstName#/g, firstName).replace(/#lastName#/g, lastName)
+		return message
+	}
+
 	// to send a messsage we need to reverse it, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
 	reverseMessage(message) {
 		return message.split("\n") // separating by line break
@@ -296,6 +298,12 @@ class Facebook {
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
+		const checkLock = (arg, cb) => {
+			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar")) {
+				cb(null, true)
+			}
+			cb(null, false)
+		}
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
@@ -342,15 +350,21 @@ class Facebook {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
+			console.log("open1")
 			try {
 				 await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
 				//
+				console.log("open2", err)
+				return "Timeout"
 			}
 			let sel
 			try {
 				sel = await tab.untilVisible(["#mainContainer", "form#login_form"], "or", 15000)
+				console.log("open3")
 			} catch (e) {
+				console.log("open4", e)
+
 				return e.toString()
 			}
 			if (sel === "#mainContainer") {
@@ -368,27 +382,28 @@ class Facebook {
 
 		try {
 			const ao = await this.buster.getAgentObject()
-
-			if ((typeof(ao[".sessionCookieCUser"]) === "string") && (ao[".originalSessionCookieCUser"] === this.originalSessionCookieCUser)) {
-				// the user has not changed his session cookie, he wants to login with the same account
-				// but we have a newer cookie from the agent object so we try that first
-				await this.nick.setCookie({
-					name: "c_user",
-					value: ao[".sessionCookieCUser"],
-					domain: "www.facebook.com"
-				})
+			if (ao.sessionCookieCUser && ao.sessionCookieXs) {
+				if ((typeof(ao[".sessionCookieCUser"]) === "string") && (ao[".originalSessionCookieCUser"] === this.originalSessionCookieCUser)) {
+					// the user has not changed his session cookie, he wants to login with the same account
+					// but we have a newer cookie from the agent object so we try that first
+					await this.nick.setCookie({
+						name: "c_user",
+						value: ao[".sessionCookieCUser"],
+						domain: "www.facebook.com"
+					})
+				}
+				if ((typeof(ao[".sessionCookieXs"]) === "string") && (ao[".originalSessionCookieXs"] === this.originalSessionCookieXs)) {
+					// the user has not changed his session cookie, he wants to login with the same account
+					// but we have a newer cookie from the agent object so we try that first
+					await this.nick.setCookie({
+						name: "xs",
+						value: ao[".sessionCookieXs"],
+						domain: "www.facebook.com"
+					})
+				}
+				// first login try with cookie from agent object
+				if (await _login() === null) return
 			}
-			if ((typeof(ao[".sessionCookieXs"]) === "string") && (ao[".originalSessionCookieXs"] === this.originalSessionCookieXs)) {
-				// the user has not changed his session cookie, he wants to login with the same account
-				// but we have a newer cookie from the agent object so we try that first
-				await this.nick.setCookie({
-					name: "xs",
-					value: ao[".sessionCookieXs"],
-					domain: "www.facebook.com"
-				})
-			}
-			// first login try with cookie from agent object
-			if (await _login() === null) return
 
 			// the newer cookie from the agent object failed (or wasn't here)
 			// so we try a second time with the cookie from argument
@@ -402,9 +417,11 @@ class Facebook {
 				value: this.originalSessionCookieXs,
 				domain: "www.facebook.com"
 			})
+			console.log(" await _login()")
 			// second login try with cookie from argument
 			const loginResult = await _login()
 			if (loginResult !== null) {
+				console.log("loginResult", loginResult)
 				throw loginResult
 			}
 
@@ -413,7 +430,15 @@ class Facebook {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log("Can't connect to Facebook with these session cookies.", "error")
+			if (error === "Timeout") {
+				this.utils.log("Connection has timed out.", "error")
+				this.nick.exit(1)
+			}
+			if (await tab.evaluate(checkLock)) {
+				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+			} else {
+				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
+			}
 			console.log("err", error)
 			await tab.screenshot(`err${new Date()}.png`)
 			await this.buster.saveText(await tab.getContent(), `err${Date.now()}.html`)

@@ -120,11 +120,6 @@ class Facebook {
 				friendsCount = parseInt(friendsCount.replace(/[, ]/g, ""), 10)
 				scrapedData.friendsCount = friendsCount
 			}
-		
-			// if Add friend button is hidden, we're already friend
-			if (document.querySelector(".FriendRequestAdd")) {
-				scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
-			}
 
 			// extracting social media links
 			try {
@@ -137,27 +132,43 @@ class Facebook {
 			} catch (err) {
 				//
 			}
+
+			// if Add friend button is hidden, we're already friend
+			if (document.querySelector(".FriendRequestAdd")) {
+				scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
+			}
 		
-			if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
-				const educationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "education")
-				if (educationDiv.length) {
-					const educations = educationDiv.map(el => {
+			try {
+				if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
+					const workAndEducationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div"))
+					const extractData = node => {
 						const data = {}
-						if (el.querySelector("a")) { 
-							data.url = el.querySelector("a").href
-							if (el.querySelectorAll("a")[1] && el.querySelectorAll("a")[1].parentElement) {
-								data.name = el.querySelectorAll("a")[1].parentElement.textContent
+						if (node.querySelector("a")) {
+							data.url = node.querySelector("a").href
+							if (node.querySelectorAll("a")[1] && node.querySelectorAll("a")[1].parentElement) {
+								data.name = node.querySelectorAll("a")[1].parentElement.textContent
 							}
 							try {
-								data.description = el.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
+								data.description = node.querySelectorAll("a")[1].parentElement.parentElement.querySelector("div:not(:first-child)").textContent
 							} catch (err) {
 								//
 							}
 						}
 						return data
-					})
-					scrapedData.educations = educations
+					}
+					if (workAndEducationDiv) {
+						const work = extractData(workAndEducationDiv[0])
+						if (work) {
+							scrapedData.works = work
+						}
+						const education = extractData(workAndEducationDiv[1])
+						if (education) {
+							scrapedData.educations = education
+						}
+					}
 				}
+			} catch (err) {
+				//
 			}
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.placesLived) {
@@ -263,6 +274,13 @@ class Facebook {
 		return message
 	}
 
+	// replace #firstName#, #name", #lastName" by the real values
+	replaceTagsDefault(message, name, firstName) {
+		const lastName = name.replace(firstName,"").trim()
+		message = message.replace(/#name#/g, name).replace(/#firstName#/g, firstName).replace(/#lastName#/g, lastName)
+		return message
+	}
+
 	// to send a messsage we need to reverse it, as facebook doesn't handle \n, and 'AAA\rBBB' is displayed as 'BBB (line break) AAA'
 	reverseMessage(message) {
 		return message.split("\n") // separating by line break
@@ -280,6 +298,12 @@ class Facebook {
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
+		const checkLock = (arg, cb) => {
+			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar")) {
+				cb(null, true)
+			}
+			cb(null, false)
+		}
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
 			this.nick.exit(1)
@@ -352,28 +376,28 @@ class Facebook {
 
 		try {
 			const ao = await this.buster.getAgentObject()
-
-			if ((typeof(ao[".sessionCookieCUser"]) === "string") && (ao[".originalSessionCookieCUser"] === this.originalSessionCookieCUser)) {
-				// the user has not changed his session cookie, he wants to login with the same account
-				// but we have a newer cookie from the agent object so we try that first
-				await this.nick.setCookie({
-					name: "c_user",
-					value: ao[".sessionCookieCUser"],
-					domain: "www.facebook.com"
-				})
+			if (ao.sessionCookieCUser && ao.sessionCookieXs) {
+				if ((typeof(ao[".sessionCookieCUser"]) === "string") && (ao[".originalSessionCookieCUser"] === this.originalSessionCookieCUser)) {
+					// the user has not changed his session cookie, he wants to login with the same account
+					// but we have a newer cookie from the agent object so we try that first
+					await this.nick.setCookie({
+						name: "c_user",
+						value: ao[".sessionCookieCUser"],
+						domain: "www.facebook.com"
+					})
+				}
+				if ((typeof(ao[".sessionCookieXs"]) === "string") && (ao[".originalSessionCookieXs"] === this.originalSessionCookieXs)) {
+					// the user has not changed his session cookie, he wants to login with the same account
+					// but we have a newer cookie from the agent object so we try that first
+					await this.nick.setCookie({
+						name: "xs",
+						value: ao[".sessionCookieXs"],
+						domain: "www.facebook.com"
+					})
+				}
+				// first login try with cookie from agent object
+				if (await _login() === null) return
 			}
-			if ((typeof(ao[".sessionCookieXs"]) === "string") && (ao[".originalSessionCookieXs"] === this.originalSessionCookieXs)) {
-				// the user has not changed his session cookie, he wants to login with the same account
-				// but we have a newer cookie from the agent object so we try that first
-				await this.nick.setCookie({
-					name: "xs",
-					value: ao[".sessionCookieXs"],
-					domain: "www.facebook.com"
-				})
-			}
-			// first login try with cookie from agent object
-			if (await _login() === null) return
-
 			// the newer cookie from the agent object failed (or wasn't here)
 			// so we try a second time with the cookie from argument
 			await this.nick.setCookie({
@@ -397,7 +421,15 @@ class Facebook {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log("Can't connect to Facebook with these session cookies.", "error")
+			if (error === "Timeout") {
+				this.utils.log("Connection has timed out.", "error")
+				this.nick.exit(1)
+			}
+			if (await tab.evaluate(checkLock)) {
+				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+			} else {
+				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
+			}
 			this.nick.exit(1)
 		}
 	}
