@@ -23,6 +23,7 @@ const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
+let notSalesNav
 
 // }
 
@@ -220,7 +221,13 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
-		utils.log(`Could not get total results count. ${err}`, "warning")
+		if (await tab.getUrl() === "https://www.linkedin.com/feed/") {
+			utils.log("It seems you don't have a Sales Navigator Account...", "error")
+			notSalesNav = true
+			return []
+		} else {
+			utils.log(`Could not get total results count. ${err}`, "warning")
+		}
 	}
 	for (let i = 1; i <= pageCount; i++) {
 		try {
@@ -342,6 +349,9 @@ const isLinkedInSearchURL = (url) => {
 			}
 			try {
 				let tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
+				if (notSalesNav) {
+					break
+				}
 				if (extractDefaultUrl) {
 					tempResult = await extractDefaultUrls(tempResult)
 				}
