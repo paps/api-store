@@ -11,7 +11,7 @@
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "#soloparking",
-		"sessionCookie": "sessionid"
+		"sessionCookie": "your_session_cookie"
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",

@@ -579,7 +579,6 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 						}
 					}
 					if (canScroll) {
-						await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat, onlyGetFirstResult }))
 					} else {
 						break

@@ -7,6 +7,7 @@
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "instagram_posts_urls"
 	},
 	"outputDescription": {
@@ -41,7 +42,7 @@
 						"placeholder": "Instagram Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
-					"numberOfProfilesPerLaunch": {
+					"numberOfPostsPerLaunch": {
 						"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
@@ -67,7 +68,7 @@
 			"columnName": {
 				"type": "string"
 			},
-			"numberOfProfilesPerLaunch": {
+			"numberOfPostsPerLaunch": {
 				"type": "number",
 				"minimum": 1
 			},
