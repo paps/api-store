@@ -333,9 +333,10 @@ class StoreUtilities {
 				}
 			}
 			if (column !== i) {
-				throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
+				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
+			} else {
+				data.shift()
 			}
-			data.shift()
 		}
 		result = data.map(line => line[column])
 		if (printLogs) {
@@ -382,9 +383,11 @@ class StoreUtilities {
 			if (columnName) {
 				column = data[0].findIndex(el => el === columnName)
 				if (column < 0) {
-					throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
+					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
+					column = 0
+				} else {
+					data.shift()
 				}
-				data.shift()
 			}
 			const result = data.map(line => line[column])
 			if (printLogs) {
