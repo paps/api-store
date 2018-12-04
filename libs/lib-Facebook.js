@@ -299,7 +299,7 @@ class Facebook {
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
 		const checkLock = (arg, cb) => {
-			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar")) {
+			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar") || document.querySelector("#globalContainer form.checkpoint")) {
 				cb(null, true)
 			}
 			cb(null, false)

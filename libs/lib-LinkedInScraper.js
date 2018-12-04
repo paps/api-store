@@ -246,6 +246,9 @@ const scrapeInfos = (arg, callback) => {
 				}
 			}
 		}
+		if (document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]")) {
+			infos.general.linkedinRecruiterUrl = document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]").href
+		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
 			// Issue 128: new UI (experiences are stacked in a li if the company doesn't change)
@@ -531,6 +534,7 @@ const craftCsvObject = infos => {
 		savedImg: (hasGeneral) ? (infos.general.savedImg || null) : null,
 		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
+		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
