@@ -36,19 +36,26 @@ const checkGroup = async (tab, groupUrl) => {
 		"ul.manage-members-list",
 		"div.groups-members-list",
 		"div.js-admins-region",
-		"div#main.error404"
+		"div#main.error404",
+		"button.groups-entity__withdraw-join-button",
+		"button.groups-entity__request-join-button"
 	]
 	try {
 		const selector = await tab.waitUntilVisible(selectors, 10000, "or")
 		if (selector === selectors[0] || selector === selectors[1]) { // Case 1 - Valid group
 			return true
 		}
-		if (selector === selectors[2]) { // Case 2 - Valid group but the account isn't part of it
-			utils.log("You are not part of this group -- Can't get members list", "error")
+		const groupName = await tab.evaluate(getGroupName)
+		if (selector === selectors[2] || selector === selectors[5]) { // Case 2 - Valid group but the account isn't part of it
+			utils.log(`You are not part of ${groupName ? `group ${groupName}` : "this group"} -- Can't get members list`, "error")
 			nick.exit(1)
 		}
 		if (selector === selectors[3]) { // Case 3 - Not a valid group
 			utils.log("This page doesn't exist, please check the url", "error")
+			nick.exit(1)
+		}
+		if (selector === selectors[4]) { // Case 4 - Group request still not accepted
+			utils.log(`Group request ${groupName ? `for group ${groupName}` : ""} still not accepted -- Can't get members list`, "error")
 			nick.exit(1)
 		}
 	} catch (error) { // Case 3 - Not a valid group
@@ -136,6 +143,12 @@ const getMembers = async tab => {
 	let lastCount = 0
 	// Wait until the result list is visible
 	await tab.waitUntilVisible("artdeco-typeahead-results-list.groups-members-list__results-list", 15000)
+	try {
+		const groupName = await tab.evaluate(getGroupNameFromMemberPage)
+		utils.log(`Getting members for group ${groupName}...`, "loading")
+	} catch (err) {
+		//
+	}
 	const count = await tab.evaluate(getMembersCount)
 	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < count) {
@@ -181,25 +194,40 @@ const getMembers = async tab => {
 	return members
 }
 
+// get the group name from its main page
+const getGroupName = (arg, cb) => {
+	if (document.querySelector("h1.groups-entity__name span")) {
+		cb(null, document.querySelector("h1.groups-entity__name span").textContent)
+	}
+	cb(null, null)
+}
+
+// get the group name from its members page
+const getGroupNameFromMemberPage = (arg, cb) => {
+	if (document.querySelector("a.groups-members-list__groups-entity-link span")) {
+		cb(null, document.querySelector("a.groups-members-list__groups-entity-link span").textContent)
+	}
+	cb(null, null)
+}
+
 // Main function to launch everything and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, groupUrl, groupName } = utils.validateArguments()
+	let { sessionCookie, groupUrl, csvName } = utils.validateArguments()
 	const members = []
 
-	if (!groupName) {
-		groupName = "result"
+	if (!csvName) {
+		csvName = "result"
 	}
 	await linkedIn.login(tab, sessionCookie)
 	await checkGroup(tab, groupUrl)
 	try {
-		utils.log(`Getting members for group ${groupName}...`, "loading")
 		const res = await getMembers(tab)
 		members.push(...res)
 	} catch (err) {
 		utils.log(`Error while scraping: ${err.message || err}`, "warning")
 	}
-	await utils.saveResults(members, members, groupName)
+	await utils.saveResults(members, members, csvName)
 	await linkedIn.saveCookie()
 	nick.exit()
 })()
