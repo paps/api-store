@@ -276,13 +276,13 @@ const isLinkedUrl = target => {
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb("result.csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
-	companies = companies.filter(el => utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
+	companies = companies.filter(el => el !== "no url" && utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
 	utils.log(`Processing ${companies.length} lines...`, "info")
 	if (companies.length < 1) {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
 	}
-	console.log(`Companies to scrape: ${JSON.stringify(companies, null, 4)}`)
+	console.log(`Companies to scrape: ${JSON.stringify(companies.slice(0, 500), null, 4)}`)
 	await linkedIn.login(tab, sessionCookie)
 	for (const company of companies) {
 		if (company.length > 0) {
@@ -305,8 +305,15 @@ const isLinkedUrl = target => {
 						link = `https://www.linkedin.com/company/${company}`
 					} else {
 						await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
-						await tab.waitUntilVisible("div.search-results-container")
-						link = await tab.evaluate(scrapeCompanyLink)
+						try {
+							await tab.waitUntilVisible("div.search-results-container")
+							link = await tab.evaluate(scrapeCompanyLink)
+						} catch (err) {
+							if (await tab.getUrl() === "https://www.linkedin.com/m/login/") {
+								utils.log("Cookie session invalidated, exiting...", "error")
+								break
+							}
+						}
 						if (!link) {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."
