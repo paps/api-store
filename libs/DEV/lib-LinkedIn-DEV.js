@@ -119,6 +119,84 @@ class LinkedIn {
 		}
 	}
 
+	// url is optional (will open LinkedIn feed by default)
+	async recruiterLogin(tab, sessionCookieliAt, url) {
+		if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.trim().length <= 0)) {
+			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
+			this.nick.exit(1)
+		}
+		if (sessionCookieliAt === "your_li_atsession_cookie") {
+			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
+			this.nick.exit(1)
+		}
+		if (sessionCookieliAt.indexOf("from-global-object:") === 0) {
+			try {
+				const path = sessionCookieliAt.replace("from-global-object:", "")
+				this.utils.log(`Fetching session cookie from global object at "${path}"`, "info")
+				sessionCookieliAt = require("lodash").get(await this.buster.getGlobalObject(), path)
+				if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.length <= 0)) {
+					throw `Could not find a non empty string at path ${path}`
+				}
+			} catch (e) {
+				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
+				this.nick.exit(1)
+			}
+		}
+
+		this.utils.log("Connecting to LinkedIn...", "loading")
+		this.originalSessionCookieliAt = sessionCookieliAt.trim()
+
+		// small function that detects if we're logged in
+		// return a string in case of error, null in case of success
+		const _login = async () => {
+			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/dashboard/")
+			if (httpCode !== 200) {
+				return `linkedin responded with http ${httpCode}`
+			}
+			let sel
+			try {
+				sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
+			} catch (e) {
+				return e.toString()
+			}
+			if (sel === "#nav-tools-user") {
+				const name = await tab.evaluate((arg, callback) => {
+					callback(null, document.querySelector("#nav-tools-user img").alt)
+				})
+				if ((typeof(name) === "string") && (name.length > 0)) {
+					this.utils.log(`Connected successfully as ${name}`, "done")
+					return null
+				}
+			}
+			return "cookie not working"
+		}
+
+		try {
+			await this.nick.setCookie({
+				name: "li_at",
+				value: this.originalSessionCookieliAt,
+				domain: "www.linkedin.com"
+			})
+			const loginResult = await _login()
+			if (loginResult !== null) {
+				throw loginResult
+			}
+
+		} catch (error) {
+			if (this.utils.test) {
+				console.log("Debug:")
+				console.log(error)
+			}
+			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
+			if (this.originalSessionCookie.length < 100) {
+				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
+			}
+			await this.buster.saveText(await tab.getContent(), "login-err.html")
+			await this.buster.save(await tab.screenshot("login-err.jpg"))
+			this.nick.exit(1)
+		}
+	}
+
 	async saveCookie() {
 		try {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
