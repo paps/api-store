@@ -65,8 +65,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	const tab = await nick.newTab()
 	let {sessionCookie, peopleCountToKeep} = utils.validateArguments()
 	let peopleToRemove = 0
-	let linkedInWithdrawCount = 0
-	let stopLoopPage = false
+	let inviteCount = 0
 
 	if (typeof peopleCountToKeep !== "number")
 	{
@@ -84,7 +83,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		"spinLoading": "span.loader",
 	}
 
-	utils.log(`The script will keep the ${peopleCountToKeep} most recent invitations`, "info")
+	utils.log(`The script will keep the ${peopleCountToKeep} most recent invitations.`, "info")
 
 	/**
 	 * This step will get how many invitations we have send
@@ -92,19 +91,18 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	await linkedIn.login(tab, sessionCookie)
 	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/sent")
 	await tab.untilVisible(_selectors.withdrawCount, 15000)
-	linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
-	utils.log(`You have sent ${linkedInWithdrawCount} invitations`, "info")
-
-	peopleToRemove = linkedInWithdrawCount - peopleCountToKeep
-
+	inviteCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
+	const oldInviteCount = inviteCount
+	peopleToRemove = inviteCount - peopleCountToKeep
 	/**
 	 * no more actions because the previous substractions result was 0 or a negativ number
 	 * this means the script will remove recents invitations and not the
 	 */
 	if (peopleToRemove <= 0) {
-		utils.log(`You have sent ${linkedInWithdrawCount} invitations but the script was configured to keep ${peopleCountToKeep}, no more operations to do!`, "done")
+		utils.log(`You have sent ${inviteCount} invitations but the script was configured to keep ${peopleCountToKeep}, no more operations to do!`, "done")
 		nick.exit()
 	}
+	utils.log(`You have sent ${inviteCount} invitations. ${peopleToRemove} to remove...`, "loading")
 
 	/**
 	 * Now this is the fun part of the script
@@ -112,16 +110,19 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	const selectors = ["ul.mn-invitation-list", "section.mn-invitation-manager__no-invites"]
 	await tab.waitUntilVisible(selectors, 15000, "or")
 
-	utils.log("Please wait while the API goes to the oldest sent invite...", "info")
-	while (!(stopLoopPage = await tab.evaluate(hasReachedOldestInvitations, null)))
-	{
+	utils.log("Please wait while the API goes to the oldest invite...", "info")
+	while (!await tab.evaluate(hasReachedOldestInvitations)) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Process stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 		await tab.scrollToBottom()
 		await tab.untilVisible(_selectors.navigation)
 		try {
 			await tab.click(_selectors.navigation)
-		} catch (e) {
-			console.log(e)
-			stopLoopPage = true
+		} catch (err) {
+			utils.log(`Error during scrolling: ${err}`, "warning")
 			continue
 		}
 		await tab.untilVisible(selectors, 15000, "or")
@@ -133,13 +134,12 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		try {
 			await tab.waitUntilPresent(_selectors.spinLoading)
 		} catch (e) {
-			/* ... */
+			//
 		}
 		if (Math.random() > 0.98) {
 			utils.log("Still working...", "info")
 		}
 	}
-
 	await tab.untilVisible(selectors, 15000, "or")
 	await tab.untilVisible(_selectors.pageWaitAnchor)
 	await tab.wait(10000)
@@ -148,27 +148,38 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	/**
 	 * withdraw until we get the same value of peopleCountToKeep
 	 */
-	stopLoopPage = false
-	while (!stopLoopPage)
-	{
-		linkedInWithdrawCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
-		/**
-		 * Stop when the count is equal to peopleCountToKeep
-		 */
-		if (linkedInWithdrawCount <= peopleCountToKeep) {
-			stopLoopPage = true
-		} else {
+	let withdrawCount = 0
+	try {
+		while (withdrawCount < peopleToRemove) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Process stopped: ${timeLeft.message}`, "warning")
+				break
+			}
 			await tab.click(_selectors.withdrawElement)
+			await tab.wait(200)
 			await tab.click(_selectors.withdrawBtn)
-			await tab.untilVisible(_selectors.withdrawSuccess, 15000)
 			await tab.wait(1000)
-			if (Math.random() > 0.95) {
-				utils.log(`Withdrawing invites (still ${linkedInWithdrawCount} invites left)...`, "info")
+			try {
+				await tab.untilVisible(_selectors.withdrawSuccess, 7500)
+			} catch (err) {
+				//
+			}
+			withdrawCount++
+			await tab.wait(800)
+			if (Math.random() > 0.9) {
+				utils.log(`${withdrawCount} invitations withdrawn...`, "info")
 			}
 		}
+	} catch (err) {
+		utils.log(`Error during withdrawing: ${err}`, "warning")
 	}
-	utils.log(`${peopleToRemove} invitations withdrawn`, "done")
-	utils.log("No more invites to withdraw.", "done")
+	inviteCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
+	if (inviteCount === oldInviteCount - withdrawCount) {
+		utils.log(`${withdrawCount} invitations successfully withdrawn.`, "done")
+	} else {
+		utils.log(`${inviteCount} invitations kept.`, "done")
+	}
 	await linkedIn.saveCookie()
 	nick.exit()
 })()
