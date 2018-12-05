@@ -74,8 +74,8 @@ const isFacebookGroupUrl = (url) => {
 	if (urlObject.pathname.startsWith("www.facebook")) {
 		urlObject = parse("https://" + url)
 	}
-	if (urlObject && urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
-			return true
+	if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
+		return true
 	}
 	return false
 }

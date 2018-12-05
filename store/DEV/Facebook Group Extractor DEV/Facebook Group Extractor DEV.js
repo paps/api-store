@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const { parse } = require("url")
 
@@ -18,7 +18,7 @@ const nick = new Nick({
 	debug: false,
 	timeout: 30000
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook")
@@ -74,8 +74,8 @@ const isFacebookGroupUrl = (url) => {
 	if (urlObject.pathname.startsWith("www.facebook")) {
 		urlObject = parse("https://" + url)
 	}
-	if (urlObject && urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
-			return true
+	if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
+		return true
 	}
 	return false
 }
