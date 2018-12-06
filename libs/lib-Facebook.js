@@ -353,7 +353,7 @@ class Facebook {
 			try {
 				await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
-				//
+				return "Timeout"
 			}
 			let sel
 			try {

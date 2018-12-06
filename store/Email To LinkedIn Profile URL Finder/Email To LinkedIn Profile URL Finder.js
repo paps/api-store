@@ -14,6 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -81,9 +82,9 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 ;(async () => {
 	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let emails = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let emails = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const result = await utils.getDb(csvName + ".csv")
-	emails = emails.filter(str => utils.checkDb(str, result, "email"))
+	emails = emails.filter(str => str && utils.checkDb(str, result, "email"))
 					.slice(0, numberOfLinesPerLaunch)
 	if (emails.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
@@ -102,7 +103,7 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 		if (tempResult && tempResult.profileName && tempResult.profileUrl) {
 			utils.log(`Found profile of ${tempResult.profileName}!`, "done")
 		} else {
-			utils.log(`Couldn't find profile of ${email}`, "error")
+			utils.log(`Couldn't find profile of ${email}`, "info")
 		}
 		result.push(tempResult)
 	}

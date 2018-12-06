@@ -226,7 +226,7 @@ const getIdFromUrl = async (url, tab) => {
 	])
 
 	if (typeof urls === "string") {
-		urls = await utils.getDataFromCsv(urls)
+		urls = await utils.getDataFromCsv2(urls)
 	}
 
 	if(numberOfCompanyPerLaunch === 0) {

@@ -172,7 +172,7 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 				firstPageNumber = agentObject.resumePageNumber
 			}
 		} else {
-			utils.log("Facebook seems to slow to respond.", "warning")
+			utils.log("Facebook seems too slow to respond.", "warning")
 		}
 	}
 

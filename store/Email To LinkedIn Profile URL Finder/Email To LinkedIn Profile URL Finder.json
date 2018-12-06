@@ -2,7 +2,7 @@
 	"slug": "email-to-linked-profile-url-finder",
 	"description": "Find LinkedIn Profiles from a list of emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Email-Extractor/Email+Extractor+-+Logo.png",
-	"hidden": true,
+	"hidden": false,
 	"new": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",

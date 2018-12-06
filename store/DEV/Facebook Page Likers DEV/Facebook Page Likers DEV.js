@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -15,7 +16,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 30000
+	timeout: 10000
 })
 
 const _ = require("lodash")
@@ -24,7 +25,7 @@ const URL = require("url").URL
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 
 // }
@@ -172,7 +173,7 @@ const interceptRequestTemplate = async (result, agentObject, tab, pageUrl) => {
 				firstPageNumber = agentObject.resumePageNumber
 			}
 		} else {
-			utils.log("Facebook seems to slow to respond.", "warning")
+			utils.log("Facebook seems too slow to respond.", "warning")
 		}
 	}
 
@@ -292,7 +293,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		}
 
 		let payload = response["payload"]
-
+		console.log("payload: ", payload)
 		chr = cheerio.load(payload)
 		responseResult = chr("div[data-testid=\"results\"]")
 	} else {
@@ -305,7 +306,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 	}
 
 	let likesScrapped = scrapUserData(pageUrl, currentResult, responseResult, chr)
-
+	console.log("likesScrapped", likesScrapped)
 	return { error, response, likesScrapped }
 }
 
@@ -353,6 +354,8 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 		}
 
 		let { pageId, likeNumber } = await scrapPageIdAndLikeNumbers(tab)
+		await tab.screenshot(`${Date.now()}pageId.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}pageId.html`)
 		if (!pageId) {
 			utils.log(`Error: could not open page ${pageUrl}`, "error")
 			continue
@@ -409,6 +412,7 @@ const processResponseResult = async (tab, currentResult, pageUrl, urlTemplate, u
 
 			if (urlTemplate) {
 				let requests = response["jsmods"]["require"]
+				console.log("requests:", requests)
 				for (let request of requests) {
 					if (request.indexOf("BrowseScrollingPager") !== -1){
 						for (let param of request) {
