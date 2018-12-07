@@ -52,6 +52,9 @@
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
+					},
+					"keepGoingRateLimited": {
+						"rightLabel": "<b>Keep going when hitting LinkedIn click daily limits. The API will only get the profile's name and but not its URL.</b>"
 					}
 				}
 			}
@@ -77,6 +80,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"keepGoingRateLimited": {
+				"type": "boolean"
 			}
 		}
 	}

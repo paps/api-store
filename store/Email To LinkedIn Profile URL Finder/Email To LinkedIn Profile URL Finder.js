@@ -21,9 +21,10 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+let rateLimited
 
 const extractProfile = (arg, cb) => {
-	const profileFound = { email: arg.email }
+	const profileFound = {}
 	if (document.querySelector(".li-user-title-no-match")) {
 		profileFound.error = "No match found"
 	} else {
@@ -37,17 +38,28 @@ const extractProfile = (arg, cb) => {
 	cb(null, profileFound)
 }
 
-const findProfile = async (tab, email) => {
+const findProfile = async (tab, email, keepGoingRateLimited) => {
 	utils.log(`Processing ${email}...`, "loading")
-	const url = `https://www.linkedin.com/sales/gmail/profile/viewByEmail/${email}`
-	await tab.open(url)
+	let profile = { email, timestamp: (new Date()).toISOString() }
 	try {
+		if (!email.includes("@")) {
+			throw "Not an email"
+		}
+		const url = `https://www.linkedin.com/sales/gmail/profile/viewByEmail/${email}`
+		await tab.open(url)
 		await tab.waitUntilVisible(".li-tracking-panel")
-		const profile = await tab.evaluate(extractProfile, { email })
+		profile = Object.assign(profile, await tab.evaluate(extractProfile))
 		if (profile.profileUrl) {
+			if (rateLimited) {
+				return profile
+			}
 			await tab.open(profile.profileUrl)
-			await tab.waitUntilVisible(["#profile-content", "#content-main"], "or")
+			await tab.wait(1000)
 			const profileUrl = await tab.getUrl()
+			if (profileUrl.startsWith("https://www.linkedin.com/premium/sales?upsellOrderOrigin")) {
+				throw "RateLimited"
+			}
+			await tab.waitUntilVisible(["#profile-content", "#content-main"], "or", 15000)
 			if (profileUrl.includes("linkedin.com/in/")) {
 				profile.profileUrl = profileUrl
 			} else if (profileUrl.includes("linkedin.com/sales/people")) {
@@ -61,10 +73,28 @@ const findProfile = async (tab, email) => {
 				delete profile.profileUrl
 			}
 		}
-		profile.timestamp = (new Date()).toISOString()
 		return profile
-	} catch (err) {
-		return null
+	} catch (error) {
+		if (error === "Not an email") {
+			profile.error = error
+			return profile
+		}
+		const currentUrl = await tab.getUrl()
+		if (currentUrl) {
+			if (currentUrl.startsWith("https://www.linkedin.com/in/")) {
+				profile.profileUrl = currentUrl
+				return profile
+			}
+			if (currentUrl.startsWith("https://www.linkedin.com/premium/sales?upsellOrderOrigin")) {
+				rateLimited = true
+				utils.log("Maximum click-through limit (50) reached for the day.", "warning")
+				if (keepGoingRateLimited) {
+					return profile
+				} else {
+					return null
+				}
+			}
+		}
 	}
 }
 
@@ -80,9 +110,9 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, keepGoingRateLimited } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let emails = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+	let emails = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const result = await utils.getDb(csvName + ".csv")
 	emails = emails.filter(str => str && utils.checkDb(str, result, "email"))
 					.slice(0, numberOfLinesPerLaunch)
@@ -90,7 +120,7 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
 	}
-	console.log(`Emails to process: ${JSON.stringify(emails, null, 4)}`)
+	console.log(`Emails to process: ${JSON.stringify(emails.slice(0, 500), null, 4)}`)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	for (let email of emails) {
@@ -99,11 +129,22 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
-		const tempResult = await findProfile(tab, email)
+		const tempResult = await findProfile(tab, email, keepGoingRateLimited)
 		if (tempResult && tempResult.profileName && tempResult.profileUrl) {
-			utils.log(`Found profile of ${tempResult.profileName}!`, "done")
+			if (rateLimited) {
+				delete tempResult.profileUrl
+			}
+			utils.log(`Found ${rateLimited ? "partial " : ""}profile of ${tempResult.profileName}${tempResult.profileUrl ? `: ${tempResult.profileUrl}` : "."}`, "done")
 		} else {
-			utils.log(`Couldn't find profile of ${email}`, "info")
+			if (rateLimited && !keepGoingRateLimited) {
+				utils.log("Stopping the script...", "warning")
+				break
+			}
+			if (tempResult.error === "Not an email") {
+				utils.log(`${email} is not valid email!`, "warning")
+			} else {
+				utils.log(`Couldn't find profile of ${email}`, "info")
+			}
 		}
 		result.push(tempResult)
 	}
