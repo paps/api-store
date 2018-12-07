@@ -115,8 +115,11 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 # Limits
 
-Please be aware that this API, like most of our Facebook APIs, will manipulate your own account on your behalf. 
+Please be aware that this API will manipulate your own account on your behalf.
 
-Facebook tends to notice when too many messages are sent in a short period of time. Spamming messages is probably reprimanded. We recommend spreading your messages (like 1 message every 15min rather than 10 in one go).
+Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
+
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you.
+
+Also Facebook tends to notice when too many messages are sent in a short period of time. Spamming messages is probably reprimanded. We recommend spreading your messages (like 1 message every 15min rather than 10 in one go).
 If too many actions are done too quickly, Facebook may temporarily block your messages. If that happens, you would need to wait for a few hours before being able to send them again. Be careful and reduce your API frequency the next time.
-Also Facebook may notice unusual activities (login attemps from another location) and sometimes finds it suspicious and temporarily locks the account (asking to review the login to confirm it was intended).
