@@ -21,24 +21,10 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-// const { URL } = require("url")
+const { URL } = require("url")
 
 const DB_NAME = "result"
-// const MAX_SKILLS = 6
-// }
 
-// const isLinkedInUrl = (url) => {
-// 	try {
-// 		if (url.startsWith("linkedin")) { 
-// 			url = "https://" + url
-// 		}
-// 		const { URL } = require("url")
-// 		let urlObject = new URL(url)
-// 		return ((urlObject.hostname.indexOf("linkedin.com") > -1))
-// 	} catch (err) {
-// 		return false
-// 	}
-// }
 
 const isLinkedInProfileUrl = (url) => {
 	try {
@@ -189,7 +175,6 @@ const scrapeProfile = (arg, cb) => {
 			return data
 		})
 	}
-	// Array.from(document.querySelectorAll("#profile-experience > .module-body > ul > li")).map(el => Array.from(el.querySelectorAll("a")).filter(e => e.href.includes("/recruiter/company") || e.href.includes("/recruiter/search?company"))[0].href)
 	cb(null, scrapedData)
 }
 
@@ -202,8 +187,6 @@ const loadAndScrapeProfile = async (tab, recruiterUrl, profileUrl, saveImg, take
 	} catch (err) {
 		utils.log(`Couldn't open profile: ${err}`, "error")
 	}
-	await tab.screenshot(`${Date.now()}before.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}before.html`)
 	let scrapedData
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { recruiterUrl, profileUrl })
@@ -226,9 +209,7 @@ const loadAndScrapeProfile = async (tab, recruiterUrl, profileUrl, saveImg, take
 			utils.log(`Successfully scraped profile of ${scrapedData.name}.`, "done")
 		}
 	} catch (err) {
-		console.log("err: ", err)
-		await tab.screenshot(`${Date.now()}errorScrape.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}errorScrape.html`)
+		//
 	}
 	return scrapedData
 }
@@ -298,8 +279,6 @@ const findRecruiterUrl = async (tab, profileUrl) => {
 			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${profileUrl} due to: ${err.message || err}`, "warning")
-			await tab.screenshot(`${Date.now()}err.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
 		}
 	}
 	await utils.saveResults(result, result, DB_NAME)
