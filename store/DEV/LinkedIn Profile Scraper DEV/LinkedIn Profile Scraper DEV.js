@@ -29,6 +29,7 @@ const { URL } = require("url")
 const DB_NAME = "result"
 const MAX_SKILLS = 6
 const MAX_PROFILES = 25
+let exitAndSave = false
 // }
 
 const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
@@ -36,7 +37,8 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-		nick.exit()
+		exitAndSave = true
+		return null
 	}
 	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
 }
@@ -133,6 +135,10 @@ const removeLinkedinSubdomains = url => {
 		jsonDb = JSON.parse(jsonDb)
 	}
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+	if (exitAndSave) {
+		await utils.saveResults(jsonDb, db, DB_NAME, null, true)
+		nick.exit()
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
