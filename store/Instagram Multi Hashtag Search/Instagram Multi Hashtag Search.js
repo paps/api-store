@@ -371,7 +371,9 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		} while (sortArray.length >= 2)
 		utils.log(`${scrapedData.length} posts scraped.`, "done")
 	}
-	await utils.saveResults(scrapedData, scrapedData, csvName)
+	if (scrapedData.length) {
+		await utils.saveResults(scrapedData, scrapedData, csvName)
+	}
 	nick.exit(0)
 })()
 	.catch(err => {
