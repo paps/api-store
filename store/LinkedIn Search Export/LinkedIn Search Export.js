@@ -662,7 +662,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 			}
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
-			searches = await utils.getDataFromCsv(search)
+			searches = await utils.getDataFromCsv2(search)
 		} else {
 			searches = [ search ]
 		}

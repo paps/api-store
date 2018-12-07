@@ -267,7 +267,7 @@ const isLinkedUrl = target => {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
 		} else {
-			companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 	if (!companies) {

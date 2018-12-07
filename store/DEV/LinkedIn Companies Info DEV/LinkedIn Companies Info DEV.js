@@ -227,7 +227,28 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (!link.endsWith("/")) {
 			link = `${link}/`
 		}
+		await tab.open(link)
+		console.log("opening first page")
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.screenshot(`${Date.now()}FirstPage.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}FirstPage.html`)
+		await tab.open(link + "jobs")
+		console.log("opening jobs page")
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.screenshot(`${Date.now()}JobsPage.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}JobsPage.html`)
 		await tab.open(link + "about")
+		console.log("opening about page")
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {
 			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
@@ -236,8 +257,15 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (await tab.isVisible("div.org-screen-loader")) {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
-		// await tab.screenshot(`${Date.now()}getCompanyInfo.png`)
-		// await buster.saveText(await tab.getContent(), `${Date.now()}getCompanyInfo.html`)
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+		await tab.screenshot(`${Date.now()}NewgetCompanyInfo.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}NewgetCompanyInfo.html`)
+		
 		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
 		try {
 			if (await tab.isVisible(".org-page-navigation__item")) {
@@ -271,7 +299,7 @@ const isLinkedUrl = target => {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
 		} else {
-			companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 	if (!companies) {

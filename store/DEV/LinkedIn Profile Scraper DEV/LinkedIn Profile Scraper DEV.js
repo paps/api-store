@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -19,7 +19,7 @@ const nick = new Nick({
 	heigth: 800
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -115,7 +115,7 @@ const removeLinkedinSubdomains = url => {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
 			urls = [spreadsheetUrl]
 		} else {
-			urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	} else if (typeof profileUrls === "string") {
 		urls = [profileUrls]
@@ -137,12 +137,12 @@ const removeLinkedinSubdomains = url => {
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
 	const tab = await nick.newTab()
-	console.log("IP:", await utils.getIP())
+	// console.log("IP:", await utils.getIP())
 
-	await tab.open("https://www.iplocation.net/")
-	await tab.wait(5000)
-	await tab.screenshot(`${Date.now()}sU.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
+	// await tab.open("https://www.iplocation.net/")
+	// await tab.wait(5000)
+	// await tab.screenshot(`${Date.now()}sU.png`)
+	// await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 	await linkedIn.login(tab, sessionCookie)
 
 	const result = []

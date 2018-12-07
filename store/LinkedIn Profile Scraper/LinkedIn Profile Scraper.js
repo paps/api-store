@@ -114,7 +114,7 @@ const removeLinkedinSubdomains = url => {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
 			urls = [spreadsheetUrl]
 		} else {
-			urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	} else if (typeof profileUrls === "string") {
 		urls = [profileUrls]
