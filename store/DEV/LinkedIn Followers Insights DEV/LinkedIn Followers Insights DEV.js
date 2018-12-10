@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -66,8 +65,8 @@ const getAllFollowers = async (tab, headers, search, max) => {
 			utils.log(timeLeft.message, "warning")
 			return result
 		}
-		if (fail > 2) {
-			utils.log(`Failed 3 times to fetch followers, exiting with ${result.length} followers.`, "warning")
+		if (fail > 10) {
+			utils.log(`Failed ${fail} times to fetch followers, exiting with ${result.length} followers.`, "warning")
 			return result
 		}
 		if (max - search.start < 100) {
@@ -77,26 +76,13 @@ const getAllFollowers = async (tab, headers, search, max) => {
 			const response = await tab.evaluate(ajaxGet, {url: "https://www.linkedin.com/voyager/api/feed/richRecommendedEntities", headers, search})
 			const data = utils.filterRightOuter(result, linkedinObjectToResult(response)) // Don't add duplicated results
 			result.push(...data)
-			if (search.count < 0) {
-				search.count = 20
-			}
-			if (data.length < 1) {
-				if (max - result.length < 50) {
-					break
-				}
-				await tab.wait(5000 + Math.round(Math.random() * 2500)) // Wait between 5000 <=> 7500 ms when there is no results from voyager
-				search.count -= search.count < 5 ? 0 : 5
-				continue
-			}
 			utils.log(`Got ${result.length} followers.`, "info")
 			buster.progressHint((result.length / max), "Getting followers...")
-			const payload = (max - result.length) < 5 ? (max - search.start) : (max - result.length) // HTTP 400 if search parameter is smaller than 0
-			search.start = result.length
-			search.count = payload > 0 && payload <= 20 ? payload : search.count
+			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
 		} catch (error) {
-			console.log(error)
+			utils.log(error.message || error, "warning")
 			await tab.wait(2000)
 			fail++
 		}
@@ -140,7 +126,7 @@ const onHttpRequest = e => {
 	await linkedIn.login(tab, sessionCookie)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 
-	// NOTE: First selector contains all followers, the second one is the LinkedIn picture when the current profile doesn't have any followers
+	// First selector contains all followers, the second one is the LinkedIn picture when the current profile doesn't have any followers
 	const feedSelectors = [ "ul.feed-following-list", ".feed-followers__empty-state-illustration" ]
 
 	await tab.open("https://www.linkedin.com/feed/followers/")
@@ -162,22 +148,15 @@ const onHttpRequest = e => {
 				gl.search.count = 20
 			}
 		}
-		let response = null
-		try {
-			response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
-			result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
-			console.log(JSON.stringify(result[result.length], null, 2))
-			result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
-			for (const follower of result) {
-				if (follower.followers === 0) {
-					follower.followers = "Not provided by LinkedIn"
-				}
+		const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
+		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
+		result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
+		for (const follower of result) {
+			if (follower.followers === 0) {
+				follower.followers = "Not provided by LinkedIn"
 			}
-		} catch (err) {
-			console.log(err.message || err, "\n", err.stack || "no stack")
-			await buster.saveText(await tab.getContent(), `lame-${Date.now()}.html`)
-			await tab.screenshot(`lame-${Date.now()}.jpg`)
 		}
+
 	} else {
 		utils.log("No followers found from the given profile", "warning")
 	}
@@ -187,6 +166,5 @@ const onHttpRequest = e => {
 })()
 	.catch(err => {
 		utils.log(err, "error")
-		console.log(err.stack || "no stack")
 		nick.exit(1)
 	})
