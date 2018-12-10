@@ -35,8 +35,10 @@ const loadProfileSections = async tab => {
 	const spinnerSelector = "div.artdeco-spinner"
 	// In order to completely load all sections for a profile, the script click until a condition is false
 	// waitCond field represent the selector which will stop the complete load of a section
+	let initDate
 	for (const button of buttons) {
 		let stop = false
+		initDate = new Date()
 		while (!stop && await tab.isPresent(button.waitCond)) {
 			const visible = await tab.isVisible(button.selector)
 			if (visible) {
@@ -54,6 +56,9 @@ const loadProfileSections = async tab => {
 				}
 			} else {
 				stop = true
+			}
+			if (new Date() - initDate > 10000) {
+				break
 			}
 		}
 	}
