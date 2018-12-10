@@ -39,7 +39,7 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
 	if (spreadsheetUrl.indexOf("twitter.com") > -1) {
 		result = [spreadsheetUrl]
 	} else if (spreadsheetUrl.indexOf("docs.google.com") > -1 || spreadsheetUrl.indexOf("https://") > -1 || spreadsheetUrl.indexOf("http://") > -1) {
-		result = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		result = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	} else {
 		result = [spreadsheetUrl]
 	}
