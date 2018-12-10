@@ -69,6 +69,26 @@ const scrapeCompanyInfo = (arg, callback) => {
 		} catch (err) {
 			//
 		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]")) {
+			result.fundingTotal = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]").innerText
+			result.fundingTotalUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]").href
+		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]")) {
+			result.fundingRecent = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").innerText
+			result.fundingRecentUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").href
+		}
+		const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
+		if (recentFunding && recentFunding.textContent) {
+			result.fundingRecentAmount = recentFunding.textContent.trim()
+		}
+		const investor = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_last_round_investors_link\"]")
+		if (investor && investor.textContent) {
+			result.fundingInvestor = investor.textContent.trim()
+			result.fundingInvestorUrl = investor.href
+		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_crunchbase_company_logo_link\"]")) {
+			result.fundingCrunchbaseUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_crunchbase_company_logo_link\"]").href
+		}
 	} else {
 		if (document.querySelector("h1.org-top-card-module__name")) {
 			result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim()
