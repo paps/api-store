@@ -642,14 +642,15 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, onlyGetFirstResult } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
 		utils.log("Empty search field.", "error")
 		nick.exit(1)
 	}
-	let result = await utils.getDb("result.csv")
+	if (!csvName) { csvName = "result" }
+	let result = await utils.getDb(csvName + ".csv")
 	if (!category) { category = "People" }
 	// 							//
 	if (typeof search === "string") {
@@ -697,7 +698,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		}
 	}
 	await linkedIn.saveCookie()
-	await utils.saveResults(result, result)
+	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
 	.catch(err => {

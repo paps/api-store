@@ -309,7 +309,7 @@ const isLinkedInSearchURL = (url) => {
 	const tab = await nick.newTab()
 	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let result = []
+	let result = await utils.getDb(csvName + ".csv")
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
 	if (isLinkedInSearchSalesURL === 0) { // LinkedIn Sales Navigator Search
 		searches = [ searches ]
@@ -320,7 +320,6 @@ const isLinkedInSearchURL = (url) => {
 		try { 		// Link not from LinkedIn, trying to get CSV
 			searches = await utils.getDataFromCsv(searches)
 			searches = searches.filter(str => str) // removing empty lines
-			result = await utils.getDb(csvName + ".csv")
 			const lastUrl = searches[searches.length - 1]
 			searches = searches.filter(str => checkDb(str, result))
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one

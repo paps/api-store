@@ -62,7 +62,7 @@
 					},
 					"category": {
 						"label": "Search Category",
-						"helper": "In case of a single search, which LinkedIn category to search in",
+						"helper": "In case of a specic term search, which LinkedIn category to search in",
 						"removeDefaultNone": true,
 						"sort": false
 					},
@@ -71,6 +71,10 @@
 						"placeholder": 5,
 						"inputType": "number",
 						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					},
 					"onlyGetFirstResult": {
 						"rightLabel": "<b>Only get the first search result</b>"
@@ -115,6 +119,10 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			},
 			"onlyGetFirstResult": {
 				"type": "boolean"
