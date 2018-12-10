@@ -52,9 +52,13 @@ class LinkedIn {
 			}
 			let sel
 			try {
-				sel = await tab.untilVisible(["#extended-nav", "form.login-form"], "or", 15000)
+				sel = await tab.untilVisible(["#extended-nav", "form.login-form", "#email-pin-challenge"], "or", 15000)
 			} catch (e) {
 				return e.toString()
+			}
+			if (sel === "#email-pin-challenge") {
+				this.utils.log("Cookie is correct but LinkedIn is asking for a mail verification.", "warning")
+				this.nick.exit(1)
 			}
 			if (sel === "#extended-nav") {
 				await tab.untilVisible(".nav-item__profile-member-photo.nav-item__icon", 15000)
