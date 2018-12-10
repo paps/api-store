@@ -221,11 +221,16 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, columnName, extensionsPerLaunch } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, extensionsPerLaunch, csvName } = utils.validateArguments()
 	let urls = []
 	const scrapingRes = []
 	let i = 0
-	let db = await utils.getDb(DB_NAME)
+
+	if (!csvName) {
+		csvName = SHORT_DB_NAME
+	}
+
+	let db = await utils.getDb(csvName + ".csv")
 
 	if (!extensionsPerLaunch) {
 		extensionsPerLaunch = DEFAULT_URLS_PER_LAUNCH
@@ -266,7 +271,7 @@ const createCsvOutput = json => {
 		i++
 	}
 	db = db.concat(createCsvOutput(scrapingRes))
-	await utils.saveResults(scrapingRes, db, SHORT_DB_NAME, null, false)
+	await utils.saveResults(scrapingRes, db, csvName, null, false)
 	nick.exit()
 })()
 .catch(err => {
