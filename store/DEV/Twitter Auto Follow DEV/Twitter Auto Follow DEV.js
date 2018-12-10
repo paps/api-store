@@ -185,7 +185,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, action) => {
 			}
 		}
 		// Delay the next follow
-		await tab.wait(Math.round(2500 + Math.random() * 2500))
+		await tab.wait(Math.round(500 + Math.random() * 500))
 	}
 	return added
 }
