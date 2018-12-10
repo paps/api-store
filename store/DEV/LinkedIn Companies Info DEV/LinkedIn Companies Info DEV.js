@@ -78,9 +78,14 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.fundingRecent = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").innerText
 			result.fundingRecentUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").href
 		}
-		const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
-		if (recentFunding && recentFunding.textContent) {
-			result.fundingRecentAmount = recentFunding.textContent.trim()
+		try {
+			const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]")
+			.parentElement.nextElementSibling
+			if (recentFunding && recentFunding.textContent) {
+				result.fundingRecentAmount = recentFunding.textContent.trim()
+			}
+		} catch (err) {
+			//
 		}
 		const investor = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_last_round_investors_link\"]")
 		if (investor && investor.textContent) {
@@ -293,11 +298,16 @@ const getCompanyInfo = async (tab, link, query) => {
 				result = Object.assign(result, insights)
 			}
 		} catch (err) {
-			//
+			console.log("err1q:", err)
+			await tab.screenshot(`${Date.now()}err1q.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}err1q.html`)
 		}
 
 		return result
 	} catch (err) {
+		console.log("erraze:", err)
+		await tab.screenshot(`${Date.now()}erraze.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}erraze.html`)
 		return { link, query, invalidResults: "Couldn't access company profile" }
 	}
 }

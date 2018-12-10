@@ -77,9 +77,13 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.fundingRecent = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").innerText
 			result.fundingRecentUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").href
 		}
-		const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
-		if (recentFunding && recentFunding.textContent) {
-			result.fundingRecentAmount = recentFunding.textContent.trim()
+		try {
+			const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
+			if (recentFunding && recentFunding.textContent) {
+				result.fundingRecentAmount = recentFunding.textContent.trim()
+			}
+		} catch (err) {
+			//
 		}
 		const investor = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_last_round_investors_link\"]")
 		if (investor && investor.textContent) {

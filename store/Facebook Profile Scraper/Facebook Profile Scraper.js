@@ -300,9 +300,8 @@ const checkIfPage = (arg, cb) => {
 
 const scrapeAboutPageFromPage = (arg, cb) => {
 	const scrapedData = { profileUrl: arg.profileUrl }
-	const email = Array.from(document.querySelectorAll("a")).filter(el => el.href.startsWith("mailto"))[0]
-	if (email) {
-		scrapedData.pageEmail = email.textContent
+	if (document.querySelector("a[href*=mailto]")) {
+		scrapedData.pageEmail = document.querySelector("a[href*=mailto]").textContent
 	}
 	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me"))[0]
 	if (website) {
@@ -329,7 +328,7 @@ const scrapeMainPageData = (arg, cb) => {
 	if (document.querySelector("#entity_sidebar img")) {
 		scrapedData.pageLogo = document.querySelector("#entity_sidebar img").src
 	}
-	const reviews = Array.from(document.querySelectorAll("#content_container a")).filter(el => el.href.includes("reviews"))[0].querySelector("div > div")
+	const reviews = document.querySelector("#content_container a[href*=reviews] div > div")
 	if (reviews && reviews.textContent) {
 		scrapedData.pageReviewScore = parseFloat(reviews.textContent)
 	}
