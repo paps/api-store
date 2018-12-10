@@ -1,17 +1,16 @@
 // Phantombuster configuration {
 
-"phantombuster command: casperjs"
-"phantombuster package: 4"
-"phantombuster transform: babel"
+"phantombuster command: nodejs"
+"phantombuster package: 5"
 "phantombuster flags: save-folder"
-
-require("babel-polyfill")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
 const Nick = require("nickjs")
 const nick = new Nick()
+
+/* global $ */
 
 // }
 
