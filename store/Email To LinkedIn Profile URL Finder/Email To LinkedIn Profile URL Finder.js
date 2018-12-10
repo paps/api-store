@@ -112,7 +112,7 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, keepGoingRateLimited } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let emails = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let emails = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const result = await utils.getDb(csvName + ".csv")
 	emails = emails.filter(str => str && utils.checkDb(str, result, "email"))
 					.slice(0, numberOfLinesPerLaunch)
