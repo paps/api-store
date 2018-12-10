@@ -27,50 +27,6 @@ const dbName = "database-twitter-auto-follow"
 const removeNonPrintableChars = str => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
 /**
- * @description Browser context function used to scrape languages used for every tweets loaded in the current page
- * @param {Object} arg -- Arguments passed to browser context }
- * @param {Function} cb -- Function to quit browser context }
- * @return {Promise<Array<String>>} Languages used for every tweets loaded in the current page
- */
-// const getTweetsLanguages = (arg, cb) => {
-// 	const tweets = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet"))
-// 	cb(null, tweets.map(el => el.querySelector("*[lang]").lang))
-// }
-
-/**
- * @async
- * @description Function used to check if languages used from a tweet are in a given whitelist
- * @param {Object} tab -- Nickjs Tab instance }
- * @param {Array<String>} list -- Whitelisted languages }
- * @return {Promise<Boolean>} true if every languages are in the whitelist otherwise false at the first occurence
- */
-// const isLanguagesInList = async (tab, list) => {
-// 	if (list.length < 1) {
-// 		return true
-// 	}
-
-// 	const langsScraped = await tab.evaluate(getTweetsLanguages)
-
-// 	/**
-// 	 * No tweets scraped:
-// 	 * - No tweets from the user ?
-// 	 * - Protected mode ?
-// 	 * - An error ?
-// 	 * In any case the function will return false
-// 	 */
-// 	if (langsScraped.length < 1) {
-// 		return false
-// 	}
-
-// 	for (const lang of langsScraped) {
-// 		if (list.indexOf(lang) < 0) {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
-/**
  * @description Compare list received with file saved to know what profile to add
  * @param {String} spreadsheetUrl
  * @param {String} columnName
@@ -112,19 +68,18 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
  * @description Subscribe to one twitter profile
  * @param {Object} tab
  * @param {String} url
- * @param {Array<String>} whitelist
  * @param {String} action
  * @throws String if url is not a valid URL, or the daily follow limit is reached
  */
-const subscribe = async (tab, url, whitelist, action) => {
-	utils.log(`${ action === "follow" ? "Adding" : "Removing" } ${url}...`, "loading")
+const subscribe = async (tab, url, action) => {
+	utils.log(`${ action === "follow" ? "Adding" : "Unfollowing" } ${url}...`, "loading")
 	const followingSelector = ".ProfileNav-item .following-text"
 	const followSelector = ".ProfileNav-item .follow-text"
 	const pendingSelector = ".pending"
-	await tab.open(url)
 	let selector
+	await tab.open(url)
 	try {
-		selector = await tab.waitUntilVisible([ followSelector, followingSelector, pendingSelector ], 5000, "or")
+		selector = await tab.waitUntilVisible([ followSelector, followingSelector, pendingSelector ], 7500, "or")
 	} catch (error) {
 		throw `${url} isn't a valid twitter profile.`
 	}
@@ -134,7 +89,7 @@ const subscribe = async (tab, url, whitelist, action) => {
 			return utils.log(`You need to follow ${url} before sending an unfollow request`, "warning")
 		}
 		await tab.click(followSelector)
-		const result = await tab.waitUntilVisible([ followingSelector, pendingSelector ], 5000, "or")
+		const result = await tab.waitUntilVisible([ followingSelector, pendingSelector ], 7500, "or")
 		await tab.wait(1000)
 		/**
 		 * Is the target profile in protected mode ?
@@ -162,13 +117,13 @@ const subscribe = async (tab, url, whitelist, action) => {
 				return utils.log(`Unfollow request can't be done: ${url} is following you back`, "warning")
 			}
 			await tab.click(followingSelector)
-			const selectorFound = await tab.waitUntilVisible([ followingSelector, followSelector ], 5000, "or")
-			await tab.wait(1000)
+			await tab.wait(1000) // Wait until the DOM is updated
+			const selectorFound = await tab.waitUntilVisible([ followingSelector, followSelector ], 7500, "or")
 			if (await tab.isVisible(".alter-messages")) {
 				utils.log("Twitter daily un/follow limit reached", "error")
 				throw "TLIMIT"
 			}
-			if (selectorFound === followingSelector) {
+			if (selectorFound === followSelector) {
 				return utils.log(`${url} unfollowed`, "done")
 			}
 			return utils.log(`Unfollow request for ${url} can't be done`, "warning")
@@ -182,11 +137,10 @@ const subscribe = async (tab, url, whitelist, action) => {
  * @param {Object} tab
  * @param {Array<String>} profiles
  * @param {Number} numberOfAddsPerLaunch
- * @param {Array<String>} whitelist
  * @param {String} action - action to perform (follow, unfollow, unfollow if profile doesn't follow back)
  * @return {Array<{ url: String, handle: String, ?error: String }>} Contains profile added
  */
-const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, action) => {
+const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, action) => {
 	const added = []
 	let i = 1
 	for (let profile of profiles) {
@@ -213,7 +167,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
 			newAdd.handle = profile
 		}
 		try {
-			await subscribe(tab, newAdd.url, whitelist, action)
+			await subscribe(tab, newAdd.url, action)
 			if (!newAdd.handle) {
 				const url = await tab.getUrl()
 				newAdd.handle = url.match(getUsernameRegex)[1]
@@ -241,7 +195,7 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, csvName, whiteList, unfollowProfiles, actionToPerform } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, csvName, unfollowProfiles, actionToPerform } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = dbName
@@ -258,22 +212,19 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, whitelist, a
 			actionToPerform = "follow"
 		}
 	}
-	if (!whiteList) {
-		whiteList = []
-	}
 	if (!numberOfAddsPerLaunch) {
 		numberOfAddsPerLaunch = 20
 	}
 	let db = await utils.getDb(csvName + ".csv")
 	let profiles = await getProfilesToAdd(spreadsheetUrl, columnName, db, numberOfAddsPerLaunch)
 	await twitter.login(tab, sessionCookie)
-	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, whiteList, actionToPerform)
+	const added = await subscribeToAll(tab, profiles, numberOfAddsPerLaunch, actionToPerform)
 	utils.log(`${added.length} profile${added.length === 1 ? "" : "s" } successfuly ${actionToPerform === "unfollow" || actionToPerform === "unfollowback" ? "unfollowed" : "added" }.`, "done")
 	db = db.concat(added)
 	await utils.saveResult(db, csvName)
 	nick.exit()
 })()
-	.catch(err => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.catch(err => {
+	utils.log(err, "error")
+	nick.exit(1)
+})
