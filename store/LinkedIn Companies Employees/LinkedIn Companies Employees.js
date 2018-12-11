@@ -70,13 +70,11 @@ const scrapeResults = (args, callback) => {
 					name = result.querySelector("figure.search-result__image > img").alt
 				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
 					name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
-				} else {
-					name = "No name found"
+				} else if (result.querySelector(".actor-name")) {
+					name = result.querySelector(".actor-name").textContent
 				}
 				scrapedEmployee.name = name
 				scrapedEmployee.url = url
-			} else {
-				scrapedEmployee.name = "No name found"
 			}
 			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
 			scrapedEmployee.job = result.querySelector("div.search-result__info > p.subline-level-1") ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found"

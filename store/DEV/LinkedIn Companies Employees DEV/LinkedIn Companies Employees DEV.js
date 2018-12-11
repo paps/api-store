@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 4"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
 
@@ -71,13 +70,11 @@ const scrapeResults = (args, callback) => {
 					name = result.querySelector("figure.search-result__image > img").alt
 				} else if (result.querySelector("figure.search-result__image div[aria-label]")) {
 					name = result.querySelector("figure.search-result__image div[aria-label]").getAttribute("aria-label").trim()
-				} else {
-					name = "No name found"
+				} else if (result.querySelector(".actor-name")) {
+					name = result.querySelector(".actor-name").textContent
 				}
 				scrapedEmployee.name = name
 				scrapedEmployee.url = url
-			} else {
-				scrapedEmployee.name = "No name found"
 			}
 			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
 			scrapedEmployee.job = result.querySelector("div.search-result__info > p.subline-level-1") ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found"
@@ -162,8 +159,6 @@ const getIdFromUrl = async (url, tab) => {
 		if (!isLinkedUrl(url)) {
 			await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${url}`)
 			await tab.waitUntilVisible("div.search-results-container")
-			await tab.screenshot(`${Date.now()}cdiv.search-results-container ${url}.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}cdiv.search-results-container ${url}.html`)
 			url = await tab.evaluate(scrapeCompanyLink)
 			if (!url) {
 				throw "No company found."
@@ -204,8 +199,6 @@ const getIdFromUrl = async (url, tab) => {
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
 		} else {
-			await tab.screenshot(`${Date.now()}could not get id ${url}.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}could not get id ${url}.html`)
 			throw "could not get id from " + url
 		}
 	}
@@ -229,7 +222,7 @@ const getIdFromUrl = async (url, tab) => {
 		urls = await utils.getDataFromCsv2(urls)
 	}
 
-	if(numberOfCompanyPerLaunch === 0) {
+	if (numberOfCompanyPerLaunch === 0) {
 		numberOfCompanyPerLaunch = urls.length
 	}
 
@@ -254,7 +247,7 @@ const getIdFromUrl = async (url, tab) => {
 			res.url = companyUrl
 			result.push(res)
 		} catch (error) {
-			utils.log(`Could not scrape company ${companyUrl}: ${error}`, "error")
+			utils.log(`Could not scrape company ${companyUrl} because ${error}`, "error")
 			// Saving bad entries in order to not retry on next launch
 			result.push({ url: companyUrl, employees: [{ url: "none", name: "none", job: "none", location: "none", currentJob: "none", companyUrl: "none" }] })
 		}
