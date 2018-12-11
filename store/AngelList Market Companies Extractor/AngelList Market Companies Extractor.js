@@ -109,7 +109,7 @@ const getCompaniesInfos = (arg, callback) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const {url, limit} = utils.validateArguments()
+	let { url, limit, csvName } = utils.validateArguments()
 	const clickSelector = "div.more:last-of-type"
 
 	await tab.open(url)
@@ -130,11 +130,8 @@ const getCompaniesInfos = (arg, callback) => {
 	}
 	utils.log(`Loaded ${length} companies.`, "done")
 	let result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })
-	result = result.map(el => {
-		el.timestamp = (new Date()).toISOString()
-		return el
-	})
-	await utils.saveResult(result)
+	result.forEach(el => el.timestamp = (new Date()).toISOString())
+	await utils.saveResult(result, csvName)
 })()
 .catch(err => {
 	utils.log(err, "error")
