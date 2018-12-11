@@ -37,6 +37,10 @@
 						"label": "Column name where Twitter profile URLs are stored",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
 						"placeholder": "Twitter Profile"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -53,6 +57,9 @@
 				"type": "string"
 			},
 			"columnName": {
+				"type": "string"
+			},
+			"csvName": {
 				"type": "string"
 			}
 		},

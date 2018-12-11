@@ -247,7 +247,7 @@ class Twitter {
 			}
 			await tab.scrollToBottom()
 			try {
-				await tab.waitUntilVisible(`div.GridTimeline-items > div.Grid:nth-child(${n+1})`)
+				await tab.waitUntilVisible(`div.GridTimeline-items > div.Grid:nth-child(${n + 1})`)
 				n = await tab.evaluate(_getDivsNb)
 				this.utils.log(`Loaded ${await tab.evaluate(_getFollowersNb)} accounts`, "info")
 			} catch (error) {
