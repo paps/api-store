@@ -80,27 +80,6 @@ const getPostCount = (arg, callback) => {
 	callback(null, postCount)
 }
 
-const scrapeData = (arg, cb) => {
-	const data = []
-	if (document.querySelector(arg.rootSelector)) {
-		const results = document.querySelector(arg.rootSelector).querySelectorAll(arg.divSelector)
-		for (const result of results) {
-			let postlink = result.querySelector("a") ? result.querySelector("a").href : null
-			if (postlink) {
-				let tmp = new URL(postlink)
-				postlink = `${tmp.protocol}//${tmp.hostname}${tmp.pathname}`
-			} else {
-				postlink = ""
-			}
-			data.push({
-				postUrl: postlink,
-				description: result.querySelector("img") ? result.querySelector("img").alt : ""
-			})
-		}
-	}
-	cb(null, data)
-}
-
 const interceptGraphQLHash = e => {
 	if (e.request.url.indexOf("graphql/query/?query_hash") > -1 && e.request.url.includes("after") && !hashWasFound) {
 		graphql = {}
@@ -110,6 +89,7 @@ const interceptGraphQLHash = e => {
 		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
 		hashWasFound = true
 	}
+	
 }
 
 const forgeAjaxURL = () => {
@@ -130,34 +110,50 @@ const removeDuplicates = (arr) => {
 	return resultArray
 }
 
-const scrapeFirstPage = async tab => {
-	const time = new Date()
-	tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
-	while (!hashWasFound) {
-		try {
-			await tab.scrollToBottom()
-		} catch (err) {
-			//
-		}
-		if (new Date() - time > 5000) { break }
+const scrapeFirstResults = (arg, cb) => {
+	const results = document.querySelectorAll("main article img")
+	const scrapedHashtags = []
+	for (const result of results) {
+		const hashtagData = { query: arg.hashtag }
+		hashtagData.postUrl = result.parentElement.parentElement.parentElement.href
+		scrapedHashtags.push(hashtagData)
 	}
-	tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
-	hashWasFound = false
-	let data = await tab.evaluate(scrapeData, { rootSelector: "article", divSelector: "div > div > div > div" })
-	// data = data.concat(await tab.evaluate(scrapeData, { rootSelector: "article header ~ h2 ~ div:not([class])", divSelector: "div > div > div > div"}))
-	for (let i = 0; i < data.length; i++) { //  checking the post manually if the description isn't available (video posts)
-		if (data[i].postUrl && !data[i].description) {
-			const tabT = await nick.newTab()
+	cb(null, scrapedHashtags)
+}
+
+const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
+	for (let i = 0; i < firstResultsLength; i++) {
+		if (results[i].postUrl) {
 			try {
-				await tabT.open(data[i].postUrl)
-				const result = await instagram.scrapePost(tabT)
-				if (result && result.description) { data[i].description = result.description }
+				await tab.open(results[i].postUrl)
+				const scrapedData = await instagram.scrapePost2(tab, query)
+				results[i] = scrapedData
 			} catch (err) {
-				utils.log(`${err}`, "error")
+				//
 			}
-			await tabT.close()
 		}
+		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
 	}
+	return results
+}
+
+
+const scrapeFirstPage = async (tab, query) => {
+	hashWasFound = false
+	const initDate = new Date()
+	do {
+		await tab.wait(1000)
+		await tab.scroll(0, - 1000)
+		await tab.scrollToBottom()
+		if (new Date() - initDate > 10000) {
+			break
+		}
+	} while (!graphql)
+	let data = await tab.evaluate(scrapeFirstResults, { query })
+	const newlyScraped = data.length
+	const postTab = await nick.newTab()
+	data = await extractFirstPosts(postTab, data, newlyScraped, query)
+	await postTab.close()
 	return data
 }
 
@@ -221,7 +217,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let csvData = []
 	for (const el of search) {
 		if (isUrl(el)) {
-			csvData = await utils.getDataFromCsv(el, columnName)
+			csvData = await utils.getDataFromCsv2(el, columnName)
 			hasSpreadsheet = true
 		}
 	}
@@ -339,10 +335,18 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term}...`, "loading")
 
 			//scraping the first page the usual way
-			scrapedResult = await scrapeFirstPage(tab)
+			tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
+			scrapedResult = await scrapeFirstPage(tab, term)
+			tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
+
+
 			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
-			if (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount)) {
-				await scrapePosts(tab, scrapedResult, maxPosts, term)
+			if (graphql && (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount))) {
+				try {
+					await scrapePosts(tab, scrapedResult, maxPosts, term)
+				} catch (err) {
+					//
+				}
 			}
 
 			scrapedResult = scrapedResult.slice(0, maxPosts) // only getting maxPosts results

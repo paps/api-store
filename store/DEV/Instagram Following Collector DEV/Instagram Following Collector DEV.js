@@ -258,7 +258,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
 	} else { // CSV
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			if (urls[i].startsWith("@")) { // converting @profile_name to https://www.instagram/profile_name

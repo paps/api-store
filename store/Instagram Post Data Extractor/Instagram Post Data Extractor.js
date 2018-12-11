@@ -63,7 +63,7 @@ const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		postUrls = [ spreadsheetUrl ]
 	} else { // CSV
-		postUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		postUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		postUrls = postUrls.filter(str => str) // removing empty lines
 		if (!numberOfPostsPerLaunch) {
 			numberOfPostsPerLaunch = postUrls.length

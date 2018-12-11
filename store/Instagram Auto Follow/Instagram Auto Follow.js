@@ -130,7 +130,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 		}
 		result = []
 	} else { // CSV
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")
@@ -189,7 +189,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 			continue
 		}
 		if (rateLimited) {
-			utils.log("Rate limited by Instagram, stopping the agent... Please retry later.", "warning")
+			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (15min+).", "warning")
 			break
 		}
 		await tab.wait(1500 + Math.random() * 2000)
