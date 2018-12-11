@@ -14,6 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -201,7 +202,8 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
-	utils.log(`${result.length} messages sent in total.`, "done")
+	const messageCount = result.filter(el => el.message).length
+	utils.log(`${messageCount} message${messageCount > 1 ? "s" : ""} sent in total.`, "done")
 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)

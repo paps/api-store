@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -14,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -57,6 +59,7 @@ const openChatPage = async (tab, profileUrl) => {
 		const slug = urlObject.pathname
 		chatUrl = `https://www.facebook.com/messages/t${slug}`
 	}
+	console.log("chatUrl", chatUrl)
 	await tab.open(chatUrl)
 	await tab.waitUntilVisible("#content")
 
@@ -163,11 +166,13 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
+					await tab.screenshot(`${Date.now()}openChatPage.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}openChatPage.html`)
 					if (tempResult.name && message) {
 						try {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-							await sendMessage(tab, forgedMessage)
+							// await sendMessage(tab, forgedMessage)
 							await tab.wait(4000)
 							const isBanned = await tab.evaluate(checkIfBanned)
 							const isBlocked = await tab.evaluate(checkIfBlocked)							
@@ -201,7 +206,8 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
-	utils.log(`${result.length} messages sent in total.`, "done")
+	const messageCount = result.filter(el => el.message).length
+	utils.log(`${messageCount} message${messageCount > 1 ? "s" : ""} sent in total.`, "done")
 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
