@@ -103,23 +103,13 @@ const waitUntilNewReviews = (arg, cb) => {
  * Since click doesn't use under the hood Input.dispatchMouseEvent, here a tiny snippet
  * @param {Object} tab - Nickjs Tab instance
  * @param {String} selector - CSS selector to click
- * @throws if the click procedure failed
+ * @throws Error if the click procedure failed
  */
 const emulateHumanClick = async (tab, selector) => {
 
 	const selectorPosition = await tab.evaluate((arg, cb) => {
 		const tmp = document.querySelector(arg.selector).getBoundingClientRect()
-		let res = {
-			top: tmp.top,
-			right: tmp.right,
-			bottom: tmp.bottom,
-			left: tmp.left,
-			width: tmp.width,
-			height: tmp.height,
-			x: tmp.x,
-			y: tmp.y
-		}
-		cb(null, res)
+		cb(null, tmp.toJSON())
 	}, { selector })
 
 	// Using Nickjs click mechanism to get coordinates in order to click at the center of the element
@@ -129,12 +119,7 @@ const emulateHumanClick = async (tab, selector) => {
 	posX = Math.floor(selectorPosition.width * (posX - (posX ^ 0)).toFixed(10)) + (posX ^ 0) + selectorPosition.left
 	posY = Math.floor(selectorPosition.height * (posY - (posY ^ 0)).toFixed(10)) + (posY ^ 0) + selectorPosition.top
 
-	const opts = {
-		x: posX,
-		y: posY,
-		button: "left",
-		clickCount: 1
-	}
+	const opts = { x: posX, y: posY, button: "left", clickCount: 1 }
 
 	opts.type = "mousePressed"
 	await tab.driver.client.Input.dispatchMouseEvent(opts)
