@@ -19,38 +19,27 @@ const { URL, parse } = require("url")
 const _downloadCsv = url => {
 	return new Promise((resolve, reject) => {
 		let hasRedirection = false
-		let httpCodeRedirection = null
 		let hasTimeout = false
 
 		let httpStream = needle.get(url, { follow_max: 5, follow_set_cookie: true }, (err, resp) => {
 			if (err) {
 				reject(err)
 			}
-
 			if (hasTimeout) {
-				reject(`Could not download specified URL, socket hang up, HTTP code: ${resp.statusCode}`)
+				reject("Could not download specified URL, socket hang up")
 			}
 
 			const parsedRequestURL = new URL(url)
-
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
-				reject(`Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public, HTTP code: ${httpCodeRedirection}`)
+				reject("Could not download csv, maybe csv is not public")
 			}
-
 			if (resp.statusCode >= 400) {
-				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
+				reject(`${url} is not available`)
 			}
 			resolve(resp.raw.toString())
 		})
-
-		httpStream.on("redirect", () => {
-			httpCodeRedirection = httpStream.request.res.statusCode
-			hasRedirection = true
-		})
-
-		httpStream.on("timeout", () => {
-			hasTimeout = true
-		})
+		httpStream.on("redirect", () => { hasRedirection = true })
+		httpStream.on("timeout", () => { hasTimeout = true })
 	})
 }
 
