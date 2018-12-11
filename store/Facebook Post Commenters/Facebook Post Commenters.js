@@ -48,7 +48,11 @@ const checkDb = (str, db) => {
 const getCommentsCount = (arg, cb) => {
 	let comments = []
 	try {
-		comments = Array.from(document.querySelector(arg.selector).querySelectorAll("div")).filter(el => el.id.startsWith("comment_js_"))
+		if (document.querySelector(arg.selector).querySelectorAll("div[id*=\"comment_js_\"]").length) {
+			comments = document.querySelector(arg.selector).querySelectorAll("div[id*=\"comment_js_\"]")
+		} else if (document.querySelector(arg.selector).querySelectorAll("div[data-testid=\"UFI2Comment/body\"]").length) {
+			comments = document.querySelector(arg.selector).querySelectorAll("div[data-testid=\"UFI2Comment/body\"]")
+		}
 	} catch (err) {
 		//
 	}
@@ -68,7 +72,12 @@ const scrapeCommentsAndRemove = (arg, cb) => {
 		return url
 	}
 
-	const comments = Array.from(document.querySelector(arg.selector).querySelectorAll("div")).filter(el => el.id.startsWith("comment_js_"))
+	let comments = []
+	if (document.querySelector(arg.selector).querySelectorAll("div[id*=\"comment_js_\"]").length) {
+		comments = document.querySelector(arg.selector).querySelectorAll("div[id*=\"comment_js_\"]")
+	} else if (document.querySelector(arg.selector).querySelectorAll("div[data-testid*=\"UFI2Comment/root\"]").length) {
+		comments = document.querySelector(arg.selector).querySelectorAll("div[data-testid*=\"UFI2Comment/root\"]")
+	}
 	const result = []
 	let firstComment = arg.firstComment
 	for (const comment of comments) {
@@ -77,7 +86,7 @@ const scrapeCommentsAndRemove = (arg, cb) => {
 		} else {
 			const scrapedData = { query:arg.query }
 
-			if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a")) {
+			if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly") && comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a")) {
 				if (comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i")) { // removing admin tag to only get the name
 					comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a").removeChild(comment.querySelector("span.UFICommentActorAndBody, span.UFICommentActorOnly").querySelector("div > span a > i"))
 				}
@@ -109,6 +118,31 @@ const scrapeCommentsAndRemove = (arg, cb) => {
 					//
 				}
 				scrapedData.likeCount = likeCount
+			} else if (comment.querySelector("div[data-testid=\"UFI2Comment/body\"]")) {
+				if (comment.querySelector("div[data-testid=\"UFI2Comment/body\"] a")) {
+					const nameA = comment.querySelector("div[data-testid=\"UFI2Comment/body\"] a")
+					scrapedData.name = nameA.textContent
+					const nameArray = scrapedData.name.split(" ")
+					scrapedData.firstName = nameArray.shift()
+					const lastName = nameArray.join(" ")
+					if (lastName) {
+						scrapedData.lastName = lastName
+					}
+					scrapedData.profileUrl = cleanFacebookProfileUrl(nameA.href)
+					if (nameA.nextElementSibling) {
+						scrapedData.comment = nameA.nextElementSibling.textContent
+					}
+				}
+				if (comment.querySelector("a img")) {
+					scrapedData.profileImageUrl = comment.querySelector("a img").src
+				}
+				let likeCount = 0
+				if (comment.querySelector("span[data-testid*=\"UFI2CommentTopReactions/\"]")) {
+					likeCount = comment.querySelector("span[data-testid*=\"UFI2CommentTopReactions/\"]").textContent
+					if (likeCount.includes("K")) {
+						likeCount = parseFloat(likeCount.replace(",", ".")) * 1000
+					}
+				}
 			}
 			scrapedData.timestamp = (new Date()).toISOString()
 			result.push(scrapedData)
@@ -174,6 +208,8 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 			commentsCount = await tab.evaluate(getCommentsCount, { selector })
 			if (await tab.isVisible(".UFIPagerLink")) { 
 				await tab.click(".UFIPagerLink")
+			} else if (await tab.isVisible("a[data-testid=\"UFI2CommentsPagerRenderer/pager_depth_0\"]")) {
+				await tab.click("a[data-testid=\"UFI2CommentsPagerRenderer/pager_depth_0\"]")
 			}
 			if (result.length > totalScraped) {
 				totalScraped = result.length
@@ -181,9 +217,12 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 				utils.log(`${result.length} comments scraped.`, "info")
 			}
 		}
+		if (result.length === totalCount - 1) {
+			break
+		}
 		await tab.wait(500)
-	} while ((!numberOfCommentsPerPost || result.length < numberOfCommentsPerPost) && new Date() - lastDate < 25000)
-	if (new Date() - lastDate > 25000) {
+	} while ((!numberOfCommentsPerPost || result.length + 1 < numberOfCommentsPerPost) && new Date() - lastDate < 15000)
+	if (new Date() - lastDate > 15000) {
 		utils.log("No new comments can be loaded, exiting...", "info")
 	}
 	try {
@@ -204,7 +243,13 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 
 // get the total comment count that is displayed by the page
 const getTotalCommentsCount = (arg, cb) => {
-	let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(/[,.]/,"")
+	// let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(/[,.]/,"")
+	let totalCount
+	if (document.querySelector("a[data-comment-prelude-ref]")) {
+		totalCount = document.querySelector("a[data-comment-prelude-ref]").textContent.split(" ")[0].replace(/[,.]/,"")
+	} else if (document.querySelector("a[data-testid*=\"CommentsCount\"]")) {
+		totalCount = document.querySelector("a[data-testid*=\"CommentsCount\"]").textContent.split(" ")[0].replace(/[,.]/,"")
+	}
 	// we're converting 56.3K to 56300
 	if (totalCount.includes("K")) {
 		totalCount = parseFloat(totalCount.replace("K", "")) * 1000
