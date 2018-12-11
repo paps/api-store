@@ -31,7 +31,8 @@ const SELECTORS = {
 	likersPopUp: "artdeco-modal div.likers-modal__feed ul.entity-feed-list",
 	likerSpinner: "div.entity-feed-loader",
 	likersCount: "h2#likers-modal-header",
-	likerElement: "li.likers-modal__liker"
+	likerElement: "li.likers-modal__liker",
+	overviewTab: "artdeco-tab.course-body__info-tab-name.course-body__info-tab-name-overview"
 }
 // }
 
@@ -69,7 +70,11 @@ const isLearningUrl = url => {
 const loadLearningPage = async (tab, url) => {
 	try {
 		await tab.open(url)
-		await tab.waitUntilVisible([ SELECTORS.pageLoader, SELECTORS.popUpTrigger ], "and", 15000)
+		await tab.waitUntilVisible([ SELECTORS.pageLoader, SELECTORS.popUpTrigger ], "or", 15000)
+		if (await tab.isVisible(SELECTORS.overviewTab)) {
+			await tab.click(SELECTORS.overviewTab)
+			await tab.waitUntilVisible([ SELECTORS.pageLoader, SELECTORS.popUpTrigger ], "and", 15000)
+		}
 	} catch (err) {
 		if (!await tab.isPresent(SELECTORS.popUpTrigger)) {
 			throw "No likers found"
@@ -210,7 +215,7 @@ const createCsvOutput = json => {
 				break
 			}
 		if (!isLearningUrl(url)) {
-			let err = `${url} doesn't represent a LinkedIn learning page, url skipped` 
+			let err = `${url} doesn't represent a LinkedIn learning page, url skipped`
 			utils.log(err, "warning")
 			res.push({ pageUrl: url, likers:[], error: err })
 			continue
