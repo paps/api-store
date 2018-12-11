@@ -34,6 +34,10 @@
 					},
 					"limit": {
 						"helper": "You can only scrape 400 companies per page because AngelList won't allow to load more companies."
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -54,6 +58,9 @@
 				"maximum": 400,
 				"title": "Limit number of companies to scrape",
 				"required": true
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}

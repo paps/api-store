@@ -25,16 +25,7 @@ const twitter = new Twitter(nick, buster, utils)
 const { URL } = require("url")
 
 const DB_SHORT_NAME = "twitter-profile-like-extractor"
-const DB_NAME = DB_SHORT_NAME + ".csv"
 // }
-
-const isUrl = url => {
-	try {
-		return ((new URL(url)) !== null)
-	} catch (err) {
-		return false
-	}
-}
 
 const isTwitterUrl = url => {
 	try {
@@ -137,7 +128,7 @@ const scrapeLikes = (arg, cb) => {
  * @async
  * @description Load / and scrape a certain amount of likes
  * @param {Object} tab - Nickjs tab instance
- * @param {Number} [count] - number of elements to loade
+ * @param {Number} [count] - number of elements to load
  * @return {Promise<Array<Object>>} Scraped likes
  */
 const loadLikes = async (tab, count = Infinity) => {
@@ -159,6 +150,11 @@ const loadLikes = async (tab, count = Infinity) => {
 	let loadedCount = await tab.evaluate(getLoadedLikesCount)
 
 	while (loadedCount <= likesCount || likesCount >= loadedCount) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		loadedCount = await tab.evaluate(getLoadedLikesCount)
 		if (loadedCount - lastCount >= 100) {
 			utils.log(`${loadedCount} likes loaded`, "info")
@@ -183,8 +179,13 @@ const loadLikes = async (tab, count = Infinity) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, queries, noDatabase } = utils.validateArguments()
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	let { sessionCookie, spreadsheetUrl, columnName, csvName, queries, noDatabase } = utils.validateArguments()
+
+	if (!csvName) {
+		csvName = DB_SHORT_NAME
+	}
+
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	let results = []
 
 	if (typeof queries === "string") {
@@ -192,7 +193,7 @@ const loadLikes = async (tab, count = Infinity) => {
 	}
 
 	if (spreadsheetUrl) {
-		if (isUrl(spreadsheetUrl)) {
+		if (utils.isUrl(spreadsheetUrl)) {
 			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
@@ -203,12 +204,9 @@ const loadLikes = async (tab, count = Infinity) => {
 	utils.log(`Urls to scrape ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
 		try {
-			await twitter.openProfile(tab, isUrl(query) ? appendLikesPages(query) : `https://twitter.com/${query}/likes`)
+			await twitter.openProfile(tab, utils.isUrl(query) ? appendLikesPages(query) : `https://twitter.com/${query}/likes`)
 			let likes = await loadLikes(tab)
-			likes = likes.map(el => {
-				el.query = query
-				return el
-			})
+			likes.forEach(el => el.query = query)
 			results.push(...likes)
 		} catch (err) {
 			utils.log(`${err.message || err}`, "warning")
@@ -217,7 +215,7 @@ const loadLikes = async (tab, count = Infinity) => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, results))
-	await utils.saveResults(noDatabase ? [] : results, noDatabase ? [] : db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(noDatabase ? [] : results, noDatabase ? [] : db, csvName, null, false)
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}`, "error")
