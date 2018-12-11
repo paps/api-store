@@ -197,6 +197,15 @@ class LinkedIn {
 		}
 	}
 
+	/**
+	 * @async
+	 * @param {Object} tab - Nickjs instance with a LinkedIn page loaded
+	 * @return {Promise<Boolean>}
+	 */
+	async isPremiumAccount(tab) {
+		return await tab.isPresent("a[data-control-name=\"premium_nav_upsell_text_click\"]") ? false : true
+	}
+
 	async saveCookie() {
 		try {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
@@ -242,7 +251,7 @@ class LinkedIn {
 	 */
 	isLinkedInProfile(url) {
 		try {
-			if (url.startsWith("linkedin")) { 
+			if (url.startsWith("linkedin")) {
 				url = "https://" + url
 			}
 			const { URL } = require("url")
