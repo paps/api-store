@@ -1,0 +1,138 @@
+{
+	"slug": "medium-auto-clapper",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#029E74",
+	"gradientEnd": "#516395",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"uid": "uid_cookie",
+		"sid": "sid_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreasheets/d/(...)"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"uid": {
+						"label": "Medium UID session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Medium UID cookie"
+					},
+					"sid": {
+						"label": "Medium SID session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Medium SID cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name where Medium posts URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Medium Posts"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"numberOfClapsPerPost": {
+						"label": "Number of claps to do per launch (max: 50)",
+						"inputType": "number",
+						"placeholder": 1
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					},
+					"action": {
+						"label": "Action to perform for each articles",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"vertical": false,
+						"optionLabels": [ "Clap articles", "Undo claps on articles" ]
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"uid": {
+				"type": "string",
+				"required": true
+			},
+			"sid": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"numberOfClapsPerPost": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 50,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"action": {
+				"enum": [ "clap", "undo" ],
+				"default": "clap"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

@@ -14,6 +14,7 @@
 		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
 		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
 		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
+		'lib-Medium-DEV.js': 'libs/DEV/lib-Medium-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -70,6 +71,7 @@
 		'LinkedIn Sales Navigator Search Export DEV.js': 'store/DEV/LinkedIn Sales Navigator Search Export DEV/LinkedIn Sales Navigator Search Export DEV.js'
 		'LinkedIn Sales Navigator URL Converter DEV.js': 'store/DEV/LinkedIn Sales Navigator URL Converter DEV/LinkedIn Sales Navigator URL Converter DEV.js'
 		'LinkedIn Search Export DEV.js': 'store/DEV/LinkedIn Search Export DEV/LinkedIn Search Export DEV.js'
+		'Medium Auto Clapper DEV.js': 'store/DEV/Medium Auto Clapper DEV/Medium Auto Clapper DEV.js'
 		'Medium Post Clappers DEV.js': 'store/DEV/Medium Post Clappers DEV/Medium Post Clappers DEV.js'
 		'Pinterest Profile URL Finder DEV.js': 'store/DEV/Pinterest Profile URL Finder DEV/Pinterest Profile URL Finder DEV.js'
 		'Quora Topics Influencers DEV.js': 'store/DEV/Quora Topics Influencers DEV/Quora Topics Influencers DEV.js'
