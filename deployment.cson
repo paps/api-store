@@ -20,6 +20,7 @@
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
 		'lib-Messaging.js': 'libs/lib-Messaging.js'
 		'lib-Google.js': 'libs/lib-Google.js'
+		'lib-Medium.js': 'libs/lib-Medium.js'
 
 
 		# API store
