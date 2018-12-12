@@ -123,7 +123,7 @@ class Facebook {
 		
 			// extracting social media links
 			try {
-				Array.from(Array.from(document.querySelectorAll("ul.uiList")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0].querySelectorAll(".inlineLabel")).map(el => {
+				Array.from(document.querySelectorAll("ul.uiList[data-overviewsection=\"contact_basic\"] .inlineLabel")).map(el => {
 					const text = el.parentElement.textContent
 					const slug = text.slice(0, text.indexOf("("))
 					const site = text.slice(text.indexOf("(") + 1, text.indexOf(")")).toLowerCase() + "Name"
@@ -172,7 +172,7 @@ class Facebook {
 			}
 		
 			if (!arg.pagesToScrape || !arg.pagesToScrape.placesLived) {
-				const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
+				const citiesDiv = document.querySelector("#pagelet_timeline_medley_about li > div[data-overviewsection=\"places\"]")
 				if (citiesDiv) {
 					const cities = {}
 					cities.name = citiesDiv.querySelectorAll("a")[1].parentElement.textContent
@@ -187,7 +187,7 @@ class Facebook {
 			}
 			
 			if (!arg.pagesToScrape || !arg.pagesToScrape.familyAndRelationships) {
-				const relationshipDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")[0]
+				const relationshipDiv =	document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul li div[data-overviewsection=\"all_relationships\"]")
 				if (relationshipDiv) {
 					const relationship = {}
 					if (relationshipDiv.querySelectorAll("a")[1] && relationshipDiv.querySelectorAll("a")[1].textContent) {
@@ -203,7 +203,8 @@ class Facebook {
 				}
 			}
 			try {
-				let birthday = Array.from(Array.from(document.querySelectorAll("ul.uiList")).filter(el => el.getAttribute("data-overviewsection") === "contact_basic")[0].querySelectorAll("li")).filter(el => !el.querySelector("a"))[0].textContent
+				let birthday = Array.from(document.querySelector("ul.uiList[data-overviewsection=\"contact_basic\"]").querySelectorAll("li"))
+				.filter(el => !el.querySelector("a"))[0].textContent
 				let language
 				const birthdayIntro = birthday.slice(0,5)
 				switch (birthdayIntro) {
@@ -295,7 +296,6 @@ class Facebook {
 		const lastName = nameArray.join(" ")
 		return { firstName, lastName }
 	}
-
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
 		const checkLock = (arg, cb) => {
@@ -306,15 +306,15 @@ class Facebook {
 		}
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(147)
 		}
 		if (cookieCUser === "your_c-user_session_cookie") {
 			this.utils.log("You didn't enter your Facebook c_user session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(146)
 		}
 		if (cookieXs === "your_xs_session_cookie") {
 			this.utils.log("You didn't enter your Facebook xs session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(146)
 		}
 		if (cookieCUser.indexOf("from-global-object:") === 0) {
 			try {
@@ -326,7 +326,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(105)
 			}
 		}
 		if (cookieXs.indexOf("from-global-object:") === 0) {
@@ -339,7 +339,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(105)
 			}
 		}
 
@@ -354,7 +354,8 @@ class Facebook {
 			try {
 				 await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
-				//
+				// await tab.screenshot(`timeout${new Date()}.png`)
+				// await this.buster.saveText(await tab.getContent(), `timeout${Date.now()}.html`)
 				console.log("open2", err)
 				return "Timeout"
 			}
@@ -432,17 +433,18 @@ class Facebook {
 			}
 			if (error === "Timeout") {
 				this.utils.log("Connection has timed out.", "error")
-				this.nick.exit(1)
+				this.nick.exit(146)
 			}
 			if (await tab.evaluate(checkLock)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+				this.nick.exit(145)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
 			}
 			console.log("err", error)
 			await tab.screenshot(`err${new Date()}.png`)
 			await this.buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
-			this.nick.exit(1)
+			this.nick.exit(143)
 		}
 	}
 
