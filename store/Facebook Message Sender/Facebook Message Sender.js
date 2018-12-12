@@ -142,7 +142,7 @@ nick.newTab().then(async (tab) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	profilesToScrape = profilesToScrape.filter(el => result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
+	profilesToScrape = profilesToScrape.filter(el =>  el[columnName] && result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
