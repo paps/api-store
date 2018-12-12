@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -87,6 +88,8 @@ const findProfile = async (tab, email, keepGoingRateLimited) => {
 			}
 			if (currentUrl.startsWith("https://www.linkedin.com/premium/sales?upsellOrderOrigin")) {
 				rateLimited = true
+				await tab.screenshot(`${Date.now()}rateLimited.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}rateLimited.html`)
 				utils.log("Maximum click-through limit (50) reached for the day.", "warning")
 				if (keepGoingRateLimited) {
 					return profile

@@ -12,7 +12,8 @@
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1qWQ5t-pFaibQQoltH05uH0uw_t_fArpZoYTAYh4k1Gg"
 	},
 	"outputDescription": {
-		"profileUrl": "LinkedIn profile URL"
+		"profileUrl": "LinkedIn profile URL",
+		"profileName": ""
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

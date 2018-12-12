@@ -312,7 +312,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			if (!targetUrl) { // Using webSearch if we can't find location through instagram
 				let search = await webSearch.search(term + "location instagram")
 				let firstSearch
-				if (search && search.results[0].link) {
+				if (search && search.results[0] && search.results[0].link) {
 					firstSearch = search.results[0].link
 					if (firstSearch.startsWith("https://www.instagram.com/explore/locations/")) {
 						targetUrl = firstSearch
