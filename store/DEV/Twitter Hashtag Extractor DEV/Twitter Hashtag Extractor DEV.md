@@ -27,7 +27,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Aim at a specific Twitter hashtag or several at a time
 In the 1st argument field **"`Spreadsheet URL or Twitter hashtag(s)`"** you have the choice to use this API for 1 twitter hashtag or several.
-* One at a time: Just fill the form with a Twitter username, example: `#marketing`
+* One at a time: Just fill the form with a Twitter hashtag, example: `#marketing`
 
 * Several at a time: Paste the URL of a spreadsheet filled with Twitter username and/or Twitter accounts URLs **on column A**
 

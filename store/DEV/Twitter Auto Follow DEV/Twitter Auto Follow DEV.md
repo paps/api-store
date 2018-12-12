@@ -1,39 +1,54 @@
-# Expand your Twitter network by auto following
-Your perfect audience is somewhere on Twitter. Don't waste any more time exploring each page 1 by 1, let this API do the (hard) work for you.
+# Expand your Twitter network by Auto Following targeted audiences 📈
+Your perfect audience is somewhere on Twitter. They are all following the same key influencers, seeing the same hastags and liking the same Tweets.
+
+Auto-following is still in 2019 _the_ best way to get noticed by people. Once you're noticed, they will visit your profile then it's up to you to have quality content to make them follow you.
+
+This API will do the repetitive work or Following or Unfollowing a list of contacts you're interested **so you can focus on quality content creation** and **building significant connections**.
+
+## 📚 Related tutorials & strategies
+
+[📜 How to find the _right_ people to follow on Twitter: ](https://cdn-images-1.medium.com/max/800/1*F5v3EW0BDBcej1xctNv6qQ.png) In this tutorial, you learn how to make a list of people that would be interested in your content. Probably the followers of competitors of yours, or influencers.
+
+[📜 Why & How to setup a follow/unfollow strategy on Twitter: ](https://cdn-images-1.medium.com/max/800/1*F5v3EW0BDBcej1xctNv6qQ.png) Learn how to setup _the_ best strategy to grow your following count with real, engaged, targeted followers.
 
 
-# Turn Twitter users into prospects
-The fastest way to establish 1st contact with your future Twitter audience. 
+## ℹ️ Recommendations 
 
-✔️ Will follow up to **50 profiles per launch**. 
-💨 At the speed of **25 profiles per minute**.
-⏳ Configure **repetitive** launches to spread out the follow requests.
-🛑 Beware of <a href="https://help.twitter.com/en/using-twitter/twitter-follow-limit" target="_blank">Twitter limitations</a>. _(1000 follow per day)_
-📈 After a week, think  about using our <a href="https://phantombuster.com/api-store/4128/twitter-network-cleaner" target="_blank">Twitter Network Cleaner</a> to remove all profiles that didn't follow you back.
+- When starting a Follow/Unfollow strategy, you need to **warm your account up**. Like in Email marketing, you have to start with moderate numbers, and slowly increase those until you're
+- **Start by following 10 people per launch, 8 times per day** and slowly increase these numbers.
+- Be aware that Twitter allows a maxium of 1000 follows per day. [Read more about those rules](https://blog.phantombuster.com/never-get-banned-every-social-networks-limitations-any-digital-marketer-should-know-9276c8eaa13f).
+## ⏳ Speed
 
-# What do you need? ⚙️ 
-- **"Spreadsheet URL"**: Link of a pubicly accessible spreadsheet containing a list of twitter profile urls
-- **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
 
-# Which steps to follow?
+This API is capable of adding about **25 profiles per minute**.
+
+# Let's get started 🚀️ 
+
+## 0. Necessary information 
+
+In order to get started, you'll need to fill out 2 mandatory information:
+- **"Spreadsheet URL"**: In order to know **_who_** to follow, Phantombuster needs an _input_. This input file thakes the form of spreadsheet hosted online. We recommend using Google Spreadsheet to build this input file and click on Share the URL to make it publicly accessible to Phantombuster.
+
+- **"Session Cookie auth_token"**: This is your Twitter `auth_token` session cookie. You'll have more details in Step 5 of this tutorial.
+
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
-
 
 ## 2. Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-## 3. Click on Configure me!
+## 3. Create a nice Spreadsheet
+Create a spreadsheet on Google Spreadsheet for example filled with Twitter profile URLs. Make one profile URL per row, all in column A.
+
+The API would follow each one of those 1 by 1
+
+## 4. Click on Configure me!
 You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-## 4. Create a nice Spreadsheet
-In this 1st argument field paste the URL of a spreadsheet filled with Twitter profile URLs, all **on column A**
-
-The API would follow each one of those 1 by 1
 
 ## 5. Get your Twitter Session cookie 
 The Session Cookie you'll need to make this API work is called "`auth_token`",
@@ -83,9 +98,15 @@ Then, select a frequency:
 
 Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
-# Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" to try your script!
+## Click on Launch & Enjoy!
+You're done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
+# Info you will get in the output ⚙️ 
+
+In addition to auto-following the Twitter profiles in your input file, this API will generate a spreadsheet with the following information.
+
+- **"timestamp"**: Link of a pubicly accessible spreadsheet containing a list of twitter profile urls
+- **"url"**: Your Twitter `auth_token` session cookie.
+- **"handle"**: Your Twitter `auth_token` session cookie.
+- **"error"**: Your Twitter `auth_token` session cookie.
