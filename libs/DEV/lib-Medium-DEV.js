@@ -46,6 +46,48 @@ class Medium {
 			this.nick.exit(1)
 		}
 	}
+
+	/**
+	 * @async
+	 * @description Get clappers count
+	 * @param {Object} tab - Nickjs instance with a loaded Medium article
+	 * @param {Boolean} [closePopup] - close the popup showing clappers (default: close)
+	 * @return {Promise<Number>} -1 means error during the scraping process
+	 */
+	async getClapsCount(tab, closePopup = true, verbose = false) {
+		const scraper = (arg, cb) => {
+			let res = -1
+			const sel = document.querySelector("h3.overlay-title")
+			if (!sel) {
+				return cb(null, res)
+			}
+			const values = sel.textContent.trim().match(/\d+/g)
+			if (values) {
+				res = parseInt(values.shift(), 10)
+			}
+			cb(null, res)
+
+		}
+		const popupCloser = "button[data-action=\"overlay-close\"]"
+		const popupTrigger = "button.js-multirecommendCountButton"
+		const popupLoader = "div.overlay-content"
+		let count = 0
+		try {
+			await tab.waitUntilVisible(popupTrigger)
+			await tab.wait(1000)
+			await tab.click(popupTrigger)
+			await tab.waitUntilVisible(popupLoader)
+			count = await tab.evaluate(scraper)
+			if (closePopup) {
+				await tab.click(popupCloser)
+				await tab.waitWhileVisible(popupLoader)
+			}
+		} catch (err) {
+			verbose && this.utils.log(`scraping failure: ${err.message || err}`, "warning")
+			count = -1
+		}
+		return count
+	}
 }
 
 module.exports = Medium
