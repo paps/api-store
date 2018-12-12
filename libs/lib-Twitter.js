@@ -134,11 +134,11 @@ class Twitter {
 
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Twitter session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(93)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Twitter session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(96)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -150,7 +150,7 @@ class Twitter {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(97)
 			}
 		}
 		this.utils.log("Connecting to Twitter...", "loading")
@@ -168,7 +168,7 @@ class Twitter {
 		} catch (error) {
 			await tab.screenshot(`Tok${Date.now()}.png`)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-			this.nick.exit(1)
+			this.nick.exit(97)
 		}
 	}
 
@@ -280,7 +280,7 @@ class Twitter {
 		return followers
 	}
 
-		/**
+	/**
 	 * @async
 	 * @description Method used to check if an email account exists on Twitter, and gives some part of the email
 	 * @throws if an uncatchable error occurs
@@ -289,6 +289,7 @@ class Twitter {
 	 * @return {String} partialEmail
 	 */
 	async checkEmail(tab, input) {
+		console.log("checking Email with input=", input)
 		try {
 			await tab.open("https://twitter.com/account/begin_password_reset")
 			try {
@@ -301,6 +302,9 @@ class Twitter {
 				} catch (err) {
 					return null
 				}
+				await tab.screenshot(`${Date.now()}-selector".png`)
+				await this.buster.saveText(await tab.getContent(), `${Date.now()}- selector".html`)
+				console.log("selector=", selector)
 				if (selector === "strong") {
 					// const emailFound = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).filter(el => el.textContent.includes("@"))[0].textContent))
 					const twitterDataArray = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).map(el => el.textContent)))
@@ -312,6 +316,7 @@ class Twitter {
 							twitterData.phoneNumber = el
 						} 
 					})
+					console.log("twitterData", twitterData)
 					return twitterData
 				} else if (await tab.evaluate((arg, cb) => cb(null, document.querySelector("div.Section > a")))) {
 					return "Too many attemps"
@@ -319,10 +324,14 @@ class Twitter {
 					return null
 				}
 			} catch (err) {
-				//
+				console.log("err1", err)
+				await tab.screenshot(`${Date.now()}-err1".png`)
+				await this.buster.saveText(await tab.getContent(), `${Date.now()}- err1".html`)
 			}
+			await tab.screenshot(`${Date.now()}-.png`)
+			await this.buster.saveText(await tab.getContent(), `${Date.now()}-$.html`)
 		} catch (err) {
-			//
+			console.log("err2", err)
 		}
 		return null
 	}

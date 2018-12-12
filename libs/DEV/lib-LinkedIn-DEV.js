@@ -20,11 +20,11 @@ class LinkedIn {
 	async login(tab, cookie, url) {
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(87)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(86)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -36,7 +36,7 @@ class LinkedIn {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(83)
 			}
 		}
 
@@ -115,7 +115,7 @@ class LinkedIn {
 			}
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(1)
+			this.nick.exit(87)
 		}
 	}
 
