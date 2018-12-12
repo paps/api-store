@@ -5,8 +5,9 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Chrome_Extension_Review_Extractor/chrome_extension_review_extractor_2.png",
 	"gradientBegin": "#ACB6E5",
 	"gradientEnd": "#74EBD5",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
+	"updated": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(....)",
 		"extensionsPerLaunch": 2
@@ -48,6 +49,10 @@
 							"<b>Please be gentle</b>. Google can block the scraping, when scraping too many reviews. Scraping 3+ extensions with a huge amount of reviews is not recommended."
 						],
 						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -68,6 +73,9 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 2
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}

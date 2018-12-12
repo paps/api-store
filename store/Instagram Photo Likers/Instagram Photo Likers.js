@@ -303,7 +303,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		photoUrls = [ spreadsheetUrl ]
 	} else { // CSV
-		photoUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		photoUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		photoUrls = photoUrls.filter(str => str) // removing empty lines
 		if (!numberOfPhotosPerLaunch) {
 			numberOfPhotosPerLaunch = photoUrls.length

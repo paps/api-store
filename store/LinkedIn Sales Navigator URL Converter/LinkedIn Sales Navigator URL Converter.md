@@ -2,7 +2,7 @@
 
 Got a list of Sales Navigator profile URLs and want to their regular profile URLs? 
 Well that's all that API does :) And you don't even need a Sales Navigator account for it to work!
-Not that for converting the Sales Navigator URL, the API needs to visit the profile for that URL.
+Note that for converting the Sales Navigator URL, the API needs to visit the profile for that URL.
 
 # What will you need? ⚙️ 
 

@@ -21,9 +21,6 @@ const { URL } = require("url")
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-//const Twitter = require("./lib-Twitter")
-//const twitter = new Twitter(nick, buster, utils)
-
 const DB_NAME = "result"
 const DEFAULT_POSTS_COUNT = 25
 const SEARCH_URL = "https://twitter.com/search?f=tweets&q="

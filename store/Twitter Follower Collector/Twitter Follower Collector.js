@@ -282,17 +282,14 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
-	if (result.length) {
-		try {
-			agentObject = await buster.getAgentObject()
-			if (agentObject && agentObject.nextUrl) {
-				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
-				alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
-			}
-
-		} catch (err) {
-			utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
-		}
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
+	}
+	if (initialResultLength && agentObject.nextUrl) {
+		lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
+		alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
 	}
 	if (!followersPerAccount) {
 		followersPerAccount = 0
@@ -331,7 +328,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	let urlCount = 0
 	for (const url of twitterUrls) {
 		let resuming = false
-		if (agentObject && url === lastSavedQuery) {
+		if (alreadyScraped && agentObject && url === lastSavedQuery) {
 			// if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
 			// 	utils.log("Still rate limited, try later.", "info")
 			// 	nick.exit()

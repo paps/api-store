@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -19,7 +19,7 @@ const nick = new Nick({
 	heigth: 800
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -29,6 +29,7 @@ const { URL } = require("url")
 const DB_NAME = "result"
 const MAX_SKILLS = 6
 const MAX_PROFILES = 25
+let exitAndSave = false
 // }
 
 const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
@@ -36,7 +37,8 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-		nick.exit()
+		exitAndSave = true
+		return null
 	}
 	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
 }
@@ -115,7 +117,7 @@ const removeLinkedinSubdomains = url => {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
 			urls = [spreadsheetUrl]
 		} else {
-			urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	} else if (typeof profileUrls === "string") {
 		urls = [profileUrls]
@@ -133,16 +135,20 @@ const removeLinkedinSubdomains = url => {
 		jsonDb = JSON.parse(jsonDb)
 	}
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+	if (exitAndSave) {
+		await utils.saveResults(jsonDb, db, DB_NAME, null, true)
+		nick.exit()
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
 	const tab = await nick.newTab()
-	console.log("IP:", await utils.getIP())
+	// console.log("IP:", await utils.getIP())
 
-	await tab.open("https://www.iplocation.net/")
-	await tab.wait(5000)
-	await tab.screenshot(`${Date.now()}sU.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
+	// await tab.open("https://www.iplocation.net/")
+	// await tab.wait(5000)
+	// await tab.screenshot(`${Date.now()}sU.png`)
+	// await buster.saveText(await tab.getContent(), `${Date.now()}sU.html`)
 	await linkedIn.login(tab, sessionCookie)
 
 	const result = []

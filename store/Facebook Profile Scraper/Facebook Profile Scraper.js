@@ -298,6 +298,56 @@ const checkIfPage = (arg, cb) => {
 	}
 }
 
+const scrapeAboutPageFromPage = (arg, cb) => {
+	const scrapedData = { profileUrl: arg.profileUrl }
+	if (document.querySelector("a[href*=mailto]")) {
+		scrapedData.pageEmail = document.querySelector("a[href*=mailto]").textContent
+	}
+	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me"))[0]
+	if (website) {
+		scrapedData.pageWebsite = website.textContent
+	}
+
+	cb(null, scrapedData)
+}
+
+// scrape data from the main page URL
+const scrapeMainPageData = (arg, cb) => {
+	const scrapedData = {}
+	if (document.querySelector("#seo_h1_tag")) {
+		scrapedData.pageName = document.querySelector("#seo_h1_tag").textContent
+	}
+	if (document.querySelector("a[position][tooltip]")) {
+		scrapedData.pageHandle = document.querySelector("a[position][tooltip]").textContent
+	}
+	if (document.querySelector("#entity_sidebar a")) {
+		const picUrl = document.querySelector("#entity_sidebar a").href
+		const idString = new URL(picUrl).pathname.slice(1)
+		scrapedData.pageId = idString.slice(0, idString.indexOf("/"))
+	}
+	if (document.querySelector("#entity_sidebar img")) {
+		scrapedData.pageLogo = document.querySelector("#entity_sidebar img").src
+	}
+	const reviews = document.querySelector("#content_container a[href*=reviews] div > div")
+	if (reviews && reviews.textContent) {
+		scrapedData.pageReviewScore = parseFloat(reviews.textContent)
+	}
+	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)")) {
+		let likeCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)").textContent.replace(/\D+/g, ""), 10)
+		if (likeCount) {
+			scrapedData.pageLikeCount = likeCount
+		}
+	}
+	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)")) {
+		let followCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)").textContent.replace(/\D+/g, ""), 10)
+		if (followCount) {
+			scrapedData.pageFollowCount = followCount
+		}
+	}
+
+	cb(null, scrapedData)
+}
+
 // load profile page and handle tabs switching
 const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	await tab.open(forgeUrl(profileUrl, ""))
@@ -322,8 +372,15 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 
 	}
 	if (await tab.evaluate(checkIfPage)) {
-		utils.log("Page URL, not a Profile URL", "warning")
-		return { profileUrl, error: "Page URL, not handled"}
+		try {
+			let result = await tab.evaluate(scrapeAboutPageFromPage, { profileUrl })
+			await tab.click("div[data-key=\"tab_home\"] a")
+			await tab.waitUntilVisible("#pages_side_column")
+			result = Object.assign(result, await tab.evaluate(scrapeMainPageData, { profileUrl }))
+			return result
+		} catch (err) {
+			return { profileUrl, error: "Error scraping that Page"}
+		}
 	}
 	try {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
@@ -386,22 +443,28 @@ nick.newTab().then(async (tab) => {
 	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let db = await utils.getDb(csvName + ".csv")
+	let jsonDb = await utils.getDb(csvName + ".json", false)
+	if (typeof jsonDb === "string") {
+		jsonDb = JSON.parse(jsonDb)
+	}
 	let result = []
 	let profilesToScrape
 	if (facebook.isFacebookUrl(spreadsheetUrl)) {
-		profilesToScrape = [ spreadsheetUrl ]
+		profilesToScrape = [ facebook.cleanProfileUrl(spreadsheetUrl) ]
 	} else {
 		profilesToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
+										.filter(str => str) // removing empty lines
+										.filter(str => checkDb(str, db)) // checking if already processed
+										.slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
 	}
-	profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
-									   .filter(str => str) // removing empty lines
-									   .filter(str => checkDb(str, db)) // checking if already processed
-									   .slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
-	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
+	
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
-	}
+	}								
+	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
+	
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
 	for (let profileUrl of profilesToScrape) {
@@ -418,9 +481,14 @@ nick.newTab().then(async (tab) => {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, pagesToScrape)
 				if (tempResult && tempResult.profileUrl) {
 					tempResult.timestamp = (new Date()).toISOString()
-					const tempCsvResult = craftCsvObject(tempResult)
-					result.push(tempResult)
-					db.push(tempCsvResult)
+					if (tempResult.pageName) { // page instead of a profile
+						result.push(tempResult)
+						db.push(tempResult)
+					} else {
+						const tempCsvResult = craftCsvObject(tempResult)
+						result.push(tempResult)
+						db.push(tempCsvResult)
+					}
 				}
 				if (blocked) {
 					utils.log("Temporarily blocked by Facebook!", "error")
@@ -436,8 +504,9 @@ nick.newTab().then(async (tab) => {
 			await tab.wait(3000 + 2000 * Math.random())
 		}
 	}
-	utils.log(`${profileCount} profiles scraped, ${result.length} in total, exiting.`, "info")
-	await utils.saveResults(result, db, csvName)
+	utils.log(`${profileCount} profile${profileCount > 1 ? "s" : ""} scraped, ${db.length} in total, exiting.`, "info")
+	jsonDb.push(...result)
+	await utils.saveResults(jsonDb, db, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

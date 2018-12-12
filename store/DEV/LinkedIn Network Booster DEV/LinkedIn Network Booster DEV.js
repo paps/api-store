@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -15,13 +15,14 @@ const nick = new Nick({
 	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let db
@@ -176,34 +177,33 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
-	console.log("message:", message)
-	// if (message && message.length > 0) {
-	// 	try {
-	// 		await tab.click(".send-invite__actions > button:nth-child(1)")
-	// 		// Write the message
-	// 		await tab.waitUntilVisible("#custom-message")
-	// 		await tab.evaluate((arg, callback) => {
-	// 			document.getElementById("custom-message").value = arg.message
-	// 			callback()
-	// 		}, {message})
-	// 		await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
-	// 		utils.log(`Message sent: ${message}`, "done")
-	// 	} catch (err) {
-	// 		utils.log(`Error while sending message: ${err}`, "error")
-	// 	}
-	// }
-	// await tab.click(".send-invite__actions > button:nth-child(2)")
-	// try {
-	// 	// Sometimes this alert isn't shown but the user is still added
-	// 	await tab.waitUntilVisible([
-	// 		".mn-invite-alert__svg-icon--success",
-	// 		".mn-heathrow-toast__icon--success",
-	// 		"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
-	// 		"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
-	// 	], 10000, "or")
-	// } catch (error) {
-	// 	utils.log("Button clicked but could not verify if the user was added.", "warning")
-	// }
+	if (message && message.length > 0) {
+		try {
+			await tab.click(".send-invite__actions > button:nth-child(1)")
+			// Write the message
+			await tab.waitUntilVisible("#custom-message")
+			await tab.evaluate((arg, callback) => {
+				document.getElementById("custom-message").value = arg.message
+				callback()
+			}, {message})
+			await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
+			utils.log(`Message sent: ${message}`, "done")
+		} catch (err) {
+			utils.log(`Error while sending message: ${err}`, "error")
+		}
+	}
+	await tab.click(".send-invite__actions > button:nth-child(2)")
+	try {
+		// Sometimes this alert isn't shown but the user is still added
+		await tab.waitUntilVisible([
+			".mn-invite-alert__svg-icon--success",
+			".mn-heathrow-toast__icon--success",
+			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
+			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+		], 10000, "or")
+	} catch (error) {
+		utils.log("Button clicked but could not verify if the user was added.", "warning")
+	}
 }
 
 /**
@@ -350,7 +350,6 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		const firstname = await tab.evaluate(getFirstName)
 		invitation.firstName = firstname
 	}
-	console.log("invitation:", invitation)
 	cleanUpEmojis(invitation)
 	if (message) {
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
@@ -434,10 +433,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 }
 
 /**
- * @description Removing all tags stored in the invitation object
- * @param {Array<Object>} invitations - Invitations representations
- * @param {String} msg - message
- */
+	* @description Removing all tags stored in the invitation object
+	* @param {Array<Object>} invitations - Invitations representations
+	* @param {String} msg - message
+	*/
 const cleanUpInvitations = (invitations, msg) => {
 	if (msg) {
 		const tags = inflater.getMessageTags(msg)
@@ -514,10 +513,10 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	/**
-	 * Issue #117
-	 * "Successfull" invitations are stored here,
-	 * in order to check later in the script execution if they're sent
-	 */
+		* Issue #117
+		* "Successfull" invitations are stored here,
+		* in order to check later in the script execution if they're sent
+		*/
 	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds

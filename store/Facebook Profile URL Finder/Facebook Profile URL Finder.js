@@ -64,13 +64,15 @@ let db
 				break
 			}
 		}
+		const foundData = { query: one, timestamp: (new Date()).toISOString() }
 		if (link) {
+			foundData.facebookUrl = link
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
-			link = "no url"
+			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		result.push({ facebookUrl: link, query: one, timestamp: (new Date()).toISOString() })
+		result.push(foundData)
 		i++
 	}
 

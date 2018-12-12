@@ -65,8 +65,8 @@ const getAllFollowers = async (tab, headers, search, max) => {
 			utils.log(timeLeft.message, "warning")
 			return result
 		}
-		if (fail > 2) {
-			utils.log(`Failed 3 times to fetch followers, exiting with ${result.length} followers.`, "warning")
+		if (fail > 10) {
+			utils.log(`Failed ${fail} times to fetch followers, exiting with ${result.length} followers.`, "warning")
 			return result
 		}
 		if (max - search.start < 100) {
@@ -74,16 +74,17 @@ const getAllFollowers = async (tab, headers, search, max) => {
 		}
 		try {
 			const response = await tab.evaluate(ajaxGet, {url: "https://www.linkedin.com/voyager/api/feed/richRecommendedEntities", headers, search})
-			result = result.concat(linkedinObjectToResult(response))
+			const data = utils.filterRightOuter(result, linkedinObjectToResult(response)) // Don't add duplicated results
+			result.push(...data)
 			utils.log(`Got ${result.length} followers.`, "info")
-			buster.progressHint((result.length/max), "Getting followers...")
+			buster.progressHint((result.length / max), "Getting followers...")
 			search.start += 100
 			fail = 0
 			await tab.wait(2000 + Math.random() * 2000)
 		} catch (error) {
-			console.log(error)
+			utils.log(error.message || error, "warning")
 			await tab.wait(2000)
-			fail ++
+			fail++
 		}
 	}
 	utils.log(`Got ${result.length} followers.`, "done")
@@ -91,24 +92,24 @@ const getAllFollowers = async (tab, headers, search, max) => {
 }
 
 const ajaxGet = (arg, callback) => {
-	$.ajax({
-		url: arg.url,
-		type: "GET",
-		headers: arg.headers,
-		data: arg.search
-	})
-		.done(data => {
-			callback(null, data)
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers,
+			data: arg.search,
 		})
-		.fail(err => {
-			callback(err)
-		})
+		.done(data => callback(null, data))
+		.fail(err => callback(JSON.stringify(err, null, 2)))
+	} catch (err) {
+		callback(JSON.stringify(err, null, 2))
+	}
 }
 
-const onHttpRequest = (e) => {
+const onHttpRequest = e => {
 	if (e.request.url.indexOf("https://www.linkedin.com/voyager/api/feed/richRecommendedEntities") > -1) {
 		gl.headers = e.request.headers
-		gl.headers.Accept = "application/json"
+		gl.headers.accept = "application/json"
 		gl.search = querystring.parse(e.request.url.replace("https://www.linkedin.com/voyager/api/feed/richRecommendedEntities?", ""))
 		gl.url = "https://www.linkedin.com/voyager/api/feed/richRecommendedEntities"
 	}
@@ -125,7 +126,7 @@ const onHttpRequest = (e) => {
 	await linkedIn.login(tab, sessionCookie)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 
-	// NOTE: First selector contains all followers, the second one is the LinkedIn picture when the current profile doesn't have any followers
+	// First selector contains all followers, the second one is the LinkedIn picture when the current profile doesn't have any followers
 	const feedSelectors = [ "ul.feed-following-list", ".feed-followers__empty-state-illustration" ]
 
 	await tab.open("https://www.linkedin.com/feed/followers/")
@@ -155,6 +156,7 @@ const onHttpRequest = (e) => {
 				follower.followers = "Not provided by LinkedIn"
 			}
 		}
+
 	} else {
 		utils.log("No followers found from the given profile", "warning")
 	}

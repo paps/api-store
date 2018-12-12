@@ -1,5 +1,5 @@
 # Get highly qualified active LinkedIn members
-Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about all the commenters. 
+Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about the commenters. Due to LinkedIn's limitations, only 1500~2500 commenters can be retrieved per post.
 
 You will be able to create a CSV file containing 3 key pieces of information.
 1. LinkedIn profile links. <i>(could be used with our other API: <a href="https://phantombuster.com/api-store/2818/linkedin-network-booster" target="_blank">LinkedIn Network Booster</a>)</i>

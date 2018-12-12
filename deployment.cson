@@ -20,6 +20,7 @@
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
 		'lib-Messaging.js': 'libs/lib-Messaging.js'
 		'lib-Google.js': 'libs/lib-Google.js'
+		'lib-Medium.js': 'libs/lib-Medium.js'
 
 
 		# API store
@@ -71,10 +72,12 @@
 		'LinkedIn Post Likers.js': 'store/LinkedIn Post Likers/LinkedIn Post Likers.js'
 		'LinkedIn Profile Scraper.js': 'store/LinkedIn Profile Scraper/LinkedIn Profile Scraper.js'
 		'LinkedIn Profile URL Finder.js': 'store/LinkedIn Profile URL Finder/LinkedIn Profile URL Finder.js'
+		'LinkedIn Recruiter Profile Scraper.js': 'store/LinkedIn Recruiter Profile Scraper/LinkedIn Recruiter Profile Scraper.js'
 		'LinkedIn Sales Navigator Search Export.js': 'store/LinkedIn Sales Navigator Search Export/LinkedIn Sales Navigator Search Export.js'
 		'LinkedIn Sales Navigator URL Converter.js': 'store/LinkedIn Sales Navigator URL Converter/LinkedIn Sales Navigator URL Converter.js'
 		'LinkedIn Search and Invite.js': 'store/LinkedIn Search and Invite/LinkedIn Search and Invite.js'
 		'LinkedIn Search Export.js': 'store/LinkedIn Search Export/LinkedIn Search Export.js'
+		'Medium Auto Clapper.js': 'store/Medium Auto Clapper/Medium Auto Clapper.js'
 		'Medium Post Clappers.js': 'store/Medium Post Clappers/Medium Post Clappers.js'
 		'Pinterest Profile URL Finder.js': 'store/Pinterest Profile URL Finder/Pinterest Profile URL Finder.js'
 		'Quora Topics Influencers.js': 'store/Quora Topics Influencers/Quora Topics Influencers.js'

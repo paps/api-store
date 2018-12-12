@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -14,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -36,20 +38,15 @@ const isUrl = url => {
 
 // extract target's name from chat page
 const getNameFromChat = (arg, cb) => {
-	if (Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0]) {
-		cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("uid"))[0].textContent)
+	if (document.querySelector("a[uid]")) {
+		cb(null, document.querySelector("a[uid]").textContent)
 	} else if (document.querySelectorAll("#content div > h2")[1]) {
 			cb(null, document.querySelectorAll("#content div > h2")[1].textContent)
-	} else if (Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a")) {
+	} else if (Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3] && Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a")) {
 		cb(null, Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a").textContent)
 	} else {
 		cb(null, null)
 	}	
-}
-
-// click on chat's Send button
-const clickSendButton = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll("#content div")).filter(el => el.getAttribute("role")==="presentation")[0].querySelector("ul + a").click())
 }
 
 const openChatPage = async (tab, profileUrl) => {
@@ -62,6 +59,7 @@ const openChatPage = async (tab, profileUrl) => {
 		const slug = urlObject.pathname
 		chatUrl = `https://www.facebook.com/messages/t${slug}`
 	}
+	console.log("chatUrl", chatUrl)
 	await tab.open(chatUrl)
 	await tab.waitUntilVisible("#content")
 
@@ -94,10 +92,7 @@ const sendMessage = async (tab, message) => {
 	}
 	await tab.wait(3000)
 	utils.log(`Sending message : ${message}`, "done")
-	await tab.evaluate(clickSendButton)
-	await tab.wait(4000)
-	const isBanned = await tab.evaluate(checkIfBanned)
-	return isBanned
+	await tab.click("#content div[role=presentation] ul + a")
 }
 
 // returns true if we got an error message from Fb, false otherwise
@@ -137,6 +132,7 @@ nick.newTab().then(async (tab) => {
 	let profilesToScrape
 	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ { "0": spreadsheetUrl } ]
+		columnName = "0"
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
 		let csvHeader = profilesToScrape[0].filter(cell => !isUrl(cell))
@@ -170,11 +166,15 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
+					await tab.screenshot(`${Date.now()}openChatPage.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}openChatPage.html`)
 					if (tempResult.name && message) {
 						try {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-							const isBanned = await sendMessage(tab, forgedMessage)
+							// await sendMessage(tab, forgedMessage)
+							await tab.wait(4000)
+							const isBanned = await tab.evaluate(checkIfBanned)
 							const isBlocked = await tab.evaluate(checkIfBlocked)							
 							if (!isBanned && !isBlocked) {
 								tempResult.message = forgedMessage
@@ -206,7 +206,8 @@ nick.newTab().then(async (tab) => {
 		}
 	
 	}
-	utils.log(`${result.length} messages sent in total.`, "done")
+	const messageCount = result.filter(el => el.message).length
+	utils.log(`${messageCount} message${messageCount > 1 ? "s" : ""} sent in total.`, "done")
 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)

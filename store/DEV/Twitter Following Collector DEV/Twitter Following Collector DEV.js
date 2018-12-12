@@ -37,6 +37,7 @@ let lastSavedQuery
 let twitterUrl
 let isProtected
 let fullScrape = false
+let alreadyScraped
 
 
 const ajaxCall = (arg, cb) => {
@@ -238,7 +239,7 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 			result.push({ query: profileUrl, error: "Profile Protected"})
 			isProtected = false
 		}
-		if (followersPerAccount) { result = result.slice(0, followersPerAccount) }
+		if (followersPerAccount && !fullScrape) { result = result.slice(0, followersPerAccount) }
 	} else {
 		utils.log("Profile follows no one.", "warning")
 		result.push({ query: profileUrl, error: "Profile follows no one" })
@@ -291,16 +292,14 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
-	if (result.length) {
-		try {
-			agentObject = await buster.getAgentObject()
-			if (agentObject && agentObject.nextUrl) {
-				lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
-			}
-
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
+	}
+	if (initialResultLength && agentObject.nextUrl) {
+		lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
+		alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
 	}
 	if (!followersPerAccount) {
 		followersPerAccount = 0
@@ -342,7 +341,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	let urlCount = 0
 	for (const url of twitterUrls) {
 		let resuming = false
-		if (agentObject && url === lastSavedQuery) {
+		if (alreadyScraped && agentObject && url === lastSavedQuery) {
 			utils.log(`Resuming scraping for ${url}...`, "info")
 			resuming = true
 		} else {
@@ -366,11 +365,17 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	}
 
 	if (result.length !== initialResultLength) {
+		utils.log(`Got ${result.length} followers in total.`, "done")
 		await utils.saveResults(result, result, csvName)
-		if (interrupted && twitterUrl) { 
-			await buster.setAgentObject({ nextUrl: twitterUrl })
-		} else {
-			await buster.setAgentObject({})
+		if (agentObject) {
+			if (interrupted && twitterUrl) { 
+				agentObject.nextUrl = twitterUrl
+				agentObject.timestamp = new Date()
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.timestamp
+			}
+			await buster.setAgentObject(agentObject)
 		}
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)

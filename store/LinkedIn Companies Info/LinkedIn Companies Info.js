@@ -69,6 +69,30 @@ const scrapeCompanyInfo = (arg, callback) => {
 		} catch (err) {
 			//
 		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]")) {
+			result.fundingTotal = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]").innerText
+			result.fundingTotalUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_all_rounds_link\"]").href
+		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]")) {
+			result.fundingRecent = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").innerText
+			result.fundingRecentUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").href
+		}
+		try {
+			const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
+			if (recentFunding && recentFunding.textContent) {
+				result.fundingRecentAmount = recentFunding.textContent.trim()
+			}
+		} catch (err) {
+			//
+		}
+		const investor = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_last_round_investors_link\"]")
+		if (investor && investor.textContent) {
+			result.fundingInvestor = investor.textContent.trim()
+			result.fundingInvestorUrl = investor.href
+		}
+		if (document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_crunchbase_company_logo_link\"]")) {
+			result.fundingCrunchbaseUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_crunchbase_company_logo_link\"]").href
+		}
 	} else {
 		if (document.querySelector("h1.org-top-card-module__name")) {
 			result.name = document.querySelector("h1.org-top-card-module__name").textContent.trim()
@@ -267,7 +291,7 @@ const isLinkedUrl = target => {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
 		} else {
-			companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 	if (!companies) {
@@ -276,13 +300,13 @@ const isLinkedUrl = target => {
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb("result.csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
-	companies = companies.filter(el => utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
+	companies = companies.filter(el => el !== "no url" && utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
 	utils.log(`Processing ${companies.length} lines...`, "info")
 	if (companies.length < 1) {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
 	}
-	console.log(`Companies to scrape: ${JSON.stringify(companies, null, 4)}`)
+	console.log(`Companies to scrape: ${JSON.stringify(companies.slice(0, 500), null, 4)}`)
 	await linkedIn.login(tab, sessionCookie)
 	for (const company of companies) {
 		if (company.length > 0) {
@@ -305,8 +329,15 @@ const isLinkedUrl = target => {
 						link = `https://www.linkedin.com/company/${company}`
 					} else {
 						await tab.open(`https://www.linkedin.com/search/results/companies/?keywords=${company}`)
-						await tab.waitUntilVisible("div.search-results-container")
-						link = await tab.evaluate(scrapeCompanyLink)
+						try {
+							await tab.waitUntilVisible("div.search-results-container")
+							link = await tab.evaluate(scrapeCompanyLink)
+						} catch (err) {
+							if (await tab.getUrl() === "https://www.linkedin.com/m/login/") {
+								utils.log("Cookie session invalidated, exiting...", "error")
+								break
+							}
+						}
 						if (!link) {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."

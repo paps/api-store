@@ -33,10 +33,12 @@ const loadProfileSections = async tab => {
 		{ selector: "button.contact-see-more-less", waitCond: "button.contact-see-more-less", noSpinners: false },
 	]
 	const spinnerSelector = "div.artdeco-spinner"
-	// In order to completly load all sections for a profile, the script click untile a condition is false
+	// In order to completely load all sections for a profile, the script click until a condition is false
 	// waitCond field represent the selector which will stop the complete load of a section
+	let initDate
 	for (const button of buttons) {
 		let stop = false
+		initDate = new Date()
 		while (!stop && await tab.isPresent(button.waitCond)) {
 			const visible = await tab.isVisible(button.selector)
 			if (visible) {
@@ -54,6 +56,9 @@ const loadProfileSections = async tab => {
 				}
 			} else {
 				stop = true
+			}
+			if (new Date() - initDate > 10000) {
+				break
 			}
 		}
 	}
@@ -219,7 +224,7 @@ const scrapeInfos = (arg, callback) => {
 		/**
 		 * Issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
-		 * the code below replace all br tags by a newline character, and remove elippsis string used by LinkedIn
+		 * the code below replace all br tags by a newline character, and remove ellipsis string used by LinkedIn
 		 */
 		if (document.querySelector(".pv-top-card-section__summary-text")) {
 			let ellipsis = document.querySelector(".lt-line-clamp__ellipsis.lt-line-clamp__ellipsis--dummy")
@@ -245,6 +250,9 @@ const scrapeInfos = (arg, callback) => {
 					infos.general.subscribers = subscribersText.match(/[0-9]*/g)[0]
 				}
 			}
+		}
+		if (document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]")) {
+			infos.general.linkedinRecruiterUrl = document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]").href
 		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
@@ -285,7 +293,7 @@ const scrapeInfos = (arg, callback) => {
 					let job = {}
 
 					/**
-					 * Issue #128: Differents positions in the same company need a specific handler
+					 * Issue #128: Different positions in the same company need a specific handler
 					 */
 					if (el.querySelector(".pv-entity__position-group")) {
 						let companyName = (el.querySelector(".pv-entity__company-details .pv-entity__company-summary-info span:last-of-type") ? el.querySelector(".pv-entity__company-details .pv-entity__company-summary-info span:last-of-type").textContent.trim() : null)
@@ -354,7 +362,7 @@ const scrapeInfos = (arg, callback) => {
 			// If the first selector failed, the script will try this selector
 			} else if (_skills.length > 0) {
 				// Special handlers for skills
-				// Skills whitout endorsements use a different CSS selector
+				// Skills without endorsements use a different CSS selector
 				infos.skills = Array.from(_skills).map(el => {
 					let ret = {}
 					if (el.querySelector(".pv-skill-category-entity__name span")) {
@@ -531,6 +539,7 @@ const craftCsvObject = infos => {
 		savedImg: (hasGeneral) ? (infos.general.savedImg || null) : null,
 		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
+		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
@@ -645,7 +654,7 @@ const defaultCsvResult = {
 }
 
 /**
- * @description Function used to scrape the company website from it own LinkedIn comapny page
+ * @description Function used to scrape the company website from it own LinkedIn company page
  * @throws if there were an error during the scraping process
  * @param {Object} tab - Nick.js tab
  * @param {String} url - LinkedIn company URL

@@ -299,22 +299,22 @@ class Facebook {
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
 		const checkLock = (arg, cb) => {
-			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar")) {
+			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar") || document.querySelector("#globalContainer form.checkpoint")) {
 				cb(null, true)
 			}
 			cb(null, false)
 		}
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(147)
 		}
 		if (cookieCUser === "your_c-user_session_cookie") {
 			this.utils.log("You didn't enter your Facebook c_user session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(146)
 		}
 		if (cookieXs === "your_xs_session_cookie") {
 			this.utils.log("You didn't enter your Facebook xs session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(146)
 		}
 		if (cookieCUser.indexOf("from-global-object:") === 0) {
 			try {
@@ -326,7 +326,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(105)
 			}
 		}
 		if (cookieXs.indexOf("from-global-object:") === 0) {
@@ -339,7 +339,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(105)
 			}
 		}
 
@@ -353,7 +353,7 @@ class Facebook {
 			try {
 				await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
-				//
+				return "Timeout"
 			}
 			let sel
 			try {
@@ -423,14 +423,15 @@ class Facebook {
 			}
 			if (error === "Timeout") {
 				this.utils.log("Connection has timed out.", "error")
-				this.nick.exit(1)
+				this.nick.exit(146)
 			}
 			if (await tab.evaluate(checkLock)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+				this.nick.exit(145)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
+				this.nick.exit(143)
 			}
-			this.nick.exit(1)
 		}
 	}
 

@@ -29,7 +29,7 @@ let db
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const toReturn = []
 	let i = 1
 
@@ -58,13 +58,15 @@ let db
 				break
 			}
 		}
+		const foundData = { query: one, timestamp: (new Date()).toISOString() }
 		if (link) {
+			foundData.instagramUrl = link
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
-			link = "no url"
+			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ instagramUrl: link, query: one, timestamp: (new Date()).toISOString() })
+		toReturn.push(foundData)
 		i++
 	}
 

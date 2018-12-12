@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Medium.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,38 +18,10 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+const Medium = require("./lib-Medium")
+const medium = new Medium(nick, buster, utils)
 // }
-
-const getUsername = (arg, callback) => {
-	callback(null, document.querySelector("button > div.avatar > img.avatar-image").alt)
-}
-
-const mediumConnect = async (uid, sid, tab) => {
-	utils.log("Connecting to Medium...", "loading")
-	await nick.setCookie({
-		name: "uid",
-		value: uid,
-		domain: ".medium.com",
-		secure: true,
-		httpOnly: true
-	})
-	await nick.setCookie({
-		name: "sid",
-		value: sid,
-		domain: ".medium.com",
-		secure: true,
-		httpOnly: true
-	})
-	await tab.open("https://medium.com/")
-	try {
-		await tab.waitUntilVisible("button > div.avatar")
-		utils.log(`Successfully connected to Medium as ${await tab.evaluate(getUsername)}`, "done")
-	} catch (error) {
-		utils.log("Could not connect to Medium.", "error")
-		await tab.screenshot("error.jpg")
-		nick.exit(1)
-	}
-}
 
 const scrapeClappers = (arg, callback) => {
 	const clappers = document.querySelectorAll("ul.list > li.list-item")
@@ -78,7 +50,7 @@ const loadAllClappers = async tab => {
 	while (load) {
 		await tab.click("button[data-action=\"show-more-recommends\"]")
 		try {
-			await tab.waitUntilVisible(`ul.list > li:nth-of-type(${length+1})`)
+			await tab.waitUntilVisible(`ul.list > li:nth-of-type(${length + 1})`)
 			length = await tab.evaluate((arg, callback) => { callback(null, document.querySelectorAll("ul.list > li").length) })
 			utils.log(`Loaded ${length} clappers.`, "info")
 		} catch (error) {
@@ -121,7 +93,7 @@ const jsonToCsv = json => {
 	if (spreadsheetUrl) {
 		articles = await utils.getDataFromCsv(spreadsheetUrl)
 	}
-	await mediumConnect(uid, sid, tab)
+	await medium.login(tab, uid, sid)
 	let result = []
 	for (const article of articles) {
 		const timeLeft = await utils.checkTimeLeft()

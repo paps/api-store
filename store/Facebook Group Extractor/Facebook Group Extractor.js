@@ -74,8 +74,8 @@ const isFacebookGroupUrl = (url) => {
 	if (urlObject.pathname.startsWith("www.facebook")) {
 		urlObject = parse("https://" + url)
 	}
-	if (urlObject && urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
-			return true
+	if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
+		return true
 	}
 	return false
 }
@@ -412,13 +412,13 @@ nick.newTab().then(async (tab) => {
 	let result = await utils.getDb(csvName + ".csv")
 	if (!numberMaxOfMembers) { numberMaxOfMembers = false }
 	const initialResultLength = result.length
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log("Could not access agent Object.", "warning")
+	}
 	if (initialResultLength) {
-		try {
-			agentObject = await buster.getAgentObject()
-			alreadyScraped = result.filter(el => el.groupUrl === agentObject.lastQuery).length
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
+		alreadyScraped = result.filter(el => el.groupUrl === agentObject.lastQuery).length
 	}
 	let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)
 	if (isAFacebookGroupUrl) { // Facebook Group URL
@@ -453,7 +453,7 @@ nick.newTab().then(async (tab) => {
 	for (let url of groupsUrl) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			let resuming = false
-			if (agentObject && url === agentObject.lastQuery) {
+			if (alreadyScraped && agentObject && url === agentObject.lastQuery) {
 				utils.log(`Resuming scraping for ${url}...`, "info")
 				resuming = true
 			} else {

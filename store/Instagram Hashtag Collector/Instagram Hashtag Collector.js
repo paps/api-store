@@ -263,7 +263,7 @@ const isUrl = target => url.parse(target).hostname !== null
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
-			hashtags = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			hashtags = [ spreadsheetUrl ]
 		}

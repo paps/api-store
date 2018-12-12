@@ -55,7 +55,7 @@ const checkRateLimit = (arg, cb) => {
 		}
 		result = []
 	} else { // CSV
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = utils.adjustUrl(urls[i], "instagram")

@@ -72,13 +72,15 @@ let db
 				break
 			}
 		}
+		const foundData = { query: one, timestamp: (new Date()).toISOString() }
 		if (link) {
+			foundData.linkedinUrl = link
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
-			link = "no url"
+			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ linkedinUrl: link, query: one, timestamp: (new Date()).toISOString() })
+		toReturn.push(foundData)
 		i++
 	}
 

@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const { parse } = require("url")
 
@@ -19,7 +18,7 @@ const nick = new Nick({
 	debug: false,
 	timeout: 30000
 })
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const Facebook = require("./lib-Facebook")
@@ -75,8 +74,8 @@ const isFacebookGroupUrl = (url) => {
 	if (urlObject.pathname.startsWith("www.facebook")) {
 		urlObject = parse("https://" + url)
 	}
-	if (urlObject && urlObject.hostname === "www.facebook.com" && urlObject.pathname.startsWith("/groups")) {
-			return true
+	if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
+		return true
 	}
 	return false
 }
@@ -124,8 +123,7 @@ const scrapeFirstMembers = (arg, callback) => {
 	let groupName
 	if (document.querySelector("#seo_h1_tag a")) {
 		groupName = document.querySelector("#seo_h1_tag a").textContent
-	}
-	const results = document.querySelectorAll(".uiList.clearfix > div")
+	}	const results = document.querySelectorAll(".uiList.clearfix > div")
 	const data = []
 	for (const result of results) {
 		if (result.querySelector("a")) {
@@ -162,9 +160,9 @@ const scrapeFirstMembers = (arg, callback) => {
 				newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
 			}
 			newData.timestamp = (new Date()).toISOString()
-
+	
 			data.push(newData)
-		}		
+		}
 	} 
 	callback(null, data)
 }
@@ -187,7 +185,6 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 	profileList.shift()
 	const result = []
 	for (const profile of profileList) {
-		// console.log("prof:", profile)
 		const data = {}
 		const chr = cheerio.load(profile)
 		const url = chr("a").attr("href")
@@ -268,8 +265,8 @@ const forgeNewUrl = (cursorUrl, scrapeCount, membersToScrape) => {
 
 const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 	const urlObject = new URL(url)
-	let numberToScrape = 400
-	if (scrapeCount + 400 > membersToScrape) { 
+	let numberToScrape = 500
+	if (scrapeCount + 500 > membersToScrape) { 
 		numberToScrape = membersToScrape - scrapeCount
 	}
 	urlObject.searchParams.set("limit", numberToScrape)
@@ -277,11 +274,6 @@ const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 }
 
 const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape, numberAlreadyScraped) => {
-	console.log("ajaxUrl", ajaxUrl)
-	// if (!ajaxUrl) {
-		// await buster.saveText(await tab.getContent(), `${Date.now()}scrollIntoView.html`)
-		// await tab.screenshot(`${Date.now()}scrollIntoView.png`)
-	// }
 	let jsonResponse
 	try {
 		jsonResponse = await getJsonResponse(tab, ajaxUrl)
@@ -420,13 +412,13 @@ nick.newTab().then(async (tab) => {
 	let result = await utils.getDb(csvName + ".csv")
 	if (!numberMaxOfMembers) { numberMaxOfMembers = false }
 	const initialResultLength = result.length
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log("Could not access agent Object.", "warning")
+	}
 	if (initialResultLength) {
-		try {
-			agentObject = await buster.getAgentObject()
-			alreadyScraped = result.filter(el => el.groupUrl === agentObject.lastQuery).length
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
+		alreadyScraped = result.filter(el => el.groupUrl === agentObject.lastQuery).length
 	}
 	let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)
 	if (isAFacebookGroupUrl) { // Facebook Group URL
@@ -434,17 +426,8 @@ nick.newTab().then(async (tab) => {
 	} else { 
 		// Link not from Facebook, trying to get CSV
 		try {
-			try {
-				groupsUrl = await utils.getDataFromCsv2(groupsUrl, columnName)
-			} catch (err) {
-				console.log("err:", err)
-				// console.log("opening csv:", "http://phantombuster.com")
-				await tab.open(groupsUrl)
-				await tab.screenshot(`${Date.now()}s.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}s.html`)
-				await utils.saveResults(result, result, csvName)
-				nick.exit(0)
-			}
+			groupsUrl = await utils.getDataFromCsv2(groupsUrl, columnName)
+			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
 			if (groupsUrl.length === 0) {
 				utils.log("Spreadsheet is empty!", "error")
 				nick.exit(1)
@@ -470,7 +453,7 @@ nick.newTab().then(async (tab) => {
 	for (let url of groupsUrl) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			let resuming = false
-			if (agentObject && url === agentObject.lastQuery) {
+			if (alreadyScraped && agentObject && url === agentObject.lastQuery) {
 				utils.log(`Resuming scraping for ${url}...`, "info")
 				resuming = true
 			} else {

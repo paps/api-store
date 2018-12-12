@@ -114,11 +114,11 @@ class Instagram {
 	async login(tab, cookie) {
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Instagram session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(137)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Instagram session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(136)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -130,7 +130,7 @@ class Instagram {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(105)
 			}
 		}
 		this.utils.log("Connecting to Instagram...", "loading")
@@ -150,7 +150,8 @@ class Instagram {
 			})
 			this.utils.log(`Connected as ${name}`, "done")
 		} catch (error) {
-			throw "Could not connect to Instagram with this session cookie."
+			this.utils.log("Can't connect to Instagram with these session cookies.", "error")
+			this.nick.exit(133)
 		}
 	}
 
@@ -388,7 +389,7 @@ class Instagram {
 		// Sometimes the selector used to get likes count for a Instagram video isn't present
 		if (scrapedData.postVideo && isLikeSelectorInDOM) {
 			scrapedData.views = scrapedData.likes
-			await tab.click("section span[role=\"button\"]")
+			await tab.click("section span[role=\"button\"][tabindex]")
 			const likesSelectors = [ "section span[role=\"button\"] ~ div span", "section span[role=\"button\"] ~ div > div:last-of-type" ]
 			const foundSelector = await tab.waitUntilVisible(likesSelectors, 7500, "or")
 			scrapedData.likeCount = await tab.evaluate((arg, cb) => {

@@ -7,6 +7,7 @@ We have a tool for that!
 
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with emails in it.
+- **Keep going when limited**: Past 50 profiles found per day, LinkedIn prevents from getting URLs (without a premium account). With that option the API will keep scraping but will only get the profile's name and not its URL.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
@@ -89,6 +90,7 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 # Limits
 
 Please be aware that this API will visit the profiles found in order to get their URLS.
-We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 4 launches per day of 20 scraped profiles for this reason.
+LinkedIn has set a daily limit for finding profiles from emails, around 50 profiles per day. You may choose to continue the scraping past that point, but the API will only be able to get the profile's name and not its URL.
+We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). 
 
-Having a LinkedIn Premium subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
+Having a LinkedIn Sales Navigator subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).

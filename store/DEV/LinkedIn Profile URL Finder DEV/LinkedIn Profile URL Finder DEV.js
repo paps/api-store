@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
 
@@ -74,7 +75,7 @@ const normalizeLinkedInURL = url => {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
 	}
-	console.log(`Lines to process: ${JSON.stringify(queries, null, 4)}`)
+	console.log(`Lines to process: ${JSON.stringify(queries.slice(0, 1000), null, 4)}`)
 
 	for (const one of queries) {
 		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
@@ -84,7 +85,7 @@ const normalizeLinkedInURL = url => {
 			break
 		}
 		utils.log(`Searching for ${one} ...`, "loading")
-		let search = await webSearch.search("linkedin.com " + one)
+		let search = await webSearch.search(one + " linkedin.com")
 		let link = null
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {
@@ -92,13 +93,15 @@ const normalizeLinkedInURL = url => {
 				break
 			}
 		}
+		const foundData = { query: one, timestamp: (new Date()).toISOString() }
 		if (link) {
+			foundData.linkedinUrl = link
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
-			link = "no url"
+			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
-		toReturn.push({ linkedinUrl: link, query: one, timestamp: (new Date()).toISOString() })
+		toReturn.push(foundData)
 		i++
 	}
 

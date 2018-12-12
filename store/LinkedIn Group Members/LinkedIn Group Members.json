@@ -9,29 +9,14 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"groupUrl": "https://www.linkedin.com/groups/(..)",
-		"groupName": ""
+		"csvName": ""
 	},
 	"outputDescription": {
 		"profileUrl": "LinkedIn profile URL",
 		"firstName": "",
 		"lastName": "",
 		"fullName": "",
-		"headline": "LinkedIn profile description",
-		"company": "Current company name",
-		"title": "Current job/position",
-		"companyUrl": "LinkedIn company URL",
-		"location": "",
-		"industry": "Industry sector",
-		"school": "",
-		"skill1": "",
-		"skill2": "",
-		"skill3": "",
-		"group1": "",
-		"group2": "",
-		"group3": "",
-		"groupUrl1": "",
-		"groupUrl2": "",
-		"groupUrl3": ""
+		"headline": "LinkedIn profile headline"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -48,7 +33,7 @@
 						"placeholder": "Paste a LinkedIn group URL here",
 						"type": "url"
 					},
-					"groupName": {
+					"csvName": {
 						"label": "Name of resulting CSV file <a href=\"/api-store/2852/linkedin-group-members#section_csv\" target=\"_blank\">(?)</a>"
 					}
 				}
@@ -67,7 +52,7 @@
 				"type": "string",
 				"required": true
 			},
-			"groupName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}
