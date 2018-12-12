@@ -29,7 +29,7 @@ let db
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
 	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
-	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	let queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const toReturn = []
 	let i = 1
 

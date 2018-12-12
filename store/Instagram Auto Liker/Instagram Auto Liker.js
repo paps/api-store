@@ -88,20 +88,22 @@ const likePost = async (tab, postUrl, query, action) => {
 	}
 	await tab.click(".coreSpriteHeartOpen")
 	try {
+		await tab.wait(7000)
 		await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 		await tab.waitUntilVisible(".coreSpriteHeartOpen")
-		if (await tab.isPresent(selectorAfter)) {
-			utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
-			return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
-		} else if (action === "Like") {
-			utils.log(`Couldn't like post ${postUrl}: rate limited by Instagram.`, "warning")
-			rateLimited = true
-			return {}
-		} else {
-			utils.log(`Couldn't unlike post ${postUrl}`, "warning")
-			return {}
-		}
+		// if (await tab.isPresent(selectorAfter)) {
+		utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
+		return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
+		// } else if (action === "Like") {
+		// 	utils.log(`Couldn't like post ${postUrl}: rate limited by Instagram.`, "warning")
+		// 	rateLimited = true
+		// 	return {}
+		// } else {
+		// 	utils.log(`Couldn't unlike post ${postUrl}`, "warning")
+		// 	return {}
+		// }
 	} catch (err) {
+		utils.log(`Error checking like status: ${err}`, "warning")
 		return null
 	}
 }
@@ -138,10 +140,10 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 		} catch (err) {
 			//
 		}
-		await tab.wait(1000 + Math.random() * 1000)
+		await tab.wait(2500 + Math.random() * 2000)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			utils.log(`Process stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 	}
@@ -175,7 +177,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
 	} else { // CSV
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
 			urls[i] = cleanInstagramUrl(urls[i])
@@ -191,11 +193,11 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 			urls = oldUrls.slice(0, numberOfLinesPerLaunch)
 		}
 		if (urls.length === 0) {
-			utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+			utils.log("Input spreadsheet is empty OR we already processed all the profiles from this spreadsheet.", "warning")
 			nick.exit()
 		}
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
+	console.log(`URLs to process: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 
@@ -204,7 +206,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			utils.log(`Process stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 		try {
@@ -224,10 +226,10 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 			continue
 		}
 		if (rateLimited) {
-			utils.log("Rate limited by Instagram, stopping the agent... Please retry later.", "warning")
+			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (30min+).", "warning")
 			break
 		}
-		await tab.wait(1500 + Math.random() * 2000)
+		await tab.wait(2500 + Math.random() * 2000)
 	}
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
