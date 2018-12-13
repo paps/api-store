@@ -80,7 +80,9 @@ const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
 				} else {
 					toRet.job = null
 				}
-				toRet.messageLink = this.querySelector("a[data-control-name=\"personalized_message\"]").href
+				if (this.querySelector("a[data-control-name=\"personalized_message\"]")) {
+					toRet.messageLink = this.querySelector("a[data-control-name=\"personalized_message\"]").href
+				}
 				jQuery(this).find("input[type=\"checkbox\"]").click()
 				return toRet
 			}
@@ -191,10 +193,16 @@ nick.newTab().then(async (tab) => {
 	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
 
 	if (invites.length > 0) {
+		// Issue #196: hotfix send message only if the scraping function return a LinkedIn thread URL
+		// TODO: handle chat conversation situation (new LinkedIn feature)
 		if (message) {
 			const inMailTab = await nick.newTab()
 			for (const invite of invites) {
-				await sendMessage(inMailTab, invite.messageLink, message, invite)
+				if (invite.messageLink) {
+					await sendMessage(inMailTab, invite.messageLink, message, invite)
+				} else {
+					utils.log(`No LinkedIn thread URL found for ${invite.url}, accepting invitation whitout sending a message`, "info")
+				}
 			}
 			await inMailTab.close()
 		}
@@ -211,11 +219,11 @@ nick.newTab().then(async (tab) => {
 	}
 	await linkedIn.saveCookie()
 })
-	.then(() => {
-		utils.log("Job done!", "done")
-		nick.exit(0)
-	})
-	.catch((err) => {
-		utils.log(err, "error")
-		nick.exit(1)
-	})
+.then(() => {
+	utils.log("Job done!", "done")
+	nick.exit(0)
+})
+.catch((err) => {
+	utils.log(err, "error")
+	nick.exit(1)
+})
