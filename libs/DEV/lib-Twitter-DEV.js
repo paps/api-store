@@ -353,6 +353,51 @@ class Twitter {
 		}
 		return false
 	}
+
+	/**
+	 * @description Method used to load Tweets from a Twitter page
+	 * @param {Object} tab - Nickjs tab with an Twitter listing page loaded
+	 * @param {Number} [count] - Amount of items to load (default all)
+	 * @return {Promise<Number>} Loaded count
+	 */
+	async loadList(tab, count = Infinity) {
+		let loadedContent = 0
+		const getContentCount = (arg, cb) => cb(null, document.querySelectorAll("div.tweet.js-actionable-tweet").length)
+		const waitWhileLoading = (arg, cb) => {
+			const idleStart = Date.now()
+			const idle = () => {
+				const loadedTweets = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+				if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
+					cb(null, "DONE")
+				} else if (loadedTweets <= arg.prevCount) {
+					if (Date.now() - idleStart >= 30000) {
+						cb("No content loaded after 30s")
+					}
+					setTimeout(idle, 100)
+				}
+				cb(null)
+			}
+			idle()
+		}
+		while (loadedContent <= count || loadedContent >= count) {
+			const timeLeft = await this.utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				break
+			}
+			loadedContent = await tab.evaluate(getContentCount)
+			await tab.scrollToBottom()
+			try {
+				const state = await tab.evaluate(waitWhileLoading, { prevCount: loadedContent })
+				if (state === "DONE") {
+					break
+				}
+			} catch (err) {
+				this.utils.log(`Error while loading content: ${err.message || err}`, "warning")
+				break
+			}
+		}
+		return tab.evaluate(getContentCount)
+	}
 }
 
 module.exports = Twitter
