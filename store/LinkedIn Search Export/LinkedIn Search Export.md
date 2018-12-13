@@ -2,6 +2,7 @@
 
 UPDATE: Now handles more search categories: People, Jobs, Content, Companies, Groups, and even Schools!
 
+To scrape your first connections, use "http://linkedin.com/mynetwork/invite-connect/connections" as input.
 Also, scrape your Network Suggestions by using "https://www.linkedin.com/mynetwork/" as input.
 
 You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results..? 

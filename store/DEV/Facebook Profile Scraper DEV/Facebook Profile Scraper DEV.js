@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -332,17 +333,21 @@ const scrapeMainPageData = (arg, cb) => {
 	if (reviews && reviews.textContent) {
 		scrapedData.pageReviewScore = parseFloat(reviews.textContent)
 	}
-	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)")) {
-		let likeCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)").textContent.replace(/\D+/g, ""), 10)
-		if (likeCount) {
-			scrapedData.pageLikeCount = likeCount
+	try {
+		if (document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[2].firstChild.lastChild.firstChild) {
+			let likeCount = parseInt(document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[2].firstChild.lastChild.firstChild.textContent.replace(/\D+/g, ""), 10)
+			if (likeCount) {
+				scrapedData.likeCount = likeCount
+			}
 		}
-	}
-	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)")) {
-		let followCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)").textContent.replace(/\D+/g, ""), 10)
-		if (followCount) {
-			scrapedData.pageFollowCount = followCount
+		if (document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[3].firstChild.lastChild.firstChild) {
+			let followCount = parseInt(document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[3].firstChild.lastChild.firstChild.textContent.replace(/\D+/g, ""), 10)
+			if (followCount) {
+				scrapedData.followCount = followCount
+			}
 		}
+	} catch (err) {
+		//
 	}
 
 	cb(null, scrapedData)
@@ -357,6 +362,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
 			utils.log(`${profileUrl} page is not available.`, "error")
+			await tab.screenshot(`${Date.now()}page is not available.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}page is not available.html`)
 			return { profileUrl, error: "The profile page isn't available"}
 		}
 	}
@@ -386,6 +393,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
 		utils.log("About Page still not visible", "error")
+		await tab.screenshot(`${Date.now()}About Page still not visible.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}About Page still not visible.html`)
 		return null
 	}
 	const aboutList = [ 

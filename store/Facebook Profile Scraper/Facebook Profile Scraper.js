@@ -332,17 +332,21 @@ const scrapeMainPageData = (arg, cb) => {
 	if (reviews && reviews.textContent) {
 		scrapedData.pageReviewScore = parseFloat(reviews.textContent)
 	}
-	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)")) {
-		let likeCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(3)").textContent.replace(/\D+/g, ""), 10)
-		if (likeCount) {
-			scrapedData.pageLikeCount = likeCount
+	try {
+		if (document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[2].firstChild.lastChild.firstChild) {
+			let likeCount = parseInt(document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[2].firstChild.lastChild.firstChild.textContent.replace(/\D+/g, ""), 10)
+			if (likeCount) {
+				scrapedData.likeCount = likeCount
+			}
 		}
-	}
-	if (document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)")) {
-		let followCount = parseInt(document.querySelector("#pages_side_column > div > div > div:nth-child(2) > div > div > div:nth-child(4)").textContent.replace(/\D+/g, ""), 10)
-		if (followCount) {
-			scrapedData.pageFollowCount = followCount
+		if (document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[3].firstChild.lastChild.firstChild) {
+			let followCount = parseInt(document.querySelector("a[href*=friend_invi]").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[3].firstChild.lastChild.firstChild.textContent.replace(/\D+/g, ""), 10)
+			if (followCount) {
+				scrapedData.followCount = followCount
+			}
 		}
+	} catch (err) {
+		//
 	}
 
 	cb(null, scrapedData)
