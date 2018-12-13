@@ -112,11 +112,4 @@ Now that this is set, click 💾 <span style="color:blue">Save</span> at the bot
 You're done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-# Info you will get in the output ⚙️ 
 
-In addition to auto-following the Twitter profiles in your input file, this API will generate a spreadsheet with the following information.
-
-- **"timestamp"**: Link of a publicly accessible spreadsheet containing a list of twitter profile urls
-- **"url"**: Your Twitter `auth_token` session cookie.
-- **"handle"**: Your Twitter `auth_token` session cookie.
-- **"error"**: Your Twitter `auth_token` session cookie.

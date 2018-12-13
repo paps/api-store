@@ -1,16 +1,36 @@
-# Find out who is following a Twitter account 🐦
-The 1st step in order to know who is following a specific Twitter account is to actually list the followers. With this API, choose your own or any Twitter account and get in seconds a clear listing of every follower, including their own:
-* Twitter Profile Url
-* Full Name
-* Bio
+# Extract the profiles of every followers of specific Twitter account(s) 🐦
 
-🤖💨 _Around **5000 profiles** every **90min**_ 🤖💨
+Extracting a list of someone's followers is a great way to **make a very targeted list of people interested in a particular topic**.
 
-# What will you need? ⚙️ 
-- **"Twitter account or Spreadsheet URL"**: Choose a specific twitter account like `@phbuster` or choose an open spreadsheet url
-- **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
+Having this list is then useful to build **Custom Audiences for Twitter Ads** or as an input for a **Follow/Unfollow strategy to get more followers**.
 
-# Which steps to follow?
+This API will do the hard work for you of visiting your favorite influencers' profiles, extract every followers and neatly arrange them in a spreadsheet.
+
+## 📚 Related tutorials & strategies
+
+[📜 How to find the _right_ people to follow on Twitter: ](https://blog.phantombuster.com/recipe-3-what-you-want-is-a-targeted-audience-how-to-find-it-on-twitter-54ee61a6ac30) In this tutorial, you learn how to make a list of people that would be interested in your content. Probably the followers of competitors of yours, or influencers.
+
+[📜 Why & How to set up a follow/unfollow strategy on Twitter: ](https://blog.phantombuster.com/recipe-2-growing-your-twitter-audience-101-easily-build-your-following-machine-in-5-minutes-84efffc0bc) Learn how to set up _the_ best strategy to grow your following count with real, engaged, targeted followers.
+
+## ℹ️ Recommendations
+
+Twitter limits the amount of followers you can retrieve over a period of time. It's called the rate limit. In this case after scraping **5000 followers** you'll need to wait for about **90min** before being able to scrape again. 
+
+Re-launching the API during this period simply won't work. Once the rate limit has been lift off, you'll be able to scape again. Go to the [Repetition Setup step](#repetition_setup) to program re-launches.
+
+## ⏳ Execution speed
+
+This API will extract 5000 profiles **in about 3 minutes**. Nevertheless Twitter won't allow you to extract more than about 5000 profiles every 90min.
+
+# How to start extracting Followers step-by-step.
+
+## 0. Necessary information 
+
+In order to get started, you'll need to fill out 2 mandatory information:
+- **"Spreadsheet URL"**: In order to know **_who_ to extract from**, Phantombuster needs an _input_. This input can either be a single Twitter handle such as @phbuster or a spreadsheet with one account URL per row. We recommend using Google Spreadsheet to build this input file. Click on Share the URL to make it publicly accessible to Phantombuster.
+
+- **"Session Cookie auth_token"**: This is your Twitter `auth_token` session cookie. You'll have more details in Step 5 of this tutorial.
+
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
@@ -57,9 +77,9 @@ or
 
 _// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+##  6. (Optional) ️️Repetition setup ⚙️ { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
+Once your API is ready, you can set up repetitive launches. This allows scraping to spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
 
 To do so, simply hit the “Settings” button to define when your API is launched:
@@ -74,11 +94,7 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 
 For example, 10 profiles processed per launch, 8 launches per day: you'll process a total of 80 profiles per day.
 
-# Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
+
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-# Limits
-
-Twitter has set a limitation on the amount of followers you can retrieve over a period of time (aka rate limit).
-After around 5000 followers scraped, you will need to wait for about 90min before being able to continue to scrape the rest of the followers. Re-launching the API during that time won't be of any use. When the rate limit has been lifted off, the API will be able to resume where it left off, until the next rate limit is hit, etc.
