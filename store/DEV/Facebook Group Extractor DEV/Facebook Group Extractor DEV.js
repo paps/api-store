@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse } = require("url")
 
@@ -21,7 +22,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 let interceptedUrl
 let interceptedHeaders
@@ -31,6 +32,7 @@ let ajaxUrl
 let stillMoreToScrape
 let lastQuery
 let error
+let lockedByFacebook
 const cheerio = require("cheerio")
 const { URL } = require("url")
 
@@ -302,10 +304,17 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 	let firstResults
 	try {
 		firstResults = await getFirstResult(tab, groupUrl)
+		await tab.screenshot(`${Date.now()}firstResults.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}firstResults.html`)
 		if (firstResults) {
 			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
 		} else {
-			utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			if (await facebook.checkLock(tab)) {
+				utils.log("Facebook is asking for an account verification.", "warning")
+				lockedByFacebook = true
+			} else {
+				utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			}
 			return []
 		}
 	} catch (err) {
@@ -466,6 +475,9 @@ nick.newTab().then(async (tab) => {
 			}
 		} else {  
 			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
+		}
+		if (lockedByFacebook) {
+			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {

@@ -296,14 +296,18 @@ class Facebook {
 		return { firstName, lastName }
 	}
 
-	// url is optional (will open Facebook feed by default)
-	async login(tab, cookieCUser, cookieXs, url) {
-		const checkLock = (arg, cb) => {
+	// check if we're locked by facebook 
+	checkLock(tab) {
+		return tab.evaluate((arg, cb) => {
 			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar") || document.querySelector("#globalContainer form.checkpoint")) {
 				cb(null, true)
 			}
 			cb(null, false)
-		}
+		})
+	}
+
+	// url is optional (will open Facebook feed by default)
+	async login(tab, cookieCUser, cookieXs, url) {
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
 			this.nick.exit(117)
@@ -425,7 +429,7 @@ class Facebook {
 				this.utils.log("Connection has timed out.", "error")
 				this.nick.exit(118)
 			}
-			if (await tab.evaluate(checkLock)) {
+			if (await this.checkLock(tab)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
 				this.nick.exit(115)
 			} else {

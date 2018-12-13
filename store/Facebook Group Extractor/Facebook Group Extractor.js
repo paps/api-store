@@ -31,6 +31,7 @@ let ajaxUrl
 let stillMoreToScrape
 let lastQuery
 let error
+let lockedByFacebook
 const cheerio = require("cheerio")
 const { URL } = require("url")
 
@@ -305,7 +306,13 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 		if (firstResults) {
 			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
 		} else {
-			utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			if (await facebook.checkLock(tab)) {
+				utils.log("Facebook is asking for an account verification.", "warning")
+				lockedByFacebook = true
+			} else {
+				await buster.saveText(await tab.getContent(), `${Date.now()}Not part of group.html`)
+				utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			}
 			return []
 		}
 	} catch (err) {
@@ -466,6 +473,9 @@ nick.newTab().then(async (tab) => {
 			}
 		} else {  
 			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
+		}
+		if (lockedByFacebook) {
+			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
