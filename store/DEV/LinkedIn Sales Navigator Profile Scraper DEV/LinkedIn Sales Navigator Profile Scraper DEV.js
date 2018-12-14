@@ -17,6 +17,8 @@ const nick = new Nick({
 	debug: false,
 })
 
+/* eslint-disable no-unused-vars */
+
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
