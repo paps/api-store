@@ -9,7 +9,8 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls"
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberOfProfilesPerLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Instagram profile URL",

@@ -11,6 +11,7 @@
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "instagram_profile_urls",
 		"numberOfPostsPerProfile": 1,
+		"numberOfLinesPerLaunch": 10,
 		"action": "Like"
 	},
 	"outputDescription": {
