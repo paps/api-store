@@ -21,7 +21,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 15000,
+	timeout: 30000,
 	// randomize viewport
 	width: (1180 + Math.round(Math.random() * 200)), // 1180 <=> 1380
 	height: (700 + Math.round(Math.random() * 200)), // 700 <=> 900
@@ -62,7 +62,11 @@ const normalizeLinkedInURL = url => {
 		csvName = DEFAULT_DB_NAME
 	}
 	if (spreadsheetUrl) {
-		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (utils.isUrl(spreadsheetUrl)) {
+			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		} else {
+			queries = [ spreadsheetUrl ]
+		}
 	} else if (typeof(queries) === "string") {
 		queries = [queries]
 	}
@@ -75,7 +79,7 @@ const normalizeLinkedInURL = url => {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
 	}
-	console.log(`Lines to process: ${JSON.stringify(queries.slice(0, 1000), null, 4)}`)
+	console.log(`Lines to process: ${JSON.stringify(queries.slice(0, 500), null, 4)}`)
 
 	for (const one of queries) {
 		buster.progressHint(i / queries.length, `${one} (${i} / ${queries.length})`)
