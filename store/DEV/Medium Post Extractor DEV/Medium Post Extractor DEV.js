@@ -30,6 +30,9 @@ const SELECTORS = {
 	postSel: "div.js-postListHandle > div.js-block",
 	loadingSel: "div.listItemPlaceholder.js-placeholder"
 }
+
+/* eslint-disable no-unused-vars */
+
 // }
 
 /**

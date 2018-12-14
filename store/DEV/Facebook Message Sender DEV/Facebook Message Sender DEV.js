@@ -27,6 +27,8 @@ const inflater = new Messaging(utils)
 let blocked
 const { URL } = require("url")
 
+/* eslint-disable no-unused-vars */
+
 const isUrl = url => {
 	try {
 		let tmp = new URL(url)
