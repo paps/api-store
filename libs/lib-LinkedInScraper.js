@@ -217,6 +217,9 @@ const scrapeInfos = (arg, callback) => {
 		try {
 			const entityUrn = JSON.parse(Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("urn:li:fs_memberBadges"))[0].textContent).data.entityUrn
 			infos.general.vmid = entityUrn.slice(entityUrn.indexOf("memberBadges:") + 13)
+			if (infos.general.vmid) {
+				infos.general.linkedinSalesNavigatorUrl = `https://www.linkedin.com/sales/people/${infos.general.vmid},name`
+			}
 		} catch (err) {
 			//
 		}
@@ -540,6 +543,7 @@ const craftCsvObject = infos => {
 		screenshot: (hasGeneral) ? (infos.general.screenshot || null) : null,
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
+		linkedinSalesNavigatorUrl: (hasGeneral) ? (infos.general.linkedinSalesNavigatorUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,
