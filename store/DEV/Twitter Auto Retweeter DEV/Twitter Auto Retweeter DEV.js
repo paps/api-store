@@ -43,6 +43,7 @@ const isTwitterUrl = url => {
 }
 
 /**
+ * TODO: get rid off promoted tweets while scraping
  * @param {Object} arg
  * @param {Function} cb
  * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
@@ -58,6 +59,15 @@ const scrapeTweets = (arg, cb) => {
 		const likesSelector = tweet.querySelector("button.js-actionFavorite span[data-tweet-stat-count]")
 		const rtSelector = tweet.querySelector("button.js-actionRetweet span[data-tweet-stat-count]")
 		const repliesSelector = tweet.querySelector("button.js-actionReply span[data-tweet-stat-count]")
+
+		const isRt = getComputedStyle(tweet.querySelector("button.ProfileTweet-actionButtonUndo.js-actionRetweet")).display
+		const canRt = getComputedStyle(tweet.querySelector("button.ProfileTweet-actionButton.js-actionRetweet")).display
+
+		// Do not return tweet already RT
+		if (isRt !== "none" && canRt === "none") {
+			return null
+		}
+
 		item.url = `https://www.twitter.com${tweet.dataset.permalinkPath}`
 
 		if (likesSelector) {
@@ -98,7 +108,6 @@ const scrapeTweets = (arg, cb) => {
  * @param {Object} Bundle
  * @return {Promise<Boolean>}
  */
-/* eslint-disable-next-line no-unused-vars */
 const retweet = async (tab, bundle) => {
 	try {
 	await tab.click(`div.tweet.js-stream-tweet.js-actionable-tweet:nth-child(${bundle.index}) button.js-actionRetweet`)
@@ -110,22 +119,40 @@ const retweet = async (tab, bundle) => {
 		return false
 	}
 	utils.log(`${bundle.url} retweeted`, "done")
+	bundle.timestamp = (new Date()).toISOString()
 	return true
 }
 
 /**
+ * TODO: load tweets until with reached the end of the timeline, or until we have retweetCount tweets to return
  * @param {Object} tab
  * @param {Number} retweetCount
  * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
  */
 const findRTs = async (tab, retweetCount) => {
-	const loadedCount = await twitter.loadList(tab, retweetCount)
-	utils.log(`${loadedCount} tweets loaded`, "done")
-	return tab.evaluate(scrapeTweets)
+	let tweets
+	let toLoad = retweetCount
+
+	while (true) {
+		const loadedCount = await twitter.loadList(tab, toLoad)
+		// No need to continue if we reached the end
+		if (loadedCount < 1) {
+			break
+		}
+		tweets = await tab.evaluate(scrapeTweets)
+		// TODO: add conditional checks here ....
+		if (tweets.length >= retweetCount) {
+			break
+		} else {
+			toLoad = loadedCount + retweetCount
+		}
+	}
+	return tweets
 }
 
 ;(async () => {
 	const tab = await nick.newTab()
+	const res = []
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries } = utils.validateArguments()
 
 	if (!csvName) {
@@ -152,10 +179,15 @@ const findRTs = async (tab, retweetCount) => {
 		} catch (err) {
 			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
 		}
-		const tweets = await findRTs(tab, retweetsPerLaunch)
-		console.log(JSON.stringify(tweets, null, 2))
+		let tweets = await findRTs(tab, retweetsPerLaunch)
+		tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
+		for (const tweet of tweets) {
+			if (await retweet(tab, tweet)) {
+				res.push(tweet)
+			}
+		}
 	}
-	await utils.saveResults([], [], csvName, null)
+	await utils.saveResults(res, res, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
