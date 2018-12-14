@@ -27,6 +27,7 @@ const twitter = new Twitter(nick, buster, utils)
 
 const DEFAULT_DB = "result"
 const DEFAULT_RT = 1
+const DEFAULT_LINES = 10
 // }
 
 /**
@@ -48,11 +49,12 @@ const isTwitterUrl = url => {
  */
 const scrapeTweets = (arg, cb) => {
 	const tweets = document.querySelectorAll("div.tweet.js-stream-tweet.js-actionable-tweet")
-	const res = [ ...tweets ].map(tweet => {
+	const res = [ ...tweets ].map((tweet, index) => {
+		// Skip promoted tweets
 		if (tweet.classList.contains("promoted-tweet")) {
 			return null
 		}
-		const item = {}
+		const item = { index: index + 1 }
 		const likesSelector = tweet.querySelector("button.js-actionFavorite span[data-tweet-stat-count]")
 		const rtSelector = tweet.querySelector("button.js-actionRetweet span[data-tweet-stat-count]")
 		const repliesSelector = tweet.querySelector("button.js-actionReply span[data-tweet-stat-count]")
@@ -91,12 +93,25 @@ const scrapeTweets = (arg, cb) => {
 }
 
 /**
- * TODO
+ * TODO: handle retweet popup error
  * @param {Object} tab
- * @param {String} url
+ * @param {Object} Bundle
  * @return {Promise<Boolean>}
  */
-const retweet = async (tab, url) => {}
+/* eslint-disable-next-line no-unused-vars */
+const retweet = async (tab, bundle) => {
+	try {
+	await tab.click(`div.tweet.js-stream-tweet.js-actionable-tweet:nth-child(${bundle.index}) button.js-actionRetweet`)
+	await tab.waitUntilVisible("div.RetweetDialog-modal", 15000)
+	await tab.click("div.tweet-button button.retweet-action")
+	await tab.waitWhileVisible("div.RetweetDialog-modal", 15000)
+	} catch (err) {
+		utils.log(`Error while retweeting: ${err.message || err}`, "warning")
+		return false
+	}
+	utils.log(`${bundle.url} retweeted`, "done")
+	return true
+}
 
 /**
  * @param {Object} tab
@@ -127,9 +142,8 @@ const findRTs = async (tab, retweetCount) => {
 		retweetsPerLaunch = DEFAULT_RT
 	}
 
-	const db = utils.getDb(csvName)
-
 	await twitter.login(tab, sessionCookie)
+	queries = queries.slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
 	utils.log(`Twitter profiles: ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
 		const processUrl = isTwitterUrl(query) ? query : `https://www.twitter.com/${query}`
@@ -139,6 +153,7 @@ const findRTs = async (tab, retweetCount) => {
 			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
 		}
 		const tweets = await findRTs(tab, retweetsPerLaunch)
+		console.log(JSON.stringify(tweets, null, 2))
 	}
 	await utils.saveResults([], [], csvName, null)
 	nick.exit()
