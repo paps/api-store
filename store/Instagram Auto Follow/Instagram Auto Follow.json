@@ -39,7 +39,7 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) OR a single Instagram profile URL",
-						"label": "Spreadsheet URL of profiles to follow <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of profiles to follow, or single profile URL <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
