@@ -2,8 +2,7 @@
 	"slug": "instagram-auto-follow",
 	"description": "Automatically follow a list of Instagram profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Follow/Instagram+Auto+Follow.png",
-	"hidden": false,
-	"new": false,
+	"hidden": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
@@ -54,7 +53,7 @@
 					},
 					"action": {
 						"label": "Follow/Unfollow action",
-						"helper": "Choose between Follow / Unfollow / Unfollow only if they don't follow you",
+						"helper": "Choose between Follow / Unfollow / Unfollow only if they don't follow you / Block / Unblock",
 						"removeDefaultNone": true,
 						"sort": false
 					},
@@ -86,7 +85,7 @@
 				"minimum": 1
 			},
 			"action": {
-				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you"],
+				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you", "Block", "Unblock"],
 				"default": "Follow"
 			},
             "csvName": {
