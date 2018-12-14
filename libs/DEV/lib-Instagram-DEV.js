@@ -141,7 +141,17 @@ class Instagram {
 			secure: true,
 			httpOnly: true
 		})
-		await tab.open("https://instagram.com")
+		try {
+			await tab.open("https://instagram.com")
+		} catch (err) {
+			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
+				await tab.wait(5000)
+				await tab.open("https://instagram.com")
+				this.utils.log("Retrying connection...", "loading")
+			} else {
+				throw err
+			}
+		}
 		try {
 			await tab.waitUntilVisible("main", 15000)
 			const name = await tab.evaluate((arg, cb) => {
