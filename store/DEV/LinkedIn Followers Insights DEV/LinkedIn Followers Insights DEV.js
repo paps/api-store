@@ -161,7 +161,6 @@ const onHttpRequest = e => {
 		utils.log("No followers found from the given profile", "warning")
 	}
 
-	await linkedIn.saveCookie()
 	await utils.saveResult(result, "followers")
 })()
 	.catch(err => {

@@ -230,7 +230,7 @@ const createCsvOutput = json => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, createCsvOutput(res)))
-	await linkedin.saveCookie()
+	await linkedin.updateCookie()
 	await utils.saveResults(res, db, csvName, null, true)
 	nick.exit()
 })()

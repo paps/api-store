@@ -228,7 +228,7 @@ const getGroupNameFromMemberPage = (arg, cb) => {
 		utils.log(`Error while scraping: ${err.message || err}`, "warning")
 	}
 	await utils.saveResults(members, members, csvName)
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 	nick.exit()
 })()
 .catch(err => {

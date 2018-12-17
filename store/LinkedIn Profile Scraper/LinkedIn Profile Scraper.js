@@ -25,7 +25,6 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const { URL } = require("url")
 
-const DB_NAME = "result"
 const MAX_SKILLS = 6
 const MAX_PROFILES = 25
 let exitAndSave = false
@@ -111,7 +110,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -128,15 +127,15 @@ const removeLinkedinSubdomains = url => {
 	} else if (numberOfAddsPerLaunch > urls.length) {
 		numberOfAddsPerLaunch = urls.length
 	}
-
-	const db = noDatabase ? [] : await utils.getDb(DB_NAME + ".csv")
-	let jsonDb = noDatabase ? [] : await utils.getDb(DB_NAME + ".json", false)
+	if (!csvName) { csvName = "result" }
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
+	let jsonDb = noDatabase ? [] : await utils.getDb(csvName + ".json", false)
 	if (typeof jsonDb === "string") {
 		jsonDb = JSON.parse(jsonDb)
 	}
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	if (exitAndSave) {
-		await utils.saveResults(jsonDb, db, DB_NAME, null, true)
+		await utils.saveResults(jsonDb, db, csvName, null, true)
 		nick.exit()
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
@@ -184,7 +183,6 @@ const removeLinkedinSubdomains = url => {
 		await tab.wait(2500 + Math.random() * 2000)
 	}
 
-	await linkedIn.saveCookie()
 	try {
 		await buster.setResultObject(result)
 	} catch (e) {
@@ -194,7 +192,7 @@ const removeLinkedinSubdomains = url => {
 		nick.exit()
 	} else {
 		jsonDb.push(...result)
-		await utils.saveResults(jsonDb, db, DB_NAME, null, true)
+		await utils.saveResults(jsonDb, db, csvName, null, true)
 		nick.exit(0)
 	}
 })()

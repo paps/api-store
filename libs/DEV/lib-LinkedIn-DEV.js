@@ -79,10 +79,9 @@ class LinkedIn {
 						this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
 						console.log("")
 					}
-					agentObject.lastCookie = this.originalSessionCookie
-					agentObject.lastCookieTimestamp = (new Date()).toISOString()
+					agentObject[".originalSessionCookie"] = this.originalSessionCookie
+					agentObject[".cookieTimestamp"] = (new Date()).toISOString()
 					await this.buster.setAgentObject(agentObject)
-					console.log("settingaowith", agentObject)
 					return null
 				}
 			}
@@ -90,7 +89,7 @@ class LinkedIn {
 		}
 
 		try {
-			if ((typeof(agentObject[".sessionCookie"]) === "string") && (agentObject[".originalSessionCookie"] === this.originalSessionCookie)) {
+			if ((typeof(agentObject[".sessionCookie"]) === "string") && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".sessionCookie"] !== agentObject[".originalSessionCookie"]) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
@@ -103,7 +102,7 @@ class LinkedIn {
 					return
 				}
 			}
-
+			
 			// the newer cookie from the agent object failed (or wasn't here)
 			// so we try a second time with the cookie from argument
 			await this.nick.setCookie({
@@ -124,8 +123,7 @@ class LinkedIn {
 			}
 			console.log("agentObject", agentObject)
 			console.log("this.originalSessionCookie: ", this.originalSessionCookie)
-			console.log("equal: ", agentObject.lastCookie === this.originalSessionCookie)
-			if (agentObject.lastCookie === this.originalSessionCookie) {
+			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
 				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
 			}
@@ -239,14 +237,35 @@ class LinkedIn {
 		return await tab.isPresent("a[data-control-name=\"premium_nav_upsell_text_click\"]") ? false : true
 	}
 
+	// deprecated
 	async saveCookie() {
 		try {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
 			if (cookie.length === 1) {
+			
 				await this.buster.setAgentObject({
 					".sessionCookie": cookie[0].value,
 					".originalSessionCookie": this.originalSessionCookie
 				})
+			} else {
+				throw `${cookie.length} cookies match filtering, cannot know which one to save`
+			}
+		} catch (e) {
+			this.utils.log("Caught exception when saving session cookie: " + e.toString(), "warning")
+		}
+	}
+
+	// save the .sessionCookie only if it's changed from .originalSessionCookie
+	async updateCookie() {
+		try {
+			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
+			if (cookie.length === 1) {
+				if (cookie[0].value !== this.originalSessionCookie) {
+					const agentObject = this.buster.getAgentObject
+					agentObject[".sessionCookie"] = cookie[0].value
+					agentObject[".cookieTimestamp"] = (new Date()).toISOString()
+					await this.buster.setAgentObject(agentObject)
+				}
 			} else {
 				throw `${cookie.length} cookies match filtering, cannot know which one to save`
 			}

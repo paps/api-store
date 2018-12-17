@@ -207,7 +207,6 @@ nick.newTab().then(async (tab) => {
 		await buster.saveText(Papa.unparse(db), DB_NAME)
 	}
 	utils.log(`Endorsed ${result.length} profiles.`, "done")
-	await linkedIn.saveCookie()
 	await utils.saveResult(result, csvName)
 })
 .catch((err) => {

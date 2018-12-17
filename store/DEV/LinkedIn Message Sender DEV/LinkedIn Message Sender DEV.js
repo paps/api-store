@@ -263,7 +263,7 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	db.push(...result)
 	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
-	await linkedin.saveCookie()
+	await linkedin.updateCookie()
 	nick.exit(0)
 })().catch(err => {
 	utils.log(`Error while running: ${err.message || err}`, "error")
