@@ -109,12 +109,10 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
+			this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
 			if (this.originalSessionCookie.length < 100) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
 			}
-			await this.buster.saveText(await tab.getContent(), "login-err.html")
-			await this.buster.save(await tab.screenshot("login-err.jpg"))
 			this.nick.exit(87)
 		}
 	}
@@ -251,12 +249,12 @@ class LinkedIn {
 	 */
 	isLinkedInProfile(url) {
 		try {
-			if (url.startsWith("linkedin")) {
+			if (url.startsWith("linkedin") || url.startsWith("www.")) {
 				url = "https://" + url
 			}
 			const { URL } = require("url")
 			let urlObject = new URL(url)
-			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/profile/view") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
 		} catch (err) {
 			return false
 		}
