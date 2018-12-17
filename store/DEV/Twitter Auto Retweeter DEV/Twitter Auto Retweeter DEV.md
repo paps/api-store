@@ -11,7 +11,6 @@ Twitter is limiting users to a maximum of **2400 Tweets per day**. This includes
 
 This API is capable of adding about **25 profiles per minute**.
 
-
 # What do you need? ⚙️
 - **"Spreadsheet URL"**: Link of a pubicly accessible spreadsheet containing a list of twitter profile urls
 - **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.

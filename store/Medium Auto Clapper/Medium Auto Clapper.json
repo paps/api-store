@@ -1,7 +1,7 @@
 {
 	"slug": "medium-auto-clapper",
-	"description": "",
-	"image": "",
+	"description": "Automatically Clap a list of Medium Articles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Medium_Auto_Clapper/Medium+Auto+Clapper(1).png",
 	"argumentDescription": "",
 	"gradientBegin": "#029E74",
 	"gradientEnd": "#516395",
