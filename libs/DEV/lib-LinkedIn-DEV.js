@@ -20,11 +20,12 @@ class LinkedIn {
 	async login(tab, cookie, url) {
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
-			this.nick.exit(87)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
+			// console.log("this:", this.utils)
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
-			this.nick.exit(86)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -36,7 +37,7 @@ class LinkedIn {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(83)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 
@@ -58,7 +59,7 @@ class LinkedIn {
 			}
 			if (sel === "#email-pin-challenge") {
 				this.utils.log("Cookie is correct but LinkedIn is asking for a mail verification.", "warning")
-				this.nick.exit(1)
+				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BLOCKED_ACCOUNT)
 			}
 			if (sel === "#extended-nav") {
 				await tab.untilVisible(".nav-item__profile-member-photo.nav-item__icon", 15000)
@@ -119,7 +120,7 @@ class LinkedIn {
 			}
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(87)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
 
@@ -127,11 +128,11 @@ class LinkedIn {
 	async recruiterLogin(tab, sessionCookieliAt, url) {
 		if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (sessionCookieliAt === "your_li_atsession_cookie") {
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
 		if (sessionCookieliAt.indexOf("from-global-object:") === 0) {
 			try {
@@ -143,7 +144,7 @@ class LinkedIn {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_GO_NOT_ACCESSIBLE)
 			}
 		}
 
@@ -210,7 +211,7 @@ class LinkedIn {
 			}
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
 
@@ -271,8 +272,6 @@ class LinkedIn {
 			cb(null, false)
 		})
 	}
-
-	
 
 	/**
 	 * @param {Object} url -- Profile URL

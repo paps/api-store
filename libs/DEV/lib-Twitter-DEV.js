@@ -84,11 +84,11 @@ class Twitter {
 
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Twitter session cookie. Did you specify one?", "error")
-			this.nick.exit(93)
+			this.nick.exit(this.utils.ERROR_CODES.TWITTER_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Twitter session cookie into the API Configuration.", "error")
-			this.nick.exit(96)
+			this.nick.exit(this.utils.ERROR_CODES.TWITTER_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -100,7 +100,7 @@ class Twitter {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(97)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 		this.utils.log("Connecting to Twitter...", "loading")
@@ -118,7 +118,7 @@ class Twitter {
 		} catch (error) {
 			await tab.screenshot(`Tok${Date.now()}.png`)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-			this.nick.exit(97)
+			this.nick.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
 
@@ -255,7 +255,7 @@ class Twitter {
 						await waitWhileHttpErrors(this.utils, tab)
 					} else {
 					this.utils.log("Twitter rate limit reached, you should try again later.", "warning")
-					this.nick.exit(1)
+					this.nick.exit(this.utils.ERROR_CODES.TWITTER_RATE_LIMIT)
 					}
 				} else {
 					this.utils.log(`Loaded ${await tab.evaluate(_getFollowersNb)} accounts.`, "done")

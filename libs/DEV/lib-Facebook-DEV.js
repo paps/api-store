@@ -311,15 +311,15 @@ class Facebook {
 	async login(tab, cookieCUser, cookieXs, url) {
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
-			this.nick.exit(117)
+			this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_INVALID_COOKIE)
 		}
 		if (cookieCUser === "your_c-user_session_cookie") {
 			this.utils.log("You didn't enter your Facebook c_user session cookie into the API Configuration.", "error")
-			this.nick.exit(116)
+			this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_DEFAULT_COOKIE)
 		}
 		if (cookieXs === "your_xs_session_cookie") {
 			this.utils.log("You didn't enter your Facebook xs session cookie into the API Configuration.", "error")
-			this.nick.exit(116)
+			this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_DEFAULT_COOKIE)
 		}
 		if (cookieCUser.indexOf("from-global-object:") === 0) {
 			try {
@@ -331,7 +331,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(75)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 		if (cookieXs.indexOf("from-global-object:") === 0) {
@@ -344,7 +344,7 @@ class Facebook {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(75)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 
@@ -438,18 +438,18 @@ class Facebook {
 			}
 			if (error === "Timeout") {
 				this.utils.log("Connection has timed out.", "error")
-				this.nick.exit(118)
+				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_TIMEOUT)
 			}
 			if (await this.checkLock(tab)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
-				this.nick.exit(115)
+				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BLOCKED_ACCOUNT)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
 			}
 			console.log("err", error)
 			await tab.screenshot(`err${new Date()}.png`)
 			await this.buster.saveText(await tab.getContent(), `err${Date.now()}.html`)
-			this.nick.exit(113)
+			this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BAD_COOKIE)
 		}
 	}
 
