@@ -478,14 +478,6 @@ const getNetwork = async (tab, searchUrl, numberOfPost, query) => {
 	return result
 }
 
-// check if we've reached the Excessive Page Requests warning
-const checkMaxRequestsReached = (arg, cb) => {
-	if (document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]") && document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]").href.startsWith("https://www.linkedin.com/help/linkedin/answer/")) {
-		cb(null, true)
-	} 
-	cb(null, false)
-}
-
 const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category, onlyGetFirstResult) => {
 	utils.log(`Getting data for search ${query} ...`, "loading")
 	if (onlyGetFirstResult) {
@@ -612,7 +604,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 						nextButtonIsClicked = true
 						const hasPages = await clickNextPage(tab, lastLoc)
 						if (hasPages === "Error loading next page!") {
-							if (await tab.evaluate(checkMaxRequestsReached)) {
+							if (await linkedIn.checkMaxRequestsReached(tab)) {
 								utils.log("Excessive Page Requests on LinkedIn warning.", "warning")
 							}
 							break

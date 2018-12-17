@@ -243,6 +243,16 @@ class LinkedIn {
 		return errorToRet
 	}
 
+	// check if we've reached the Excessive Page Requests warning
+	checkMaxRequestsReached(tab) {
+		return tab.evaluate((arg, cb) => {
+			if (document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]") && document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]").href.startsWith("https://www.linkedin.com/help/linkedin/answer/")) {
+				cb(null, true)
+			} 
+			cb(null, false)
+		})
+	}
+
 	/**
 	 * @param {Object} url -- Profile URL
 	 * @return {Boolean} true if url is a valid profile URL
