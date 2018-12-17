@@ -380,7 +380,7 @@ class Twitter {
 			}
 			idle()
 		}
-		while (loadedContent <= count || loadedContent >= count) {
+		while (loadedContent <= count) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				break
