@@ -8,7 +8,7 @@
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"updated": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

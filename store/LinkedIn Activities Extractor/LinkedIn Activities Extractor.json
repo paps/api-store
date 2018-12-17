@@ -3,7 +3,7 @@
 	"description": "Extract every single post and like from a LinkedIn Profile's Activity's page",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"updated": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
