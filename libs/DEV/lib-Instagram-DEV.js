@@ -114,11 +114,11 @@ class Instagram {
 	async login(tab, cookie) {
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Instagram session cookie. Did you specify one?", "error")
-			this.nick.exit(107)
+			this.nick.exit(this.utils.ERROR_CODES.INSTAGRAM_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Instagram session cookie into the API Configuration.", "error")
-			this.nick.exit(106)
+			this.nick.exit(this.utils.ERROR_CODES.INSTAGRAM_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -130,7 +130,7 @@ class Instagram {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(75)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 		this.utils.log("Connecting to Instagram...", "loading")
@@ -141,7 +141,17 @@ class Instagram {
 			secure: true,
 			httpOnly: true
 		})
-		await tab.open("https://instagram.com")
+		try {
+			await tab.open("https://instagram.com")
+		} catch (err) {
+			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
+				await tab.wait(5000)
+				await tab.open("https://instagram.com")
+				this.utils.log("Retrying connection...", "loading")
+			} else {
+				throw err
+			}
+		}
 		try {
 			await tab.waitUntilVisible("main", 15000)
 			const name = await tab.evaluate((arg, cb) => {
@@ -151,7 +161,7 @@ class Instagram {
 			this.utils.log(`Connected as ${name}`, "done")
 		} catch (error) {
 			this.utils.log("Can't connect to Instagram with these session cookies.", "error")
-			this.nick.exit(103)
+			this.nick.exit(this.utils.ERROR_CODES.INSTAGRAM_BAD_COOKIE)
 		}
 	}
 

@@ -238,7 +238,7 @@ const getPageNumber = url => {
 	return 1
 }
 
-// click on the Next Page Button
+// click on the Next Page Button, return something if it went wrong
 const clickNextPage = async (tab, lastLoc) => {
 	let selector
 	try {
@@ -253,8 +253,8 @@ const clickNextPage = async (tab, lastLoc) => {
 		await tab.click(selector)
 		const lastDate = new Date()
 		do {
-			if (new Date() - lastDate > 10000) {
-				throw "Error loading next page!"
+			if (new Date() - lastDate > 30000) {
+				return "Error loading next page!"
 			}
 			await tab.wait(500)
 		} while (lastLoc === await tab.getUrl())
@@ -603,9 +603,16 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					} else {
 						nextButtonIsClicked = true
 						const hasPages = await clickNextPage(tab, lastLoc)
+						if (hasPages === "Error loading next page!") {
+							if (await linkedIn.checkMaxRequestsReached(tab)) {
+								utils.log("Excessive Page Requests on LinkedIn warning.", "warning")
+							}
+							break
+						}
 						if (hasPages === "noMorePages" || hasPages === "Button disabled") {
 							break
 						}
+						await tab.wait(2000 + 2000 * Math.random())
 					}
 				}
 			} catch (err) {

@@ -25,6 +25,8 @@ const instagram = new Instagram(nick, buster, utils)
 let followSuccessCount = 0
 let unfollowSuccessCount = 0
 let followRequestCount = 0
+let blockSuccessCount = 0
+let unblockSuccessCount = 0
 let rateLimited
 // }
 
@@ -46,13 +48,15 @@ const interceptInstagramApiCalls = e => {
 }
 
 // function to follow a profile
-const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction) => {
-	const scrapedData = await instagram.scrapeProfile(tabJson, query, profileUrl)
-	let action
-	if (conditionalAction.startsWith("Follow")) {
-		action = "Follow"
-	} else {
+const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction, scrapedData) => {
+	let action = conditionalAction
+	if (action.startsWith("Unfollow")) {
 		action = "Unfollow"
+	}
+	if (scrapedData.status === "Blocked") {
+		utils.log(`Can't ${action === "Unfollow" ? "un" : ""}follow ${scrapedData.profileName} as you blocked their profile!`, "warning")
+		scrapedData.error = "Blocking"
+		return scrapedData
 	}
 	if (action === "Follow") {
 		if (scrapedData.status === "Following") {
@@ -77,19 +81,12 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 			return scrapedData
 		}
 	}
-	if (scrapedData.status === "Blocked") {
-		utils.log(`Can't ${action === "Unfollow" ? "un" : ""}follow ${scrapedData.profileName} as you blocked their profile!`, "warning")
-		scrapedData.error = "Blocking"
-		return scrapedData
-	}
 	await tab.click("main section button")
 	if (action === "Unfollow") {
 		await tab.waitUntilVisible("div[role=\"dialog\"]")
 		await tab.click("div[role=\"dialog\"] button")
 	}
-	await tab.wait(2000)
-
-	
+	await tab.wait(4000)
 	const checkFollowData = await instagram.scrapeProfile(tabJson, query, profileUrl)
 	if (action === "Follow") {
 		if (checkFollowData.status === "Following") {
@@ -117,11 +114,55 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 	}
 }
 
+// function to block a profile
+const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData) => {
+	const clickBlockButton = (arg, cb) => {
+		cb(null, document.querySelectorAll("div[role=\"dialog\"] button")[1].click())
+	}
+	if (action === "Block" && scrapedData.status === "Blocked") {
+		utils.log(`You already have blocked ${scrapedData.profileName}!`, "warning")
+		scrapedData.error = "Already blocked"
+		return scrapedData
+	}
+	if (action === "Unblock" && scrapedData.status !== "Blocked") {
+		utils.log(`You don't have blocked ${scrapedData.profileName}.`, "warning")
+		scrapedData.error = "No need no unblock"
+		return scrapedData
+	}
+	await tab.click("main section > div > div:last-of-type > button")
+	await tab.waitUntilVisible("div[role=\"dialog\"]")
+	await tab.evaluate(clickBlockButton)
+	await tab.wait(1000)
+	await tab.click("div[role=\"dialog\"] button")
+	await tab.wait(3000)
+	const checkBlockData = await instagram.scrapeProfile(tabJson, query, profileUrl)
+	if (action === "Block") {
+		if (checkBlockData.status === "Blocked") {
+			utils.log(`Successfully blocked ${checkBlockData.profileName}.`, "done")
+			checkBlockData.blockAction = "Success"
+			blockSuccessCount++
+			return checkBlockData
+		} else {
+			utils.log(`Fail to block ${checkBlockData.profileName}!`, "warning")
+			return null
+		}
+	} else if (!checkBlockData.status) {
+		utils.log(`Successfully unblocked ${checkBlockData.profileName}.`, "done")
+		checkBlockData.unblockAction = "Success"
+		unblockSuccessCount++
+		return checkBlockData
+	} else {
+		utils.log(`Fail to unblock ${checkBlockData.profileName}!`, "warning")
+		return null
+	}
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch, action, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let urls, result
+	result = await utils.getDb(csvName + ".csv")
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
 		if (urls) {	
@@ -129,7 +170,6 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
-		result = []
 	} else { // CSV
 		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		urls = urls.filter(str => str) // removing empty lines
@@ -140,7 +180,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 		if (!numberOfProfilesPerLaunch) {
 			numberOfProfilesPerLaunch = urls.length
 		}
-		result = await utils.getDb(csvName + ".csv")
+		// result = await utils.getDb(csvName + ".csv")
 		urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
 		if (urls.length < 1) {
 			utils.log("Input is empty OR all profiles have been processed.", "warning")
@@ -150,7 +190,14 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 	followSuccessCount = result.filter(el => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter(el => el.unfollowAction === "Success").length
 	followRequestCount = result.filter(el => el.followAction === "Request").length
-	console.log(`Profiles to ${action === "Follow" ? "follow" : "unfollow"}: ${JSON.stringify(urls, null, 4)}`)
+	blockSuccessCount = result.filter(el => el.blockAction === "Success").length
+	unblockSuccessCount = result.filter(el => el.unblockAction === "Success").length
+	let actionText = action.toLowerCase()
+	if (action.startsWith("Unfollow")) {
+		actionText = "unfollow"
+	}
+	
+	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
@@ -176,14 +223,37 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction)
 				continue
 			}
 			const profileUrl = await tab.getUrl()
-			const tempResult = await followProfile(tab, jsonTab, url, profileUrl, action)
-			if (tempResult) {
-				result.push(tempResult)
-			}
-			if (action.startsWith("Follow")) {
-				utils.log(`In total ${followSuccessCount} profiles followed, ${followRequestCount} requests sent.`, "done")
+			const scrapedData = await instagram.scrapeProfile(jsonTab, url, profileUrl)
+			let tempResult
+			if (action.includes("ollow")) {
+				tempResult = await followProfile(tab, jsonTab, url, profileUrl, action, scrapedData)
+				if (action.startsWith("Follow")) {
+					utils.log(`In total ${followSuccessCount} profile${followSuccessCount > 1 ? "s" : ""} followed, ${followRequestCount} request${followRequestCount > 1 ? "s" : ""} sent.`, "done")
+				} else {
+					utils.log(`In total ${unfollowSuccessCount} profile${unfollowSuccessCount > 1 ? "s" : ""} unfollowed.`, "done")
+				}
 			} else {
-				utils.log(`In total ${unfollowSuccessCount} profiles unfollowed.`, "done")
+				tempResult = await blockProfile(tab, jsonTab, url, profileUrl, action, scrapedData)
+				if (action === "Block") {
+					utils.log(`In total ${blockSuccessCount} profile${blockSuccessCount > 1 ? "s" : ""} blocked.`, "done")
+				} else {
+					utils.log(`In total ${unblockSuccessCount} profile${unblockSuccessCount > 1 ? "s" : ""} unblocked.`, "done")
+				}
+			}
+			if (tempResult) {
+				let isAlreadyThere = false
+				let i
+				for (i = 0; i < result.length ; i++) {
+					if (tempResult.query === result[i].query) {
+						isAlreadyThere = true
+						break
+					}
+				}
+				if (!isAlreadyThere) {
+					result.push(tempResult)
+				} else if (!tempResult.error) {
+					result[i] = tempResult
+				}
 			}
 		} catch (err) {
 			utils.log(`Can't open the profile at ${url} due to: ${err.message || err}`, "warning")

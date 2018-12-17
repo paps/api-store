@@ -20,11 +20,12 @@ class LinkedIn {
 	async login(tab, cookie, url) {
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
-			this.nick.exit(87)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
+			// console.log("this:", this.utils)
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
-			this.nick.exit(86)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -36,7 +37,7 @@ class LinkedIn {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(83)
+				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 
@@ -52,9 +53,13 @@ class LinkedIn {
 			}
 			let sel
 			try {
-				sel = await tab.untilVisible(["#extended-nav", "form.login-form"], "or", 15000)
+				sel = await tab.untilVisible(["#extended-nav", "form.login-form", "#email-pin-challenge"], "or", 15000)
 			} catch (e) {
 				return e.toString()
+			}
+			if (sel === "#email-pin-challenge") {
+				this.utils.log("Cookie is correct but LinkedIn is asking for a mail verification.", "warning")
+				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BLOCKED_ACCOUNT)
 			}
 			if (sel === "#extended-nav") {
 				await tab.untilVisible(".nav-item__profile-member-photo.nav-item__icon", 15000)
@@ -115,7 +120,7 @@ class LinkedIn {
 			}
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(87)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
 
@@ -123,11 +128,11 @@ class LinkedIn {
 	async recruiterLogin(tab, sessionCookieliAt, url) {
 		if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (sessionCookieliAt === "your_li_atsession_cookie") {
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
 		if (sessionCookieliAt.indexOf("from-global-object:") === 0) {
 			try {
@@ -139,7 +144,7 @@ class LinkedIn {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(1)
+				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_GO_NOT_ACCESSIBLE)
 			}
 		}
 
@@ -149,7 +154,7 @@ class LinkedIn {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/dashboard/")
+			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/")
 			if (httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
@@ -158,6 +163,17 @@ class LinkedIn {
 				sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
 			} catch (e) {
 				return e.toString()
+			}
+			console.log("sel:", sel)
+			if (sel === "form#login") {
+				console.log("Entering password...")
+				await tab.sendKeys("#session_key-login", "")	
+				await tab.wait(500)
+				await tab.sendKeys("#session_password-login", "")
+				await tab.wait(500)
+				await tab.click("#btn-primary")
+				await tab.wait(3000)
+				sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
 			}
 			if (sel === "#nav-tools-user") {
 				const name = await tab.evaluate((arg, callback) => {
@@ -172,28 +188,30 @@ class LinkedIn {
 		}
 
 		try {
-			await this.nick.setCookie({
-				name: "li_at",
-				value: this.originalSessionCookieliAt,
-				domain: "www.linkedin.com"
-			})
+			// await this.nick.setCookie({
+			// 	name: "li_at",
+			// 	value: this.originalSessionCookieliAt,
+			// 	domain: "www.linkedin.com"
+			// })
 			const loginResult = await _login()
 			if (loginResult !== null) {
 				throw loginResult
 			}
 
 		} catch (error) {
+			console.log("error:", error)
 			if (this.utils.test) {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
-			if (this.originalSessionCookie.length < 100) {
+			this.utils.log("Can't connect to LinkedIn Recruiter with this session cookie.", "error")
+			this.utils.log("From your browser in private mode, go to https://www.linkedin.com/cap, log in, THEN copy-paste your li_at session cookie.", "info")
+			if (this.originalSessionCookieliAt.length < 100) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
 			}
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
-			this.nick.exit(1)
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
 
@@ -245,18 +263,28 @@ class LinkedIn {
 		return errorToRet
 	}
 
+	// check if we've reached the Excessive Page Requests warning
+	checkMaxRequestsReached(tab) {
+		return tab.evaluate((arg, cb) => {
+			if (document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]") && document.querySelector(".authentication-outlet a[data-test=\"no-results-cta\"]").href.startsWith("https://www.linkedin.com/help/linkedin/answer/")) {
+				cb(null, true)
+			} 
+			cb(null, false)
+		})
+	}
+
 	/**
 	 * @param {Object} url -- Profile URL
 	 * @return {Boolean} true if url is a valid profile URL
 	 */
 	isLinkedInProfile(url) {
 		try {
-			if (url.startsWith("linkedin")) {
+			if (url.startsWith("linkedin") || url.startsWith("www.")) {
 				url = "https://" + url
 			}
 			const { URL } = require("url")
 			let urlObject = new URL(url)
-			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
+			return ((urlObject.hostname.indexOf("linkedin.com") > -1) && (urlObject.pathname.startsWith("/in/") || urlObject.pathname.startsWith("/profile/view") || urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/gmail/profile/")))
 		} catch (err) {
 			return false
 		}

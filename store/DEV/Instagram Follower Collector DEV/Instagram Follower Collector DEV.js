@@ -184,7 +184,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				if (displayResult % 15 === 14) {
 					utils.log(`Got ${profileCount} followers.`, "info")
 				}
-				buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
+				buster.progressHint(profileCount / numberMaxOfFollowers, `Loading followers... ${profileCount}/${numberMaxOfFollowers}`)
 				if (instagramJson.data.user.edge_followed_by.page_info.end_cursor){
 					let endCursor = instagramJson.data.user.edge_followed_by.page_info.end_cursor
 					nextUrl = forgeNewUrl(endCursor)
@@ -245,14 +245,14 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
 	result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length
-	if (result.length) {
-		try {
-			agentObject = await buster.getAgentObject()
-			alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
+	const initialResultLength = result.length	
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
+	}
+	if (initialResultLength && agentObject.nextUrl) {
+		alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
 	}
 	if (!numberMaxOfFollowers) { numberMaxOfFollowers = false }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url

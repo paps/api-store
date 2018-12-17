@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -80,7 +81,12 @@ const getEmployees = async (tab, id, query, numberOfPage) => {
 		utils.log(`Getting urls from page ${i}...`, "loading")
 		await tab.open(`https://www.linkedin.com/search/results/people/?facetCurrentCompany=["${id}"]&page=${i}`)
 		const selector = await tab.waitUntilVisible(selectors, 5000, "or")
+		await tab.screenshot(`${Date.now()}slectors.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}slectors.html`)
 		if (selector === selectors[0]) {
+			if (await linkedIn.checkMaxRequestsReached(tab)) {
+				utils.log("Excessive Page Requests on LinkedIn warning.", "warning")
+			}
 			break
 		} else {
 			for (let j = 0, k = 500; j < 10; j++, k += 500) {

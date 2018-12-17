@@ -2,14 +2,14 @@
 	"slug": "instagram-auto-follow",
 	"description": "Automatically follow a list of Instagram profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Follow/Instagram+Auto+Follow.png",
-	"hidden": false,
-	"new": false,
+	"hidden": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls"
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberOfProfilesPerLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Instagram profile URL",
@@ -39,7 +39,7 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) OR a single Instagram profile URL",
-						"label": "Spreadsheet URL of profiles to follow <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of profiles to follow, or single profile URL <a href=\"/api-store/10274/instagram-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
@@ -53,7 +53,7 @@
 					},
 					"action": {
 						"label": "Follow/Unfollow action",
-						"helper": "Choose between Follow / Unfollow / Unfollow only if they don't follow you",
+						"helper": "Choose between Follow / Unfollow / Unfollow only if they don't follow you / Block / Unblock",
 						"removeDefaultNone": true,
 						"sort": false
 					},
@@ -85,7 +85,7 @@
 				"minimum": 1
 			},
 			"action": {
-				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you"],
+				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you", "Block", "Unblock"],
 				"default": "Follow"
 			},
             "csvName": {

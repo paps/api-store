@@ -18,7 +18,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 15000,
+	timeout: 30000,
 	// randomize viewport
 	width: (1180 + Math.round(Math.random() * 200)), // 1180 <=> 1380
 	height: (700 + Math.round(Math.random() * 200)), // 700 <=> 900
@@ -45,10 +45,15 @@ let db
 	db = await utils.getDb(`${csvName}.csv`)
 
 	if (spreadsheetUrl) {
-		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (utils.isUrl(spreadsheetUrl)) {
+			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		} else {
+			queries = [ spreadsheetUrl ]
+		}
 	} else if (typeof(queries) === "string") {
 		queries = [queries]
 	}
+
 
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
 	if (queries.length < 1) {

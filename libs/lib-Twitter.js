@@ -48,56 +48,6 @@ const waitWhileHttpErrors = async (utils, tab) => {
 	utils.log(`Resuming the API scraping process (Rate limit duration ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
 
-const _scrapeProfile = (arg, cb) => {
-	const res = { name: null, twitterProfile: null, handle: null, bio: null, location: null, website: null, joinDate: null }
-	const descriptionSelector = document.querySelector("div.ProfileSidebar")
-	const activitySelector = document.querySelector("div.ProfileNav")
-	const avatarSelector = document.querySelector("img.ProfileAvatar-image")
-	res.profilePicture = avatarSelector ? avatarSelector.src : null
-	if (activitySelector) {
-		const tweetCountSelector = activitySelector.querySelector("li.ProfileNav-item--tweets span.ProfileNav-value")
-		const followersSelector = activitySelector.querySelector("li.ProfileNav-item--followers span.ProfileNav-value")
-		const followingSelector = activitySelector.querySelector("li.ProfileNav-item--following span.ProfileNav-value")
-		const likesSelector = activitySelector.querySelector("li.ProfileNav-item--favorites span.ProfileNav-value")
-		const listsSelector = activitySelector.querySelector("li.ProfileNav-item--lists span.ProfileNav-value")
-		res.twitterId = activitySelector.dataset.userId
-		res.alternativeProfileUrl = `https://www.twitter.com/intent/user?user_id=${res.twitterId}`
-		res.tweetsCount = tweetCountSelector ? tweetCountSelector.dataset.count : null
-		res.followers = followersSelector ? followersSelector.dataset.count : null
-		res.following = followingSelector ? followingSelector.dataset.count : null
-		res.likes = likesSelector ? likesSelector.dataset.count : null
-		res.lists = listsSelector ? listsSelector.dataset.count : null
-	}
-	if (descriptionSelector) {
-		const screenNameSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-nameLink")
-		const handleSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-screennameLink")
-		const bioSelector = descriptionSelector.querySelector("p.ProfileHeaderCard-bio")
-		const locationSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-location span.ProfileHeaderCard-locationText a[data-place-id]")
-		const websiteSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-url span.ProfileHeaderCard-urlText a:first-of-type")
-		const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
-		const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")
-		const followBackSelector = descriptionSelector.querySelector("span.FollowStatus")
-		res.name = screenNameSelector ? screenNameSelector.textContent.trim() : null
-		res.twitterProfile = screenNameSelector ? screenNameSelector.href : null
-		res.handle = handleSelector ? handleSelector.textContent.trim() : null
-		res.bio = bioSelector ? bioSelector.textContent.trim() : null
-		res.location = locationSelector ? locationSelector.textContent.trim() : null
-		res.website = websiteSelector ? websiteSelector.title : null
-		res.joinDate = null
-		res.followback = followBackSelector !== null
-		if (joinDateSelector) {
-			if (joinDateSelector.title) {
-				res.joinDate = joinDateSelector.title
-			}
-			if (joinDateSelector.dataset.originalTitle) {
-				res.joinDate = joinDateSelector.dataset.originalTitle
-			}
-		}
-		res.birthday = birthdaySelector ? birthdaySelector.textContent.trim() : null
-	}
-	cb(null, res)
-}
-
 class Twitter {
 	constructor(nick, buster, utils) {
 		this.nick = nick
@@ -206,6 +156,55 @@ class Twitter {
 	 * @return {Promise<Object>}
 	 */
 	async scrapeProfile(tab, url, verbose = false) {
+		const _scrapeProfile = (arg, cb) => {
+			const res = { name: null, twitterProfile: null, handle: null, bio: null, location: null, website: null, joinDate: null }
+			const descriptionSelector = document.querySelector("div.ProfileSidebar")
+			const activitySelector = document.querySelector("div.ProfileNav")
+			const avatarSelector = document.querySelector("img.ProfileAvatar-image")
+			res.profilePicture = avatarSelector ? avatarSelector.src : null
+			if (activitySelector) {
+				const tweetCountSelector = activitySelector.querySelector("li.ProfileNav-item--tweets span.ProfileNav-value")
+				const followersSelector = activitySelector.querySelector("li.ProfileNav-item--followers span.ProfileNav-value")
+				const followingSelector = activitySelector.querySelector("li.ProfileNav-item--following span.ProfileNav-value")
+				const likesSelector = activitySelector.querySelector("li.ProfileNav-item--favorites span.ProfileNav-value")
+				const listsSelector = activitySelector.querySelector("li.ProfileNav-item--lists span.ProfileNav-value")
+				res.twitterId = activitySelector.dataset.userId
+				res.alternativeProfileUrl = `https://www.twitter.com/intent/user?user_id=${res.twitterId}`
+				res.tweetsCount = tweetCountSelector ? tweetCountSelector.dataset.count : null
+				res.followers = followersSelector ? followersSelector.dataset.count : null
+				res.following = followingSelector ? followingSelector.dataset.count : null
+				res.likes = likesSelector ? likesSelector.dataset.count : null
+				res.lists = listsSelector ? listsSelector.dataset.count : null
+			}
+			if (descriptionSelector) {
+				const screenNameSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-nameLink")
+				const handleSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-screennameLink")
+				const bioSelector = descriptionSelector.querySelector("p.ProfileHeaderCard-bio")
+				const locationSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-location span.ProfileHeaderCard-locationText a[data-place-id]")
+				const websiteSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-url span.ProfileHeaderCard-urlText a:first-of-type")
+				const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
+				const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")
+				const followBackSelector = descriptionSelector.querySelector("span.FollowStatus")
+				res.name = screenNameSelector ? screenNameSelector.textContent.trim() : null
+				res.twitterProfile = screenNameSelector ? screenNameSelector.href : null
+				res.handle = handleSelector ? handleSelector.textContent.trim() : null
+				res.bio = bioSelector ? bioSelector.textContent.trim() : null
+				res.location = locationSelector ? locationSelector.textContent.trim() : null
+				res.website = websiteSelector ? websiteSelector.title : null
+				res.joinDate = null
+				res.followback = followBackSelector !== null
+				if (joinDateSelector) {
+					if (joinDateSelector.title) {
+						res.joinDate = joinDateSelector.title
+					}
+					if (joinDateSelector.dataset.originalTitle) {
+						res.joinDate = joinDateSelector.dataset.originalTitle
+					}
+				}
+				res.birthday = birthdaySelector ? birthdaySelector.textContent.trim() : null
+			}
+			cb(null, res)
+		}
 		verbose && this.utils.log(`Loading profile: ${url}...`, "loading")
 		try {
 			await this.openProfile(tab, url)
@@ -352,6 +351,57 @@ class Twitter {
 			return true
 		}
 		return false
+	}
+
+	/**
+	 * @description Method used to load Tweets from a Twitter page
+	 * @param {Object} tab - Nickjs tab with an Twitter listing page loaded
+	 * @param {Number} [count] - Amount of items to load (default all)
+	 * @param {Boolean} [verbose] - printing logs (default yes)
+	 * @return {Promise<Number>} Loaded count
+	 */
+	async loadList(tab, count = Infinity, verbose = true) {
+		let loadedContent = 0
+		let lastCount = 0
+		const getContentCount = (arg, cb) => cb(null, document.querySelectorAll("div.tweet.js-actionable-tweet").length)
+		const waitWhileLoading = (arg, cb) => {
+			const idleStart = Date.now()
+			const idle = () => {
+				const loadedTweets = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+				if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
+					cb(null, "DONE")
+				} else if (loadedTweets <= arg.prevCount) {
+					if (Date.now() - idleStart >= 30000) {
+						cb("No content loaded after 30s")
+					}
+					setTimeout(idle, 100)
+				}
+				cb(null)
+			}
+			idle()
+		}
+		while (loadedContent <= count) {
+			const timeLeft = await this.utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				break
+			}
+			loadedContent = await tab.evaluate(getContentCount)
+			if (verbose && (loadedContent - lastCount >= 100)) {
+				this.utils.log(`${loadedContent} content loaded`, "info")
+				lastCount = loadedContent
+			}
+			await tab.scrollToBottom()
+			try {
+				const state = await tab.evaluate(waitWhileLoading, { prevCount: loadedContent })
+				if (state === "DONE") {
+					break
+				}
+			} catch (err) {
+				this.utils.log(`Error while loading content: ${err.message || err}`, "warning")
+				break
+			}
+		}
+		return tab.evaluate(getContentCount)
 	}
 }
 

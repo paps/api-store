@@ -6,6 +6,36 @@ const jsonexport = promisify(require("jsonexport"))
 const validator = require("is-my-json-valid")
 const needle = require("needle")
 const { URL, parse } = require("url")
+const ERROR_CODES = {
+	EMPTY_SPREADSHEET: 71,
+	CSV_NOT_PUBLIC: 72,
+	GO_NOT_ACCESSIBLE: 75,
+	LINKEDIN_BAD_COOKIE: 83,
+	LINKEDIN_EXPIRED_COOKIE: 84,
+	LINKEDIN_BLOCKED_ACCOUNT: 85,
+	LINKEDIN_DEFAULT_COOKIE: 82,
+	LINKEDIN_INVALID_COOKIE: 87,
+	TWITTER_RATE_LIMIT: 92,
+	TWITTER_BAD_COOKIE: 93,
+	TWITTER_EXPIRED_COOKIE: 94,
+	TWITTER_BLOCKED_ACCOUNT: 95,
+	TWITTER_DEFAULT_COOKIE: 96,
+	TWITTER_INVALID_COOKIE: 97,
+	MEDIUM_DEFAULT_COOKIE: 98,
+	MEDIUM_BAD_COOKIE: 99,
+	INSTAGRAM_BAD_COOKIE: 103,
+	INSTAGRAM_EXPIRED_COOKIE: 104,
+	INSTAGRAM_BLOCKED_ACCOUNT: 105,
+	INSTAGRAM_DEFAULT_COOKIE: 106,
+	INSTAGRAM_INVALID_COOKIE: 107,
+	FACEBOOK_BAD_COOKIE: 113,
+	FACEBOOK_EXPIRED_COOKIE: 114,
+	FACEBOOK_BLOCKED_ACCOUNT: 115,
+	FACEBOOK_DEFAULT_COOKIE: 116,
+	FACEBOOK_INVALID_COOKIE: 117,
+	FACEBOOK_TIMEOUT: 118,
+}
+
 // }
 
 /**
@@ -131,6 +161,7 @@ const _handleGoogle = urlObject => {
 const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
 class StoreUtilities {
+
 	constructor(nick, buster) {
 		this.nick = nick
 		this.buster = buster
@@ -143,6 +174,10 @@ class StoreUtilities {
 		} else {
 			this.test = false
 		}
+	}
+
+	get ERROR_CODES() {
+		return ERROR_CODES
 	}
 
 	// Function to print beautiful logs
@@ -462,8 +497,8 @@ class StoreUtilities {
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		this.log("Saving data...", "loading")
-		const v8 = require("v8")
-		let date
+		// const v8 = require("v8")
+		// let date
 		if (schema) {
 			const newResult = []
 			for (let i = 0; i < csvResult.length; i++) {
@@ -480,12 +515,12 @@ class StoreUtilities {
 			csvResult = newResult
 		// If no schema is supplied, the function will try to create a csv with all gaps filled
 		} else {
-			date = new Date()
+			// date = new Date()
 			const newResult = []
-			console.log("part1")			
+			// console.log("part1")			
 			const fields = this._getFieldsFromArray(csvResult)
-			console.log("part2:", new Date() - date)
-			date = new Date()			
+			// console.log("part2:", new Date() - date)
+			// date = new Date()			
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
@@ -493,32 +528,32 @@ class StoreUtilities {
 				}
 				newResult.push(newItem)
 			}
-			console.log("part3:", new Date() - date)
-			date = new Date()
+			// console.log("part3:", new Date() - date)
+			// date = new Date()
 			csvResult = newResult
 		}
-		console.log("v8", v8.getHeapStatistics())
+		// console.log("v8", v8.getHeapStatistics())
 		const csvUrl = await this.buster.saveText(await jsonexport(csvResult), name + ".csv")
 		this.log(`CSV saved at ${csvUrl}`, "done")
-		console.log("v8", v8.getHeapStatistics())
+		// console.log("v8", v8.getHeapStatistics())
 
-		console.log("part4:", new Date() - date)
-		date = new Date()
+		// console.log("part4:", new Date() - date)
+		// date = new Date()
 		const backupResultObject = { csvUrl }
 		if (saveJson) {
 			const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
 			this.log(`JSON saved at ${jsonUrl}`, "done")
-			console.log("part5:", new Date() - date)
+			// console.log("part5:", new Date() - date)
 			backupResultObject.jsonUrl = jsonUrl
 		}
-		date = new Date()
+		// date = new Date()
 		try {
 			await this.buster.setResultObject(jsonResult)
 		} catch (error) {
 			await this.buster.setResultObject(backupResultObject)
 		}
 		this.log("Data successfully saved!", "done")
-		console.log("part6:", new Date() - date)
+		// console.log("part6:", new Date() - date)
 		if (this.test) {
 			this.output += "|END|"
 			this._testResult(csvResult)
@@ -716,5 +751,7 @@ class StoreUtilities {
 	}
 
 }
+
+StoreUtilities.ERROR_CODES = ERROR_CODES 
 
 module.exports = StoreUtilities

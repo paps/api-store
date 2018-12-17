@@ -29,9 +29,8 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"type": "url",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
-						"label": "Spreadsheet URL of company names to find <a href=\"/api-store/4372/linkedin-company-url-finder#section_argument\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of company names to find, or single search terms <a href=\"/api-store/4372/linkedin-company-url-finder#section_argument\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get company names <a href=\"/api-store/4372/linkedin-company-url-finder#section_5columnname\" target=\"_blank\">(?)</a>",

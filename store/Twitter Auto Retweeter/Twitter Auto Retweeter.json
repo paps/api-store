@@ -1,0 +1,125 @@
+{
+	"slug": "twitter-auto-retweeter",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)"
+	},
+	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"url": "Tweet URL",
+		"likes": "Likes count",
+		"rt": "Retweets count",
+		"replies": "Replies count",
+		"timestamp": "Time when retweet action was made"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Twitter auth_token session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Twitter auth_token cookie"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile URL"
+					},
+					"columnName": {
+						"label": "Column name where Twitter profile URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Twitter Profile"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch <b>(default 10)</b> <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"retweetsPerLaunch": {
+						"label": "Number of retweets to make for each profiles <b>(default 1)</b>",
+						"inputType": "number",
+						"placeholder": 1
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"retweetsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 100,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
