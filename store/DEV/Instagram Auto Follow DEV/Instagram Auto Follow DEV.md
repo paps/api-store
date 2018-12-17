@@ -15,7 +15,7 @@ Start getting more followers today by setting up our tool in a few easy steps.
 - **Session cookie**: Your session cookie from Instagram.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it.
 - **Number of profiles per launch**: The number of profiles to follow per launch.
-- **Action**: Choose between Follow / Unfollow / Unfollow only if they don't follow you
+- **Action**: Choose between Follow / Unfollow / Unfollow only if they don't follow you / Block / Unblock
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
