@@ -1,19 +1,43 @@
-# Find out who is following an Instagram account
-The 1st step in order to know who is following a specific Instagram account is to actually list the followers. With this API, choose your own or any Instagram account and get in seconds a clear listing of every follower, including their own:
-* Instagram Profile Url
-* Full Name
+# Extract a list of every followers of one or many Instagram profile(s)
 
-# What will you need? ⚙️ 
+If you want to have more followers on Instagram, you need to know which crowd would be interested in you and your content. 
 
-- **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it, or a single specific Instagram URL.
-- **Number of followers to collect per profile**: If you want a fixed number of followers scraped (or all of them if empty).
-- **Number of profiles to process per launch**: The number of lines from your spreadsheet to process.
+These interesting people are probably already following some influencers or brands. 
 
-_(**You already have all that?**  Click straight away on **"Use this API"**)_
+This API does the hard job of going through a list of people you like and extracts all their followers. 
+
+This is the first step in building a follow/unfollow strategy and having more targeted, active, real followers on Instagram.
+
+## 📚 Related tutorials & strategies
+
+[📜 Find your next 30,000 Instagram followers in 5 minutes: ](https://blog.phantombuster.com/find-your-next-30-000-instagram-followers-in-5-minutes-ce482cf079cb) This tutorial will explain this API, showing not only how to use it but also how to choose the right influencers to extract followers from.
+
+[📜 6000 followers on Instagram in 100 days Tutorial: ](https://blog.phantombuster.com/6000-instagram-followers-in-100-days-a-realistic-and-achievable-instagram-automation-process-9965e2324162) This tutorial is an easy step-by-step guide. You'll learn the best way to grow your following on Instagram with real people who like your content.
+
+## ℹ️ Recommendations
+
+Instagram limits the amount of followers you can extract over a period of time. It's called the *rate limit*. On Instagram after scraping **9000 followers** you'll need to wait for about **15min** before being allowed to scrape again. 
+
+Re-launching the API will simply trigger a 'Rate Limit reached' error from Instagram. In order to schedule launches, go to the [Repetition Setup step](#repetition_setup) section.
+
+## ⏳ Execution speed
+
+This API will extract 9000 profiles **in about 2 minutes**. As mentioned above, you can not extract more than about 9000 profiles every 15min.
+
+# How to start extracting Followers step-by-step.
+
+## 0. Necessary information 
+
+To start using Instagram Follower Extractor, you'll need:
+
+- An **"Instagram account or Spreadsheet URL "**: In order to know **_who_ to extract from**, Phantombuster needs an _input_. This input can either be a single Instagram handle such as https://instagram.com/phantombuster or a spreadsheet with one account URL per row. We recommend using Google Spreadsheet to build this input file. Click on Share the URL to make it publicly accessible to Phantombuster.
+
+- **"Session cookie"**: This is your Twitter `auth_token` session cookie. You'll have more details in Step 5 of this tutorial.
 
 
-# Which steps to follow?
+_(**Already have all that?**  Click straight away on **"Use this API"**)_
+
+
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
@@ -32,7 +56,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 ## 4. Instagram authentication 🔑 { argument }
 Because the script will manipulate Instagram for you, it needs to be logged on your Instagram account. For that you just need to copy paste your session cookie in the script argument:
 * Using Chrome, go to your Instagram homepage and open the inspector
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ Right-click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
 → <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
 or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
@@ -67,17 +91,27 @@ You can specify the name of the column that contains the profile links. Simply e
 You can also enter a CSV file URL, it will work the same :)
 You can also enter a single Instagram profile URL directly in the field.
 
+## 6. Specify how many followers you want to extract
 
+**Column name from which to get profile URLs**: In case your list of input profiles isn't in the first column of your input spreadsheet, write here the name of the input column. Not 'A' but the name on the first row, _profileUrl_ for example.
 
-# Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" to try your script!
+**Number of followers to collect per profile**: This is the number of accounts you want to extract per profile in total. If you want to scrape every followers, just leave that field blank.
+
+**Number of profiles to process per launch**: Each time you'll launch an agent, how many profiles should it scrape? Leave that field blank in order to scrape the whole input spreadsheet.
+
+**Name of resulting CSV file**: If you want to, you can specify the name of the file you'll be saving all the followers in.
+
+Don't forget to click on 💾 Save before leaving.
+
+## 7. Launch to try it.
+
+You API is ready, you can Launch it once by clicking
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+## 8. (Optional) Repetition setup { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
-
+Whether you are scraping massive followings or want to scrape the latest new followers of a few influencers, you might be interested in **scheduling launches**.
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
@@ -90,10 +124,3 @@ Then, select a frequency:
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
 For example, 10 profiles processed per launch, 8 launches per day: you'll process a total of 80 profiles per day.
-
-
-# Limits
-
-Please be aware that this API will manipulate your Instagram account on your behalf.
-
-Instagram has set rate limits of 200 requests an hour per token. We have noticed that after a few thousands followers collected, you'll need to wait around 15 minutes before scraping again. We recommend spacing launches consequently.
