@@ -43,16 +43,15 @@ const isTwitterUrl = url => {
 }
 
 /**
- * TODO: get rid off promoted tweets while scraping
  * @param {Object} arg
  * @param {Function} cb
  * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
  */
 const scrapeTweets = (arg, cb) => {
-	const tweets = document.querySelectorAll("div.tweet.js-stream-tweet.js-actionable-tweet")
+	const tweets = document.querySelectorAll("li.js-stream-item:not(.has-profile-promoted-tweet) div.tweet.js-stream-tweet.js-actionable-tweet")
 	const res = [ ...tweets ].map((tweet, index) => {
 		// Skip promoted tweets
-		if (tweet.classList.contains("promoted-tweet")) {
+		if (getComputedStyle(tweet.parentNode).display === "none") {
 			return null
 		}
 		const item = { index: index + 1 }
@@ -110,7 +109,7 @@ const scrapeTweets = (arg, cb) => {
  */
 const retweet = async (tab, bundle) => {
 	try {
-	await tab.click(`div.tweet.js-stream-tweet.js-actionable-tweet:nth-child(${bundle.index}) button.js-actionRetweet`)
+	await tab.click(`li.js-stream-item:not(.has-profile-promoted-tweet):nth-child(${bundle.index}) div.tweet.js-stream-tweet.js-actionable-tweet button.js-actionRetweet`)
 	await tab.waitUntilVisible("div.RetweetDialog-modal", 15000)
 	await tab.click("div.tweet-button button.retweet-action")
 	await tab.waitWhileVisible("div.RetweetDialog-modal", 15000)
