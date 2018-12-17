@@ -33,11 +33,11 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Twitter auth_token session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Twitter auth_token session cookie <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_4createanicespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile URL"
 					},
 					"columnName": {
@@ -46,7 +46,7 @@
 						"placeholder": "Twitter Profile"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch <b>(default 10)</b> <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch <b>(default 10)</b> <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10
