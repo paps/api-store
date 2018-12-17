@@ -18,6 +18,12 @@ class LinkedIn {
 
 	// url is optional (will open LinkedIn feed by default)
 	async login(tab, cookie, url) {
+		let agentObject = {}
+		try {
+			agentObject = await this.buster.getAgentObject()
+		} catch (err) {
+			this.utils.log("Couln't access Agent Object.", "warning")
+		}
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
@@ -73,6 +79,10 @@ class LinkedIn {
 						this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
 						console.log("")
 					}
+					agentObject.lastCookie = this.originalSessionCookie
+					agentObject.lastCookieTimestamp = (new Date()).toISOString()
+					await this.buster.setAgentObject(agentObject)
+					console.log("settingaowith", agentObject)
 					return null
 				}
 			}
@@ -80,14 +90,12 @@ class LinkedIn {
 		}
 
 		try {
-			const ao = await this.buster.getAgentObject()
-
-			if ((typeof(ao[".sessionCookie"]) === "string") && (ao[".originalSessionCookie"] === this.originalSessionCookie)) {
+			if ((typeof(agentObject[".sessionCookie"]) === "string") && (agentObject[".originalSessionCookie"] === this.originalSessionCookie)) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
 					name: "li_at",
-					value: ao[".sessionCookie"],
+					value: agentObject[".sessionCookie"],
 					domain: "www.linkedin.com"
 				})
 				// first login try with cookie from agent object
@@ -113,6 +121,13 @@ class LinkedIn {
 			if (this.utils.test) {
 				console.log("Debug:")
 				console.log(error)
+			}
+			console.log("agentObject", agentObject)
+			console.log("this.originalSessionCookie: ", this.originalSessionCookie)
+			console.log("equal: ", agentObject.lastCookie === this.originalSessionCookie)
+			if (agentObject.lastCookie === this.originalSessionCookie) {
+				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
+				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
 			}
 			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			if (this.originalSessionCookie.length < 100) {
