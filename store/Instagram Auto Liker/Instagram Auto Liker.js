@@ -165,37 +165,43 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberOfPostsPerProfile, action, csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, profileUrls, columnName, numberOfLinesPerLaunch, numberOfPostsPerProfile, action, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let urls
+	let urls = profileUrls
 	let result = await utils.getDb(csvName + ".csv")
-	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
+	if (spreadsheetUrl && spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(spreadsheetUrl)
 		if (urls) {	
 			urls = [ urls ]
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
-	} else { // CSV
-		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-		urls = urls.filter(str => str) // removing empty lines
-		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
-			urls[i] = cleanInstagramUrl(urls[i])
+	} else {
+		if (spreadsheetUrl) { // CSV
+			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		} else if (typeof profileUrls === "string") {
+			urls = [profileUrls]
 		}
-		if (!numberOfLinesPerLaunch) {
-			numberOfLinesPerLaunch = urls.length
+		if (urls.length) {
+			urls = urls.filter(str => str) // removing empty lines
+			for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
+				urls[i] = cleanInstagramUrl(urls[i])
+			}
+			if (!numberOfLinesPerLaunch) {
+				numberOfLinesPerLaunch = urls.length
+			}
+			const oldUrls = urls
+			urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfLinesPerLaunch)
+			if (urls.length === 0) {
+				utils.log(`All ${oldUrls.length} lines have been processed. Restarting from line 1.`, "info")
+				result = []
+				urls = oldUrls.slice(0, numberOfLinesPerLaunch)
+			}
 		}
-		const oldUrls = urls
-		urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfLinesPerLaunch)
-		if (urls.length === 0) {
-			utils.log(`All ${oldUrls.length} lines have been processed. Restarting from line 1.`, "info")
-			result = []
-			urls = oldUrls.slice(0, numberOfLinesPerLaunch)
-		}
-		if (urls.length === 0) {
-			utils.log("Input spreadsheet is empty OR we already processed all the profiles from this spreadsheet.", "warning")
-			nick.exit()
-		}
+	}	
+	if (urls.length === 0) {
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		nick.exit()
 	}
 	console.log(`URLs to process: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()

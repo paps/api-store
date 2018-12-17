@@ -3,7 +3,7 @@
 	"description": "Automatically like a list of Instagram Profiles and/or of Instagram Posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Liker/Instagram+Auto+Liker.png",
 	"hidden": false,
-	"new": false,
+	"new": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
@@ -74,8 +74,7 @@
 				"minLength": 15
 			},
 			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
@@ -97,6 +96,35 @@
 				"type": "string",
 				"required": false
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }
