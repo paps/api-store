@@ -110,8 +110,7 @@
                 "minLength": 15
             },
             "spreadsheetUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
             },
             "columnName": {
                 "type": "string"
@@ -153,6 +152,35 @@
 				"type": "string",
 				"required": false
 			}
-        }
+        },
+        "oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
     }
 }
