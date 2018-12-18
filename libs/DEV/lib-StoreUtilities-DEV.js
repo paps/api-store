@@ -153,7 +153,7 @@ const _handleGoogle = async urlObject => {
 				if (docId.endsWith("/")) {
 					docId = docId.slice(0, -1)
 				}
-				_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+				_url = `${driveTemplateURL}${docId}&export=download`
 			}
 		} else if (urlObject.pathname.startsWith(docIdPattern)) {
 			let extractedDocId = urlObject.pathname.replace(docIdPattern, "")
@@ -772,6 +772,6 @@ class StoreUtilities {
 
 }
 
-StoreUtilities.ERROR_CODES = ERROR_CODES 
+StoreUtilities.ERROR_CODES = ERROR_CODES
 
 module.exports = StoreUtilities

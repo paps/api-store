@@ -74,17 +74,38 @@ const _downloadCsv = url => {
 
 /**
  * @async
+ * @description Function used to trigger an intentional 302 HTTP to retrieve a secure download URL to get the CSV content
+ * @param {String} url - Drive open ID URL
+ * @return {Primise<String>} Google secure download
+ * @throws String when there is now location headers from the 302 response
+ */
+const getDriveSecureLink = url => {
+	return new Promise((resolve, reject) => {
+		needle.get(url, (err, resp) => {
+			if (err) {
+				reject(err)
+			}
+			if (resp.statusCode === 302) {
+				resolve(resp.headers.location)
+			}
+			reject(`${url} is not a valid CSV`)
+		})
+	})
+}
+
+/**
+ * @async
  * @internal
  * @description Private handler used to download a csv file from Google Docs or Google Drive
  * @param {Object} urlObject - node URL object representing the target URL
  * @return {Promise<Object>} Http body response
  * @throws if there were an error during the download process
  */
-const _handleGoogle = urlObject => {
+const _handleGoogle = async urlObject => {
 	let _url = null
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
+	let driveTemplateURL = "https://drive.google.com/uc?id="
 	let docIdPattern
-
 	if (urlObject.hostname === "docs.google.com") {
 		docIdPattern = "/spreadsheets/d/"
 
@@ -120,7 +141,7 @@ const _handleGoogle = urlObject => {
 				if (docId.endsWith("/")) {
 					docId = docId.slice(0, -1)
 				}
-				_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+				_url = `${driveTemplateURL}${docId}&export=download`
 			}
 		} else if (urlObject.pathname.startsWith(docIdPattern)) {
 			let extractedDocId = urlObject.pathname.replace(docIdPattern, "")
@@ -128,7 +149,7 @@ const _handleGoogle = urlObject => {
 			if (extractedDocId.indexOf("/") > -1) {
 				extractedDocId = extractedDocId.split("/").shift()
 			}
-			_url = `${gdocsTemplateURL}${extractedDocId}/export?format=csv`
+			_url = await getDriveSecureLink(`${driveTemplateURL}${extractedDocId}&export=download`)
 		}
 	}
 
@@ -142,9 +163,8 @@ const _handleGoogle = urlObject => {
  * @async
  * @internal
  * @description Private function used to forge CSV downloadable URL
- * @param {String} url - URL to use
- * @param {Object} urlRepresentation - nodejs URL object
- * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ * @param {Object} urlObject - nodejs URL object
+ * @return {Promise<String>} HTTP body otherwise HTTP error
  */
 const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
