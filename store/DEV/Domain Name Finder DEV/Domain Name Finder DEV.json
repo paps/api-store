@@ -57,8 +57,7 @@
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will process 100 lines per launch",
-						"inputType": "number",
-						"placeholder": 100
+						"inputType": "number"
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
@@ -85,7 +84,7 @@
 			},
 			"numberOfLinesPerLaunch": {
 				"type": "number",
-				"minimum": 1
+				"required": false
 			},
 			"csvName": {
 				"type": "string",
