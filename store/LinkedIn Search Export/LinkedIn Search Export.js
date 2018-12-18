@@ -69,31 +69,30 @@ const scrapeResultsAll = (arg, callback) => {
 	const data = []
 	for (const result of results) {
 		let url
-		let newInfos = {}
+		let scrapedData = {}
 		if (arg.searchCat === "jobs") {
 			if (result.querySelector("div") && result.querySelector("div").dataset) {
 				const jobId = result.querySelector("div").dataset.jobId
-				newInfos.jobId = jobId
-				newInfos.url = "https://www.linkedin.com/jobs/view/" + jobId
+				scrapedData.jobId = jobId
+				scrapedData.url = "https://www.linkedin.com/jobs/view/" + jobId
 			}
 			if (!result.querySelector("img.job-card-search__logo-image").classList.contains("ghost-company") && result.querySelector("img.job-card-search__logo-image").classList.contains("loaded")) {
-				newInfos.logoUrl = result.querySelector("img.job-card-search__logo-image").src
+				scrapedData.logoUrl = result.querySelector("img.job-card-search__logo-image").src
 			}
 			if (result.querySelector("h4.job-card-search__company-name")) {
-				newInfos.companyName = result.querySelector("h4.job-card-search__company-name").textContent
+				scrapedData.companyName = result.querySelector("h4.job-card-search__company-name").textContent
 			}
 			if (result.querySelector("h3.job-card-search__title")) {
-				newInfos.jobTitle = result.querySelector("h3.job-card-search__title").textContent.trim()
+				scrapedData.jobTitle = result.querySelector("h3.job-card-search__title").textContent.trim()
 			}
 			if (result.querySelector("h5.job-card-search__location span") && result.querySelector("h5.job-card-search__location span").nextSibling) {
-				newInfos.location = result.querySelector("h5.job-card-search__location span").nextSibling.wholeText.trim()
+				scrapedData.location = result.querySelector("h5.job-card-search__location span").nextSibling.wholeText.trim()
 			}
 			if (result.querySelector("p.job-card-search__description-snippet")) {
-				newInfos.description = result.querySelector("p.job-card-search__description-snippet").innerText.trim()
+				scrapedData.description = result.querySelector("p.job-card-search__description-snippet").innerText.trim()
 			}
 		} else if (result.querySelector(".search-result__result-link")) {
 			url = result.querySelector(".search-result__result-link").href
-			newInfos.url = url
 			if (arg.searchCat === "people") {
 				let currentJob = "none"
 				let pastJob = "none"
@@ -121,82 +120,83 @@ const scrapeResultsAll = (arg, callback) => {
 					}
 				}
 				if ((url !== window.location.href + "#") && (url.indexOf("www.linkedin.com/in") > -1)) {
+					scrapedData.url = url
 					if (currentJob && currentJob !== "none" && !pastJob) {
-						newInfos.currentJob = currentJob
+						scrapedData.currentJob = currentJob
 					} else if (pastJob && !currentJob) {
-						newInfos.pastJob = pastJob
+						scrapedData.pastJob = pastJob
 					} else if (currentJob !== "none") {
-						newInfos.currentJob = currentJob
+						scrapedData.currentJob = currentJob
 					}
 					if (result.querySelector("figure.search-result__image > img")) {
-						newInfos.name = result.querySelector("figure.search-result__image > img").alt
+						scrapedData.name = result.querySelector("figure.search-result__image > img").alt
 						/**
 						 * NOTE: If the script a CSS class named .ghost-person it means that the profile doesnt't contain an image
 						 */
 						if (!result.querySelector("figure.search-result__image > img").classList.contains("ghost-person") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
-							newInfos.profileImageUrl = result.querySelector("figure.search-result__image > img").src
+							scrapedData.profileImageUrl = result.querySelector("figure.search-result__image > img").src
 						}
 					} else {
 						if (result.querySelector(".name")) {
-							newInfos.name = result.querySelector(".name").textContent
+							scrapedData.name = result.querySelector(".name").textContent
 						}
 						if (result.querySelector("figure.search-result__image div[aria-label]")) {
-							newInfos.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
+							scrapedData.profileImageUrl = result.querySelector("figure.search-result__image div[aria-label]").style["backgroundImage"].replace("url(\"", "").replace("\")", "").trim()
 						}
 					}
-					if (newInfos.name) {
-						const nameArray = newInfos.name.split(" ")
+					if (scrapedData.name) {
+						const nameArray = scrapedData.name.split(" ")
 						const firstName = nameArray.shift()
 						const lastName = nameArray.join(" ")
-						newInfos.firstName = firstName
+						scrapedData.firstName = firstName
 						if (lastName) {
-							newInfos.lastName = lastName
+							scrapedData.lastName = lastName
 						}
 					}
 				} else {
-					newInfos.error = "Profile out of your network."
+					scrapedData.error = "Profile out of your network."
 				}
-				if (result.querySelector("div.search-result__info > p.subline-level-1")) { newInfos.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
-				if (result.querySelector("div.search-result__info > p.subline-level-2")) { newInfos.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
+				if (result.querySelector("div.search-result__info > p.subline-level-1")) { scrapedData.job = result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() }
+				if (result.querySelector("div.search-result__info > p.subline-level-2")) { scrapedData.location = result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() }
 			} else if (arg.searchCat !== "groups" && result.querySelector("figure.search-result__image > img")) {
-					newInfos.name = result.querySelector("figure.search-result__image > img").alt
+					scrapedData.name = result.querySelector("figure.search-result__image > img").alt
 			} else if (result.querySelector(".search-result__title")) {
-				newInfos.name = result.querySelector(".search-result__title").innerText
+				scrapedData.name = result.querySelector(".search-result__title").innerText
 			}
 			if (arg.searchCat === "companies") {
-				newInfos.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
+				scrapedData.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
 				// .ghost-company class it means that the profile doesnt't contain a logo
 				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-company") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
-					newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
+					scrapedData.logoUrl = result.querySelector("figure.search-result__image > img").src
 				}
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
-					newInfos.description = result.querySelector("p.subline-level-1").textContent.trim()
+					scrapedData.description = result.querySelector("p.subline-level-1").textContent.trim()
 				}
 			}
 			if (arg.searchCat === "groups") {
-				newInfos.groupId = new URL(url).pathname.replace(/[^\d]/g, "")
+				scrapedData.groupId = new URL(url).pathname.replace(/[^\d]/g, "")
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
-					newInfos.memberCount = parseInt(result.querySelector("p.subline-level-1").textContent.replace(/[^\d]/g, ""), 10)
+					scrapedData.memberCount = parseInt(result.querySelector("p.subline-level-1").textContent.replace(/[^\d]/g, ""), 10)
 				}
 			}
 			if (arg.searchCat === "schools") {
 				// .ghost-school class it means that the profile doesnt't contain a logo
 				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-school") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
-					newInfos.logoUrl = result.querySelector("figure.search-result__image > img").src
+					scrapedData.logoUrl = result.querySelector("figure.search-result__image > img").src
 				}
-				newInfos.schoolId = new URL(url).pathname.replace(/[^\d]/g, "")
+				scrapedData.schoolId = new URL(url).pathname.replace(/[^\d]/g, "")
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
-					newInfos.location = result.querySelector("p.subline-level-1").textContent.trim()
+					scrapedData.location = result.querySelector("p.subline-level-1").textContent.trim()
 				}
 				if (result.querySelector("p.subline-level-2") && result.querySelector("p.subline-level-2").textContent) {
-					newInfos.studentsAndAlumniCount = parseInt(result.querySelector("p.subline-level-2").textContent.replace(/[^\d]/g, ""), 10)
+					scrapedData.studentsAndAlumniCount = parseInt(result.querySelector("p.subline-level-2").textContent.replace(/[^\d]/g, ""), 10)
 				}
 			}
 		}
-		if (arg.query) { newInfos.query = arg.query	}
-		newInfos.category = arg.searchCat.charAt(0).toUpperCase() + arg.searchCat.substr(1)
-		newInfos.timestamp = (new Date()).toISOString()
-		data.push(newInfos)
+		if (arg.query) { scrapedData.query = arg.query	}
+		scrapedData.category = arg.searchCat.charAt(0).toUpperCase() + arg.searchCat.substr(1)
+		scrapedData.timestamp = (new Date()).toISOString()
+		data.push(scrapedData)
 	}
 	callback(null, data)
 
@@ -703,8 +703,8 @@ const isLinkedInSearchURL = (targetUrl) => {
 			break
 		}
 	}
-	await linkedIn.saveCookie()
-	await utils.saveResults(result, result)
+	await utils.saveResults(result, result, csvName)
+	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
 	.catch(err => {

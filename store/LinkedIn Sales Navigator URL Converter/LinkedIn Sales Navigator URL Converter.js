@@ -113,6 +113,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 	}
 	utils.log(`${i} URLs converted.`, "done")
 	await utils.saveResults(result, result, csvName)
+	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
 	.catch(err => {
