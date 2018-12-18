@@ -26,7 +26,7 @@ You can do the same with all your Network Suggestions by using `https://www.link
 
 Combine it with our other LinkedIn APIs, <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a> for example, and you'll be able to connect at scale with the people you extracted.
 
-Do you want to find the email addresses of these people ? Use <a href="/api-store/3112/linkedin-profile-scraper", target="_blank">LinkedIn Profile Scraper</a> with [Hunter.io](hunter.io) or [DropContact.io](dropcontact.io).
+Do you want to find the email addresses of these people ? Use <a href="/api-store/3112/linkedin-profile-scraper", target="_blank">LinkedIn Profile Scraper</a> with [Hunter.io](http://www.hunter.io) or [DropContact.io](http://www.dropcontact.io).
 
 
 # Easy step-by-step tutorial to extract your LinkedIn Searches
