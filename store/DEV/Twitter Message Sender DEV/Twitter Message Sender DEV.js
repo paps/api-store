@@ -183,7 +183,7 @@ const sendMessage = async (tab, message) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let db
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries, noDatabase } = utils.validateArguments()
 	let csvHeaders = null
 	let rows = []
 	let msgTags = null
@@ -206,7 +206,7 @@ const sendMessage = async (tab, message) => {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
 	}
 
-	db = await utils.getDb(csvName + ".csv")
+	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl && isUrl(spreadsheetUrl)) {
 		if (isTwitterUrl(spreadsheetUrl)) {
@@ -264,7 +264,7 @@ const sendMessage = async (tab, message) => {
 		}
 	}
 	db.push(...res)
-	await utils.saveResults(db, db, csvName, false)
+	await utils.saveResults(noDatabase ? [] : db, noDatabase ? [] : db, csvName, false)
 	nick.exit()
 })()
 .catch(err => {

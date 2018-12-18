@@ -150,12 +150,12 @@ const findRTs = async (tab, retweetCount) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	const res = []
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries, noDatabase } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
 	}
-	const db = await utils.getDb(csvName + ".csv")
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	if (spreadsheetUrl) {
 		if (utils.isUrl(spreadsheetUrl)) {
 			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
@@ -187,7 +187,7 @@ const findRTs = async (tab, retweetCount) => {
 		}
 	}
 	db.push(...res)
-	await utils.saveResults(res, db, csvName, null)
+	await utils.saveResults(noDatabase ? [] : res, noDatabase ? [] : db, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
