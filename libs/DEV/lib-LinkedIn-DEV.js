@@ -29,7 +29,6 @@ class LinkedIn {
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
-			// console.log("this:", this.utils)
 			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
@@ -54,7 +53,7 @@ class LinkedIn {
 		// return a string in case of error, null in case of success
 		const _login = async () => {
 			const [httpCode] = await tab.open(url || "https://www.linkedin.com/feed/")
-			if (httpCode !== 200) {
+			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
@@ -89,7 +88,7 @@ class LinkedIn {
 		}
 
 		try {
-			if ((typeof(agentObject[".sessionCookie"]) === "string") && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".sessionCookie"] !== agentObject[".originalSessionCookie"]) {
+			if ((typeof(agentObject[".sessionCookie"]) === "string") && agentObject[".cookieTimestamp"] && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".sessionCookie"] !== agentObject[".originalSessionCookie"]) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
@@ -98,8 +97,12 @@ class LinkedIn {
 					domain: "www.linkedin.com"
 				})
 				// first login try with cookie from agent object
-				if (await _login() === null) {
-					return
+				try {
+					if (await _login() === null) {
+						return
+					}
+				} catch (err) {
+					//
 				}
 			}
 			
@@ -121,8 +124,6 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			console.log("agentObject", agentObject)
-			console.log("this.originalSessionCookie: ", this.originalSessionCookie)
 			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
 				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
@@ -168,7 +169,7 @@ class LinkedIn {
 		// return a string in case of error, null in case of success
 		const _login = async () => {
 			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/")
-			if (httpCode !== 200) {
+			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
@@ -177,7 +178,6 @@ class LinkedIn {
 			} catch (e) {
 				return e.toString()
 			}
-			console.log("sel:", sel)
 			if (sel === "form#login") {
 				console.log("Entering password...")
 				await tab.sendKeys("#session_key-login", "")	

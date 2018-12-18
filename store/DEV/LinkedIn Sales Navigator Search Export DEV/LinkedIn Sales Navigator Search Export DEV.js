@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
 
 const { parse, URL } = require("url")
 
@@ -19,9 +19,9 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 let notSalesNav
 
@@ -369,6 +369,7 @@ const isLinkedInSearchURL = (url) => {
 	}
 	utils.log(`${result.length} profiles found.`, "done")
 	await utils.saveResults(result, result, csvName)
+	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
 	.catch(err => {

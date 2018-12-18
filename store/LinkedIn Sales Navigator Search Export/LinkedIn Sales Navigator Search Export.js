@@ -369,6 +369,7 @@ const isLinkedInSearchURL = (url) => {
 	}
 	utils.log(`${result.length} profiles found.`, "done")
 	await utils.saveResults(result, result, csvName)
+	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
 	.catch(err => {

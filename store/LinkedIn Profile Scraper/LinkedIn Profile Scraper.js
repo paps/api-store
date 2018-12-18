@@ -193,6 +193,7 @@ const removeLinkedinSubdomains = url => {
 	} else {
 		jsonDb.push(...result)
 		await utils.saveResults(jsonDb, db, csvName, null, true)
+		await linkedIn.updateCookie()
 		nick.exit(0)
 	}
 })()

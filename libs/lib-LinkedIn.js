@@ -53,12 +53,13 @@ class LinkedIn {
 		// return a string in case of error, null in case of success
 		const _login = async () => {
 			const [httpCode] = await tab.open(url || "https://www.linkedin.com/feed/")
-			if (httpCode !== 200) {
+			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
 			try {
-				sel = await tab.untilVisible(["#extended-nav", "form.login-form", "#email-pin-challenge"], "or", 15000)			} catch (e) {
+				sel = await tab.untilVisible(["#extended-nav", "form.login-form", "#email-pin-challenge"], "or", 15000)	
+			} catch (e) {
 				return e.toString()
 			}
 			if (sel === "#email-pin-challenge") {
@@ -77,8 +78,8 @@ class LinkedIn {
 						this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
 						console.log("")
 					}
-					agentObject.lastCookie = this.originalSessionCookie
-					agentObject.lastCookieTimestamp = (new Date()).toISOString()
+					agentObject[".originalSessionCookie"] = this.originalSessionCookie
+					agentObject[".cookieTimestamp"] = (new Date()).toISOString()
 					await this.buster.setAgentObject(agentObject)
 					return null
 				}
@@ -87,7 +88,7 @@ class LinkedIn {
 		}
 
 		try {
-			if ((typeof(agentObject[".sessionCookie"]) === "string") && (agentObject[".originalSessionCookie"] === this.originalSessionCookie)) {
+			if ((typeof(agentObject[".sessionCookie"]) === "string") && agentObject[".cookieTimestamp"] && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".sessionCookie"] !== agentObject[".originalSessionCookie"]) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
@@ -96,8 +97,12 @@ class LinkedIn {
 					domain: "www.linkedin.com"
 				})
 				// first login try with cookie from agent object
-				if (await _login() === null) {
-					return
+				try {
+					if (await _login() === null) {
+						return
+					}
+				} catch (err) {
+					//
 				}
 			}
 
@@ -119,7 +124,7 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			if (agentObject.lastCookie === this.originalSessionCookie) {
+			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
 				this.utils.log("Session cookie not valid anymore. Please log in to LinkedIn to get a new one.", "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
 			}
@@ -162,7 +167,7 @@ class LinkedIn {
 		// return a string in case of error, null in case of success
 		const _login = async () => {
 			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/dashboard/")
-			if (httpCode !== 200) {
+			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
 			let sel
@@ -226,6 +231,25 @@ class LinkedIn {
 					".sessionCookie": cookie[0].value,
 					".originalSessionCookie": this.originalSessionCookie
 				})
+			} else {
+				throw `${cookie.length} cookies match filtering, cannot know which one to save`
+			}
+		} catch (e) {
+			this.utils.log("Caught exception when saving session cookie: " + e.toString(), "warning")
+		}
+	}
+
+	// save the .sessionCookie only if it's changed from .originalSessionCookie
+	async updateCookie() {
+		try {
+			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
+			if (cookie.length === 1) {
+				if (cookie[0].value !== this.originalSessionCookie) {
+					const agentObject = this.buster.getAgentObject
+					agentObject[".sessionCookie"] = cookie[0].value
+					agentObject[".cookieTimestamp"] = (new Date()).toISOString()
+					await this.buster.setAgentObject(agentObject)
+				}
 			} else {
 				throw `${cookie.length} cookies match filtering, cannot know which one to save`
 			}
