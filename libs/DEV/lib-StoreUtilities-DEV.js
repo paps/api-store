@@ -377,6 +377,14 @@ class StoreUtilities {
 			throw `${url} doesn't represent a CSV file`
 		}
 
+		/**
+		 * In some cases, papaparse can parse HTML pages whitout returning MissingQuotes nor InvalidQuotes
+		 * So we simply check if the downloaded target starts with the HTML doctype
+		 */
+		if (httpContent.toLowerCase().startsWith("<!doctype html>") > -1) {
+			throw `${url} doesn't represent a CSV file`
+		}
+
 		let column = 0
 		if (columnName) {
 			let i
