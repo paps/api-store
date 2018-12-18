@@ -24,20 +24,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 let notSalesNav
-
 // }
-
-
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.query) {
-			return false
-		}
-	}
-	return true
-}
-
 
 const createUrl = (search) => {
 	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`)
@@ -61,7 +48,12 @@ const scrapeResults = (arg, callback) => {
 	for (const result of results) {
 		if (result.querySelector(".name-link.profile-link")) {
 			const profileUrl = result.querySelector(".name-link.profile-link").href
-			let newData = { profileUrl }
+			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			const urlObject = new URL(profileUrl)
+			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
+			if (vmid) {
+				newData.vmid = vmid
+			}
 			if (result.querySelector(".name a")) {
 				newData.name = result.querySelector(".name a").title.trim()
 				if (newData.name) {
@@ -99,7 +91,6 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
-			newData.timestamp = (new Date()).toISOString()
 			data.push(newData)
 		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
@@ -114,7 +105,12 @@ const scrapeResultsLeads = (arg, callback) => {
 	for (const result of results) {
 		if (result.querySelector(".result-lockup__name")) {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
-			let newData = { profileUrl }
+			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			const urlObject = new URL(profileUrl)
+			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
+			if (vmid) {
+				newData.vmid = vmid
+			}
 			if (result.querySelector(".result-lockup__name")) {
 				newData.name = result.querySelector(".result-lockup__name").textContent.trim()
 				if (newData.name) {
@@ -307,7 +303,7 @@ const isLinkedInSearchURL = (url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl } = utils.validateArguments()
+	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
@@ -321,7 +317,7 @@ const isLinkedInSearchURL = (url) => {
 			searches = await utils.getDataFromCsv(searches)
 			searches = searches.filter(str => str) // removing empty lines
 			const lastUrl = searches[searches.length - 1]
-			searches = searches.filter(str => checkDb(str, result))
+			searches = searches.filter(str => utils.checkDb(str, result, "query"))
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
 			if (searches.startsWith("http")) {
@@ -354,7 +350,15 @@ const isLinkedInSearchURL = (url) => {
 				if (extractDefaultUrl) {
 					tempResult = await extractDefaultUrls(tempResult)
 				}
-				result = result.concat(tempResult)
+				if (removeDuplicateProfiles) {
+					for (let i = 0; i < tempResult.length; i++) {
+						if (!result.find(el => el.vmid === tempResult[i].vmid)) {
+							result.push(tempResult[i])
+						}
+					}
+				} else {
+					result = result.concat(tempResult)
+				}
 			} catch (err) {
 				utils.log(`Error : ${err}`, "error")
 			}
