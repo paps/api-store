@@ -1,17 +1,25 @@
-# Use names to find LinkedIn profiles 🔍
+# How to automatically find the LinkedIn Profiles of a list of names? 🔍
 
-You have THE prospect list somewhere. However, you lack the LinkedIn profiles that match people on that list. Once you have it, you'll be able to start a conversation with your future customers.
+You have a prospect list but you only have names and perhaps a company. **How to _quickly_ transform it in something valuable?**
 
-This API can easily be combined with our other LinkedIn APIs, most notably <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a>.
+This automation API will help you turn a dry prospect's list into valuable LinkedIn Profile URLs.
 
-# Our Solution
+## Our Solution
 Starting from a spreadsheet filled with a list of names, Phantombuster will use Web search engines to automatically match names with their LinkedIn profile URLs.
 
-# What will you need? ⚙️ 
-- **Spreadsheet URL**: link to a spreadsheet containing first and last names (and optionally company names)
-- **Column name**: title of the column from which to get names
+## Combine API and set your Prospection process on automatic. 
 
-# Which steps to follow?
+Once you'll have this list of Profiles, you'll be able to use other Phantombuster tools to **transform this people in valuable leads**.
+
+You could for example use <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a> and automatically connect with them on LinkedIn.
+
+Or you could extract email addresses out of a lot of them if you pair Phantombuster with [Hunter.io](http://www.hunter.io) or [DropContact.io](http://www.dropcontact.io). 
+
+Our tutorial [From a name to an email address](https://blog.phantombuster.com/from-a-name-to-an-email-address-5e31b804bebb) will explain each step in details.
+
+
+# Start using LinkedIn Prodile URL Finder ⚙️ 
+
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
@@ -27,7 +35,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 ## 4. Setting the Spreadsheet { argument }
-Prepare a spreadsheet with **first name**/**last name** in a single cell. It can either be a Google Spreadsheet or a CSV file. Make sure your file is publicly accessible on that URL!
+**Prepare a spreadsheet with your prospect name in a single cell**. We recommend using Google Spreadsheet to host that spreadsheet online. Make sure your file is publicly accessible on that URL.
 
 In order to match your search query with a LinkedIn profile our API will use different search engines such as Google, Duckduckgo, Bing and others...
 
