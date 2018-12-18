@@ -33,7 +33,7 @@ const inflateArguments = async urls => {
 	const ret = []
 	for (const url of urls) {
 		try {
-			const tmp = await utils.getDataFromCsv(url, null, false) // Set lib calls quiet
+			const tmp = await utils.getDataFromCsv2(url, null, false) // Set lib calls quiet
 			utils.log(`Getting data from ${url}...`, "loading")
 			utils.log(`Got ${tmp.length} lines from csv`, "done")
 			ret.push(...tmp)

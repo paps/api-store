@@ -86,7 +86,7 @@ const handleArguments = async argv => {
 
 	for (const arg of argv) {
 		try {
-			let urls = await utils.getDataFromCsv(arg.link, null, false)
+			let urls = await utils.getDataFromCsv2(arg.link, null, false)
 			utils.log(`Getting data from ${arg.link}...`, "loading")
 			utils.log(`Got ${urls.length} lines from csv`, "done")
 			urls = urls.map(el => {
