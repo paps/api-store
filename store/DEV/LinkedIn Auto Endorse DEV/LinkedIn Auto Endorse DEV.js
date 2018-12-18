@@ -3,6 +3,9 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
+
+const { URL } = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -25,6 +28,14 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 let linkedInScraper
 // }
+
+const isLinkedInProfile = url => {
+	try {
+		return (new URL(url)).pathname.startsWith("/in/")
+	} catch (err) {
+		return false
+	}
+}
 
 const DB_NAME = "database-linkedin-auto-endorse.csv"
 
@@ -130,7 +141,7 @@ nick.newTab().then(async (tab) => {
        ])
 
 	const db = await utils.getDb(DB_NAME)
-	const data = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const data = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	let profileUrls = data.filter(el => db.findIndex(line => el === line.url || linkedIn.getUsername(el) === linkedIn.getUsername(line.url)) < 0).slice(0, numberOfEndorsePerLaunch)
 
 	if (profileUrls.length < 1) {
