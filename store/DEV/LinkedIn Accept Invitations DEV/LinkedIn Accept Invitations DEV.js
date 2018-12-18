@@ -4,6 +4,8 @@
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
+/* eslint-disable no-unused-vars */
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
