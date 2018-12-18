@@ -12,7 +12,8 @@
 		"sessionCookie": "your_session_cookie",
 		"searches": "SpaceX engineer",
 		"numberOfProfiles": 25,
-		"extractDefaultUrl": false
+		"extractDefaultUrl": false,
+		"removeDuplicateProfiles": false
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
@@ -59,7 +60,10 @@
 					},
 					"extractDefaultUrl": {
                         "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> - takes longer, also visits each profile - <b>Do not use if you have hundreds of results!</b>"
-                    }
+					},
+					"removeDuplicateProfiles": {
+                        "rightLabel": "<b>Remove duplicate profiles</b>"
+					}
 				}
 			}
 		}
@@ -87,6 +91,10 @@
 				"required": false
 			},
 			"extractDefaultUrl": {
+				"type": "boolean",
+				"default": "false"
+			},
+			"removeDuplicateProfiles": {
 				"type": "boolean",
 				"default": "false"
             }
