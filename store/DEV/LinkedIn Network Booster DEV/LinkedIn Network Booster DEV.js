@@ -535,7 +535,7 @@ nick.newTab().then(async (tab) => {
 	cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
 	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null, false)
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

@@ -180,7 +180,6 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	} else {
 		utils.log(`${inviteCount} invitations kept.`, "done")
 	}
-	await linkedIn.saveCookie()
 	nick.exit()
 })()
 .catch(err => {

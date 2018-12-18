@@ -2,6 +2,9 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
+
+/* eslint-disable no-unused-vars */
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -160,6 +163,9 @@ const sendMessage = async (tab, url, message, invite) => {
 	}
 
 	await tab.wait(2500)
+	console.log("ON VA CLICK")
+	await tab.screenshot(`Tok${Date.now()}.png`)
+	await buster.saveText(await tab.getContent(), `ON VA CLICK${Date.now()}.html`)
 	await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
 	await tab.wait(2500)
 }
@@ -183,13 +189,20 @@ nick.newTab().then(async (tab) => {
 	const selectors = [ ".js-invitation-card__invite-details-container", "section.mn-invitation-manager__no-invites" ]
 
 	await linkedIn.login(tab, sessionCookie, "https://www.linkedin.com/mynetwork/invitation-manager/?filterCriteria=null")
+	console.log("getting started")
+	await tab.screenshot(`Gettingstarted${Date.now()}.png`)
+	await buster.saveText(await tab.getContent(), `Gettingstarted${Date.now()}.html`)
+	await tab.wait(2000)
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
 	const selector = await tab.waitUntilVisible(selectors, 10000, "or")
-	if (selector === selectors[1]) {
-		utils.log("No invite to accept.", "done")
-		nick.exit()
-	}
+	// if (selector === selectors[1]) {
+	// 	utils.log("No invite to accept.", "done")
+	// 	nick.exit()
+	// }
 	await loadProfilesUsingScrollDown(tab)
+	await tab.screenshot(`loadProfilesUsingScrollDown${Date.now()}.png`)
+	await buster.saveText(await tab.getContent(), `loadProfilesUsingScrollDown${Date.now()}.html`)
+	nick.exit()
 	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
 
 	if (invites.length > 0) {
@@ -217,7 +230,7 @@ nick.newTab().then(async (tab) => {
 	} else {
 		utils.log("No invites found with given criterias", "done")
 	}
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 })
 .then(() => {
 	utils.log("Job done!", "done")

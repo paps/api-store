@@ -266,6 +266,7 @@ const scrapeCommenters = (arg, cb) => {
 			}
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
+		console.log("response", response)
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
 		commenters.map(el => {
 			el.postUrl = url
@@ -275,7 +276,7 @@ const scrapeCommenters = (arg, cb) => {
 		voyagerHeadersFound = false
 		db.push(...utils.filterRightOuter(db, commenters))
 	}
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {

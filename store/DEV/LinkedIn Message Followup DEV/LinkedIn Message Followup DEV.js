@@ -256,7 +256,7 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	db.push(...result)	// TODO: edit the DB result instead of append
 	await utils.saveResults(db, [], csvName + ".csv", null, false)
-	await linkedin.saveCookie()
+	await linkedin.updateCookie()
 	nick.exit()
 })()
 .catch(err => {

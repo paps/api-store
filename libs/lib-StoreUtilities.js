@@ -6,6 +6,35 @@ const jsonexport = promisify(require("jsonexport"))
 const validator = require("is-my-json-valid")
 const needle = require("needle")
 const { URL, parse } = require("url")
+const ERROR_CODES = {
+	EMPTY_SPREADSHEET: 71,
+	CSV_NOT_PUBLIC: 72,
+	GO_NOT_ACCESSIBLE: 75,
+	LINKEDIN_BAD_COOKIE: 83,
+	LINKEDIN_EXPIRED_COOKIE: 84,
+	LINKEDIN_BLOCKED_ACCOUNT: 85,
+	LINKEDIN_DEFAULT_COOKIE: 82,
+	LINKEDIN_INVALID_COOKIE: 87,
+	TWITTER_RATE_LIMIT: 92,
+	TWITTER_BAD_COOKIE: 93,
+	TWITTER_EXPIRED_COOKIE: 94,
+	TWITTER_BLOCKED_ACCOUNT: 95,
+	TWITTER_DEFAULT_COOKIE: 96,
+	TWITTER_INVALID_COOKIE: 97,
+	MEDIUM_DEFAULT_COOKIE: 98,
+	MEDIUM_BAD_COOKIE: 99,
+	INSTAGRAM_BAD_COOKIE: 103,
+	INSTAGRAM_EXPIRED_COOKIE: 104,
+	INSTAGRAM_BLOCKED_ACCOUNT: 105,
+	INSTAGRAM_DEFAULT_COOKIE: 106,
+	INSTAGRAM_INVALID_COOKIE: 107,
+	FACEBOOK_BAD_COOKIE: 113,
+	FACEBOOK_EXPIRED_COOKIE: 114,
+	FACEBOOK_BLOCKED_ACCOUNT: 115,
+	FACEBOOK_DEFAULT_COOKIE: 116,
+	FACEBOOK_INVALID_COOKIE: 117,
+	FACEBOOK_TIMEOUT: 118,
+}
 // }
 
 /**
@@ -45,17 +74,38 @@ const _downloadCsv = url => {
 
 /**
  * @async
+ * @description Function used to trigger an intentional 302 HTTP to retrieve a secure download URL to get the CSV content
+ * @param {String} url - Drive open ID URL
+ * @return {Primise<String>} Google secure download
+ * @throws String when there is now location headers from the 302 response
+ */
+const getDriveSecureLink = url => {
+	return new Promise((resolve, reject) => {
+		needle.get(url, (err, resp) => {
+			if (err) {
+				reject(err)
+			}
+			if (resp.statusCode === 302) {
+				resolve(resp.headers.location)
+			}
+			reject(`${url} is not a valid CSV`)
+		})
+	})
+}
+
+/**
+ * @async
  * @internal
  * @description Private handler used to download a csv file from Google Docs or Google Drive
  * @param {Object} urlObject - node URL object representing the target URL
  * @return {Promise<Object>} Http body response
  * @throws if there were an error during the download process
  */
-const _handleGoogle = urlObject => {
+const _handleGoogle = async urlObject => {
 	let _url = null
 	let gdocsTemplateURL = "https://docs.google.com/spreadsheets/d/"
+	let driveTemplateURL = "https://drive.google.com/uc?id="
 	let docIdPattern
-
 	if (urlObject.hostname === "docs.google.com") {
 		docIdPattern = "/spreadsheets/d/"
 
@@ -91,7 +141,7 @@ const _handleGoogle = urlObject => {
 				if (docId.endsWith("/")) {
 					docId = docId.slice(0, -1)
 				}
-				_url = `${gdocsTemplateURL}${docId}/export?format=csv`
+				_url = `${driveTemplateURL}${docId}&export=download`
 			}
 		} else if (urlObject.pathname.startsWith(docIdPattern)) {
 			let extractedDocId = urlObject.pathname.replace(docIdPattern, "")
@@ -99,7 +149,7 @@ const _handleGoogle = urlObject => {
 			if (extractedDocId.indexOf("/") > -1) {
 				extractedDocId = extractedDocId.split("/").shift()
 			}
-			_url = `${gdocsTemplateURL}${extractedDocId}/export?format=csv`
+			_url = await getDriveSecureLink(`${driveTemplateURL}${extractedDocId}&export=download`)
 		}
 	}
 
@@ -113,9 +163,8 @@ const _handleGoogle = urlObject => {
  * @async
  * @internal
  * @description Private function used to forge CSV downloadable URL
- * @param {String} url - URL to use
- * @param {Object} urlRepresentation - nodejs URL object
- * @return {Promise<String|DownloadError>} HTTP body otherwise HTTP error
+ * @param {Object} urlObject - nodejs URL object
+ * @return {Promise<String>} HTTP body otherwise HTTP error
  */
 const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
@@ -132,6 +181,10 @@ class StoreUtilities {
 		} else {
 			this.test = false
 		}
+	}
+
+	get ERROR_CODES() {
+		return ERROR_CODES
 	}
 
 	// Function to print beautiful logs

@@ -27,15 +27,15 @@
 			"options": {
 				"fields": {
 					"uid": {
-						"label": "Medium UID session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Medium UID session cookie <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_0whatyoullneed\">(?)</a>",
 						"helper": "Medium UID cookie"
 					},
 					"sid": {
-						"label": "Medium SID session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Medium SID session cookie <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_0whatyoullneed\">(?)</a>",
 						"helper": "Medium SID cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_5settingupanicespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
@@ -44,7 +44,7 @@
 						"placeholder": "Medium Posts"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_repetition_setup\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10

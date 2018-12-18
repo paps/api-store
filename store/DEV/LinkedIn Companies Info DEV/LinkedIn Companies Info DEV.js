@@ -404,7 +404,6 @@ const isLinkedUrl = target => {
 			}
 		}
 	}
-	await linkedIn.saveCookie()
 	await utils.saveResult(result)
 })()
 	.catch(err => {
