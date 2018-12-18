@@ -325,7 +325,6 @@ class StoreUtilities {
 	 * @return {Promise<Array<String>>} CSV content
 	 */
 	async getDataFromCsv2(url, columnName, printLogs = true) {
-		// TODO: handle multiple columns with columnName as array
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -358,10 +357,10 @@ class StoreUtilities {
 		let data = raw.data
 		let result = []
 		/**
-		 * HACK: Downloaded content check
+		 * Downloaded content check
 		 * if there were MissingQuotes error during parsing process, we assume that the data is not representing a CSV
 		 */
-		if (raw.errors.find(el => el.code === "MissingQuotes")) {
+		if (raw.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
 			throw `${url} doesn't represent a CSV file`
 		}
 
