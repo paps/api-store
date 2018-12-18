@@ -21,7 +21,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Twitter = require("./lib-Twitter-DEV")
+const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 
 const DEFAULT_DB = "result"
@@ -42,12 +42,24 @@ const isTwitterUrl = url => {
 }
 
 /**
- * @param {Object} arg
+ * @param {String} url
+ * @return {Boolean}
+ */
+const isTweetUrl = url => {
+	try {
+		return (new URL(url)).pathname.split("/").findIndex(el => el === "status") > 1
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * @param {{ single: Boolean }} arg
  * @param {Function} cb
  * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
  */
 const scrapeTweets = (arg, cb) => {
-	const tweets = document.querySelectorAll("li.js-stream-item:not(.has-profile-promoted-tweet) div.tweet.js-stream-tweet.js-actionable-tweet")
+	const tweets = document.querySelectorAll(arg.single ? "div.tweet.js-actionable-tweet" : "li.js-stream-item:not(.has-profile-promoted-tweet) div.tweet.js-stream-tweet.js-actionable-tweet")
 	const res = [ ...tweets ].map((tweet, index) => {
 		// Skip promoted tweets
 		if (getComputedStyle(tweet.parentNode).display === "none") {
@@ -104,14 +116,15 @@ const scrapeTweets = (arg, cb) => {
  * TODO: handle retweet popup error
  * @param {Object} tab
  * @param {Object} Bundle
+ * @param {Boolean} [isSingle]
  * @return {Promise<Boolean>}
  */
-const retweet = async (tab, bundle) => {
+const retweet = async (tab, bundle, isSingle = false) => {
 	try {
-	await tab.click(`li.js-stream-item:not(.has-profile-promoted-tweet):nth-child(${bundle.index}) div.tweet.js-stream-tweet.js-actionable-tweet button.js-actionRetweet`)
-	await tab.waitUntilVisible("div.RetweetDialog-modal", 15000)
-	await tab.click("div.tweet-button button.retweet-action")
-	await tab.waitWhileVisible("div.RetweetDialog-modal", 15000)
+		await tab.click(isSingle ? "div.tweet.js-actionable-tweet button.js-actionRetweet" : `li.js-stream-item:not(.has-profile-promoted-tweet):nth-child(${bundle.index}) div.tweet.js-stream-tweet.js-actionable-tweet button.js-actionRetweet`)
+		await tab.waitUntilVisible("div.RetweetDialog-modal", 15000)
+		await tab.click("div.tweet-button button.retweet-action")
+		await tab.waitWhileVisible("div.RetweetDialog-modal", 15000)
 	} catch (err) {
 		utils.log(`Error while retweeting: ${err.message || err}`, "warning")
 		return false
@@ -122,6 +135,7 @@ const retweet = async (tab, bundle) => {
 }
 
 /**
+ * @async
  * @param {Object} tab
  * @param {Number} retweetCount
  * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
@@ -147,6 +161,28 @@ const findRTs = async (tab, retweetCount) => {
 	return tweets
 }
 
+/**
+ * @async
+ * @param {Object} tab
+ * @param {String} url
+ * @throws String on HTTP 404 code OR CSS failure
+ */
+const loadSingleTweet = async (tab, url) => {
+	const [ httpCode ] = await tab.open(url)
+
+	if (httpCode === 404) {
+		throw `Can't open ${url}`
+	}
+	await tab.waitUntilVisible("div.tweet", 7500)
+}
+
+/**
+ * @async
+ * @param {Object} tab
+ * @return {Promise<Array<{ url: String, likes: Number, rt: Number, replies: Number }>>}
+ */
+const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
+
 ;(async () => {
 	const tab = await nick.newTab()
 	const res = []
@@ -158,7 +194,7 @@ const findRTs = async (tab, retweetCount) => {
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	if (spreadsheetUrl) {
 		if (utils.isUrl(spreadsheetUrl)) {
-			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+			queries = isTwitterUrl(spreadsheetUrl) || isTweetUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else {
 			queries = [ spreadsheetUrl ]
 		}
@@ -171,16 +207,21 @@ const findRTs = async (tab, retweetCount) => {
 	queries = queries.slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
 	utils.log(`Twitter profiles: ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
-		const processUrl = isTwitterUrl(query) ? query : `https://www.twitter.com/${query}`
+		const processUrl = isTwitterUrl(query) || isTweetUrl(query) ? query : `https://www.twitter.com/${query}`
+		const isTweet = isTweetUrl(query)
 		try {
-			await twitter.openProfile(tab, processUrl)
+			if (!isTweet) {
+				await twitter.openProfile(tab, processUrl)
+			} else {
+				await loadSingleTweet(tab, processUrl)
+			}
 		} catch (err) {
 			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
 		}
-		let tweets = await findRTs(tab, retweetsPerLaunch)
+		let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
 		tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
 		for (const tweet of tweets) {
-			if (await retweet(tab, tweet)) {
+			if (await retweet(tab, tweet, isTweet)) {
 				delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
 				res.push(tweet)
 			}
