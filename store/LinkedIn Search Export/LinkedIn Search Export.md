@@ -1,4 +1,4 @@
-# Extract every result of a LinkedIn Search automatically (profiles, companies, content,.. ) in a single file.
+# Extract every result of a LinkedIn Search - Profiles, Companies, Content,.. - to a single file.
 
 🆕 Updated: Now handles more search categories: People, Jobs, Content, Companies, Groups, and even Schools!
 
@@ -18,28 +18,18 @@ You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch th
 
 ## Extract all your connections in a single file
 
-To scrape your first connections, use "http://linkedin.com/mynetwork/invite-connect/connections" as an input. 
+To scrape your first connections, use `http://linkedin.com/mynetwork/invite-connect/connections` as an input. 
 
-You can do the same with all your Network Suggestions by using "https://www.linkedin.com/mynetwork/" as an input.
+You can do the same with all your Network Suggestions by using `https://www.linkedin.com/mynetwork/` as an input.
 
 ## Combine API and set your Prospection process on automatic. 
 
 Combine it with our other LinkedIn APIs, <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a> for example, and you'll be able to connect at scale with the people you extracted.
 
-Do you want to find the email addresses of these people ? Use <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a> with Hunter.io or DropContact.io.
+Do you want to find the email addresses of these people ? Use <a href="/api-store/3112/linkedin-profile-scraper", target="_blank">LinkedIn Profile Scraper</a> with [Hunter.io](http://www.hunter.io) or [DropContact.io](http://www.dropcontact.io).
 
 
 # Easy step-by-step tutorial to extract your LinkedIn Searches
-
-## 0. What will you need?
-
-- **Session cookie**: Your session Cookie from LinkedIn
-- **Search**: The terms you want to search on the LinkedIn search engine.
-
-You can then specify additional options: 
-- _Circles_ if you want to limit the search to your 1st, 2nd, or 3rd+ degree connections.
-- _Category_ to specify what you're looking for: People, Jobs, Companies, Groups or Schools.
-- The _Number of pages_ you want to extract.
 
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). We browse the web for you so you can focus on not automatable tasks.
