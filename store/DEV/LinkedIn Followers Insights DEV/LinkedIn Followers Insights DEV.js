@@ -15,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -160,7 +161,7 @@ const onHttpRequest = e => {
 	} else {
 		utils.log("No followers found from the given profile", "warning")
 	}
-
+	await linkedIn.updateCookie()
 	await utils.saveResult(result, "followers")
 })()
 	.catch(err => {
