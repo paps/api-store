@@ -772,6 +772,6 @@ class StoreUtilities {
 
 }
 
-StoreUtilities.ERROR_CODES = ERROR_CODES 
+StoreUtilities.ERROR_CODES = ERROR_CODES
 
 module.exports = StoreUtilities
