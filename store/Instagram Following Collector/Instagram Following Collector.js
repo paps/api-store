@@ -239,7 +239,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowing, numberofProfilesperLaunch, csvName } = utils.validateArguments()
 	const tab = await nick.newTab()
-	await instagram.login(tab, sessionCookie)	
+	await instagram.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
 	result = await utils.getDb(csvName + ".csv")

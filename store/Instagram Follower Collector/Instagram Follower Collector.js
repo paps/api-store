@@ -242,12 +242,12 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowers, numberofProfilesperLaunch, csvName } = utils.validateArguments()
-	await instagram.login(tab, sessionCookie)
 	const tab = await nick.newTab()
+	await instagram.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
 	result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length	
+	const initialResultLength = result.length
 	try {
 		agentObject = await buster.getAgentObject()
 	} catch (err) {
@@ -259,7 +259,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	if (!numberMaxOfFollowers) { numberMaxOfFollowers = false }
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
-		if (urls) {	
+		if (urls) {
 			urls = [ urls ]
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
