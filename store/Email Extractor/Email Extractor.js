@@ -18,7 +18,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const DB_NAME = "result.csv"
+const DB_NAME = "result"
 const DEFAULT_WAIT_TIME = 5000
 const DEFAULT_PAGES_PER_LAUNCH = 2
 // }
@@ -102,9 +102,14 @@ const createCsvOutput = json => {
 }
 
 ;(async () => {
-	let { urls, timeToWait, pagesPerLaunch, queries } = utils.validateArguments()
+	let { urls, timeToWait, pagesPerLaunch, csvName, queries } = utils.validateArguments()
 	const tab = await nick.newTab()
-	let db = await utils.getDb(DB_NAME)
+
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+
+	let db = await utils.getDb(csvName + ".csv")
 	let i = 0
 
 	let scrapingRes = []
@@ -155,7 +160,7 @@ const createCsvOutput = json => {
 
 	db = db.concat(createCsvOutput(scrapingRes))
 
-	await utils.saveResults(scrapingRes, db, DB_NAME.split(".").shift(), null, false)
+	await utils.saveResults(scrapingRes, db, csvName, null, false)
 	nick.exit(0)
 })()
 .catch(err => {
