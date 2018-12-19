@@ -23,8 +23,8 @@ const LinkedInScraper = require("./lib-LinkedInScraper")
 let linkedInScraper
 let db
 
-const DB_NAME = "database-linkedin-auto-follow.csv"
-const DB_SHORT_NAME = DB_NAME.split(".").shift()
+const DB_NAME = "database-linkedin-auto-follow"
+// }
 
 // Check if a url is already in the csv
 const checkDb = (str, db) => {
@@ -128,33 +128,37 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-    let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
-    linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
-    db = await utils.getDb(DB_NAME)
-    let data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
-    data = data.filter(str => str) // removing empty lines
-    const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
-    await linkedIn.login(tab, sessionCookie)
-    utils.log(`Urls to ${unfollowProfiles ? "un" : ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")
-    for (let url of urls) {
-        try {
-            if (url){
-                url = await linkedInScraper.salesNavigatorUrlConverter(url)
-                utils.log(`${unfollowProfiles ? "Unf" : "F"}ollowing ${url}...`, "loading")
-                await addFollow(url, tab, unfollowProfiles, disableScraping)
-            } else {
-                utils.log("Empty line...", "warning")
-            }
-        } catch (error) {
-			utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url} because of an error: ${error}`, "warning")
-        }
-    }
-    await utils.saveResults(db, db, DB_SHORT_NAME, null, false)
-    await linkedIn.saveCookie()
-    utils.log("Job is done!", "done")
-    nick.exit(0)
+	let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, csvName, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
+
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
+	db = await utils.getDb(csvName + ".csv")
+	let data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+	data = data.filter(str => str) // removing empty lines
+	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
+	await linkedIn.login(tab, sessionCookie)
+	utils.log(`Urls to ${unfollowProfiles ? "un" : ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")
+	for (let url of urls) {
+		try {
+			if (url) {
+				url = await linkedInScraper.salesNavigatorUrlConverter(url)
+				utils.log(`${unfollowProfiles ? "Unf" : "F"}ollowing ${url}...`, "loading")
+				await addFollow(url, tab, unfollowProfiles, disableScraping)
+			} else {
+				utils.log("Empty line...", "warning")
+		    }
+		} catch (error) {
+				utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url} because of an error: ${error}`, "warning")
+		}
+	}
+	await utils.saveResults(db, db, csvName, null, false)
+	await linkedIn.saveCookie()
+	utils.log("Job is done!", "done")
+	nick.exit(0)
 })
 .catch((err) => {
-    utils.log(err, "error")
-    nick.exit(1)
+	utils.log(err, "error")
+	nick.exit(1)
 })
