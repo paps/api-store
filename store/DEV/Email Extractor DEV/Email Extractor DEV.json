@@ -7,8 +7,8 @@
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": true,
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"defaultArgument": {
 		"urls": [ "https://phantombuster.com" ],
 		"timeToWait": 5000,
@@ -34,6 +34,10 @@
 						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
 						"helper": "If the field is empty, the API will scrape only 2 pages"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"queries": {
 						"hidden": true,
@@ -62,6 +66,9 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 2
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"anyOf": [

@@ -84,6 +84,10 @@
 						"label": "Amount of pages to scrape for every API launchs",
 						"helper": "Leaving this field empty will make the API scrape all pages in one run",
 						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -129,6 +133,9 @@
 			"pageToScrapePerLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}
