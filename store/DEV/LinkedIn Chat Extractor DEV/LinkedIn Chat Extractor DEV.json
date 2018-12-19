@@ -53,6 +53,10 @@
 					},
 					"chronOrder": {
 						"rightLabel": "Get messages from <b>oldest to newest</b>"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV name",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -85,6 +89,9 @@
 			},
 			"chronOrder": {
 				"type": "boolean"
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"oneOf": [

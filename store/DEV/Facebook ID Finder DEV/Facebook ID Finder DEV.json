@@ -18,6 +18,10 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"label": "Spreadsheet URL <a target=\"_blank\" href=\"/api-store/3102/facebook-id-finder#section_4googlespreadsheet\">(?)</a>"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV name",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -30,6 +34,9 @@
 				"type": "string",
 				"title": "Spreadsheet URL",
 				"required": true
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}
