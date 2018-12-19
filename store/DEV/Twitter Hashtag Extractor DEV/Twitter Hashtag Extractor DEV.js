@@ -147,7 +147,7 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 }
 
 ;(async () => {
-	const tab = await nick.newTab()
+	let tab = await nick.newTab()
 	const res = []
 	let { spreadsheetUrl, columnName, numberOfPostsPerLaunch, csvName, queries, noDatabase } = utils.validateArguments()
 
@@ -160,7 +160,8 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 	}
 
 	if (spreadsheetUrl) {
-		queries = isUrl(spreadsheetUrl) ? await utils.getDataFromCsv(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
+		queries = isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
+		queries = [ ...new Set(queries) ] // Remove duplicated terms
 	}
 
 	if (typeof queries === "string") {
@@ -168,7 +169,7 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 	}
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
-	utils.log(`Hashtags to scrape: ${JSON.stringify(queries, null, 2)}`, "done")
+	utils.log(`Hashtags to scrape: ${JSON.stringify(queries.slice(0, 500), null, 2)}`, "done")
 	for (const query of queries) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -189,6 +190,8 @@ const extractTweets = async (tab, maxCount = DEFAULT_POSTS_COUNT) => {
 		const scrapingRes = await extractTweets(tab, numberOfPostsPerLaunch)
 		scrapingRes.forEach(el => el.query = query)
 		res.push(...scrapingRes)
+		await tab.close()
+		tab = await nick.newTab()
 	}
 	db.push(...utils.filterRightOuter(db, res))
 	await utils.saveResults(res, db, csvName, null)
