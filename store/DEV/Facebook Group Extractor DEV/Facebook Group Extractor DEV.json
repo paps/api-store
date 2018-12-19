@@ -5,7 +5,6 @@
     "gradientBegin": "#32C1F1",
     "gradientEnd": "#5477BC",
     "argumentDescription": "",
-    "hidden": true,
     "new": false,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
@@ -45,8 +44,7 @@
 							"Enter either a Facebook Group URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Facebook Group URL / Spreadsheet URL <a href=\"/api-store/6987/facebook-group-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
-						"placeholder": "https://www.facebook.com/groups/JavaScript.Programming"
+						"label": "Facebook Group URL / Spreadsheet URL <a href=\"/api-store/6987/facebook-group-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
                     },
                     "columnName": {
                         "label": "Column name from which to get groups URLs",
@@ -83,8 +81,7 @@
                 "minLength": 15
             },
             "groupsUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
             },
             "columnName": {
                 "type": "string"
@@ -101,6 +98,35 @@
 				"type": "string",
 				"required": false
 			}
-        }
+        },
+        "oneOf": [
+			{
+				"required": [
+					"groupsUrl"
+				]
+			},
+			{
+				"properties": {
+					"groupsArray": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"groupsArray": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
     }
 }

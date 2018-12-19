@@ -88,12 +88,12 @@ class LinkedIn {
 		}
 
 		try {
-			if ((typeof(agentObject[".sessionCookie"]) === "string") && agentObject[".cookieTimestamp"] && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".sessionCookie"] !== agentObject[".originalSessionCookie"]) {
+			if ((typeof(agentObject[".modifiedSessionCookie"]) === "string") && agentObject[".cookieTimestamp"] && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".modifiedSessionCookie"] !== agentObject[".originalSessionCookie"]) {
 				// the user has not changed his session cookie, he wants to login with the same account
 				// but we have a newer cookie from the agent object so we try that first
 				await this.nick.setCookie({
 					name: "li_at",
-					value: agentObject[".sessionCookie"],
+					value: agentObject[".modifiedSessionCookie"],
 					domain: "www.linkedin.com"
 				})
 				// first login try with cookie from agent object
@@ -228,7 +228,7 @@ class LinkedIn {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
 			if (cookie.length === 1) {
 				await this.buster.setAgentObject({
-					".sessionCookie": cookie[0].value,
+					".modifiedSessionCookie": cookie[0].value,
 					".originalSessionCookie": this.originalSessionCookie
 				})
 			} else {
@@ -239,14 +239,14 @@ class LinkedIn {
 		}
 	}
 
-	// save the .sessionCookie only if it's changed from .originalSessionCookie
+	// save the .modifiedSessionCookie only if it's changed from .originalSessionCookie
 	async updateCookie() {
 		try {
 			const cookie = (await this.nick.getAllCookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
 			if (cookie.length === 1) {
 				if (cookie[0].value !== this.originalSessionCookie) {
 					const agentObject = this.buster.getAgentObject
-					agentObject[".sessionCookie"] = cookie[0].value
+					agentObject[".modifiedSessionCookie"] = cookie[0].value
 					agentObject[".cookieTimestamp"] = (new Date()).toISOString()
 					await this.buster.setAgentObject(agentObject)
 				}
