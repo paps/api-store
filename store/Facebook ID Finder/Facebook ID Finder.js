@@ -18,11 +18,11 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
+const DB_NAME = "result"
 // }
 
-const scrapeId = (arg, callback) => {
-	callback(null, document.querySelector("code").textContent.trim())
-}
+const scrapeId = (arg, callback) => callback(null, document.querySelector("code").textContent.trim())
 
 const getId = async (tab, url) => {
 	const selector = "form.i-amphtml-form"
@@ -54,14 +54,19 @@ const checkDb = (str, db) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const {spreadsheetUrl} = utils.validateArguments()
+	let { spreadsheetUrl, csvName } = utils.validateArguments()
+
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+
 	let facebookLinks = await utils.getDataFromCsv(spreadsheetUrl)
-	let result = await utils.getDb("result.csv")
+	let result = await utils.getDb(csvName + ".csv")
 	facebookLinks = facebookLinks.filter(el => checkDb(el, result))
 	if (facebookLinks.length < 1) {
 		utils.log("Spreadsheet is empty or every URLs from this sheet has already been treated.", "warning")
 		nick.exit()
-	}	
+	}
 	for (const link of facebookLinks) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -82,7 +87,7 @@ const checkDb = (str, db) => {
 			utils.log("Empty line... skipping entry", "warning")
 		}
 	}
-	await utils.saveResult(result)
+	await utils.saveResult(result, csvName)
  })()
 .catch(err => {
 	utils.log(err, "error")
