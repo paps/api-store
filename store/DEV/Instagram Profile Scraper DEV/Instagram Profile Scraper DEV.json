@@ -1,14 +1,16 @@
 {
 	"slug": "instagram-profile-scraper",
-	"description": "Collect valuable information you need from Instagram profiles",
+	"description": "Collect valuable information from Instagram profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
-	"hidden": true,
+	"hidden": false,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
-	"gradientEnd": "#v",
+	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls"
+		"spreadsheetUrl": "instagram_profile_urls",
+		"numberOfProfilesPerLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Instagram profile URL",
@@ -71,8 +73,7 @@
 				"minLength": 15
 			},
 			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
@@ -85,6 +86,35 @@
 				"type": "string",
 				"required": false
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }

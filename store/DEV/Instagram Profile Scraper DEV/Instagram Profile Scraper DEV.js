@@ -44,38 +44,50 @@ const checkRateLimit = (arg, cb) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
-	if (!csvName) { csvName = "result" }
-	let urls, result
-	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
-		urls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
-		if (urls) {	
-			urls = [ urls ]
-		} else {
-			utils.log("The given url is not a valid instagram profile url.", "error")
-		}
-		result = []
-	} else { // CSV
-		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-		urls = urls.filter(str => str) // removing empty lines
-		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
-			urls[i] = utils.adjustUrl(urls[i], "instagram")
-			urls[i] = instagram.cleanInstagramUrl(urls[i])
-		}
-		if (!numberOfProfilesPerLaunch) {
-			numberOfProfilesPerLaunch = urls.length
-		}
-		result = await utils.getDb(csvName + ".csv")
-		urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
-	}
-
-	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
+	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
+	if (!csvName) { csvName = "result" }
+	let result
+	let singleProfile
+	if (spreadsheetUrl) {
+		if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
+			profileUrls = instagram.cleanInstagramUrl(utils.adjustUrl(spreadsheetUrl, "instagram"))
+			if (profileUrls) {	
+				profileUrls = [profileUrls]
+				singleProfile = true
+			} else {
+				utils.log("The given url is not a valid instagram profile url.", "error")
+				nick.exit(1)
+			}
+		} else { // CSV
+			profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		}
+	} else if (typeof profileUrls === "string") {
+		profileUrls = [profileUrls]
+		singleProfile = true
+	}
+	if (!singleProfile) {
+		profileUrls = profileUrls.filter(str => str) // removing empty lines
+		for (let i = 0; i < profileUrls.length; i++) { // cleaning all instagram entries
+			profileUrls[i] = utils.adjustUrl(profileUrls[i], "instagram")
+			profileUrls[i] = instagram.cleanInstagramUrl(profileUrls[i])
+		}
+		if (!numberOfProfilesPerLaunch) {
+			numberOfProfilesPerLaunch = profileUrls.length
+		}
+		result = await utils.getDb(csvName + ".csv")
+		profileUrls = getUrlsToScrape(profileUrls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
+	} else {
+		result = await utils.getDb(csvName + ".csv")
+	}
+
+	console.log(`URLs to scrape: ${JSON.stringify(profileUrls, null, 4)}`)
 
 	let pageCount = 0
-	for (let url of urls) {
+	let tempResult = []
+	for (let url of profileUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -84,7 +96,7 @@ const checkRateLimit = (arg, cb) => {
 		try {
 			utils.log(`Scraping page ${url}`, "loading")
 			pageCount++
-			buster.progressHint(pageCount / urls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
+			buster.progressHint(pageCount / profileUrls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
 			await tab.open(url)
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
@@ -93,7 +105,7 @@ const checkRateLimit = (arg, cb) => {
 				continue
 			}
 			const profileUrl = await tab.getUrl()
-			result = result.concat(await instagram.scrapeProfile(jsonTab, url, profileUrl))
+			tempResult = tempResult.concat(await instagram.scrapeProfile(jsonTab, url, profileUrl))
 		} catch (err) {
 			try {
 				await tab.waitUntilVisible("body")
@@ -109,7 +121,11 @@ const checkRateLimit = (arg, cb) => {
 		}
 		await tab.wait(2500 + Math.random() * 2000)
 	}
-
+	for (let i = 0; i < tempResult.length; i++) {
+		if (!result.find(el => el.instagramID === tempResult[i].instagramID && el.query === tempResult[i].query)) {
+			result.push(tempResult[i])
+		}
+	}
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
