@@ -1,5 +1,5 @@
 # Get highly qualified active Facebook members
-Whether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers, up to around 10k profiles per page.
+Whether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers, up to around 5k profiles per page.
 
 # What will you need? ⚙️ 
 
@@ -81,4 +81,4 @@ Since Phantombuster's servers are located on the west coast of the USA, Facebook
 
 In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you. 
 
-Also there's a limit on how many likers can be extracted, around 10k Facebook profiles, even when the total count displayed by Facebook is higher.
+Also there's a limit on how many likers can be extracted, around 5k Facebook profiles, even when the total count displayed by Facebook is higher. As it's loading and scrolling through the likers' list, once stopped this API cannot resume where it left off.

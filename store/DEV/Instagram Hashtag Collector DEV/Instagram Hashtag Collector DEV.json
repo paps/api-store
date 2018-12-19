@@ -11,7 +11,8 @@
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "#soloparking",
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"maxPosts": 5000
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",
@@ -64,8 +65,7 @@
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
 						"inputType": "number",
-						"helper": "All of them if empty (until hitting Instagram rate limit)",
-						"placeholder": 5000
+						"helper": "All of them if empty (until hitting Instagram rate limit)"
 					},
 					"csvName": {
 						"label": "Output CSV name",
@@ -93,8 +93,7 @@
 				"type": "string"
 			},
 			"maxPosts": {
-				"type": "number",
-				"default": 5000
+				"type": "number"
 			}
 		},
 		"oneOf": [

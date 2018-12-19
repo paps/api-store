@@ -208,11 +208,10 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
+	await instagram.login(tab, sessionCookie)
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	const webSearch = new WebSearch(tab, buster)
 	const scrapedData = []
-
-	if (!maxPosts) { maxPosts = 1000 }
 	if (!csvName) { csvName = "result" }
 	let hasSpreadsheet = false
 	let csvData = []
@@ -223,8 +222,6 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		}
 	}
 	if (!hasSpreadsheet) { csvData = [ search.join(", ") ] }
-	await instagram.login(tab, sessionCookie)
-
 	for (const line of csvData) {
 		utils.log(`Searching for ${line}`, "done")
 		let terms = line.split(",")
@@ -291,6 +288,9 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 					minValue = sortArray[i].resultCount
 					minPos = i
 				}
+			}
+			if (!maxPosts) {
+				maxPosts = minValue
 			}
 			leastTerm = sortArray[minPos].term
 			const term = leastTerm
