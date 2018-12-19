@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 /* eslint-disable no-unused-vars */
@@ -21,7 +21,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
 const MSG_MAX_LENGTH = 1000
@@ -85,6 +85,9 @@ const acceptInvites = (tab, nbProfiles, hasNote, hasMutualConn) => {
 				}
 				if (this.querySelector("a[data-control-name=\"personalized_message\"]")) {
 					toRet.messageLink = this.querySelector("a[data-control-name=\"personalized_message\"]").href
+				}
+				if (this.querySelector("button.message-anywhere-button.invitation-card__custom-message-btn")) {
+					toRet.chatMessageIndex = i + 1
 				}
 				jQuery(this).find("input[type=\"checkbox\"]").click()
 				return toRet
@@ -163,11 +166,75 @@ const sendMessage = async (tab, url, message, invite) => {
 	}
 
 	await tab.wait(2500)
-	console.log("ON VA CLICK")
-	await tab.screenshot(`Tok${Date.now()}.png`)
-	await buster.saveText(await tab.getContent(), `ON VA CLICK${Date.now()}.html`)
 	await tab.click("button.msg-form__send-button[data-control-name=\"send\"]")
 	await tab.wait(2500)
+}
+
+const waitWhileEnable = (arg, cb) => {
+	const startIdle = Date.now()
+	const idle = () => {
+		const sel = document.querySelector(arg.sel)
+		if ((!sel) || (sel.disabled === false)) {
+			if ((Date.now() - startIdle) >= 30000) {
+				return cb(`${arg.sel} is enable after 30s`)
+			}
+			setTimeout(idle, 200)
+		} else {
+			return cb()
+		}
+	}
+	idle()
+}
+
+const sendChatMessage = async (tab, message, invite) => {
+	const SELECTORS = {
+		chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
+		closeChatButton: "button[data-control-name=\"overlay.close_conversation_window\"]",
+		spinners: "li-icon > .artdeco-spinner",
+		messageEditor: "div.msg-form__contenteditable",
+		sendButton: "button.msg-form__send-button[type=submit]",
+		sendError: "p.msg-s-event-listitem__error-message"
+	}
+	// Removing emojis for specific fields
+	for (const field of [ "firstName", "fullName" ]) {
+		// Check if the field exists
+		if (invite[field]) {
+			invite[field] = invite[field].replace(EMOJI_PATTERN, "").trim()
+		}
+	}
+
+	const matches = message.match(/#[a-zA-Z0-9]+#/gm)
+	const inMailMessageSelectors = [ "textarea.msg-form__textarea", "div[contenteditable=true]" ]
+	let inMailSelectorFound
+	if (Array.isArray(matches)) {
+		for (const one of matches) {
+			let field = one.replace(/#/g, "")
+			if (invite[field]) {
+				message = message.replace(one, invite[field])
+			} else {
+				message = message.replace(one, "")
+				utils.log(`Tag ${one} can't be found in the given profile`,"warning")
+			}
+		}
+	}
+	try {
+		await tab.click(`button.message-anywhere-button.invitation-card__custom-message-btn:nth-child(${invite.chatMessageIndex})`)
+		await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
+		await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 15000)
+		await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
+		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
+		await tab.evaluate(waitWhileEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
+		if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.sendError}`)) {
+			utils.log("message is not sent", "warning")
+		}
+		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+	} catch (err) {
+		console.log(err.message || err)
+	} /*finally {
+		await tab.screenshot(`state-${Date.now()}.jpg`)
+		await buster.saveText(await tab.getContent(), `state-${Date.now()}.html`)
+		nick.exit(41)
+		}*/
 }
 
 nick.newTab().then(async (tab) => {
@@ -189,30 +256,25 @@ nick.newTab().then(async (tab) => {
 	const selectors = [ ".js-invitation-card__invite-details-container", "section.mn-invitation-manager__no-invites" ]
 
 	await linkedIn.login(tab, sessionCookie, "https://www.linkedin.com/mynetwork/invitation-manager/?filterCriteria=null")
-	console.log("getting started")
-	await tab.screenshot(`Gettingstarted${Date.now()}.png`)
-	await buster.saveText(await tab.getContent(), `Gettingstarted${Date.now()}.html`)
-	await tab.wait(2000)
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
 	const selector = await tab.waitUntilVisible(selectors, 10000, "or")
-	// if (selector === selectors[1]) {
-	// 	utils.log("No invite to accept.", "done")
-	// 	nick.exit()
-	// }
+	if (selector === selectors[1]) {
+	 	utils.log("No invite to accept.", "done")
+	 	nick.exit()
+	 }
 	await loadProfilesUsingScrollDown(tab)
-	await tab.screenshot(`loadProfilesUsingScrollDown${Date.now()}.png`)
-	await buster.saveText(await tab.getContent(), `loadProfilesUsingScrollDown${Date.now()}.html`)
-	nick.exit()
 	let invites = await acceptInvites(tab, numberOfProfilesToAdd, hasNoteSent, hasMutualConnections)
-
 	if (invites.length > 0) {
 		// Issue #196: hotfix send message only if the scraping function return a LinkedIn thread URL
-		// TODO: handle chat conversation situation (new LinkedIn feature)
 		if (message) {
 			const inMailTab = await nick.newTab()
+
 			for (const invite of invites) {
 				if (invite.messageLink) {
 					await sendMessage(inMailTab, invite.messageLink, message, invite)
+				} else if (invite.chatMessageIndex) {
+					// handle chat conversation situation (new LinkedIn feature)
+					await sendChatMessage(tab, message, invite)
 				} else {
 					utils.log(`No LinkedIn thread URL found for ${invite.url}, accepting invitation whitout sending a message`, "info")
 				}
