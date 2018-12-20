@@ -22,16 +22,6 @@ const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.profileUrl) {
-			return false
-		}
-	}
-	return true
-}
-
 //  format the data for the csv file
 const craftCsvObject = data => {
 	const csvResult = {
@@ -361,6 +351,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
 			utils.log(`${profileUrl} page is not available.`, "error")
+			await tab.screenshot(`${Date.now()}page is not available.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}page is not available.html`)
 			return { profileUrl, error: "The profile page isn't available"}
 		}
 	}
@@ -390,6 +382,8 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
 		utils.log("About Page still not visible", "error")
+		await tab.screenshot(`${Date.now()}About Page still not visible.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}About Page still not visible.html`)
 		return null
 	}
 	const aboutList = [ 
@@ -444,7 +438,9 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, profileUrls, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+	let profilesToScrape = profileUrls
 	if (!csvName) { csvName = "result" }
 	let db = await utils.getDb(csvName + ".csv")
 	let jsonDb = await utils.getDb(csvName + ".json", false)
@@ -452,24 +448,29 @@ nick.newTab().then(async (tab) => {
 		jsonDb = JSON.parse(jsonDb)
 	}
 	let result = []
-	let profilesToScrape
-	if (facebook.isFacebookUrl(spreadsheetUrl)) {
-		profilesToScrape = [ facebook.cleanProfileUrl(spreadsheetUrl) ]
-	} else {
-		profilesToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
-										.filter(str => str) // removing empty lines
-										.filter(str => checkDb(str, db)) // checking if already processed
-										.slice(0, profilesPerLaunch) // only processing profilesPerLaunch lines
+	let singleProfile
+	if (spreadsheetUrl) {
+		if (facebook.isFacebookUrl(spreadsheetUrl)) {
+			profilesToScrape = [ facebook.cleanProfileUrl(spreadsheetUrl) ]
+			singleProfile = true
+		} else {
+			profilesToScrape = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		}
+	} else if (typeof profileUrls === "string") {
+		profilesToScrape = [profileUrls]
 	}
-	
+	if (!singleProfile) {
+		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
+		.filter(str => str) // removing empty lines
+		.filter(str => utils.checkDb(str, db, "profileUrl")) // checking if already processed
+		.slice(0, profilesPerLaunch) // only processing profilesPerLaunch line
+	}
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
 	}								
 	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
 	
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
 	for (let profileUrl of profilesToScrape) {
 		const timeLeft = await utils.checkTimeLeft()

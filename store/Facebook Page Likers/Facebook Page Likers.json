@@ -2,18 +2,21 @@
     "slug": "facebook-page-likers",
     "description": "Extract a list of all the profiles that liked any Facebook page",
     "image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
-    "hidden": false,
+    "hidden": true,
     "new": false,
     "gradientBegin": "#32C1F1",
     "gradientEnd": "#5477BC",
     "argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
         "sessionCookieCUser": "your_c-user_session_cookie",
-        "sessionCookieXs": "your_xs_session_cookie"
+		"sessionCookieXs": "your_xs_session_cookie",
+		"spreadsheetUrl": "facebook_page_urls",
+		"maxLikers": 500
 	},
 	"outputDescription": {
 		"profileUrl": "Facebook profile URL",
 		"name": "Full name",
+		"facebookId": "Unique Facebook ID",
 		"imageUrl": "Profile picture URL",
 		"isFriend": "Indicates if the user is a friend",
 		"highlight": "Main information about the user selected by Facebook",
@@ -51,7 +54,7 @@
 					},
 				    "maxLikers": {
 						"label": "Maximum number of likers to extract per page",
-						"helper": "All of them if empty"
+						"helper": "All of them (until hitting Facebook limits) if empty"
 					}
 				}
 			}
@@ -71,8 +74,7 @@
                 "minLength": 15
             },
 			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
@@ -85,6 +87,35 @@
 				"type": "number",
 				"required": false
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"pageUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"pageUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }

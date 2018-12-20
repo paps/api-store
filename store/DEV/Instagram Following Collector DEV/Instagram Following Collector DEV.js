@@ -238,6 +238,9 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowing, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	const tab = await nick.newTab()
+	await instagram.login(tab, sessionCookie)
+	
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
 	result = await utils.getDb(csvName + ".csv")
@@ -275,10 +278,8 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 		urls = getUrlsToScrape(urls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
-	const tab = await nick.newTab()
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	await instagram.login(tab, sessionCookie)
 
 	let urlCount = 0
 

@@ -463,11 +463,10 @@ nick.newTab().then(async (tab) => {
 	if (typeof disableScraping !== "boolean") {
 		disableScraping = true
 	}
-
+	await linkedIn.login(tab, sessionCookie)
 	spreadsheetUrl = spreadsheetUrl.trim()
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
-	db = await utils.getDb(DB_NAME)
 	let rows = []
 	let columns = []
 	if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -485,6 +484,7 @@ nick.newTab().then(async (tab) => {
 	}
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
+	db = await utils.getDb(DB_NAME)
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
@@ -492,7 +492,6 @@ nick.newTab().then(async (tab) => {
 		nick.exit()
 	}
 	let invitations = []
-	await linkedIn.login(tab, sessionCookie)
 	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 	for (const row of rows) {
 		if (row[columnName]) {

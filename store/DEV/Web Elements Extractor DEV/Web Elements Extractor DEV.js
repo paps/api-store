@@ -17,8 +17,7 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const DB_SHORT_NAME = "result"
-const DB_NAME = DB_SHORT_NAME + ".csv"
+const DB_NAME = "result"
 // }
 
 const doScraping = (arg, cb) => {
@@ -86,7 +85,7 @@ const handleArguments = async argv => {
 
 	for (const arg of argv) {
 		try {
-			let urls = await utils.getDataFromCsv(arg.link, null, false)
+			let urls = await utils.getDataFromCsv2(arg.link, null, false)
 			utils.log(`Getting data from ${arg.link}...`, "loading")
 			utils.log(`Got ${urls.length} lines from csv`, "done")
 			urls = urls.map(el => {
@@ -157,10 +156,15 @@ const filterArgumentsBySelector = (db, argv) => {
 }
 
 ;(async () => {
-	let { pageToScrapePerLaunch, urls } = utils.validateArguments()
+	let { pageToScrapePerLaunch, urls, csvName } = utils.validateArguments()
 	const tab = await nick.newTab()
 	const scrapedData = []
-	let db = await utils.getDb(DB_NAME)
+
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+
+	let db = await utils.getDb(csvName + ".csv")
 	let i = 0
 
 	urls = filterArgumentsBySelector(db, await handleArguments(urls))
@@ -185,7 +189,7 @@ const filterArgumentsBySelector = (db, argv) => {
 		i++
 	}
 	db = db.concat(createCsvOutput(scrapedData))
-	await utils.saveResults(scrapedData, db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(scrapedData, db, csvName, null, false)
 	nick.exit(0)
 })()
 .catch(err => {

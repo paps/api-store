@@ -21,19 +21,23 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const WebSearch = require("./lib-WebSearch")
 const utils = new StoreUtilities(nick, buster)
 
-const DB_NAME = "result.csv"
+const DB_NAME = "result"
 let db
 // }
 
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
-	const {spreadsheetUrl, columnName, csvName} = utils.validateArguments()
+	let { spreadsheetUrl, columnName, csvName } = utils.validateArguments()
 	let queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	const toReturn = []
 	let i = 1
 
-	db = await utils.getDb(DB_NAME)
+	if (!csvName) {
+		csvName = DB_NAME
+	}
+
+	db = await utils.getDb(csvName + ".csv")
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")

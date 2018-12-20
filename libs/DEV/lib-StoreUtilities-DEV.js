@@ -338,7 +338,6 @@ class StoreUtilities {
 	 * @return {Promise<Array<String>>} CSV content
 	 */
 	async getDataFromCsv2(url, columnName, printLogs = true) {
-		// TODO: handle multiple columns with columnName as array
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -371,10 +370,18 @@ class StoreUtilities {
 		let data = raw.data
 		let result = []
 		/**
-		 * HACK: Downloaded content check
+		 * Downloaded content check
 		 * if there were MissingQuotes error during parsing process, we assume that the data is not representing a CSV
 		 */
-		if (raw.errors.find(el => el.code === "MissingQuotes")) {
+		if (raw.errors.find(el => el.code === "MissingQuotes" || el.code === "InvalidQuotes")) {
+			throw `${url} doesn't represent a CSV file`
+		}
+
+		/**
+		 * In some cases, papaparse can parse HTML pages whitout returning MissingQuotes nor InvalidQuotes
+		 * So we simply check if the downloaded target starts with the HTML doctype
+		 */
+		if (httpContent.toLowerCase().startsWith("<!doctype html>")) {
 			throw `${url} doesn't represent a CSV file`
 		}
 

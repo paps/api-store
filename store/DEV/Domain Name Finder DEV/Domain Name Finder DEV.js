@@ -152,7 +152,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let db = await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl) {
-		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)		
+		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
 	} else if (typeof(companies) === "string") {
 		companies = [companies]
 	}
@@ -162,7 +162,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	 * since getDomainName return the query in lowercase
 	 */
 	companies = companies.filter(el => db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
-						 .slice(0, numberOfLinesPerLaunch)
+							.slice(0, numberOfLinesPerLaunch)
 	if (companies.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
@@ -177,6 +177,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const webSearch = new WebSearch(tab, buster, null, null, utils)
 
 	let i = 0
+	let lastDate = new Date()
 	for (const query of companies) {
 		if (!query || query.trim().length < 1) {
 			utils.log("Empty line, skipping entry", "warning")
@@ -192,6 +193,8 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		try {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
+			console.log("elapsed: ", new Date() - lastDate)
+			lastDate = new Date()
 			delete res.codename
 			res.timestamp = (new Date()).toISOString()
 			result.push(res)

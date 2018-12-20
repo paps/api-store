@@ -40,6 +40,10 @@
                         "placeholder": 10,
                         "inputType": "number"
                     },
+		    "csvName": {
+			    "label": "Name of the resulting CSV file",
+			    "placeholder": "result"
+		    },
                     "hunterApiKey": {
                         "label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/6874/linkedin-auto-follow#section_email_discovery\" target=\"_blank\">(?)</a>",
                         "helper": "Leave this field empty if you don't want to use Hunter.io"
@@ -75,6 +79,9 @@
                 "maximum": 10,
                 "required": true
             },
+	    "csvName": {
+		    "type": "string"
+	    },
             "hunterApiKey": {
                 "type": "string",
                 "maxLength": 50

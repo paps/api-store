@@ -416,7 +416,7 @@ const scrapeInfos = (arg, callback) => {
 }
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
-const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad) => {
+const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad, silence) => {
 	const [httpCode] = await tab.open(url)
 	if (httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
@@ -426,25 +426,34 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		 * Using 7500ms timeout to make sure that the page is loaded
 		 */
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
-		utils.log("Profile loaded.", "done")
+		if (!silence) {
+			utils.log("Profile loaded.", "done")
+		}
 	} catch (error) {
 		throw ("Could not load the profile.")
 	}
 	if (fullLoad) {
 		try {
-			utils.log("Scrolling to load all data of the profile...", "loading")
+			if (!silence) {
+				utils.log("Scrolling to load all data of the profile...", "loading")
+			}
 			await fullScroll(tab)
 		} catch (error) {
-			utils.log("Error during the scroll of the page.", "warning")
+			if (!silence) {
+				utils.log("Error during the scroll of the page.", "warning")
+			}
 		}
 		try {
 			await loadProfileSections(tab)
-	
-			utils.log("All data loaded", "done")
+			if (!silence) {			
+				utils.log("All data loaded", "done")
+			}
 		} catch (error) {
 			utils.log("Error during the loading of data.", "warning")
 		}
-		utils.log("Scraping page...", "loading")
+		if (!silence) {
+			utils.log("Scraping page...", "loading")
+		}
 	}
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
@@ -474,7 +483,9 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 			}
 		}
 	} catch (err) {
-		utils.log(`Couldn't save picture :${err}`, "warning")
+		if (!silence) {
+			utils.log(`Couldn't save picture :${err}`, "warning")
+		}
 	}
 
 	const UI_SELECTORS = {
@@ -727,13 +738,14 @@ class LinkedInScraper {
 	 * @param {Boolean} saveImg -- if true, save the profile picture as a jpeg}
 	 * @param {Boolean} takeScreenshot -- if true, take a screenshot of the profile}
 	 * @param {Boolean} takePartialScreenshot -- if true, take a partial screenshot of the profile}
+	 * @param {Boolean} silence -- if true, doesn't console.log}
 	 * @return {Promise<Object>} JSON and CSV formatted result
 	 */
-	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, takePartialScreenshot, fullLoad = true) {
+	async scrapeProfile(tab, url = null, saveImg, takeScreenshot, takePartialScreenshot, fullLoad = true, silence) {
 		let result = {}
 		let csvResult = {}
 		try {
-			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad)
+			result = await scrapingProcess(tab, url, this.utils, this.buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad, silence)
 			/**
 			 * If the linkedIn profile is not fill during the scraping
 			 * the lib will automatically set the current URL used in the browser
@@ -742,12 +754,16 @@ class LinkedInScraper {
 			if (!result.details.linkedinProfile) {
 				result.details.linkedinProfile = currentUrl
 			}
-			this.utils.log(`${currentUrl} successfully scraped.`, "done")
+			if (!silence) {
+				this.utils.log(`${currentUrl} successfully scraped.`, "done")
+			}			
 		} catch (err) {
 			result.details = {}
 			result.jobs = []
 			result.details["linkedinProfile"] = url
-			this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
+			if (!silence) {
+				this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
+			}
 		}
 
 		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {

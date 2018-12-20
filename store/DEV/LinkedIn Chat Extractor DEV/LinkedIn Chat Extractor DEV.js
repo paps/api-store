@@ -29,7 +29,6 @@ const linkedInScraper = new LinkedInScraper(utils, null, nick)
 const { URL } = require("url")
 
 const SHORT_DB_NAME = "linkedin-chat-extractor"
-const DB_NAME = SHORT_DB_NAME + ".csv"
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button",
@@ -268,8 +267,13 @@ const jsonToCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, messagesPerExtract, queries, chronOrder, noDatabase } = utils.validateArguments()
-	let db = noDatabase ? [] : await utils.getDb(DB_NAME)
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, messagesPerExtract, csvName, queries, chronOrder, noDatabase } = utils.validateArguments()
+
+	if (!csvName) {
+		csvName = SHORT_DB_NAME
+	}
+
+	let db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	const currentScraping = []
 	let step = 0
 
@@ -320,7 +324,7 @@ const jsonToCsvOutput = json => {
 		currentScraping.push(conversation)
 	}
 	db.push(...jsonToCsvOutput(currentScraping))
-	await utils.saveResults(noDatabase ? [] : currentScraping, noDatabase ? [] : db, SHORT_DB_NAME, null, false)
+	await utils.saveResults(noDatabase ? [] : currentScraping, noDatabase ? [] : db, csvName, null, false)
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}`, "error")

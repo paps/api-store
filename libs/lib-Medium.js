@@ -16,11 +16,11 @@ class Medium {
 		const _getUsername = (arg, cb) => cb(null, document.querySelector("button > div.avatar > img.avatar-image").alt)
 		if ((typeof uid !== "string" || uid.trim().length < 1) || (typeof sid !== "string" || sid.trim().length < 1)) {
 			this.utils.log("Invalid Medium session cookie(s). Did you specify both uid & sid cookies?", "error")
-			this.nick.exit(99)
+			this.nick.exit(this.utils.ERROR_CODES.MEDIUM_BAD_COOKIE)
 		}
 		if (uid === "uid_cookie" || sid === "sid_cookie") {
 			this.utils.log("You didn't set one of the Medium session cookie in your API Configuration.", "error")
-			this.nick.exit(98)
+			this.nick.exit(this.utils.ERROR_CODES.MEDIUM_DEFAULT_COOKIE)
 		}
 		this.utils.log("Connecting to Medium...", "loading")
 		try {
@@ -43,7 +43,7 @@ class Medium {
 			this.utils.log(`Connected as ${await tab.evaluate(_getUsername)}`, "done")
 		} catch (err) {
 			this.utils.log("Could not connect to Medium with those session cookies.", "error")
-			this.nick.exit(99)
+			this.nick.exit(this.utils.ERROR_CODES.MEDIUM_BAD_COOKIE)
 		}
 	}
 

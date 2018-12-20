@@ -11,7 +11,8 @@
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
 		"search": [ "#oreo", "#cookies" ],
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"maxPosts": 5000
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",
@@ -49,11 +50,7 @@
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
 						"inputType": "number",
-						"helpers": [
-							"By default, the API will scrape 1000 posts per hashtag",
-							"You are limited to a maximum of 5000 posts per hashtag"
-						],
-						"placeholder": 1000
+						"helper": "By default, the API will scrape 2000 posts per hashtag"
 					},
 					"csvName": {
 						"label": "Output CSV name",
@@ -87,8 +84,6 @@
 			},
 			"maxPosts": {
 				"type": "number",
-				"default": 1000,
-				"maximum": 5000,
 				"minimum": 1
 			}
 		}

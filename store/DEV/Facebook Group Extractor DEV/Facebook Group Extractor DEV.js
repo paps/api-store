@@ -57,16 +57,6 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.groupUrl) {
-			return false
-		}
-	}
-	return true
-}
-
 // Checks if a url is a facebook group url
 const isFacebookGroupUrl = (url) => {
 	let urlObject = parse(url.toLowerCase())
@@ -416,50 +406,55 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, groupsArray, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName } = utils.validateArguments()
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)	
 	if (!csvName) { csvName = "result" }
-	let result = await utils.getDb(csvName + ".csv")
 	if (!numberMaxOfMembers) { numberMaxOfMembers = false }
-	const initialResultLength = result.length
 	try {
 		agentObject = await buster.getAgentObject()
 	} catch (err) {
 		utils.log("Could not access agent Object.", "warning")
 	}
+
+	let singleGroup
+	if (groupsUrl) {
+		let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)
+		if (isAFacebookGroupUrl) { // Facebook Group URL
+			groupsArray = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
+			singleGroup = true
+		} else { 
+			// Link not from Facebook, trying to get CSV
+			groupsArray = await utils.getDataFromCsv2(groupsUrl, columnName)
+		}
+	} else if (typeof groupsArray === "string") {
+		groupsArray = [groupsArray]
+		singleGroup = true
+	}
+	let result = await utils.getDb(csvName + ".csv")
+	const initialResultLength = result.length
 	if (initialResultLength) {
 		alreadyScraped = result.filter(el => el.groupUrl === agentObject.lastQuery).length
 	}
-	let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)
-	if (isAFacebookGroupUrl) { // Facebook Group URL
-		groupsUrl = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
-	} else { 
-		// Link not from Facebook, trying to get CSV
-		try {
-			groupsUrl = await utils.getDataFromCsv2(groupsUrl, columnName)
-			groupsUrl = groupsUrl.filter(str => str) // removing empty lines
-			if (groupsUrl.length === 0) {
-				utils.log("Spreadsheet is empty!", "error")
-				nick.exit(1)
-			}
-			if (groupsUrl.length !== 1) { membersPerLaunch = false }
-			for (let i = 0; i < groupsUrl.length; i++) { // cleaning all group entries
-				groupsUrl[i] = utils.adjustUrl(groupsUrl[i], "facebook")
-				const isGroupUrl = isFacebookGroupUrl(groupsUrl[i])
-				if (isGroupUrl) { groupsUrl[i] = cleanGroupUrl(groupsUrl[i]) }
-			}
-			const lastUrl = groupsUrl[groupsUrl.length - 1]
-			groupsUrl = groupsUrl.filter(str => checkDb(str, result))
-			if (groupsUrl.length < 1) { groupsUrl = [lastUrl] } // if every group's already been scraped, we're scraping the last one
-		} catch (err) {
-			utils.log(err, "error")
+	if (!singleGroup) {
+		groupsArray = groupsArray.filter(str => str) // removing empty lines
+		if (groupsArray.length === 0) {
+			utils.log("Spreadsheet is empty!", "error")
 			nick.exit(1)
 		}
+		if (groupsArray.length !== 1) { membersPerLaunch = false }
+		for (let i = 0; i < groupsArray.length; i++) { // cleaning all group entries
+			groupsArray[i] = utils.adjustUrl(groupsArray[i], "facebook")
+			const isGroupUrl = isFacebookGroupUrl(groupsArray[i])
+			if (isGroupUrl) { groupsArray[i] = cleanGroupUrl(groupsArray[i]) }
+		}
+		const lastUrl = groupsArray[groupsArray.length - 1]
+		groupsArray = groupsArray.filter(str => utils.checkDb(str, result, "groupUrl"))
+		if (groupsArray.length < 1) { groupsArray = [lastUrl] } // if every group's already been scraped, we're scraping the last one
 	}
-	utils.log(`Groups to scrape: ${JSON.stringify(groupsUrl, null, 2)}`, "done")
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+	utils.log(`Groups to scrape: ${JSON.stringify(groupsArray, null, 2)}`, "done")
 	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	for (let url of groupsUrl) {
+	for (let url of groupsArray) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			let resuming = false
 			if (alreadyScraped && agentObject && url === agentObject.lastQuery) {

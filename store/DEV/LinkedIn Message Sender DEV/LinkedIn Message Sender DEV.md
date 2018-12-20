@@ -130,7 +130,7 @@ Hunter gives you 100 free email guesses per month. After that, you'll have to bu
 
 Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf. Like *Uncle Ben* once said, *"With great power comes great responsibility."*
 
-We have noticed that adding more than 80 connections per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 8 launches per day of 10 connection requests for this reason.
+We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). We recommend no more than 4 launches per day of 20 scraped profiles for this reason.
 
 **Note:** When [email discovery](#section_email_discovery) is enabled, we recommend you divide this limit by 2 (that is, **40 profiles per day**).
 

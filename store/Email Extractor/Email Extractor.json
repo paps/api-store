@@ -35,6 +35,10 @@
 						"inputType": "number",
 						"helper": "If the field is empty, the API will scrape only 2 pages"
 					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
 					"queries": {
 						"hidden": true,
 						"disabled": true
@@ -62,6 +66,9 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 2
+			},
+			"csvName": {
+				"type": "string"
 			}
 		},
 		"anyOf": [

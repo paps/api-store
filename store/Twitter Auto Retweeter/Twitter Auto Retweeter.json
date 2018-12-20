@@ -37,7 +37,7 @@
 						"helper": "Twitter auth_token cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_4createanicespreadsheet\">(?)</a>",
+						"label": "Spreadsheet URL / Twitter profile URL / Twitter handle / Twitter tweet URL <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_4createanicespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile URL"
 					},
 					"columnName": {
