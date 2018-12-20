@@ -1,10 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
-
-/* eslint-disable no-unused-vars */
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -21,7 +18,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 
 const MSG_MAX_LENGTH = 1000
@@ -204,8 +201,6 @@ const sendChatMessage = async (tab, message, invite) => {
 	}
 
 	const matches = message.match(/#[a-zA-Z0-9]+#/gm)
-	const inMailMessageSelectors = [ "textarea.msg-form__textarea", "div[contenteditable=true]" ]
-	let inMailSelectorFound
 	if (Array.isArray(matches)) {
 		for (const one of matches) {
 			let field = one.replace(/#/g, "")
@@ -229,12 +224,8 @@ const sendChatMessage = async (tab, message, invite) => {
 		}
 		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	} catch (err) {
-		console.log(err.message || err)
-	} /*finally {
-		await tab.screenshot(`state-${Date.now()}.jpg`)
-		await buster.saveText(await tab.getContent(), `state-${Date.now()}.html`)
-		nick.exit(41)
-		}*/
+		utils.log(`Error while sending message: ${err.message || err}`, "warning")
+	}
 }
 
 nick.newTab().then(async (tab) => {
