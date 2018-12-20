@@ -9,7 +9,7 @@ Twitter is limiting users to a maximum of **2400 Tweets per day**. This includes
 
 ## ⏳ Execution speed
 
-This API is capable of adding about **25 profiles per minute**.
+This API will Retweet on average **7 Tweets per minute**.
 
 # What do you need? ⚙️
 - **"Spreadsheet URL"**: Link of a pubicly accessible spreadsheet containing a list of twitter profile urls
