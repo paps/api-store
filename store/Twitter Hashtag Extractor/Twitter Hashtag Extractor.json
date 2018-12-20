@@ -1,11 +1,11 @@
 {
 	"slug": "twitter-hashtag-extractor",
 	"description": "Turn specific hashtags in a stream of fresh leads",
-	"image": "",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Hashtag+Collector/Twitter+Hashtag+Collector(2).png",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"update": false,
 	"defaultArgument": {

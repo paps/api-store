@@ -1,11 +1,11 @@
 {
 	"slug": "twitter-message-sender",
-	"description": "Automatically and personnally contact your Twitter followers to spread a message",
-	"image": "",
+	"description": "Automatically Send Direct Messages (DM's) to your followerss and spread a message",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png",
 	"argumentDescription": "",
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
@@ -26,11 +26,11 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Twitter session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Twitter session cookie <a target=\"_blank\" href=\"/api-store/10678/twitter-message-sender#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or a Twitter profile URL <a target=\"_blank\" href=\"/api-store/10678/twitter-message-sender#section_5getyourtwittersessioncookie\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Twitter profile"
 					},
 					"columnName": {
@@ -39,7 +39,7 @@
 						"placeholder": "Twitter Profile"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch <b>(10 max)</b> <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch <b>(10 max)</b> <a target=\"_blank\" href=\"/api-store/10678/twitter-message-sender#section_6configurerepetitivelaunches\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10
