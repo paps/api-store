@@ -1,23 +1,19 @@
-# Launch a LinkedIn search from your Sales Navigator Account
+<center>**This API supports [email discovery](#section_email_discovery).**</center>
 
-You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results...? 
+<hr />
 
-Now you can use this API with your Sales Navigator account to retrieve highly relevant search results automatically with little effort.
+# Extract info from LinkedIn profiles
 
-This API can easily be combined with our other LinkedIn APIs, most notably <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a>.
-
-Of course, it only works if you have an active Sales Navigator account.
+When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn profiles you're targeting in a CSV file.
 
 # Our Solution
 
-Launch **LinkedIn Sales Navigator Search Export** that will export in CSV the _URL profile link_ of every person appearing in the search results.
-You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch the search.
+Launch an automated agent that will connect on LinkedIn as you. It will then browse and collect all the info from the designated profiles.
 
 # What will you need? ⚙️ 
 
-- **Session cookie**: Your session Cookie from LinkedIn
-- **Search**: What terms to search on the LinkedIn search engine
-- **Number of profiles**: How many profiles should the bot try to scrape?
+- **Session cookie**: Your session cookie from LinkedIn.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn Sales Navigator profile URLs (or regular profile URLs) in it.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
@@ -40,10 +36,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Linkedin authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
-* Using Chrome, go to your LinkedIn homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your LinkedIn homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab
@@ -58,26 +54,70 @@ or
 
 <center>![](https://phantombuster.imgix.net/api-store/li_at+3.png)</center/>
 
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Argument_)
+* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your API _Configuration_
 
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
+_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
 
-## 5. Decide which search you want to launch
+## 5. Add a Google Spreadsheet 📑
+Below your session cookie you’ll find _Spreadsheet URL_
 
-In the _search_ text field, simply enter the terms you want to search on the LinkedIn Sales Navigator search engine. For example _SpaceX engineer_ or _iOS developer_ or even _CEO_!
+Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
+<center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
 
-You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) containing a list of searches to run. It's that easy! (make sure your file is publicly accessible)
+Add every linkedIn profiles link in column A (**one link per row**)
 
-**More advanced search queries are also possible** using keywords allowed by LinkedIn: `OR` & `AND` (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even `school:`, `company:`... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>).
+**Please make sure your file is publicly accessible!**
 
-**Even more advanced:** You can also paste into the _search_ field a LinkedIn Sales Navigator search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field. Be careful not to use a regular LinkedIn search though.
+You can also enter a CSV file URL, it will work the same :)
 
-## 6. How many profiles?
+## 6. Email discovery (optional) { email_discovery }
 
-Define here the number of profiles you want the bot to scrape.
+**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+
+To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+
+<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
+
+Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
+
+Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
 
 
 # Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" and watch your API do the work for you!
+It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
+
+This will launch the bot and, if you didn't already change the spreadsheet URL, will collect the information of the Phantombuster team.
+
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
+
+Every time the API is launched, it will scrape 10 profiles and then stop. (This number can be changed in the configuration, the maximum is 25 per launch.)
+
+To do so, simply hit the “Settings” button to define when your API is launched:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API. (Read more below about LinkedIn's limits.)
+
+
+# Limits
+
+Please be aware that this API, like most of our LinkedIn APIs, will manipulate your own account on your behalf. 
+
+
+# ⚙ ️HTTP API 🤓
+
+If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_profileUrls_** which must be an array of strings. Additionally, you should set **_noDatabase_** to `true` so that the API does not maintain a state on its own (so that you can re-scrape the same profiles).
+
+It should look just like this :
+`{ "profileUrls": ["www.linkedin.com/in/foo", "www.linkedin.com/in/bar"], "noDatabase": true, "sessionCookie": "xxxx" }`
+

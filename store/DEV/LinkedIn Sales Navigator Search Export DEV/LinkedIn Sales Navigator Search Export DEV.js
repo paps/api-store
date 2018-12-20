@@ -152,6 +152,52 @@ const scrapeResultsLeads = (arg, callback) => {
 	callback(null, data)
 }
 
+const scrapeLists = (arg, cb) => {
+	const results = document.querySelectorAll("tr.artdeco-table-row")
+	const scrapedData = []
+	let profilesScraped = 0
+	for (const result of results) {
+		if (result.querySelector("a")) {
+			const profileUrl = result.querySelector("a").href
+			const newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			const urlObject = new URL(profileUrl)
+			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
+			if (vmid) {
+				newData.vmid = vmid
+			}
+			if (result.querySelector("a img")) {
+				newData.imgUrl = result.querySelector("a img").src
+			}
+			if (result.querySelector(".list-detail_name-and_badge a")) {
+				newData.name = result.querySelector(".list-detail_name-and_badge a").textContent.trim()
+			}
+			if (result.querySelector(".list-detail_name-and_badge ul li > span:last-of-type")) {
+				newData.degree = result.querySelector(".list-detail_name-and_badge ul li > span:last-of-type").textContent.trim()
+			}
+			if (result.querySelector("dl > div:not(:first-child")) {
+				newData.title = result.querySelector("dl > div:not(:first-child").textContent.trim()
+			}
+			if (result.querySelector(".list-people-detail-header__account a span")) {
+				newData.companyName = result.querySelector(".list-people-detail-header__account a span").textContent
+				newData.companyUrl = result.querySelector(".list-people-detail-header__account a").href
+			}
+			if (result.querySelector(".list-people-detail-header__geography")) {
+				newData.location = result.querySelector(".list-people-detail-header__geography").textContent.trim()
+			}
+			if (result.querySelector(".list-people-detail-header__date-added")) {
+				newData.dateAdded = result.querySelector(".list-people-detail-header__date-added").textContent.trim()
+			}
+			if (arg.query) {
+				newData.query = arg.query
+			}
+			profilesScraped++
+			scrapedData.push(newData)
+		}		
+		if (profilesScraped >= arg.numberOnThisPage) { break }
+	}
+	cb(null, scrapedData)
+}
+
 const totalResults = (arg, callback) => {
 	const total = document.querySelector(arg.selector).textContent
 	callback(null, total)
@@ -161,6 +207,16 @@ const totalResults = (arg, callback) => {
 const clickNextPage = (arg, cb) => {
 	if (!document.querySelector(".search-results__pagination-next-button").disabled) {
 		document.querySelector(".search-results__pagination-next-button").click()
+		cb(null, true)
+	} else {
+		cb(null, null)
+	}
+}
+
+// click on the Next button to switch search pages on Lists
+const clickNextPageLists = (arg, cb) => {
+	if (!document.querySelector(".artdeco-table-next-btn").disabled) {
+		document.querySelector(".artdeco-table-next-btn").click()
 		cb(null, true)
 	} else {
 		cb(null, null)
@@ -192,7 +248,87 @@ const extractDefaultUrls = async results => {
 	return results
 }
 
+const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
+	let pageCount
+	let result = []
+	let profilesFoundCount = 0
+	let maxResults = Math.min(1000, numberOfProfiles)
+	let numberPerPage = 25
+	try {
+		await tab.open(listUrl)
+		await tab.waitUntilVisible(".lists-nav__container")
+		let listName
+		try {
+			listName = await tab.evaluate((arg, cb) => cb(null, document.querySelector(".lists-nav__list-name").textContent.trim()))
+		} catch (err) {
+			//
+		}
+		utils.log(`Getting data for list ${listName ? `${listName}` : ""}...`, "loading")
+		const selector = await tab.waitUntilVisible(".artdeco-tab-primary-text", 15000, "or")
+		const resultsCount = await tab.evaluate(totalResults, { selector })
+		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
+
+		utils.log(`Getting ${resultsCount} results`, "done")
+		let multiplicator = 1
+		if (resultsCount.includes("K")) { multiplicator = 1000 }
+		if (resultsCount.includes("M")) { multiplicator = 1000000 }
+		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
+	} catch (err) {
+		if (await tab.getUrl() === "https://www.linkedin.com/feed/") {
+			utils.log("It seems you don't have a Sales Navigator Account...", "error")
+			notSalesNav = true
+			return []
+		} else {
+			utils.log(`Could not get total results count. ${err}`, "warning")
+		}
+	}
+	for (let i = 1; i <= pageCount; i++) {
+		try {
+			utils.log(`Getting results from page ${i}...`, "loading")
+			try {
+				await tab.waitUntilVisible("table.artdeco-table", 15000)
+			} catch (err) {
+				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
+				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
+				return result
+			}
+			await tab.scrollToBottom()
+			await tab.wait(1500)
+			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			result = result.concat(await tab.evaluate(scrapeLists, {query, numberOnThisPage}))
+			if (result.length > profilesFoundCount) {
+				profilesFoundCount = result.length
+				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
+				try {
+					const clickDone = await tab.evaluate(clickNextPageLists)
+					if (!clickDone) {
+						utils.log("No more profiles found on this page", "warning")
+						break
+					}
+				} catch (err) {
+					utils.log("Error click on Next button", "error")
+					break
+				}
+			} else {
+				utils.log("No more profiles found on this page", "warning")
+				break
+			}
+		} catch (err) {
+			utils.log(`Error scraping this page: ${err}`, "error")
+		}
+	}
+	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
+	utils.log("All pages with result scrapped.", "done")
+	return result
+}
+
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
+
 	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
 	let pageCount
 	let result = []
@@ -290,7 +426,7 @@ const isLinkedInSearchURL = (url) => {
 			if (urlObject.pathname.startsWith("www.linkedin")) {
 				urlObject = parse("https://" + url)
 			}
-			if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/sales/search")) {
+			if (urlObject.hostname === "www.linkedin.com" && (urlObject.pathname.startsWith("/sales/search") || urlObject.pathname.startsWith("/sales/lists/"))) {
 				return 0 // LinkedIn Sales Navigator search
 			} else if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname.startsWith("/search/results/")) {
 				return -1 // Default LinkedIn search
@@ -304,6 +440,7 @@ const isLinkedInSearchURL = (url) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
+	await linkedIn.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
@@ -343,7 +480,12 @@ const isLinkedInSearchURL = (url) => {
 				continue
 			}
 			try {
-				let tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
+				let tempResult
+				if (searchUrl.includes("/sales/lists")) {
+					tempResult = await getListResults(tab, searchUrl, numberOfProfiles, search)
+				} else {
+					tempResult = await getSearchResults(tab, searchUrl, numberOfProfiles, search)
+				}
 				if (notSalesNav) {
 					break
 				}
