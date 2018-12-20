@@ -3,6 +3,8 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
+const { URL } = require("url")
+
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -21,6 +23,18 @@ const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
+
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
+const isLinkedInURL = url => {
+	try {
+		return (new URL(url)).hostname.endsWith("linkedin.com")
+	} catch (err) {
+		return false
+	}
+}
 
 /**
  * @async
@@ -135,10 +149,11 @@ const isStillLoading = (arg, cb) => cb(null, document.querySelector("div.artdeco
 /**
  * @async
  * @param {Object} tab
+ * @param {Number} count
  * @return {Promise<Array<Object>>} scraped members
  */
-const getMembers = async tab => {
-	const members = []
+const getMembers = async (tab, url, scrapeCount = 0) => {
+	let members = []
 	const sel = "artdeco-typeahead-results-list.groups-members-list__results-list artdeco-typeahead-result"
 	let lastCount = 0
 	// Wait until the result list is visible
@@ -150,8 +165,11 @@ const getMembers = async tab => {
 		//
 	}
 	const count = await tab.evaluate(getMembersCount)
-	utils.log(`Scraping ${count} members`, "info")
-	while (members.length + 1 < count) {
+	if (scrapeCount > count || scrapeCount < 1) {
+		scrapeCount = count
+	}
+	utils.log(`Scraping ${scrapeCount} of ${count} members`, "info")
+	while (members.length + 1 < scrapeCount) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting group members: ${timeLeft.message}`, "warning")
@@ -190,6 +208,8 @@ const getMembers = async tab => {
 			}
 		}
 	}
+	members = members.slice(0, scrapeCount)
+	members.forEach(el => el.query = url)
 	utils.log(`${members.length + 1} members scraped`, "done")
 	return members
 }
@@ -213,22 +233,45 @@ const getGroupNameFromMemberPage = (arg, cb) => {
 // Main function to launch everything and handle errors
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, groupUrl, csvName } = utils.validateArguments()
+	let { sessionCookie, groupUrl, columnName, numberOfLinesPerLaunch, numberOfMembersPerGroup, csvName } = utils.validateArguments()
 	const members = []
 
 	if (!csvName) {
 		csvName = "result"
 	}
 	await linkedIn.login(tab, sessionCookie)
-	await checkGroup(tab, groupUrl)
-	try {
-		const res = await getMembers(tab)
-		members.push(...res)
-	} catch (err) {
-		utils.log(`Error while scraping: ${err.message || err}`, "warning")
+
+	const isSingleURL = isLinkedInURL(groupUrl)
+	let queries = isSingleURL ? [ groupUrl ] : await utils.getDataFromCsv2(groupUrl, columnName)
+	const db = await utils.getDb(csvName + ".csv")
+
+	if (!isSingleURL) {
+		queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+		if (numberOfLinesPerLaunch) {
+			queries = queries.slice(0, numberOfLinesPerLaunch)
+		}
+		if (queries.length < 1) {
+			utils.log("Every groups are scraped OR input is empty", "warning")
+			nick.exit()
+		}
 	}
-	await utils.saveResults(members, members, csvName)
-	await linkedIn.saveCookie()
+	utils.log(`Groups to scrape: ${JSON.stringify(queries.slice(0, 500), null, 2)}`, "info")
+	for (const query of queries) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
+		await checkGroup(tab, query)
+		try {
+			const res = await getMembers(tab, query, numberOfMembersPerGroup)
+			members.push(...res)
+		} catch (err) {
+			utils.log(`Error while scraping: ${err.message || err}`, "warning")
+		}
+	}
+	db.push(...utils.filterRightOuter(db, members))
+	await utils.saveResults(db, db, csvName)
+	await linkedIn.updateCookie()
 	nick.exit()
 })()
 .catch(err => {
