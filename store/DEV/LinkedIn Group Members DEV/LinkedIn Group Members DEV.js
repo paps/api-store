@@ -164,11 +164,14 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 	} catch (err) {
 		//
 	}
-	const count = await tab.evaluate(getMembersCount)
+	let count = await tab.evaluate(getMembersCount)
+	if (count > 2500) {
+		count = 2500
+	}
 	if (scrapeCount > count || scrapeCount < 1) {
 		scrapeCount = count
 	}
-	utils.log(`Scraping ${scrapeCount} of ${count} members`, "info")
+	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < scrapeCount) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -270,7 +273,7 @@ const getGroupNameFromMemberPage = (arg, cb) => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, members))
-	await utils.saveResults(db, db, csvName)
+	await utils.saveResults(db, members, csvName)
 	await linkedIn.updateCookie()
 	nick.exit()
 })()

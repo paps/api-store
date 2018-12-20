@@ -39,13 +39,14 @@
 						"placeholder": "groups"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of LinkedIn groups to scrape per launch(default: all URLs are processed)",
-						"inputType": "number"
+						"label": "Number of LinkedIn groups to scrape per launch",
+						"inputType": "number",
+						"helper": "Default: all URLs are processed"
 					},
 					"numberOfMembersPerGroup": {
 						"label": "Number of members to extract per group",
 						"placeholder": "2500",
-						"helper": "When this field is empty, the API will try to scrape all members",
+						"helper": "When this field is empty, 2500 members will be scraped",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -76,7 +77,8 @@
 			},
 			"numberOfMembersPerGroup": {
 				"type": "number",
-				"minimum": 1
+				"minimum": 1,
+				"maximum": 2500
 			},
 			"csvName": {
 				"type": "string",
