@@ -12,7 +12,7 @@ Twitter is limiting users to a maximum of **2400 Tweets per day**. This includes
 This API will Retweet on average **7 Tweets per minute**.
 
 # What do you need? ⚙️
-- **"Spreadsheet URL"**: Link of a pubicly accessible spreadsheet containing a list of twitter profile urls
+- **"Spreadsheet URL"**: Link of a publicly accessible spreadsheet containing a list of twitter profile URLs.
 - **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
 
 # Which steps to follow?
@@ -93,4 +93,4 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 If you want to use this API programmatically you can **replace** the argument **_spreadsheetUrl_** by **_queries_** which must be an array of Twitter handles or Twitter profile URLs (strings). Additionally, you should set **_noDatabase_** to `true` so that the API does not maintain a state on its own (so that you can re-launch the same query to unlike tweets for example).
 
 It should look just like this :
-`{ "queries": ["phbuster", "paps__"], "noDatabase": true, "sessionCookie": "xxxx" }`
+`{ "queries": ["ms_laurynhill", "nas"], "noDatabase": true, "sessionCookie": "xxxx" }`
