@@ -35,15 +35,22 @@ const DB_SHORT_NAME = "twitter-likes-export"
  */
 const isTweetUrl = url => {
 	try {
-		let tmp = new URL(url)
-		return tmp.pathname.indexOf("/status") > -1
+		return (new URL(url)).pathname.split("/").findIndex(el => el === "status") > 1
+	} catch (err) {
+		return false
+	}
+}
+
+const isTwitterUrl = url => {
+	try {
+		return (new URL(url)).hostname.endsWith("twitter.com")
 	} catch (err) {
 		return false
 	}
 }
 
 const scrapeMetadata = (arg, cb) => {
-	const res = {};
+	const res = {}
 	if (document.querySelector("li.js-stat-favorites strong")) {
 		res.likesCount = parseInt(document.querySelector("li.js-stat-favorites strong").textContent.trim().replace(/\s/g, ""), 10)
 	} else {
@@ -222,8 +229,8 @@ const createCsvOutput = json => {
 	}
 
 	if (spreadsheetUrl) {
-		if (utils.isUrl(spreadsheetUrl) && !isTweetUrl(spreadsheetUrl)) {
-			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		if (utils.isUrl(spreadsheetUrl) && !isTwitterUrl(spreadsheetUrl)) {
+			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
 		}
@@ -239,9 +246,14 @@ const createCsvOutput = json => {
 	}
 
 	utils.log(JSON.stringify(queries, null, 2), "info")
-
 	await twitter.login(tab, sessionCookie)
 	for (const query of queries) {
+		if (!isTweetUrl(query)) {
+			const res = { query, error: `${query} is not a valid tweet URL`, timestamp: (new Date()).toISOString(), likers: [], retweets: [] }
+			utils.log(res.error, "warning")
+			execResult.push(res)
+			continue
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.logs(timeLeft.message)
