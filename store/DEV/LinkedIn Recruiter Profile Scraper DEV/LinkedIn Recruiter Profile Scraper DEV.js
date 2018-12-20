@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-Hunter.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -21,31 +21,13 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-// const { URL } = require("url")
-
-const DB_NAME = "result"
-// const MAX_SKILLS = 6
-// }
-
-// const isLinkedInUrl = (url) => {
-// 	try {
-// 		if (url.startsWith("linkedin")) { 
-// 			url = "https://" + url
-// 		}
-// 		const { URL } = require("url")
-// 		let urlObject = new URL(url)
-// 		return ((urlObject.hostname.indexOf("linkedin.com") > -1))
-// 	} catch (err) {
-// 		return false
-// 	}
-// }
+const { URL } = require("url")
 
 const isLinkedInProfileUrl = (url) => {
 	try {
 		if (url.startsWith("linkedin")) { 
 			url = "https://" + url
 		}
-		const { URL } = require("url")
 		let urlObject = new URL(url)
 		if ((urlObject.hostname.indexOf("linkedin.com") > -1)) {
 			if (urlObject.pathname.startsWith("/in/")) {
@@ -68,16 +50,6 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 		nick.exit()
 	}
 	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
-}
-
-const filterRows = (str, db) => {
-	for (const line of db) {
-		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-		if (str.match(regex) || (str === line.baseUrl)) {
-			return false
-		}
-	}
-	return true
 }
 
 // main scraping function
@@ -111,7 +83,7 @@ const scrapeProfile = (arg, cb) => {
 	if (document.querySelectorAll(".profile-info .positions li")) {
 		scrapedData.previousPositions = Array.from(document.querySelectorAll(".profile-info .positions li")).map(el => el.textContent).join(" | ")
 	}
-	if (document.querySelector("a[href=\"#profile-education\"]").parentElement.nextSibling) {
+	if (document.querySelector("a[href=\"#profile-education\"]") && document.querySelector("a[href=\"#profile-education\"]").parentElement.nextSibling) {
 		scrapedData.education = document.querySelector("a[href=\"#profile-education\"]").parentElement.nextSibling.textContent
 	}
 	if (document.querySelector("#profile-summary .module-body")) {
@@ -128,7 +100,7 @@ const scrapeProfile = (arg, cb) => {
 				data.companyName = recruiterCompanyUrl.textContent
 				data.recruiterCompanyUrl = recruiterCompanyUrl.href
 				if (data.recruiterCompanyUrl.startsWith("https://www.linkedin.com/recruiter/company/")) {
-					const companyId = new URL("https://www.linkedin.com/recruiter/company/23213").pathname.slice(19)
+					const companyId = new URL(data.recruiterCompanyUrl).pathname.slice(19)
 					data.companyUrl = `https://www.linkedin.com/company/${companyId}`
 					data.companyId = companyId
 				}
@@ -189,7 +161,6 @@ const scrapeProfile = (arg, cb) => {
 			return data
 		})
 	}
-	// Array.from(document.querySelectorAll("#profile-experience > .module-body > ul > li")).map(el => Array.from(el.querySelectorAll("a")).filter(e => e.href.includes("/recruiter/company") || e.href.includes("/recruiter/search?company"))[0].href)
 	cb(null, scrapedData)
 }
 
@@ -198,12 +169,11 @@ const loadAndScrapeProfile = async (tab, recruiterUrl, profileUrl, saveImg, take
 	utils.log(`Opening page ${recruiterUrl}`, "loading")
 	try {
 		await tab.open(recruiterUrl)
-		await tab.waitUntilVisible("#primary-content")
+		await tab.waitUntilVisible("#profile-ugc")
 	} catch (err) {
 		utils.log(`Couldn't open profile: ${err}`, "error")
+		return null
 	}
-	await tab.screenshot(`${Date.now()}before.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}before.html`)
 	let scrapedData
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { recruiterUrl, profileUrl })
@@ -233,6 +203,29 @@ const loadAndScrapeProfile = async (tab, recruiterUrl, profileUrl, saveImg, take
 	return scrapedData
 }
 
+/**
+ * @description Function used to scrape the company website from it own LinkedIn company page
+ * @throws if there were an error during the scraping process
+ * @param {Object} tab - Nick.js tab
+ * @param {String} url - LinkedIn company URL
+ * @return {Promise<String>} Website company
+ */
+const getCompanyWebsite = async (tab, companyUrl) => {
+	try {
+		const [httpCode] = await tab.open(companyUrl)
+		if (httpCode === 404) {
+			utils.log(`Can't open the LinkedIn company URL: ${companyUrl}`, "warning")
+			return null
+		}
+		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
+		return await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
+		})
+	} catch (err) {
+		return null
+	}
+}
+
 // extract the Recruiter URL from default Profile
 const getRecruiterUrl = (arg, cb) => {
 	if (document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]")) {
@@ -254,31 +247,64 @@ const findRecruiterUrl = async (tab, profileUrl) => {
 	return recruiterUrl
 }
 
+const getMailFromHunter = async (scrapedData, hunter) => {
+	try {
+		const companyTab = await nick.newTab()
+		const companyWebsite = await getCompanyWebsite(companyTab, scrapedData.experience[0].companyUrl)
+		await companyTab.close()
+		if (companyWebsite) {
+			scrapedData.companyWebsite = companyWebsite
+		}
+		const hunterPayload = {}
+		hunterPayload.full_name = scrapedData.name
+		if (!scrapedData.companyWebsite) {
+			hunterPayload.company = scrapedData.experience[0].companyName
+		} else {
+			hunterPayload.domain = scrapedData.companyWebsite
+		}
+		const hunterSearch = await hunter.find(hunterPayload)
+		utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.experience[0].companyName || scrapedData.companyWebsite}`, "info")
+		if (hunterSearch.email) {
+			scrapedData.mailFromHunter = hunterSearch.email
+		}
+	} catch (err) {
+		utils.log(`Error from Hunter: ${err}`, "error")
+	}
+	return scrapedData
+}
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, spreadsheetUrl, columnName, numberOfAddsPerLaunch, saveImg, takeScreenshot} = utils.validateArguments()
-	let profileUrls
-	if (isLinkedInProfileUrl(spreadsheetUrl)) {
-		if ((spreadsheetUrl)) {
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	const tab = await nick.newTab()	
+	await linkedIn.recruiterLogin(tab, sessionCookie)
+	let singleProfile
+	if (spreadsheetUrl) {
+		if (isLinkedInProfileUrl(spreadsheetUrl)) {
 			profileUrls = [spreadsheetUrl]
+			singleProfile = true
 		} else {
-			throw "This link is not a LinkedIn Profile URL."
+			profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
-	} else {
-		profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+	} else if (typeof profileUrls === "string") {
+		profileUrls = [profileUrls]
+		singleProfile = true
 	}
 	if (!numberOfAddsPerLaunch) {
 		numberOfAddsPerLaunch = profileUrls.length
-	} else if (numberOfAddsPerLaunch > profileUrls.length) {
-		numberOfAddsPerLaunch = profileUrls.length
 	}
-
-	const result = await utils.getDb(DB_NAME + ".csv")
-	profileUrls = getUrlsToScrape(profileUrls.filter(el => filterRows(el, result)), numberOfAddsPerLaunch)
+	if (!csvName) { csvName = "result" }
+	const result = await utils.getDb(csvName + ".csv")
+	if (!singleProfile) {
+		profileUrls = getUrlsToScrape(profileUrls.filter(el => el && utils.checkDb(el, result, "query")), numberOfAddsPerLaunch)
+	}
+	let hunter
+	if (hunterApiKey) {
+		require("coffee-script/register")
+		hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(profileUrls, null, 4)}`)
 
-	const tab = await nick.newTab()
-	await linkedIn.recruiterLogin(tab, sessionCookie)
 	for (let profileUrl of profileUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -293,7 +319,10 @@ const findRecruiterUrl = async (tab, profileUrl) => {
 				recruiterUrl = profileUrl
 			}
 			if (recruiterUrl) {
-				const scrapedData = await loadAndScrapeProfile(tab, recruiterUrl, profileUrl, saveImg, takeScreenshot)
+				let scrapedData = await loadAndScrapeProfile(tab, recruiterUrl, profileUrl, saveImg, takeScreenshot)
+				if (hunterApiKey) {
+					scrapedData = await getMailFromHunter(scrapedData, hunter)
+				}
 				result.push(scrapedData)
 			}
 		} catch (err) {
@@ -302,7 +331,7 @@ const findRecruiterUrl = async (tab, profileUrl) => {
 			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
 		}
 	}
-	await utils.saveResults(result, result, DB_NAME)
+	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 
 })()

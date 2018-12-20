@@ -59,14 +59,14 @@ const isLinkedInProfile = (url) => {
 	}
 	return false
 }
-const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
+const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
+	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
 const filterRows = (str, db) => {
@@ -202,7 +202,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -220,19 +220,19 @@ const getCompanyWebsite = async (tab, url, utils) => {
 		urls = [profileUrls]
 	}
 
-	if (!numberOfAddsPerLaunch) {
-		numberOfAddsPerLaunch = urls.length
-	} else if (numberOfAddsPerLaunch > urls.length) {
-		numberOfAddsPerLaunch = urls.length
+	if (!numberOfProfilesPerLaunch) {
+		numberOfProfilesPerLaunch = urls.length
+	} else if (numberOfProfilesPerLaunch > urls.length) {
+		numberOfProfilesPerLaunch = urls.length
 	}
 	let hunter
 	if (hunterApiKey) {
 		require("coffee-script/register")
 		hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 	}
-
+	if (!csvName) { csvName = "result" }
 	const result = await utils.getDb(csvName + ".csv")
-	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfAddsPerLaunch)
+	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfProfilesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 

@@ -1,6 +1,6 @@
 {
-	"slug": "linkedin-profile-scraper",
-	"description": "Collect valuable information you need from LinkedIn profiles, including emails",
+	"slug": "linkedin-recruiter-profile-scraper",
+	"description": "Collect valuable information you need from LinkedIn Recruiter profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
 	"hidden": false,
 	"updated": false,
@@ -9,29 +9,23 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1qWQ5t-pFaibQQoltH05uH0uw_t_fArpZoYTAYh4k1Gg",
+		"spreadsheetUrl": "linkedin_profile_urls",
 		"saveImg": false,
 		"takeScreenshot": false
 	},
 	"outputDescription": {
-		"linkedinProfile": "LinkedIn profile URL",
-		"description": "LinkedIn profile description",
-		"firstName": "",
-		"lastName": "",
-		"fullName": "",
-		"subscribers": "How many subscribers does she/he have",
-		"company": "What is the name of the company she/he is currently working for",
-		"companyUrl": "What is the url of the company she/he is currently working for",
-		"jobTitle": "What is her/his current job title",
-		"jobDescription": "Description of the current job",
-		"location": "Where is she/he located",
-		"mail": "Email address displayed on profile page (very few people do that)",
-		"mailFromHunter": "Discovered email (see 'Email discovery' section)",
-		"profileImageUrl": "",
-		"phoneNumber": "",
-		"twitter": "",
-		"skill1 to skill6": "Top skills",
-		"endorsements1 to endorsements6": "Number of endorsements per top skill"
+		"profileUrl": "LinkedIn profile URL",
+		"recruiterProfileUrl": "LinkedIn Recruiter profile URL",
+		"name": "",
+		"degree": "",
+		"connectionCount": "",
+		"title": "",
+		"previousPositions": "",
+		"education": "",
+		"summary": "",
+		"skills": "",
+		"experience": "",
+		"languages": ""
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -54,6 +48,7 @@
 						"type": "url",
 						"helpers": [
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+							"OR a LinkedIn Recruiter/regular profile URL",
 							"<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
 						],
 						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/3112/linkedin-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
@@ -71,6 +66,10 @@
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"placeholder": 10,
 						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
 					},
 					"saveImg": {
 						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
@@ -105,12 +104,45 @@
 				"minimum": 1,
 				"maximum": 25
 			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			},
 			"saveImg": {
 				"type": "boolean"
 			},
 			"takeScreenshot": {
 				"type": "boolean"
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }

@@ -2,14 +2,15 @@
 	"slug": "linkedin-sales-navigator-profile-scraper",
 	"description": "Collect valuable information you need from LinkedIn Sales Navigator profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1qWQ5t-pFaibQQoltH05uH0uw_t_fArpZoYTAYh4k1Gg",
+		"numberOfProfilesPerLaunch": 10,
 		"saveImg": false,
 		"takeScreenshot": false
 	},
@@ -75,9 +76,8 @@
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
-					"numberOfAddsPerLaunch": {
+					"numberOfProfilesPerLaunch": {
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
 						"inputType": "number"
 					},
 					"csvName": {
@@ -112,7 +112,7 @@
 				"type": "string",
 				"maxLength": 50
 			},
-			"numberOfAddsPerLaunch": {
+			"numberOfProfilesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
 				"maximum": 25

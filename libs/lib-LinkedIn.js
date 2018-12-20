@@ -86,7 +86,6 @@ class LinkedIn {
 			}
 			return "cookie not working"
 		}
-
 		try {
 			if ((typeof(agentObject[".modifiedSessionCookie"]) === "string") && agentObject[".cookieTimestamp"] && (agentObject[".originalSessionCookie"] === this.originalSessionCookie) && agentObject[".modifiedSessionCookie"] !== agentObject[".originalSessionCookie"]) {
 				// the user has not changed his session cookie, he wants to login with the same account

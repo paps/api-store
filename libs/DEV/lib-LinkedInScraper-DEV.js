@@ -418,7 +418,7 @@ const scrapeInfos = (arg, callback) => {
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad, silence) => {
 	const [httpCode] = await tab.open(url)
-	if (httpCode !== 200 && httpCode !== 999) {
+	if (httpCode && httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {
@@ -822,7 +822,7 @@ class LinkedInScraper {
 	 */
 	async visitProfile(tab, url, verbose = false) {
 		const [httpCode] = await tab.open(url)
-		if (httpCode !== 200 && httpCode !== null) {
+		if (httpCode !== 200 && httpCode) {
 			throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 		}
 		try {

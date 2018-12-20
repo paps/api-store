@@ -415,7 +415,6 @@ nick.newTab().then(async (tab) => {
 	} catch (err) {
 		utils.log("Could not access agent Object.", "warning")
 	}
-
 	let singleGroup
 	if (groupsUrl) {
 		let isAFacebookGroupUrl = isFacebookGroupUrl(groupsUrl)

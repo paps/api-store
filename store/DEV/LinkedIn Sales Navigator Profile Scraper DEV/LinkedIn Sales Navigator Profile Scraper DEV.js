@@ -230,7 +230,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 		require("coffee-script/register")
 		hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
 	}
-
+	if (!csvName) { csvName = "result" }
 	const result = await utils.getDb(csvName + ".csv")
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)

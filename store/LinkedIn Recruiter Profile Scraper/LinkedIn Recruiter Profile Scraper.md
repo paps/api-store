@@ -2,9 +2,9 @@
 
 <hr />
 
-# Extract info from LinkedIn profiles
+# Extract info from LinkedIn Recruiter profiles
 
-When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn profiles you're targeting in a CSV file.
+When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn Recrioter profiles you're targeting in a CSV file.
 
 # Our Solution
 
@@ -19,7 +19,7 @@ _More infos about_ <span style="color:red"> >> [LinkedIn Commercial Use Limit](h
 # What will you need? ⚙️ 
 
 - **Session cookie**: Your session cookie from LinkedIn.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn profile URLs in it.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn Recruiter or regular profile URLs in it.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
