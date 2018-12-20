@@ -256,6 +256,7 @@ const sendMessage = async (tab, message) => {
 			await startConversation(tab, profile.handle)
 			await sendMessage(tab, profile.message)
 			utils.log(`Message successfully sent to ${profile.handle}`, "done")
+			profile.timestamp = (new Date()).toISOString()
 			res.push(profile)
 		} catch (err) {
 			profile.error = err.message || err
