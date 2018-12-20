@@ -35,7 +35,7 @@ const DEFAULT_LINES = 10
  */
 const isTwitterUrl = url => {
 	try {
-		return (new URL(url)).pathname.indexOf("twitter.com") > -1
+		return (new URL(url)).hostname.indexOf("twitter.com") > -1
 	} catch (err) {
 		return false
 	}
@@ -233,6 +233,5 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 })()
 .catch(err => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack available")
 	nick.exit(1)
 })
