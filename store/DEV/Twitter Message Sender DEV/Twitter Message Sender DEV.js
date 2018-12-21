@@ -60,7 +60,7 @@ const isUrl = url => {
 
 const isTwitterUrl = url => {
 	try {
-		return (new URL(url)).pathname.indexOf("twitter.com") > -1
+		return (new URL(url)).hostname.indexOf("twitter.com") > -1
 	} catch (err) {
 		return false
 	}
@@ -241,7 +241,7 @@ const sendMessage = async (tab, message) => {
 
 	await twitter.login(tab, sessionCookie)
 	for (const one of rows) {
-		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one : `https://www.twitter.com/${one[columnName]}`, true)
+		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
 		profile.query = one[columnName]
 		profile.message = inflater.forgeMessage(message, Object.assign({}, profile, one))
 		try {
@@ -252,7 +252,10 @@ const sendMessage = async (tab, message) => {
 				utils.log(profile.error, "warning")
 				continue
 			}
+
 			utils.log(`Opening a conversation for ${profile.handle}`, "loading")
+			nick.exit()
+
 			await startConversation(tab, profile.handle)
 			await sendMessage(tab, profile.message)
 			utils.log(`Message successfully sent to ${profile.handle}`, "done")

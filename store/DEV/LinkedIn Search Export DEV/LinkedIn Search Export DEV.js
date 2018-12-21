@@ -291,7 +291,7 @@ const scrapeAndRemove = (arg, cb) => {
 			scrapedObject.title = results[i].querySelector(".feed-shared-actor__description").innerText
 		}
 		if (results[i].querySelector(".feed-shared-actor__sub-description")) {
-			scrapedObject.postDate = results[i].querySelector(".feed-shared-actor__sub-description").innerText
+			scrapedObject.postDate = results[i].querySelector(".feed-shared-actor__sub-description").innerText.trim()
 		}
 		if (results[i].querySelector(".feed-shared-text__text-view")) {
 			scrapedObject.textContent = results[i].querySelector(".feed-shared-text__text-view").innerText

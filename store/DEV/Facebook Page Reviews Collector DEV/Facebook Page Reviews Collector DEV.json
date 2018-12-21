@@ -1,0 +1,141 @@
+{
+	"slug": "facebook-page-reviews-collector",
+	"description": "Extract a list of reviews from a facebook page",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Event+Guests+Exporter/Facebook+Event+Guests+Exporter.png",
+	"hidden": false,
+	"new": true,
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+        "sessionCookieCUser": "your_c-user_session_cookie",
+        "sessionCookieXs": "your_xs_session_cookie",
+		"numberofPagesperLaunch": 10,
+		"orderBy": "Most Helpful",
+		"maxReviews": 50
+	},
+	"outputDescription": {
+		"profileUrl": "Facebook profile URL",
+		"name": "Full name",
+		"profilePictureUrl": "Profile picture URL",
+		"facebookID": "Facebook Unique ID",
+		"eventName": "",
+		"eventStatus": "Interested/Invited/Going/Declined",
+		"friendStatus": "Friend/Not friend"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+                    "sessionCookieCUser": {
+                        "label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your c_user session cookie here"
+                    },
+                    "sessionCookieXs": {
+                        "label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your xs session cookie here"
+                    },
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook event URL"
+						],
+						"label": "Facebook page or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "Facebook Page link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberofPagesperLaunch": {
+						"label": "Number of pages to process per launch (all of them if left empty)",
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+					},
+					"maxReviews": {
+						"label": "Number of reviews to scrape per page (all of them if left empty)",
+						"inputType": "number"
+					},
+					"orderBy": {
+						"label": "Posts order",
+						"helper": "Order by Most Helpful or Most Recent post",
+						"removeDefaultNone": true,
+						"sort": false
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+            "sessionCookieCUser": {
+                "type": "string",
+                "required": true,
+                "minLength": 6
+            },
+            "sessionCookieXs": {
+                "type": "string",
+                "required": true,
+                "minLength": 15
+            },
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberofPagesperLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+			},
+			"maxReviews": {
+				"type": "number",
+				"minimum": 1
+			},
+			"orderBy": {
+				"enum": ["Most Helpful", "Most Recent"],
+				"default": "Most Helpful"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"pageUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"pageUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

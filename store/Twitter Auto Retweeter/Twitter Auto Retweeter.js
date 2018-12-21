@@ -150,7 +150,7 @@ const findRTs = async (tab, retweetCount) => {
 		if (loadedCount < 1) {
 			break
 		}
-		tweets = await tab.evaluate(scrapeTweets)
+		tweets = await tab.evaluate(scrapeTweets, {})
 		// TODO: add conditional checks here ....
 		if (tweets.length >= retweetCount) {
 			break

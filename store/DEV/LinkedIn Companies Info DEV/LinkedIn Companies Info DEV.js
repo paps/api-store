@@ -396,14 +396,15 @@ const isLinkedUrl = target => {
 				} else {
 					result.push(newResult)
 					if (!newResult.invalidResults) {
-						utils.log(`Got linkedin data for ${company}`, "done")
+						utils.log(`Scraped data for ${newResult.name ? `company ${newResult.name}` : company}.`, "done")
 					}
 				}
 			} catch (error) {
-				utils.log(`Could not get ${company} linkedIn profile because ${error}`, "warning")
+				utils.log(`Could not get ${company} data because ${error}`, "warning")
 			}
 		}
 	}
+	await linkedIn.updateCookie()
 	await utils.saveResult(result)
 })()
 	.catch(err => {
