@@ -105,9 +105,11 @@ const scrapeProfile = (arg, cb) => {
 	scrapedData.numberOfConnections = jsonData.numOfConnections
 	scrapedData.numberOfSharedConnections = jsonData.numOfSharedConnections
 	scrapedData.companyName = jsonData.companyName
-	if (jsonCode.defaultPosition) {
-		scrapedData.companyDescription = jsonCode.defaultPosition.description
-		scrapedData.companyLocation = jsonCode.defaultPosition.location
+	if (jsonData.defaultPosition) {
+		scrapedData.currentCompanyDescription = jsonData.defaultPosition.description
+		scrapedData.currentCompanyLocation = jsonData.defaultPosition.location
+		scrapedData.currentCompanyName = jsonData.defaultPosition.companyName
+		scrapedData.currentTitle = jsonData.defaultPosition.title
 	}
 	if (jsonData.profilePictureDisplayImage) {
 		scrapedData.imgUrl = jsonData.profilePictureDisplayImage.artifacts[jsonData.profilePictureDisplayImage.artifacts.length - 1].fileIdentifyingUrlPathSegment

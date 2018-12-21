@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Hunter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Hunter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,9 +20,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 
 const { URL } = require("url")
 // }
@@ -59,14 +59,14 @@ const isLinkedInProfile = (url) => {
 	}
 	return false
 }
-const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
+const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
 	}
-	return data.slice(0, Math.min(numberOfAddsPerLaunch, maxLength)) // return the first elements
+	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
 const filterRows = (str, db) => {
@@ -105,9 +105,11 @@ const scrapeProfile = (arg, cb) => {
 	scrapedData.numberOfConnections = jsonData.numOfConnections
 	scrapedData.numberOfSharedConnections = jsonData.numOfSharedConnections
 	scrapedData.companyName = jsonData.companyName
-	if (jsonCode.defaultPosition) {
-		scrapedData.companyDescription = jsonCode.defaultPosition.description
-		scrapedData.companyLocation = jsonCode.defaultPosition.location
+	if (jsonData.defaultPosition) {
+		scrapedData.currentCompanyDescription = jsonData.defaultPosition.description
+		scrapedData.currentCompanyLocation = jsonData.defaultPosition.location
+		scrapedData.currentCompanyName = jsonData.defaultPosition.companyName
+		scrapedData.currentTitle = jsonData.defaultPosition.title
 	}
 	if (jsonData.profilePictureDisplayImage) {
 		scrapedData.imgUrl = jsonData.profilePictureDisplayImage.artifacts[jsonData.profilePictureDisplayImage.artifacts.length - 1].fileIdentifyingUrlPathSegment
@@ -202,7 +204,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -220,10 +222,10 @@ const getCompanyWebsite = async (tab, url, utils) => {
 		urls = [profileUrls]
 	}
 
-	if (!numberOfAddsPerLaunch) {
-		numberOfAddsPerLaunch = urls.length
-	} else if (numberOfAddsPerLaunch > urls.length) {
-		numberOfAddsPerLaunch = urls.length
+	if (!numberOfProfilesPerLaunch) {
+		numberOfProfilesPerLaunch = urls.length
+	} else if (numberOfProfilesPerLaunch > urls.length) {
+		numberOfProfilesPerLaunch = urls.length
 	}
 	let hunter
 	if (hunterApiKey) {
@@ -232,7 +234,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 	}
 	if (!csvName) { csvName = "result" }
 	const result = await utils.getDb(csvName + ".csv")
-	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfAddsPerLaunch)
+	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfProfilesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 
