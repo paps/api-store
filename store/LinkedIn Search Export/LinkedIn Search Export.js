@@ -80,16 +80,23 @@ const scrapeResultsAll = (arg, callback) => {
 				scrapedData.logoUrl = result.querySelector("img.job-card-search__logo-image").src
 			}
 			if (result.querySelector("h4.job-card-search__company-name")) {
-				scrapedData.companyName = result.querySelector("h4.job-card-search__company-name").textContent
+				scrapedData.companyName = result.querySelector("h4.job-card-search__company-name").textContent.trim()
+			}
+			if (result.querySelector("h4.job-card-search__company-name a")) {
+				scrapedData.companyUrl = result.querySelector("h4.job-card-search__company-name a").href
 			}
 			if (result.querySelector("h3.job-card-search__title")) {
-				scrapedData.jobTitle = result.querySelector("h3.job-card-search__title").textContent.trim()
+				let jobTitle = result.querySelector("h3.job-card-search__title").textContent.trim()
+				scrapedData.jobTitle = jobTitle.split("\n").map(el => el.trim()).join(" | ")
 			}
-			if (result.querySelector("h5.job-card-search__location span") && result.querySelector("h5.job-card-search__location span").nextSibling) {
-				scrapedData.location = result.querySelector("h5.job-card-search__location span").nextSibling.wholeText.trim()
+			if (result.querySelector("h5.job-card-search__location")) {
+				scrapedData.location = result.querySelector("h5.job-card-search__location").textContent.trim()
 			}
 			if (result.querySelector("p.job-card-search__description-snippet")) {
 				scrapedData.description = result.querySelector("p.job-card-search__description-snippet").innerText.trim()
+			}
+			if (result.querySelector(".job-card-search__time-badge")) {
+				scrapedData.postDate = result.querySelector(".job-card-search__time-badge").textContent.trim()
 			}
 		} else if (result.querySelector(".search-result__result-link")) {
 			url = result.querySelector(".search-result__result-link").href

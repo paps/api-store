@@ -251,10 +251,12 @@ const getTotalCommentsCount = (arg, cb) => {
 		totalCount = document.querySelector("a[data-testid*=\"CommentsCount\"]").textContent.split(" ")[0].replace(/[,.]/,"")
 	}
 	// we're converting 56.3K to 56300
-	if (totalCount.includes("K")) {
-		totalCount = parseFloat(totalCount.replace("K", "")) * 1000
-	} else {
-		totalCount = parseInt(totalCount, 10)
+	if (totalCount) {
+		if (totalCount.includes("K")) {
+			totalCount = parseFloat(totalCount.replace("K", "")) * 1000
+		} else {
+			totalCount = parseInt(totalCount, 10)
+		}
 	}
 	cb(null, totalCount)
 }
@@ -310,7 +312,7 @@ const getTotalCommentsCount = (arg, cb) => {
 				}
 			}
 			try {
-				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
+				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 30000, "or")
 				let totalCount
 				try {
 					totalCount = await tab.evaluate(getTotalCommentsCount)

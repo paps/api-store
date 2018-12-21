@@ -207,8 +207,8 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 }
 
 ;(async () => {
-	const tab = await nick.newTab()
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
+	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 	const webSearch = new WebSearch(tab, buster)
 	const scrapedData = []
@@ -328,7 +328,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl }) 
 
 			try {
-				await tab.waitUntilVisible("main", 15000)
+				await tab.waitUntilVisible("main", 30000)
 			} catch (err) {
 				utils.log(`Page is not opened: ${err.message || err}`, "error")
 				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
