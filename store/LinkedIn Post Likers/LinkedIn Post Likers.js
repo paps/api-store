@@ -133,7 +133,7 @@ const getLikes = async (tab, urls) => {
 	// Issue #157: append the content instead of overwritting the db
 	db = await utils.getDb(csvName + ".csv")
 	if (postUrl.indexOf("linkedin.com/") < 0) {
-		postUrl = await utils.getDataFromCsv(postUrl, columnName)
+		postUrl = await utils.getDataFromCsv2(postUrl, columnName)
 	} else {
 		postUrl = [ postUrl ]
 	}
@@ -146,7 +146,7 @@ const getLikes = async (tab, urls) => {
 	const results = await getLikes(tab, postUrl)
 	db.push(...utils.filterRightOuter(db, results))
 	utils.log(`Got ${results.length} likers.`, "done")
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {

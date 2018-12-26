@@ -152,7 +152,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let db = await utils.getDb(csvName + ".csv")
 
 	if (spreadsheetUrl) {
-		companies = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	} else if (typeof(companies) === "string") {
 		companies = [companies]
 	}
