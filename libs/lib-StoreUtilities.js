@@ -372,6 +372,10 @@ class StoreUtilities {
 			throw `${url} doesn't represent a CSV file`
 		}
 
+		if (!httpContent) {
+			throw "Input spreadsheet is empty!"
+		}
+
 		let column = 0
 		if (columnName) {
 			let i
