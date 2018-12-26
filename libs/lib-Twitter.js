@@ -133,7 +133,7 @@ class Twitter {
 	 * @throws on CSS exception / 404 HTTP code
 	 */
 	async openProfile(tab, url) {
-		const selectors = [ ".ProfileHeading", "div.footer a.alternate-context" ]
+		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context" ]
 		const [httpCode] = await tab.open(url)
 		if (httpCode === 404) {
 			throw `Can't open URL: ${url}`
@@ -185,6 +185,7 @@ class Twitter {
 				const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
 				const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")
 				const followBackSelector = descriptionSelector.querySelector("span.FollowStatus")
+				const protectedSelector = descriptionSelector.querySelector("span.Icon--protected:not(.hidden)")
 				res.name = screenNameSelector ? screenNameSelector.textContent.trim() : null
 				res.twitterProfile = screenNameSelector ? screenNameSelector.href : null
 				res.handle = handleSelector ? handleSelector.textContent.trim() : null
@@ -192,6 +193,7 @@ class Twitter {
 				res.location = locationSelector ? locationSelector.textContent.trim() : null
 				res.website = websiteSelector ? websiteSelector.title : null
 				res.joinDate = null
+				res.protectedAccount = protectedSelector !== null
 				res.followback = followBackSelector !== null
 				if (joinDateSelector) {
 					if (joinDateSelector.title) {
