@@ -130,34 +130,38 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 	let lastDate = new Date()
 	let totalScraped = 0
 	do {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-			break
-		}
-		const newlikerCount = await tab.evaluate(getLikerCount)
-		if (newlikerCount > likerCount) {
-			likerCount = newlikerCount
-			utils.log(`${likerCount + totalScraped} likers scraped.`, "done")
-			buster.progressHint((likerCount + totalScraped) / likerToScrape, `${likerCount + totalScraped} likers scraped`)
-			lastDate = new Date()
-			if (totalScraped + likerCount > likerToScrape) {
+		try {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 				break
 			}
-		}
-		if (likerCount > 60) {
-			try {
-				result = result.concat(await tab.evaluate(scrapeLikers, { pageUrl, all: false }))
-			} catch (err) {
-				//
+			const newlikerCount = await tab.evaluate(getLikerCount)
+			if (newlikerCount > likerCount) {
+				likerCount = newlikerCount
+				utils.log(`${likerCount + totalScraped} likers scraped.`, "done")
+				buster.progressHint((likerCount + totalScraped) / likerToScrape, `${likerCount + totalScraped} likers scraped`)
+				lastDate = new Date()
+				if (totalScraped + likerCount > likerToScrape) {
+					break
+				}
 			}
-			likerCount = await tab.evaluate(getLikerCount)
-			await tab.scrollToBottom()
-			if (result.length > totalScraped) {
-				totalScraped = result.length
+			if (likerCount > 60) {
+				try {
+					result = result.concat(await tab.evaluate(scrapeLikers, { pageUrl, all: false }))
+				} catch (err) {
+					//
+				}
+				likerCount = await tab.evaluate(getLikerCount)
+				await tab.scrollToBottom()
+				if (result.length > totalScraped) {
+					totalScraped = result.length
+				}
 			}
+			await scrollABit(tab)
+		} catch (err) {
+			//
 		}
-		await scrollABit(tab)
 	} while (!await tab.isPresent("#browse_end_of_results_footer") && new Date() - lastDate < 40000)
 	const tookTooLong = (new Date() - lastDate) >= 40000
 	const footer = await tab.isPresent("#browse_end_of_results_footer")
@@ -236,6 +240,11 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 		}
 		try {
 			await tab.waitUntilVisible("#pages_side_column", 30000)
+		} catch (err) {
+			utils.log("Error loading the page, it may not be a Facebook page URL", "error")
+			continue
+		}
+		try {
 			const pageData = await tab.evaluate(scrapedPageIdNameandLikeCount)
 			if (!pageData.pageId) {
 				utils.log(`Error: could not open page ${pageUrl}`, "error")

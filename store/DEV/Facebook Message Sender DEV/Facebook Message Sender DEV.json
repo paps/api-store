@@ -16,16 +16,10 @@
         "csvName": "result"
     },
     "outputDescription": {
-		"profileURL": "Facebook profile URL",
-		"profilePictureUrl": "Profile picture URL",
 		"name": "Full name",
-		"status": "Friend or not",
-        "work": "",
-        "education": "",
-        "cities": "",
-        "contactInfo": "",
-        "familyMembers": "",
-        "lifeEvents": ""
+		"firstName": "",
+        "lastName": "",
+        "message": "The message you sent"
 	},
     "defaultArgumentAllowed": false,
     "argumentForm": {

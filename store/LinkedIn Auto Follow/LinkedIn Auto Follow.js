@@ -135,7 +135,7 @@ nick.newTab().then(async (tab) => {
 	}
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	db = await utils.getDb(csvName + ".csv")
-	let data = await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+	let data = await utils.getDataFromCsv2(spreadsheetUrl.trim(), columnName)
 	data = data.filter(str => str) // removing empty lines
 	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
 	await linkedIn.login(tab, sessionCookie)

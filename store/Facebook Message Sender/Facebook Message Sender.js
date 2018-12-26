@@ -23,7 +23,6 @@ const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
-let blocked
 const { URL } = require("url")
 
 const isUrl = url => {
@@ -90,7 +89,11 @@ const sendMessage = async (tab, message) => {
 	}
 	await tab.wait(3000)
 	utils.log(`Sending message : ${message}`, "done")
-	await tab.click("#content div[role=presentation] ul + a")
+	try {
+		await tab.click("#content div[role=presentation] ul + a")
+	} catch (err) {
+		throw "Send button not available!"
+	}
 }
 
 // returns true if we got an error message from Fb, false otherwise
@@ -128,8 +131,10 @@ nick.newTab().then(async (tab) => {
 	}
 	let result = await utils.getDb(csvName + ".csv")
 	let profilesToScrape
+	let singleProfile
 	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ { "0": spreadsheetUrl } ]
+		singleProfile = true
 		columnName = "0"
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
@@ -142,7 +147,9 @@ nick.newTab().then(async (tab) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	profilesToScrape = profilesToScrape.filter(el =>  el[columnName] && result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
+	if (!singleProfile) {
+		profilesToScrape = profilesToScrape.filter(el => el[columnName] && result.findIndex(line => el[columnName] === line.profileUrl && line.message) < 0).slice(0, profilesPerLaunch)
+	}
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
@@ -164,6 +171,7 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
+					tempResult.timestamp = (new Date()).toISOString()
 					if (tempResult.name && message) {
 						try {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
@@ -175,18 +183,28 @@ nick.newTab().then(async (tab) => {
 							if (!isBanned && !isBlocked) {
 								tempResult.message = forgedMessage
 							} else {
-								utils.log("Message didn't go through, blocked by Facebook.", "error")	
-								blocked = true
+								utils.log("Message didn't go through, blocked by Facebook.", "error")
+								break
+								// try {
+								// 	await tab.waitUntilVisible("#captcha_dialog_submit_button")
+								// 	await tab.click("#captcha_dialog_submit_button")
+								// 	await tab.wait(2000)
+								// 	await buster.saveText(await tab.getContent(), `${Date.now()}slectors.html`)
+								// 	await tab.waitUntilVisible("#captcha_dialog_submit_button")
+								// 	await tab.click("#captcha_dialog_submit_button")
+								// 	await tab.wait(2000)
+								// 	await buster.saveText(await tab.getContent(), `${Date.now()}slectors.html`)
+								// } catch (err) {
+								// 	//
+								// }
+								// blocked = true
 							}
-							tempResult.timestamp = (new Date()).toISOString()
 						} catch (err) {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
+							tempResult.error = err
 						}
 					}		
 					result.push(tempResult)
-					if (blocked) {
-						break
-					}
 				} catch (err) {
 					const isBlocked = await tab.evaluate(checkIfBlocked)
 					if (isBlocked) {

@@ -12,20 +12,14 @@
         "sessionCookieCUser": "your_c-user_session_cookie",
         "sessionCookieXs": "your_xs_session_cookie",
         "spreadsheetUrl": "facebook_profile_urls",
-        "message": "Hey #fbFirstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/8852/facebook-message-sender\n\nNice to connect!\n\nBest regards",
+        "message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/8852/facebook-message-sender\n\nNice to connect!\n\nBest regards",
         "csvName": "result"
     },
     "outputDescription": {
-		"profileURL": "Facebook profile URL",
-		"profilePictureUrl": "Profile picture URL",
 		"name": "Full name",
-		"status": "Friend or not",
-        "work": "",
-        "education": "",
-        "cities": "",
-        "contactInfo": "",
-        "familyMembers": "",
-        "lifeEvents": ""
+		"firstName": "",
+        "lastName": "",
+        "message": "The message you sent"
 	},
     "defaultArgumentAllowed": false,
     "argumentForm": {
@@ -92,7 +86,8 @@
             },
             "message": {
 				"type": "string",
-				"maxLength": 1000
+                "maxLength": 1000,
+                "minLength": 1
             },
             "profilesPerLaunch": {
                 "type": "number",

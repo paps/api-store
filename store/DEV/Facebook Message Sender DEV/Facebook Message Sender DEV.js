@@ -24,7 +24,6 @@ const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
-let blocked
 const { URL } = require("url")
 
 /* eslint-disable no-unused-vars */
@@ -42,8 +41,8 @@ const isUrl = url => {
 const getNameFromChat = (arg, cb) => {
 	if (document.querySelector("a[uid]")) {
 		cb(null, document.querySelector("a[uid]").textContent)
-	} else if (document.querySelectorAll("#content div > h2")[1]) {
-			cb(null, document.querySelectorAll("#content div > h2")[1].textContent)
+	} else if (document.querySelector("#content div[style=\"text-align: center;\"] h2")) {
+			cb(null, document.querySelector("#content div[style=\"text-align: center;\"] h2").textContent)
 	} else if (Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3] && Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a")) {
 		cb(null, Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a").textContent)
 	} else {
@@ -72,8 +71,33 @@ const openChatPage = async (tab, profileUrl) => {
 	}
 	await tab.wait(5000)
 	try {
-		const name = await tab.evaluate(getNameFromChat)
+	// 	const name = await tab.evaluate(getNameFromChat)
+	// 	const dataTS = await tab.getContent()
+	// 	// let dataTS = "hey"
+	// 	console.log("len", dataTS.length)
+
+	// 	try {
+	// 		const request = require("request") // You have to run `npm install request` for this script to work
+	// 		const json = {
+	// 			"output": "first-result-object",
+	// 			"argument": {
+	// 			"input": dataTS
+	// 			}
+	// 		}
+	// 		const options = {
+	// 			url: "https://phantombuster.com/api/v1/agent/44789/launch",
+	// 			headers: { "X-Phantombuster-Key-1": "XCAOO4VxCABQIlysEY8G21BNG6we6jUr" },
+	// 			json
+	// 		}
+	// 		console.log("sending", typeof dataTS)
+	// 		await request.post(options)
+	// 		// console.log("sent", dataTS)
+	// 	} catch (err) {
+	// 		//
+	// 	}
 		if (!name) {
+			await tab.screenshot(`${Date.now()}not accessible.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}not accessible.html`)
 			throw "Name not accessible"
 		}
 		const names = facebook.getFirstAndLastName(name)
@@ -83,6 +107,8 @@ const openChatPage = async (tab, profileUrl) => {
 		return { profileUrl, name, firstName, lastName }
 	} catch (err) {
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
+		await tab.screenshot(`${Date.now()}Couldn't get .png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}Couldn't get .html`)
 		return { profileUrl, error: "Could get profile name"}
 	}
 }
@@ -94,7 +120,12 @@ const sendMessage = async (tab, message) => {
 	}
 	await tab.wait(3000)
 	utils.log(`Sending message : ${message}`, "done")
-	await tab.click("#content div[role=presentation] ul + a")
+	try {
+		// await tab.click("#content div[role=presentation] ul + a")
+		throw "r"
+	} catch (err) {
+		throw "Send button not available!"
+	}
 }
 
 // returns true if we got an error message from Fb, false otherwise
@@ -131,9 +162,10 @@ nick.newTab().then(async (tab) => {
 		profilesPerLaunch = 10
 	}
 	let result = await utils.getDb(csvName + ".csv")
-	let profilesToScrape
+	let profilesToScrape, singleProfile
 	if (facebook.isFacebookUrl(spreadsheetUrl)) {
 		profilesToScrape = [ { "0": spreadsheetUrl } ]
+		singleProfile = true
 		columnName = "0"
 	} else {
 		profilesToScrape = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
@@ -146,8 +178,9 @@ nick.newTab().then(async (tab) => {
 	if (!columnName) {
 		columnName = "0"
 	}
-	
-	profilesToScrape = profilesToScrape.filter(el => el[columnName] && result.findIndex(line => el[columnName] === line.profileUrl) < 0).slice(0, profilesPerLaunch)
+	if (!singleProfile) {
+		profilesToScrape = profilesToScrape.filter(el => el[columnName] && result.findIndex(line => el[columnName] === line.profileUrl && line.message) < 0).slice(0, profilesPerLaunch)
+	}
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
@@ -155,6 +188,7 @@ nick.newTab().then(async (tab) => {
 	utils.log(`Lines to process: ${JSON.stringify(profilesToScrape.map(el => el[columnName]), null, 2)}`, "done")
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profileCount = 0
+	let tempResult = []
 	for (let profileObject of profilesToScrape) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -169,6 +203,7 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
 					const tempResult = await openChatPage(tab, profileUrl)
+					tempResult.timestamp = (new Date()).toISOString()
 					await tab.screenshot(`${Date.now()}openChatPage.png`)
 					await buster.saveText(await tab.getContent(), `${Date.now()}openChatPage.html`)
 					if (tempResult.name && message) {
@@ -177,24 +212,27 @@ nick.newTab().then(async (tab) => {
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
 							// await sendMessage(tab, forgedMessage)
 							await tab.wait(4000)
+							await tab.screenshot(`${Date.now()}message sent.png`)
+							await buster.saveText(await tab.getContent(), `${Date.now()}message sent.html`)
 							const isBanned = await tab.evaluate(checkIfBanned)
 							const isBlocked = await tab.evaluate(checkIfBlocked)							
 							if (!isBanned && !isBlocked) {
 								tempResult.message = forgedMessage
 							} else {
-								utils.log("Message didn't go through, blocked by Facebook.", "error")	
-								blocked = true
+								utils.log("Message didn't go through, blocked by Facebook.", "error")
+								break
 							}
-							tempResult.timestamp = (new Date()).toISOString()
 						} catch (err) {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
+							tempResult.error = err
+							await tab.screenshot(`${Date.now()}error sending.png`)
+							await buster.saveText(await tab.getContent(), `${Date.now()}error sending.html`)
 						}
 					}		
 					result.push(tempResult)
-					if (blocked) {
-						break
-					}
 				} catch (err) {
+					await tab.screenshot(`${Date.now()}errqqpart.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}errqqpart.html`)
 					const isBlocked = await tab.evaluate(checkIfBlocked)
 					if (isBlocked) {
 						utils.log("Blocked by Facebook, you should try again later!", "error")

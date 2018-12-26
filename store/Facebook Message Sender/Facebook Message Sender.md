@@ -77,6 +77,8 @@ You can also enter a single Facebook profile URL directly in the field.
 Below the column name you'll find the **message** configuration.
 
 In the message textbox you can write a private note which will be sent to the profile included in your Google spreadsheet.
+Note: Emojis aren't handled.
+
 
 **\#fbFirstName\#** will be replaced in your message by the first name of the person you’re adding.
 The other tags available are **\#fbName\#** and **\#fbLastName\#**, replaced by their full name and last name.
