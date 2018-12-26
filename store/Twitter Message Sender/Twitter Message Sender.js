@@ -145,7 +145,7 @@ const startConversation = async (tab, handle) => {
 	const keys = handle.split("")
 	for (const key of keys) {
 		await tab.sendKeys(SELECTORS.msgDestinationSelector, key, { reset: false, keepFocus: false })
-		await tab.wait(50)
+		await tab.wait(250)
 	}
 	await tab.click(SELECTORS.initConvSelector)
 	try {
@@ -231,7 +231,6 @@ const sendMessage = async (tab, message) => {
 	// Don't process data in the DB even if it was an error
 	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName] || line.error) < 0)
 	rows = rows.slice(0, numberOfLinesPerLaunch)
-
 	if (rows.length < 1) {
 		utils.log("Input is empty OR all messages are send", "warning")
 		nick.exit()
