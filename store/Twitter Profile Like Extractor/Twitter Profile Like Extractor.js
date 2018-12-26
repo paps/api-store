@@ -194,7 +194,7 @@ const loadLikes = async (tab, count = Infinity) => {
 
 	if (spreadsheetUrl) {
 		if (utils.isUrl(spreadsheetUrl)) {
-			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
 		}

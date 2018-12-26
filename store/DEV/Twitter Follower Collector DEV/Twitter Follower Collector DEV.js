@@ -301,11 +301,10 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	if (isUrl(spreadsheetUrl)) {
 		if (!isTwitter(spreadsheetUrl)) {
-			twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
+			twitterUrls = await utils.getDataFromCsv2(spreadsheetUrl)
 		}
 	}
 	twitterUrls = twitterUrls.filter(str => str) // removing empty lines
-	
 	for (let i = 0; i < twitterUrls.length; i++) { // removing ending slash
 		if (twitterUrls[i].endsWith("/")) { twitterUrls[i] = twitterUrls[i].slice(0, -1) }
 	}

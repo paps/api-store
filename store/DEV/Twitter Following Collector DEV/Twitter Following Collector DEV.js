@@ -311,7 +311,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	if (isUrl(spreadsheetUrl)) {
 		if (!isTwitter(spreadsheetUrl)) {
-			twitterUrls = await utils.getDataFromCsv(spreadsheetUrl)
+			twitterUrls = await utils.getDataFromCsv2(spreadsheetUrl)
 		}
 	}
 	twitterUrls = twitterUrls.filter(str => str) // removing empty lines

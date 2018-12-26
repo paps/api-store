@@ -312,7 +312,7 @@ const isTweetUrl = target => {
 			if (isTwitterUrl(spreadsheetUrl)) {
 				queries = [ spreadsheetUrl ]
 			} else {
-				queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+				queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 			}
 		} else {
 			queries = spreadsheetUrl

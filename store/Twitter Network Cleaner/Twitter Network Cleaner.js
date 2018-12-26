@@ -81,7 +81,7 @@ const unfollow = async (tab, twitterHandle) => {
 		 * It'll throw an error if this isn't a CSV
 		 */
 		if (!/(?:http[s]?:\/\/)?(?:www\.)?twitter\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w-]*\/)*([\w-]*)/.test(spreadsheetUrl)) {
-			twitterProfiles = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			twitterProfiles = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 
 	}

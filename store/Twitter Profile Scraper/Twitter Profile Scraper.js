@@ -57,7 +57,7 @@ const isTwitterProfile = url => {
 		} else if (!isUrl(spreadsheetUrl)) {
 			profileUrls = [ spreadsheetUrl ]
 		} else {
-			profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 

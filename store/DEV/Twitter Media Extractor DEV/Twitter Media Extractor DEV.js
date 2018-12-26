@@ -245,7 +245,7 @@ const createCsvOutput = json => {
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl) && !isTwitterUrl(spreadsheetUrl)) {
-			queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else if (typeof spreadsheetUrl === "string") {
 			queries = [ spreadsheetUrl ]
 		}
