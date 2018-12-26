@@ -28,6 +28,7 @@
 		"website": "",
 		"joindDate": "Twitter join date (if available)",
 		"birthday": "",
+		"protectedAccount": "",
 		"followback": ""
 	},
 	"defaultArgumentAllowed": false,
@@ -48,7 +49,7 @@
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
-						"type": "url",
+						"type": "string",
 						"helpers": [
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 						],
