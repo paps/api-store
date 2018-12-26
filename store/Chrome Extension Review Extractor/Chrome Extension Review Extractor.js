@@ -45,7 +45,7 @@ let rateLimit = false
 const handleSpreadsheet = async (url, column) => {
 	const urls = []
 	try {
-		let tmp = await utils.getDataFromCsv(url, column)
+		let tmp = await utils.getDataFromCsv2(url, column)
 		urls.push(...tmp)
 	} catch (err) {
 		urls.push(url)
