@@ -223,7 +223,7 @@ const createCsvOutput = json => {
 
 	if (typeof topic === "string") {
 		if (isUrl(topic)) {
-			topic = isQuoraUrl(topic) ? [ topic ] : await utils.getDataFromCsv(topic, columnName)
+			topic = isQuoraUrl(topic) ? [ topic ] : await utils.getDataFromCsv2(topic, columnName)
 		} else {
 			topic = [ topic ]
 		}
