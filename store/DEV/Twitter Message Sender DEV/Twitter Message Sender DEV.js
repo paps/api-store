@@ -229,7 +229,7 @@ const sendMessage = async (tab, message) => {
 	}
 
 	// Don't process data in the DB even if it was an error
-	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName] || line.error) < 0)
+	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName]) < 0)
 	rows = rows.slice(0, numberOfLinesPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Input is empty OR all messages are send", "warning")
