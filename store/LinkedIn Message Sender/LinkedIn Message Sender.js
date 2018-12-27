@@ -85,7 +85,7 @@ const getFirstName = (arg, callback) => {
  * disabled DOM preoperty means that there is no text to send on the chat widget
  * @param {{ sel: String }} arg - Chat widget "send button" CSS selector
  * @param {Callback} cb - Switch back to script context
- * @throws if the button isn't present / isn't disabled after 30 seconds
+ * @throws String if the button isn't present / isn't disabled after 30 seconds
  */
 const waitWhileButtonEnable = (arg, cb) => {
 	const startTime = Date.now()
@@ -215,6 +215,7 @@ const sendMessage = async (tab, message, tags) => {
 	const result = []
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
+	rows = rows.filter(el => el)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
@@ -264,7 +265,7 @@ const sendMessage = async (tab, message, tags) => {
 	}
 	db.push(...result)
 	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
-	await linkedin.saveCookie()
+	await linkedin.updateCookie()
 	nick.exit(0)
 })().catch(err => {
 	utils.log(`Error while running: ${err.message || err}`, "error")
