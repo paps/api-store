@@ -51,7 +51,8 @@
 					},
 					"numberofPagesperLaunch": {
 						"label": "Number of pages to process per launch (all of them if left empty)",
-						"inputType": "number"
+						"inputType": "number",
+						"helper": "If using a spreadsheet as input"
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
@@ -76,12 +77,10 @@
 		"properties": {
             "sessionCookieCUser": {
                 "type": "string",
-                "required": true,
                 "minLength": 6
             },
             "sessionCookieXs": {
                 "type": "string",
-                "required": true,
                 "minLength": 15
             },
 			"spreadsheetUrl": {

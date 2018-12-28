@@ -15,6 +15,11 @@ class Facebook {
 				if (url.includes("profile.php?id=")) {
 					const id = urlObject.searchParams.get("id")
 					return "https://facebook.com/profile.php?id=" + id
+				} else if (url.includes("facebook.com/people/")) {
+					const id = urlObject.pathname.split("/")[3]
+					if (id) {
+						return "https://facebook.com/profile.php?id=" + id
+					}
 				} else {
 					let path = urlObject.pathname.slice(1)
 					if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
