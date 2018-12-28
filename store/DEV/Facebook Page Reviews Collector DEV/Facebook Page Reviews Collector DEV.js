@@ -108,12 +108,40 @@ const scrapeReviews = (arg, cb) => {
 			if (review.querySelector("div[data-ad-preview=\"message\"]") && review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList")) {
 				scrapedData.tags = review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList").textContent
 			}
-			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("abbr")) {
-				scrapedData.postDate = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("abbr").title
-				scrapedData.postTimestamp = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("abbr").getAttribute("data-utime")
+		}
+		if (review.querySelector("abbr")) {
+			scrapedData.postDate = review.querySelector("abbr").title
+			scrapedData.postTimestamp = review.querySelector("abbr").getAttribute("data-utime")
+		}
+		if (review.querySelector("h5")) {
+			scrapedData.review = review.querySelector("h5").textContent
+			if (review.querySelector("h5 i.img")) {
+				scrapedData.reviewNote = parseFloat(review.querySelector("h5 i.img").textContent.replace(/\D+/g, ""))
 			}
 		}
+		const nestedComments = review.querySelector(".userContentWrapper > div").nextElementSibling.querySelectorAll(".UFIComment")
+		// scrapedData.lengtho = nestedComments.length
 		results.push(scrapedData)
+		if (nestedComments.length) {
+			for (const nestedComment of nestedComments) {
+				const nestedData = { query: arg.pageUrl, timestamp: (new Date()).toISOString() }
+				if (nestedComment.querySelector("a")) {
+					nestedData.profileUrl = cleanFacebookProfileUrl(nestedComment.querySelector("a").href)
+				}
+				if (nestedComment.querySelector(".UFICommentBody")) {
+					nestedData.message = nestedComment.querySelector(".UFICommentBody").textContent
+				}
+				if (nestedComment.querySelector("img")) {
+					nestedData.imgUrl = nestedComment.querySelector("img").src
+					nestedData.name = nestedComment.querySelector("img").alt
+				}
+				if (nestedComment.querySelector("abbr")) {
+					nestedData.postDate = nestedComment.querySelector("abbr").title
+					nestedData.postTimestamp = nestedComment.querySelector("abbr").getAttribute("data-utime")
+				}
+				results.push(nestedData)
+			}
+		}
 	}
 	cb(null, results)
 }
@@ -133,7 +161,18 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			}
 		}
 		try {
-			await tab.waitUntilVisible("#pages_side_column a[href*=reviews]", 30000)
+			await tab.waitUntilVisible("#pages_side_column", 30000)
+		} catch (err) {
+			utils.log("Not a Facebook Page!", "warning")
+			return []
+		}
+		if (!await tab.isVisible("#pages_side_column a[href*=reviews]")) {
+			utils.log("This page doesn't seem to have reviews...", "warning")
+			return []
+		}
+		console.log("order", orderBy)
+		let clickAccountButton
+		try {
 			const pageData = await tab.evaluate(getPageData)
 			console.log("pageData", pageData)
 			await tab.screenshot(`${Date.now()}page1.png`)
@@ -143,29 +182,62 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			}
 			await tab.click("#pages_side_column a[href*=reviews]")
 			await tab.waitUntilVisible("#recommendations_tab_main_feed")
+			try {
+				if (orderBy === "Most Recent") {
+				await tab.waitUntilVisible("ul[defaultactivetabkey] li:last-of-type")
+				console.log("ordering")
+				await tab.click("ul[defaultactivetabkey] li:last-of-type")
+				await tab.wait(1000)
+			}
+			} catch (err) {
+				console.log("e", err)
+				await tab.screenshot(`${Date.now()}ordering.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}ordering.html`)
+			}
 			await tab.screenshot(`${Date.now()}pagereivew.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}pagereivew.html`)
 			let reviewCount = 0
 			let lastDate = new Date()
+			let isLoading
+			let gotAll
 			do {
 				const newReviewCount = await tab.evaluate(getReviewCount)
+
+				if (!isLoading && await tab.isVisible(".uiMorePagerLoader")) {
+					console.log("loading visible in ", new Date() - lastDate, "ms")
+					isLoading = true
+				}
+				if (!isLoading && new Date() - lastDate > 5000) {
+					gotAll = true
+					break
+				}
 				if (newReviewCount > reviewCount) {
-					console.log("newReviewCount", newReviewCount)
+					console.log("newReviewCount", newReviewCount, " in ", new Date() - lastDate, "ms")
 					if (maxReviews && newReviewCount > maxReviews) {
 						console.log("over")
 						break
 					}
 					reviewCount = newReviewCount
-
+					isLoading = false
 					lastDate = new Date()
-
+				}
+				if (!clickAccountButton && await tab.isVisible("#expanding_cta_close_button")) {
+					await tab.click("#expanding_cta_close_button")
+					clickAccountButton = true
+				}
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+					break
 				}
 				await scrollABit(tab)
-			} while (new Date() - lastDate < 15000)
+			} while (new Date() - lastDate < 45000)
 			console.log("elapsed:", new Date() - lastDate)
 			await tab.screenshot(`${Date.now()}scrolled.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}scrolled.html`)
 			result = await tab.evaluate(scrapeReviews, { pageUrl })
+			utils.log(`Got ${gotAll ? "all " : ""}${result.length} reviews for ${pageUrl}`, "done")
+			console.log(result)
 		} catch (err) {
 			utils.log(`Error accessing page!: ${err}`, "error")
 		}			
@@ -180,7 +252,19 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 ;(async () => {	
 	const tab = await nick.newTab()
 	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, numberofPagesperLaunch, csvName, maxReviews, orderBy } = utils.validateArguments()
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)	
+	let loggedIn
+	if (loggedIn && sessionCookieCUser && sessionCookieXs) {
+		try {
+			await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
+			loggedIn = true
+		} catch (err) {
+			//
+		}
+	}
+	if (!loggedIn) {
+		utils.log("We're not logged in on Facebook.", "info")
+		orderBy = "Most Helpful"
+	}
 	if (!csvName) { csvName = "result" }
 	let result = []
 	let singlePage
@@ -210,7 +294,6 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 	}
 
 	result = await utils.getDb(csvName + ".csv")
-	console.log(`URLs to process: ${JSON.stringify(pageUrls, null, 4)}`)
 	if (!singlePage) {
 		pageUrls = getUrlsToScrape(pageUrls.filter(el => utils.checkDb(el, result, "query")), numberofPagesperLaunch)
 	}
@@ -219,10 +302,15 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 		nick.exit()
 	}
 	console.log(`URLs to process: ${JSON.stringify(pageUrls, null, 4)}`)
+	utils.log(`Trying to scrape ${maxReviews ? maxReviews : "all"} reviews per page.`, "info")
 	for (let pageUrl of pageUrls) {
 		if (isFacebookUrl(pageUrl)) { // Facebook Event URL
 			const tempResult = await loadAndScrape(tab, pageUrl, orderBy, maxReviews)
-			result = result.concat(tempResult)
+			for (let i = 0; i < tempResult.length; i++) {
+				if (!result.find(el => el.postTimestamp === tempResult[i].postTimestamp)) {
+					result.push(tempResult[i])
+				}
+			}
 		} else {
 			utils.log(`${pageUrl} doesn't constitute a Facebook URL... skipping entry`, "warning")
 		}
@@ -232,6 +320,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			break
 		}
 	}
+
 	
 	utils.log(`Got ${result.length} reviews in total.`, "done")
 	

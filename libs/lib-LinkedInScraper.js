@@ -223,7 +223,9 @@ const scrapeInfos = (arg, callback) => {
 		} catch (err) {
 			//
 		}
-		
+		if (document.querySelector("#highlights-container a[data-control-name=\"highlight_entity_url_card_action_click\"]")) {
+			infos.general.mutualConnectionsUrl = document.querySelector("#highlights-container a[data-control-name=\"highlight_entity_url_card_action_click\"]").href
+		}
 		/**
 		 * Issue #49 lib-LinkedInScraper: Better description field extraction
 		 * the description selector can contains br span tags,
@@ -555,6 +557,7 @@ const craftCsvObject = infos => {
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
 		linkedinSalesNavigatorUrl: (hasGeneral) ? (infos.general.linkedinSalesNavigatorUrl || null) : null,
+		mutualConnectionsUrl: (hasGeneral) ? (infos.general.mutualConnectionsUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
 		jobTitle: job.jobTitle || null,

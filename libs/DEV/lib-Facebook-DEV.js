@@ -15,6 +15,11 @@ class Facebook {
 				if (url.includes("profile.php?id=")) {
 					const id = urlObject.searchParams.get("id")
 					return "https://facebook.com/profile.php?id=" + id
+				} else if (url.includes("facebook.com/people/")) {
+					const id = urlObject.pathname.split("/")[3]
+					if (id) {
+						return "https://facebook.com/profile.php?id=" + id
+					}
 				} else {
 					let path = urlObject.pathname.slice(1)
 					if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
@@ -441,7 +446,7 @@ class Facebook {
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_TIMEOUT)
 			}
 			if (await this.checkLock(tab)) {
-				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+				this.utils.log("Cookies are correct but Facebook is asking for an account verification. We highly recommend using a proxy.", "error")
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BLOCKED_ACCOUNT)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
