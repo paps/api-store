@@ -430,7 +430,7 @@ class Facebook {
 				this.nick.exit(118)
 			}
 			if (await this.checkLock(tab)) {
-				this.utils.log("Cookies are correct but Facebook is asking for an account verification.", "error")
+				this.utils.log("Cookies are correct but Facebook is asking for an account verification. We highly recommend using a proxy.", "error")
 				this.nick.exit(115)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")

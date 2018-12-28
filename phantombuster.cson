@@ -15,6 +15,7 @@
 		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
 		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
 		'lib-Medium-DEV.js': 'libs/DEV/lib-Medium-DEV.js'
+		'lib-Youtube-DEV.js': 'libs/DEV/lib-Youtube-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -94,5 +95,6 @@
 		'Twitter Profile Scraper DEV.js': 'store/DEV/Twitter Profile Scraper DEV/Twitter Profile Scraper DEV.js'
 		'Twitter Profile URL Finder DEV.js': 'store/DEV/Twitter Profile URL Finder DEV/Twitter Profile URL Finder DEV.js'
 		'Web Elements Extractor DEV.js': 'store/DEV/Web Elements Extractor DEV/Web Elements Extractor DEV.js'
+		'Youtube Profile Scraper DEV.js': 'store/DEV/Youtube Profile Scraper DEV/Youtube Profile Scraper DEV.js'
 
 ]
