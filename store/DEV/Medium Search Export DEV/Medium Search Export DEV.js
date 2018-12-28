@@ -89,14 +89,15 @@ const forgeSearchUrl = (term, category) => {
  * @return {Promise<Boolean>} true if the search has results otherwise false
  */
 const openSearch = async (tab, url) => {
-	const resultSelectors = [ "div.js-postListHandle", "div.js-emptyBlock" ]
+	// Last selector is always the empty result selector
+	const resultSelectors = [ "div.js-postListHandle", "div.js-searchResults" , "div.js-emptyBlock" ]
 	const [ httpCode ] = await tab.open(url)
 
 	if (httpCode === 404) {
 		throw `${url} doesn't exists`
 	}
 	const sel = await tab.waitUntilVisible(resultSelectors, "or", 15000)
-	return sel === resultSelectors[0]
+	return sel !== resultSelectors[resultSelectors.length - 1]
 }
 
 const setSearchParams = (url, params) => {
@@ -115,51 +116,74 @@ const setSearchParams = (url, params) => {
 	}
 }
 
-const formatPosts = xhrResponse => {
-	const res = []
-	const data = xhrResponse.value.posts || xhrResponse.value
-
-	for (const post of data) {
-		let article = {
-			postId: post.id,
-			articleUrl: `https://medium.com/article/${post.uniqueSlug}`,
-			pubDatePost: (new Date(post.createdAt)).toISOString(),
-			updateDatePost: (new Date(post.updatedAt)).toISOString(),
-			title: post.title,
-			type: "post"
-		}
-		if (post.inResponseToPostId) {
-			article.articleUrl = `https://medium.com/article/${post.inResponseToPostId}`
-			article.commentUrl = `https://medium.com/article/${post.uniqueSlug}`
-			article.type = "comment"
-		}
-		if (article.type === "post") {
-			if (xhrResponse.value.users) {
-				const author = xhrResponse.value.users.find(el => el.userId === post.creatorId)
-				if (author) {
-					article.authorProfile = `https://medium.com/@${author.username}`
-					article.authorName = author.name
-				}
-			} else if (xhrResponse.references.User) {
-				const author = xhrResponse.references.User[post.creatorId]
-				if (author) {
-					article.authorProfile = `https://medium.com/@${author.username}`
-					article.authorName = author.name
-				}
+const formatPost = (xhrResponse, post) => {
+	let article = {
+		postId: post.id,
+		articleUrl: `https://medium.com/article/${post.uniqueSlug}`,
+		pubDatePost: (new Date(post.createdAt)).toISOString(),
+		updateDatePost: (new Date(post.updatedAt)).toISOString(),
+		title: post.title,
+		type: "post"
+	}
+	if (post.inResponseToPostId) {
+		article.articleUrl = `https://medium.com/article/${post.inResponseToPostId}`
+		article.commentUrl = `https://medium.com/article/${post.uniqueSlug}`
+		article.type = "comment"
+	}
+	if (article.type === "post") {
+		if (xhrResponse.value.users) {
+			const author = xhrResponse.value.users.find(el => el.userId === post.creatorId)
+			if (author) {
+				article.authorProfile = `https://medium.com/@${author.username}`
+				article.authorName = author.name
 			}
-		} else if (article.type === "comment") {
+		} else if (xhrResponse.references.User) {
 			const author = xhrResponse.references.User[post.creatorId]
 			if (author) {
 				article.authorProfile = `https://medium.com/@${author.username}`
 				article.authorName = author.name
 			}
 		}
-		res.push(article)
+	} else if (article.type === "comment") {
+		const author = xhrResponse.references.User[post.creatorId]
+		if (author) {
+			article.authorProfile = `https://medium.com/@${author.username}`
+			article.authorName = author.name
+		}
+	}
+	return article
+}
+
+const formatUser = (xhr, user) => {
+	const res = {
+		userId: user.userId,
+		profileUrl: user.username ? `https://medium.com/@${user.username}` : null,
+		profileImage: user.imageId ? `https://cdn-images-1.medium.com/${user.imageId}` : null,
+		profileCreatedAt: user.createdAt ? (new Date(user.createdAt)).toISOString() : null,
+		description: user.bio
 	}
 	return res
 }
 
-const searchContent = async (tab, url, count = Infinity) => {
+const formatPosts = (xhrResponse, type) => {
+	const res = []
+	const data = xhrResponse.value.posts || xhrResponse.value
+
+	for (const el of data) {
+		let formattedData = {}
+
+		if (type === "stories") {
+			formattedData = formatPost(xhrResponse, el)
+		} else if (type === "people") {
+			formattedData = formatUser(xhrResponse, el)
+		}
+
+		res.push(formattedData)
+	}
+	return res
+}
+
+const searchContent = async (tab, url, category, count = Infinity) => {
 	let ids = []
 	const articles = []
 	let lastCount = 0
@@ -191,16 +215,16 @@ const searchContent = async (tab, url, count = Infinity) => {
 		const xhrRes = await tab.evaluate(XHRcall, xhrCursorBundle)
 		page++
 		lastCount = articles.length
-		const formattedRes = formatPosts(xhrRes.payload)
+		const formattedRes = formatPosts(xhrRes.payload, category)
 		const newIds = formattedRes.map(el => el.id)
 		ids.push(...newIds)
 		articles.push(...utils.filterRightOuter(articles, formattedRes))
 		if (lastCount === articles.length) {
 			break
 		}
-		utils.log(`${articles.length} articles scraped`, "info")
+		utils.log(`${articles.length} ${category} scraped`, "info")
 	}
-	utils.log(`${articles.length} articles scraped`, "done")
+	utils.log(`${articles.length} ${category} scraped`, "done")
 	return articles
 }
 
@@ -234,15 +258,15 @@ const searchContent = async (tab, url, count = Infinity) => {
 		if (!timeLeft.timeLeft) {
 			break
 		}
+
 		const searchUrl = utils.isUrl(query) ? query : forgeSearchUrl(query, category)
 		const hasResults = await openSearch(tab, searchUrl)
-
 		if (!hasResults) {
 			utils.log(`There is no ${category} for ${query} in Medium`, "warning")
 			continue
 		}
-
-		const result = await searchContent(tab, searchUrl)
+		utils.log(`Scraping ${category} for ${query}`, "info")
+		const result = await searchContent(tab, searchUrl, category)
 		res.push(...result)
 	}
 
