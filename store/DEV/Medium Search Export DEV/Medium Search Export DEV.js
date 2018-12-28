@@ -140,6 +140,12 @@ const formatPosts = xhrResponse => {
 					article.authorProfile = `https://medium.com/@${author.username}`
 					article.authorName = author.name
 				}
+			} else if (xhrResponse.references.User) {
+				const author = xhrResponse.references.User[post.creatorId]
+				if (author) {
+					article.authorProfile = `https://medium.com/@${author.username}`
+					article.authorName = author.name
+				}
 			}
 		} else if (article.type === "comment") {
 			const author = xhrResponse.references.User[post.creatorId]
@@ -150,7 +156,7 @@ const formatPosts = xhrResponse => {
 		}
 		res.push(article)
 	}
-	return (res);
+	return res
 }
 
 const searchContent = async (tab, url, count = Infinity) => {
