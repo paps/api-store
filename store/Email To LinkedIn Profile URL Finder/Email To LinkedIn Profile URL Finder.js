@@ -140,13 +140,15 @@ const extractSalesNavigatorProfile = (arg, cb) => {
 				utils.log("Stopping the script...", "warning")
 				break
 			}
-			if (tempResult.error === "Not an email") {
+			if (tempResult && tempResult.error === "Not an email") {
 				utils.log(`${email} is not valid email!`, "warning")
 			} else {
 				utils.log(`Couldn't find profile of ${email}`, "info")
 			}
 		}
-		result.push(tempResult)
+		if (tempResult) {
+			result.push(tempResult)
+		}
 	}
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
