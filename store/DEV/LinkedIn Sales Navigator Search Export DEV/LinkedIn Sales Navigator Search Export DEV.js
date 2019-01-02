@@ -439,7 +439,7 @@ const isLinkedInSearchURL = (url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, numberOfProfiles, csvName, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
+	let { sessionCookie, searches, numberOfProfiles, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
 	await linkedIn.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
@@ -454,7 +454,8 @@ const isLinkedInSearchURL = (url) => {
 			searches = await utils.getDataFromCsv2(searches)
 			searches = searches.filter(str => str) // removing empty lines
 			const lastUrl = searches[searches.length - 1]
-			searches = searches.filter(str => utils.checkDb(str, result, "query"))
+			searches = searches.filter(str => utils.checkDb(str, result, "query")).slice(0, numberOfLinesPerLaunch)
+
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
 			if (searches.startsWith("http")) {
