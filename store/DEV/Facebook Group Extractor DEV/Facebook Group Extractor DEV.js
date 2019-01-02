@@ -403,6 +403,16 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 	return result
 }
 
+const checkIfPage = async (tab, url) => {
+	try {
+		await tab.open(url)
+		await tab.waitUntilVisible("div[data-key=\"tab_ads\"]")
+		return true
+	} catch (err) {
+		//
+	}
+	return false
+}
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
@@ -422,6 +432,10 @@ nick.newTab().then(async (tab) => {
 			groupsArray = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
 			singleGroup = true
 		} else { 
+			if (groupsUrl.includes("facebook.com/") && await checkIfPage(tab, groupsUrl)) {
+				utils.log(`${groupsUrl} isn't a Group URL, it's a Facebook Page URL...`, "error")
+				nick.exit()
+			}
 			// Link not from Facebook, trying to get CSV
 			groupsArray = await utils.getDataFromCsv2(groupsUrl, columnName)
 		}
@@ -467,8 +481,9 @@ nick.newTab().then(async (tab) => {
 			} catch (err) {
 				utils.log(`Could not connect to ${url}  ${err}`, "error")
 			}
-		} else {  
-			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
+		} else {
+			const isPaged = await checkIfPage(tab, url)
+			utils.log(`${url} doesn't constitute a Facebook Group URL${isPaged ? ", it's a Page URL" : ""}... skipping entry`, "warning")
 		}
 		if (lockedByFacebook) {
 			break

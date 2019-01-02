@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const { parse } = require("url")
 
@@ -294,8 +293,6 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 	let firstResults
 	try {
 		firstResults = await getFirstResult(tab, groupUrl)
-		await tab.screenshot(`${Date.now()}firstResults.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}firstResults.html`)
 		if (firstResults) {
 			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
 		} else {
@@ -403,6 +400,16 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 	return result
 }
 
+const checkIfPage = async (tab, url) => {
+	try {
+		await tab.open(url)
+		await tab.waitUntilVisible("div[data-key=\"tab_ads\"]")
+		return true
+	} catch (err) {
+		//
+	}
+	return false
+}
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
@@ -421,7 +428,11 @@ nick.newTab().then(async (tab) => {
 		if (isAFacebookGroupUrl) { // Facebook Group URL
 			groupsArray = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
 			singleGroup = true
-		} else { 
+		} else {
+			if (groupsUrl.includes("facebook.com/") && await checkIfPage(tab, groupsUrl)) {
+				utils.log(`${groupsUrl} isn't a Group URL, it's a Facebook Page URL...`, "error")
+				nick.exit(utils.ERROR_CODES.BAD_INPUT)
+			}
 			// Link not from Facebook, trying to get CSV
 			groupsArray = await utils.getDataFromCsv2(groupsUrl, columnName)
 		}
@@ -467,8 +478,9 @@ nick.newTab().then(async (tab) => {
 			} catch (err) {
 				utils.log(`Could not connect to ${url}  ${err}`, "error")
 			}
-		} else {  
-			utils.log(`${url} doesn't constitute a Facebook Group URL... skipping entry`, "warning")
+		} else {
+			const isPaged = await checkIfPage(tab, url)
+			utils.log(`${url} doesn't constitute a Facebook Group URL${isPaged ? ", it's a Page URL" : ""}... skipping entry`, "warning")
 		}
 		if (lockedByFacebook) {
 			break

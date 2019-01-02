@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -19,7 +19,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 
@@ -280,15 +280,6 @@ const checkIfBlockedOrSoloBlocked = (arg, cb) => {
 	cb(null, true)
 }
 
-// checks if it's a Page URL instead of a Profile
-const checkIfPage = (arg, cb) => {
-	if (Array.from(document.querySelectorAll("div")).filter(el => el.getAttribute("data-key") === "tab_ads")[0]) {
-		cb(null, true)
-	} else {
-		cb(null, false)
-	}
-}
-
 const scrapeAboutPageFromPage = (arg, cb) => {
 	const scrapedData = { profileUrl: arg.profileUrl }
 	if (document.querySelector("a[href*=mailto]")) {
@@ -368,7 +359,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		}
 
 	}
-	if (await tab.evaluate(checkIfPage)) {
+	if (await tab.isVisible("div[data-key=\"tab_ads\"]")) { // if Page
 		try {
 			let result = await tab.evaluate(scrapeAboutPageFromPage, { profileUrl })
 			await tab.click("div[data-key=\"tab_home\"] a")
@@ -459,6 +450,7 @@ nick.newTab().then(async (tab) => {
 		}
 	} else if (typeof profileUrls === "string") {
 		profilesToScrape = [profileUrls]
+		singleProfile = true
 	}
 	if (!singleProfile) {
 		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
