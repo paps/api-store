@@ -22,7 +22,7 @@ class LinkedIn {
 		try {
 			agentObject = await this.buster.getAgentObject()
 		} catch (err) {
-			this.utils.log("Couln't access Agent Object.", "warning")
+			this.utils.log("Couldn't access Agent Object.", "warning")
 		}
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
@@ -165,7 +165,7 @@ class LinkedIn {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/dashboard/")
+			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/")
 			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
@@ -203,12 +203,11 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
-			if (this.originalSessionCookie.length < 100) {
+			this.utils.log("Can't connect to LinkedIn Recruiter with this session cookie.", "error")
+			this.utils.log("From your browser in private mode, go to https://www.linkedin.com/cap, log in, THEN copy-paste your li_at session cookie.", "info")
+			if (this.originalSessionCookieliAt.length < 100) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
 			}
-			await this.buster.saveText(await tab.getContent(), "login-err.html")
-			await this.buster.save(await tab.screenshot("login-err.jpg"))
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}

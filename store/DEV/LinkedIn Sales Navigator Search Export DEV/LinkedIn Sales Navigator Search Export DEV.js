@@ -307,15 +307,15 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 				try {
 					const clickDone = await tab.evaluate(clickNextPageLists)
 					if (!clickDone) {
-						utils.log("No more profiles found on this page", "warning")
+						utils.log("No more profiles found on this page.", "warning")
 						break
 					}
 				} catch (err) {
-					utils.log("Error click on Next button", "error")
+					utils.log("Error click on Next button.", "error")
 					break
 				}
 			} else {
-				utils.log("No more profiles found on this page", "warning")
+				utils.log("No more profiles found on this page.", "warning")
 				break
 			}
 		} catch (err) {
@@ -458,14 +458,13 @@ const isLinkedInSearchURL = (url) => {
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
 			if (searches.startsWith("http")) {
-				utils.log("Couln't open CSV, make sure it's public", "error")
+				utils.log("Couldn't open CSV, make sure it's public", "error")
 				nick.exit(1)
 			}
 			searches = [ searches ]
 		}
 	}
-	utils.log(`Search : ${JSON.stringify(searches, null, 2)}`, "done")
-	await linkedIn.login(tab, sessionCookie)
+	utils.log(`Search : ${JSON.stringify(searches.slice(0, 100), null, 2)}`, "done")
 	for (const search of searches) {
 		if (search) {
 			let searchUrl = ""

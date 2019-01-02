@@ -22,7 +22,7 @@ class LinkedIn {
 		try {
 			agentObject = await this.buster.getAgentObject()
 		} catch (err) {
-			this.utils.log("Couln't access Agent Object.", "warning")
+			this.utils.log("Couldn't access Agent Object.", "warning")
 		}
 		if ((typeof(cookie) !== "string") || (cookie.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
@@ -200,11 +200,11 @@ class LinkedIn {
 		}
 
 		try {
-			// await this.nick.setCookie({
-			// 	name: "li_at",
-			// 	value: this.originalSessionCookieliAt,
-			// 	domain: "www.linkedin.com"
-			// })
+			await this.nick.setCookie({
+				name: "li_at",
+				value: this.originalSessionCookieliAt,
+				domain: "www.linkedin.com"
+			})
 			const loginResult = await _login()
 			if (loginResult !== null) {
 				throw loginResult
