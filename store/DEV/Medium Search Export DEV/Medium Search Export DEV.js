@@ -26,7 +26,6 @@ const DEFAULT_DB = "result"
 const DEFAULT_LINES = 10
 // }
 
-
 /**
  * @param { { headers: Object, method: String, url: String, data: String, parseMediumResponse: boolean } }
  * @throws Object on XHR error
@@ -206,19 +205,32 @@ const formatPosts = (xhrResponse, type) => {
 			formattedData = formatTags(xhrResponse, el)
 		}
 
+		if (formattedData) {
+			formattedData.timestamp = (new Date()).toISOString()
+			formattedData.type = type
+		}
+
 		res.push(formattedData)
 	}
 	return res
 }
 
+/**
+ * @async
+ * @param {Object} tab
+ * @param {String} url - Medium search URL
+ * @param {String} categroy
+ * @param {Number} [count] - Maximum amount of results to return (default as much as possible)
+ * @return {Promise<Array<Object>>} Research results
+ */
 const searchContent = async (tab, url, category, count = Infinity) => {
 	let ids = []
-	const articles = []
+	let articles = []
 	let lastCount = 0
 	let page = 1
 	const xhrBundle = {
 		method: "GET",
-		headers: { "X-XSRF-Token": "1", "accept": "application/json" },
+		headers: { "X-XSRF-Token": "1", "Accept": "application/json" },
 		url,
 		parseMediumResponse: true
 	}
@@ -231,7 +243,7 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 
 	xhrBundle.url = setSearchParams(url, { pageSize: 10, ignore: ids })
 	const xhrRes = await tab.evaluate(XHRcall, xhrBundle)
-	if (!xhrRes.payload.path) {
+	if (!xhrRes.payload.paging) {
 		articles.push(...formatPosts(xhrRes.payload, category))
 		utils.log(`${articles.length} ${category} scraped`, "done")
 		return articles
@@ -246,6 +258,10 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		}
 		xhrCursorBundle.data = JSON.stringify({ pageSize: 10, ignoredIds: ids, page: page })
 		const xhrRes = await tab.evaluate(XHRcall, xhrCursorBundle)
+		/* No need to continue in case of AJAX failure */
+		if (!xhrRes.success) {
+			break
+		}
 		page++
 		lastCount = articles.length
 		const formattedRes = formatPosts(xhrRes.payload, category)
@@ -255,14 +271,17 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		if (lastCount === articles.length) {
 			break
 		}
-		utils.log(`${articles.length} ${category} scraped`, "info")
+		utils.log(`${articles.length} ${category} found`, "info")
+	}
+	if (isFinite(count)) {
+		articles = articles.slice(0, count)
 	}
 	utils.log(`${articles.length} ${category} scraped`, "done")
 	return articles
 }
 
 ;(async () => {
-	let { search, columnName, category, numberOfLinesPerLaunch, csvName, queries } = utils.validateArguments()
+	let { search, columnName, category, numberOfPostsPerSearch, numberOfLinesPerLaunch, csvName, queries } = utils.validateArguments()
 	const res = []
 	const tab = await nick.newTab()
 
@@ -281,7 +300,7 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		}
 	}
 
-	queries = queries.filter(el => db.findIndex(line => el === line.query) < 0).filter(el => el).slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
+	queries = queries.filter(el => db.findIndex(line => el === line.query && line.type === category) < 0).filter(el => el).slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all researches are made", "warning")
 		nick.exit()
@@ -301,15 +320,15 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 			continue
 		}
 		utils.log(`Scraping ${category} for ${query}`, "info")
-		const result = await searchContent(tab, searchUrl, category)
+		const result = await searchContent(tab, searchUrl, category, numberOfPostsPerSearch)
+		result.forEach(el => el.query = query)
 		res.push(...result)
 	}
-
-	await utils.saveResults(res, res, csvName, null)
+	db.push(...utils.filterRightOuter(db, res))
+	await utils.saveResults(res, db, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
 	nick.exit(1)
 })

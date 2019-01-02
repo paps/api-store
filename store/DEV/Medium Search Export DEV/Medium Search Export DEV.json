@@ -40,6 +40,12 @@
 						"removeDefaultNone": true,
 						"sort": false
 					},
+					"numberOfPostsPerSearch": {
+						"label": "Number of results to scrape per research",
+						"helper": "If fill is empty. The API will scrape as much results as possible",
+						"inputType": "number",
+						"placeholder": 10
+					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
@@ -66,6 +72,10 @@
 			"category": {
 				"enum": ["stories", "people", "publications", "tags"],
 				"default": "stories"
+			},
+			"numberOfPostsPerSearch": {
+				"type": "number",
+				"minimum": 1
 			},
 			"numberOfLinesPerLaunch": {
 				"type": "number",
