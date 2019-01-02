@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -85,28 +84,20 @@ const clickExpandButtons = async (tab) => {
 	for (let i = 0; i < moreCommentsLength; i++) {
 		try {
 			await tab.click("#recommendations_tab_main_feed .UFIPagerLink")
-			console.log("expanding", i)
 		} catch (err) {
-			console.log("er:", err)
 			break
 		}
 		await tab.wait(300 + 250 * Math.random())
 	}
 	const expandButtonsLength = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll(".UFICommentBody a").length))
-	console.log("expandButtonsLength", expandButtonsLength)
-	// const clickExpandButton = (arg, cb) => cb(null, document.querySelector(".UFICommentBody a").click())
 	for (let i = 0; i < expandButtonsLength; i++) {
 		try {
 			await tab.click(".UFICommentBody a")
-			console.log("clicking", i)
 		} catch (err) {
-			console.log("er:", err)
 			break
 		}
 		await tab.wait(100 + 50 * Math.random())
 	}
-	await tab.screenshot(`${Date.now()}clicked.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}clicked.html`)
 }
 
 const scrapeReviews = (arg, cb) => {
@@ -193,21 +184,11 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			await tab.waitUntilVisible("#pages_side_column", 30000)
 		} catch (err) {
 			utils.log("Not a Facebook Page!", "warning")
-			await tab.screenshot(`${Date.now()}page1.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}page1.html`)
 			return []
 		}
-		// if (!await tab.isVisible("#pages_side_column a[href*=reviews]")) {
-		// 	utils.log("This page doesn't seem to have reviews...", "warning")
-		// 	return []
-		// }
-		console.log("order", orderBy)
 		let clickAccountButton
 		try {
 			const pageData = await tab.evaluate(getPageData)
-			console.log("pageData", pageData)
-			// await tab.screenshot(`${Date.now()}page1.png`)
-			// await buster.saveText(await tab.getContent(), `${Date.now()}page1.html`)
 			if (pageData.pageName && pageData.pageReviewScore) {
 				utils.log(`Page ${pageData.pageName} has a review score of ${pageData.pageReviewScore}.`, "info")
 			}
@@ -220,24 +201,17 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			try {
 				await tab.waitUntilVisible("#recommendations_tab_main_feed")
 			} catch (err) {
-				console.log("errl", err)
-				await tab.screenshot(`${Date.now()}errl.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}errl.html`)
+				//
 			}
 			try {
 				if (orderBy === "Most Recent") {
 				await tab.waitUntilVisible("ul[defaultactivetabkey] li:last-of-type")
-				console.log("ordering")
 				await tab.click("ul[defaultactivetabkey] li:last-of-type")
 				await tab.wait(1000)
 			}
 			} catch (err) {
-				console.log("e", err)
-				await tab.screenshot(`${Date.now()}ordering.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}ordering.html`)
+				//
 			}
-			// await tab.screenshot(`${Date.now()}pagereivew.png`)
-			// await buster.saveText(await tab.getContent(), `${Date.now()}pagereivew.html`)
 			let reviewCount = 0
 			let lastDate = new Date()
 			let isLoading
@@ -246,7 +220,6 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 				const newReviewCount = await tab.evaluate(getReviewCount)
 
 				if (!isLoading && await tab.isVisible(".uiMorePagerLoader")) {
-					console.log("loading visible in ", new Date() - lastDate, "ms")
 					isLoading = true
 				}
 				if (!isLoading && new Date() - lastDate > 5000) {
@@ -254,9 +227,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 					break
 				}
 				if (newReviewCount > reviewCount) {
-					console.log("newReviewCount", newReviewCount, " in ", new Date() - lastDate, "ms")
 					if (maxReviews && newReviewCount > maxReviews) {
-						console.log("over")
 						break
 					}
 					reviewCount = newReviewCount
@@ -274,13 +245,9 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 				}
 				await scrollABit(tab)
 			} while (new Date() - lastDate < 45000)
-			console.log("elapsed:", new Date() - lastDate)
-			await tab.screenshot(`${Date.now()}scrolled.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}scrolled.html`)
 			await clickExpandButtons(tab)
 			result = await tab.evaluate(scrapeReviews, { pageUrl })
 			utils.log(`Got ${gotAll ? "all " : ""}${result.length} reviews for ${pageUrl}`, "done")
-			console.log(result)
 		} catch (err) {
 			utils.log(`Error accessing page!: ${err}`, "error")
 		}			
