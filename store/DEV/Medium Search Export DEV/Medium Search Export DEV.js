@@ -165,6 +165,30 @@ const formatUser = (xhr, user) => {
 	return res
 }
 
+const formatPublication = (xhr, pub) => {
+	const res = {
+		userId: pub.id,
+		name: pub.name,
+		profileImage: `https://cdn-images-1.medium.com/${pub.image.imageId}`,
+		websiteUrl: `https://medium.com/${pub.slug}`,
+		twitterProfileUrl:  pub.twitterUsername ? `https://www.twitter.com/${pub.twitterUsername}` : null,
+		facebookProfilePageUrl: pub.facebookPageName ? `https://www.facebook.com/${pub.facebookPageName}` : null,
+		description: pub.description,
+		followers: pub.metadata.followersCount,
+		email: pub.publicEmail
+	}
+	return res
+}
+
+const formatTags = (xhrResponse, tag) => {
+	const res = {
+		name: tag.name,
+		tagUrl: `https://www.medium.com/tag/${tag.slug}`,
+		postCount: tag.postCount
+	}
+	return res
+}
+
 const formatPosts = (xhrResponse, type) => {
 	const res = []
 	const data = xhrResponse.value.posts || xhrResponse.value
@@ -176,6 +200,10 @@ const formatPosts = (xhrResponse, type) => {
 			formattedData = formatPost(xhrResponse, el)
 		} else if (type === "people") {
 			formattedData = formatUser(xhrResponse, el)
+		} else if (type === "publications") {
+			formattedData = formatPublication(xhrResponse, el)
+		} else if (type === "tags") {
+			formattedData = formatTags(xhrResponse, el)
 		}
 
 		res.push(formattedData)
@@ -203,6 +231,11 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 
 	xhrBundle.url = setSearchParams(url, { pageSize: 10, ignore: ids })
 	const xhrRes = await tab.evaluate(XHRcall, xhrBundle)
+	if (!xhrRes.payload.path) {
+		articles.push(...formatPosts(xhrRes.payload, category))
+		utils.log(`${articles.length} ${category} scraped`, "done")
+		return articles
+	}
 	xhrCursorBundle.url = `https://medium.com${xhrRes.payload.paging.path}`
 
 	while (articles.length < count) {
@@ -262,7 +295,9 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		const searchUrl = utils.isUrl(query) ? query : forgeSearchUrl(query, category)
 		const hasResults = await openSearch(tab, searchUrl)
 		if (!hasResults) {
-			utils.log(`There is no ${category} for ${query} in Medium`, "warning")
+			const error = `There is no ${category} for ${query} in Medium`
+			utils.log(error, "warning")
+			res.push({ query, error, timestamp: (new Date()).toISOString() })
 			continue
 		}
 		utils.log(`Scraping ${category} for ${query}`, "info")
