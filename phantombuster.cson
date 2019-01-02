@@ -16,6 +16,7 @@
 		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
 		'lib-Medium-DEV.js': 'libs/DEV/lib-Medium-DEV.js'
 		'lib-Youtube-DEV.js': 'libs/DEV/lib-Youtube-DEV.js'
+		'lib-Slack-DEV.js': 'libs/DEV/lib-Slack-DEV.js'
 
 		# API store DEV
 		# -------------
