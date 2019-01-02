@@ -141,7 +141,7 @@ nick.newTab().then(async (tab) => {
        ])
 
 	const db = await utils.getDb(DB_NAME)
-	const data = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl, columnName)
+	const data = isLinkedInProfile(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	let profileUrls = data.filter(el => db.findIndex(line => el === line.url || linkedIn.getUsername(el) === linkedIn.getUsername(line.url)) < 0).slice(0, numberOfEndorsePerLaunch)
 
 	if (profileUrls.length < 1) {

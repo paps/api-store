@@ -278,7 +278,7 @@ const jsonToCsvOutput = json => {
 	let step = 0
 
 	if (spreadsheetUrl) {
-		queries = isLinkedInProfile(spreadsheetUrl) || isMessageThread(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv(spreadsheetUrl.trim(), columnName)
+		queries = isLinkedInProfile(spreadsheetUrl) || isMessageThread(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl.trim(), columnName)
 	} else if (typeof queries === "string") {
 		queries = [ queries ]
 	}

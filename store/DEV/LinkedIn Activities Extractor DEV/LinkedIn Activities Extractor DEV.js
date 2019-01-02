@@ -240,7 +240,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 	if (isLinkedUrl(spreadsheetUrl)) {
 		profileUrls = [ spreadsheetUrl ]
 	} else {
-		profileUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		profileUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	}
 	if (!numberOfLinesPerLaunch) {
 		numberOfLinesPerLaunch = profileUrls.length
@@ -274,7 +274,6 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 	}
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
-	
 })()
 .catch(err => {
 	utils.log(err, "error")

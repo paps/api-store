@@ -206,7 +206,7 @@ const createCsvOutput = json => {
 	if (isLinkedInURL(spreadsheetUrl)) {
 		pageUrls = [ spreadsheetUrl ]
 	} else if (spreadsheetUrl) {
-		pageUrls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		pageUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	}
 	utils.log(`Pages to scrape: ${JSON.stringify(pageUrls, null, 2)}`, "done")
 	await linkedin.login(tab, sessionCookie)
