@@ -1,5 +1,14 @@
-class Slack {
+const { URL } = require("url")
 
+const isUrl = url => {
+	try {
+		return (new URL(url)) !== null
+	} catch (err) {
+		return false
+	}
+}
+
+class Slack {
 	constructor(nick, buster, utils) {
 		this.nick = nick
 		this.buster = buster
@@ -8,6 +17,7 @@ class Slack {
 
 	/**
 	 * @async
+	 * @description Log into a Slack workspace with a specific session cookie
 	 * @param {Object} tab - NickJS tab instance
 	 * @param {String} url - Slack Workspace URL
 	 * @param {String} dCookie - Slack session cookie named "d"
@@ -23,13 +33,24 @@ class Slack {
 			// Need to wait until both the sidebar AND the username are loaded by Slack
 			await tab.waitUntilVisible([ "div#team_menu", "span#team_menu_user_name" ], 30000, "and")
 			const name = await tab.evaluate(_scrapeUsername)
-			this.utils.log(`Connected as ${name} `, "done")
+			this.utils.log(`Connected as ${name}`, "done")
 		}
 
-		if (typeof dCookie !== "string" || dCookie.length < 1) {
+		if (typeof dCookie !== "string" || dCookie.trim().length < 1) {
 			this.utils.log("Invalid Slack session cookie. Did you specify the \"d\" cookie?", "warning")
 			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
+
+		if (typeof url !== "string" || url.trim().length < 1 || !isUrl(url)) {
+			this.utils.log("Invalid Slack Workspace URL. Did you specify one?", "warning")
+			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_WORKSPACE)
+		}
+
+		if (url === "slack_workspace_url") {
+			this.utils.log("", "warning")
+			this.nick.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_WORKSPACE)
+		}
+
 
 		if (dCookie === "d_cookie") {
 			this.utils.log("You didn't set the Slack \"d\" cookie in your API configuration", "warning")
@@ -47,8 +68,6 @@ class Slack {
 			})
 			await _login()
 		} catch (err) {
-			await tab.screenshot(`log-err-${Date.now()}.jpg`)
-			console.log(err.message || err)
 			this.utils.log("Could not connect to Slack with this session cookie", "error")
 			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
@@ -56,10 +75,11 @@ class Slack {
 
 	/**
 	 * @async
+	 * @description Get the channels list from a specific workspace
 	 * @param {Object} tab - NickJS tab instance with a slack session
 	 * @return {Promise<Array<Object>>} Channels found
 	 */
-	async getChannelsList(tab) {
+	async getChannelsMeta(tab) {
 		/* global slackDebug */
 		const getSlackObject = (arg, cb) => {
 			if (!slackDebug) {
