@@ -49,7 +49,6 @@
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
-						"type": "string",
 						"helpers": [
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 						],
