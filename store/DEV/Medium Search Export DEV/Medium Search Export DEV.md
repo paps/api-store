@@ -1,8 +1,8 @@
-# Extract every Post, People, Publications and Tags out of a Medium Search 👏
+# Extract every Post, People, Publications and Tags out of a Medium Search.
 
-Medium is an underestimated source of traffic. Readers are avid of new quality content and writers are experts in super precise topics. It's often a place where ideas get tested before being formalized in a book.
+Medium is an underestimated source of traffic. Readers are avid of new quality content and writers are experts at very niche topics. It's often a place where ideas get tested before being formalized in a book.
 
-The point of this API is for you to never miss an article about a topic you're fond of. Once you have that list you can take action on it: Clap it, comment it, or directly reach the author.
+The point of this API is for you to never miss an article about a topic you're fond of. Once you have that content you'll be able to take action with our other APIs: [Clap it](https://phantombuster.com/api-store/10910/medium-auto-clapper), comment it or directly reach its author.
 
 # How to extract the results of a Medium search in seconds:
 

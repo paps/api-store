@@ -1,14 +1,17 @@
 {
     "slug": "youtube-channel-scraper",
     "description": "Collect valuable information you need from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
-    "argumentDescription": "",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
+    "gradientBegin": "#E42C27",
+    "gradientEnd": "#FFD80B",
+    "argumentDescription": "Extract every information from a list of Youtube Channels",
     "hidden": true,
-    "new": false,
+    "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
+        "sessionCookieHSID": "your_HSID_session_cookie",
+        "sessionCookieSID": "your_SID_session_cookie",
+        "sessionCookieSSID": "your_SSID_session_cookie",
         "channelsPerLaunch": 10
     },
     "outputDescription": {
@@ -25,6 +28,18 @@
         "alpaca": {
             "options": {
                 "fields": {
+                    "sessionCookieHSID": {
+                        "label": "Session cookie HSID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your HSID session cookie here"
+                    },
+                    "sessionCookieSID": {
+                        "label": "Session cookie SID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your SID session cookie here"
+                    },
+                    "sessionCookieSSID": {
+                        "label": "Session cookie SSID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+                        "placeholder": "Paste your SSID session cookie here"
+                    },
                     "spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
@@ -36,7 +51,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"channelsPerLaunch": {
-						"label": "Number of channels to scrape per launch <a href=\"/api-store/11456/youtube-channel-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of channels to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -50,6 +65,21 @@
     "argumentSchema": {
         "type": "object",
         "properties": {
+            "sessionCookieHSID": {
+                "type": "string",
+                "required": true,
+                "minLength": 10
+            },
+            "sessionCookieSID": {
+                "type": "string",
+                "required": true,
+                "minLength": 20
+            },
+            "sessionCookieSSID": {
+                "type": "string",
+                "required": true,
+                "minLength": 10
+            },
             "spreadsheetUrl": {
 				"type": "string"
 			},
