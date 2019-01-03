@@ -234,7 +234,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 	}
 	if (!csvName) { csvName = "result" }
 	const result = await utils.getDb(csvName + ".csv")
-	urls = getUrlsToScrape(urls.filter(el => filterRows(el, result)), numberOfProfilesPerLaunch)
+	urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 
