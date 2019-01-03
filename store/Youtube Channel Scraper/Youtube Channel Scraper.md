@@ -1,6 +1,6 @@
-# Collect information from Youtube profiles
+# Extract every publicly available information from a list of Youtube Profiles.
 
-Extract every publicly available information from a list of Youtube Profiles.
+Do you want to do some stats from a large number of Channels? This tool will extract every public information from a YouTube channel for you and neatly arrange it in a single spreadsheet.
 
 # What will you need? ⚙️ 
 
