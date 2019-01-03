@@ -45,7 +45,7 @@ const scrapeChannelData = (arg, cb) => {
 		scrapedData.description = document.querySelector("#description").textContent.trim()
 	}
 	if (document.querySelector("#right-column > yt-formatted-string:nth-of-type(2)")) {
-		scrapedData.joinedData = document.querySelector("#right-column > yt-formatted-string:nth-of-type(2)").textContent
+		scrapedData.joinedDate = document.querySelector("#right-column > yt-formatted-string:nth-of-type(2)").textContent
 	}
 	if (document.querySelector("#right-column > yt-formatted-string:nth-of-type(3)")) {
 		scrapedData.viewCount = parseInt(document.querySelector("#right-column > yt-formatted-string:nth-of-type(3)").textContent.replace(/\D+/g, ""), 10)
@@ -124,10 +124,15 @@ nick.newTab().then(async (tab) => {
 		}
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(channelUrls, null, 4)}`)
+	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
 	
 	for (const channelUrl of channelUrls) {
 		result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 	}
 	await utils.saveResults(result, result, csvName)
 	utils.log("Job is done!", "done")

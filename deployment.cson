@@ -100,6 +100,7 @@
 		'Twitter Auto Retweeter.js': 'store/Twitter Auto Retweeter/Twitter Auto Retweeter.js'
 		'Web Elements Extractor.js': 'store/Web Elements Extractor/Web Elements Extractor.js'
 		'Youtube Channel Scraper.js': 'store/Youtube Channel Scraper/Youtube Channel Scraper.js'
+		'Youtube Videos Extractor.js': 'store/Youtube Videos Extractor/Youtube Videos Extractor.js'
 
 		# scraping-challenges
 		# -------------------

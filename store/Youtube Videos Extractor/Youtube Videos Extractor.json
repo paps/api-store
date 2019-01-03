@@ -1,0 +1,119 @@
+{
+    "slug": "youtube-videos-extractor",
+    "description": "Extract the videos list from Youtube channels",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
+    "gradientBegin": "#32C1F1",
+    "gradientEnd": "#5477BC",
+    "argumentDescription": "",
+    "hidden": true,
+    "new": false,
+    "argumentHelpAnchor": "#section_argument",
+    "defaultArgument": {
+        "videosPerChannel": 100,
+        "channelsPerLaunch": 10,
+        "sortBy": "Newest"
+    },
+    "outputDescription": {
+		"channelTitle": "",
+        "subscriberCount": "",
+        "viewCount": "",        
+		"description": "",
+		"joinedDate": "",
+		"country": ""
+	},
+    "defaultArgumentAllowed": true,
+    "argumentForm": {
+        "enabled": true,
+        "alpaca": {
+            "options": {
+                "fields": {
+                    "spreadsheetUrl": {
+						"type": "url",
+						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+                    },
+                    "videosPerChannel": {
+						"label": "Number of videos to scrape per channel <a href=\"/api-store/11472/youtube-videos-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+                        "inputType": "number",
+                        "helper": "All of them if empty"
+					},
+					"columnName": {
+						"label": "Column name from which to get channels URLs",
+						"placeholder": "Youtube Channel Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"channelsPerLaunch": {
+						"label": "Number of channels to scrape per launch <a href=\"/api-store/11472/youtube-videos-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					},
+					"csvName": {
+                        "label": "Name of resulting CSV file",
+                        "placeholder": "result"
+                    },
+                    "sortBy": {
+						"label": "Posts order",
+						"helper": "Sort by Most popular, most recent or oldest post",
+						"removeDefaultNone": true,
+						"sort": false
+					}
+                }
+            }
+        }
+    },
+    "argumentSchema": {
+        "type": "object",
+        "properties": {
+            "spreadsheetUrl": {
+				"type": "string"
+            },
+            "videosPerChannel": {
+				"type": "number",
+				"minimum": 1
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"channelsPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+            "csvName": {
+				"type": "string",
+				"required": false
+            },
+            "sortBy": {
+				"enum": ["Most popular", "Newest", "Oldest"],
+				"default": "Most Helpful"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"channelUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"channelUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+    }
+}
