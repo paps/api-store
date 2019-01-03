@@ -293,11 +293,7 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 	try {
 		utils.isUrl(search) ? queries = await utils.getDataFromCsv2(search, columnName) : queries = [ search ]
 	} catch (err) {
-		if (typeof err === "string" && err.endsWith("doesn't represent a CSV file")) {
-			queries = [ search ]
-		} else {
-			throw err
-		}
+		queries = [ search ]
 	}
 
 	queries = queries.filter(el => db.findIndex(line => el === line.query && line.type === category) < 0).filter(el => el).slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
@@ -305,6 +301,7 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		utils.log("Input is empty OR all researches are made", "warning")
 		nick.exit()
 	}
+	utils.log(`Researches to perform: ${JSON.stringify(queries.slice(0, 100), null, 2)}`, "info")
 	for (const query of queries) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -312,11 +309,17 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 		}
 
 		const searchUrl = utils.isUrl(query) ? query : forgeSearchUrl(query, category)
-		const hasResults = await openSearch(tab, searchUrl)
-		if (!hasResults) {
-			const error = `There is no ${category} for ${query} in Medium`
-			utils.log(error, "warning")
-			res.push({ query, error, timestamp: (new Date()).toISOString() })
+		try {
+			const hasResults = await openSearch(tab, searchUrl)
+			if (!hasResults) {
+				const error = `There is no ${category} for ${query} in Medium`
+				utils.log(error, "warning")
+				res.push({ query, error, type: category , timestamp: (new Date()).toISOString() })
+				continue
+			}
+		} catch (err) {
+			utils.log(`Error while opening ${query}: ${err.message || err}`, "warning")
+			res.push({ query, type: category , error: err.message || err, timestamp: (new Date()).toISOString() })
 			continue
 		}
 		utils.log(`Scraping ${category} for ${query}`, "info")

@@ -25,7 +25,7 @@
 			"options": {
 				"fields": {
 					"search": {
-						"label": "Text search <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Text search / Spreadsheet URL <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a research term",
 						"placeholder": "#Phantombuster"
 					},
@@ -47,8 +47,8 @@
 						"placeholder": 10
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"label": "Number of lines to process per launch (default: 1 line) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will perform one research",
 						"inputType": "number",
 						"placeholder": 10
 					},
