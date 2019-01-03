@@ -245,7 +245,7 @@ const sendMessage = async (tab, message, tags) => {
 			}
 			// Can't send a message to yourself ...
 			if (await tab.isVisible(SELECTORS.editProfile)) {
-				utils.log("Trying to send a message to yourself ...", "warning")
+				utils.log("Trying to send a message to yourself...", "warning")
 				result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
 				continue
 			}
@@ -255,8 +255,8 @@ const sendMessage = async (tab, message, tags) => {
 			let payload = await sendMessage(tab, message, row)
 			if (profile !== null) {
 				payload = Object.assign({}, profile.csv, payload)
-				payload.profileUrl = row[columnName]
 			}
+			payload.profileUrl = row[columnName]
 			result.push(payload)
 		} catch (err) {
 			utils.log(`Can't load profile: ${url} due to: ${err.message || err}`, "warning")
