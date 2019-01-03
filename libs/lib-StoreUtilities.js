@@ -369,7 +369,9 @@ class StoreUtilities {
 		 * In some cases, papaparse can parse HTML pages whitout returning MissingQuotes nor InvalidQuotes
 		 * So we simply check if the downloaded target starts with the HTML doctype
 		 */
-		if (httpContent.toLowerCase().startsWith("<!doctype html>")) {
+		const pattern = "<!doctype html>"
+		const doctypeCheck = httpContent.substring(0, pattern.length).toLowerCase()
+		if (doctypeCheck === pattern) {
 			throw `${url} doesn't represent a CSV file`
 		}
 
