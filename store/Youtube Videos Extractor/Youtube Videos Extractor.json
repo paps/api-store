@@ -1,9 +1,9 @@
 {
     "slug": "youtube-videos-extractor",
-    "description": "Extract the videos list from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
+    "description": "Extract every videos from a list of Youtube channels",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Videos+Extractor/Youtube+Videos+Extractor.png",
+    "gradientBegin": "#E42C27",
+    "gradientEnd": "#FFD80B",
     "argumentDescription": "",
     "hidden": true,
     "new": false,
