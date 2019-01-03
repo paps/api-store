@@ -21,6 +21,7 @@
 		'lib-Messaging.js': 'libs/lib-Messaging.js'
 		'lib-Google.js': 'libs/lib-Google.js'
 		'lib-Medium.js': 'libs/lib-Medium.js'
+		'lib-Youtube.js': 'libs/lib-Youtube.js'
 
 
 		# API store
@@ -39,6 +40,7 @@
 		'Facebook Message Sender.js': 'store/Facebook Message Sender/Facebook Message Sender.js'
 		'Facebook Network Booster.js': 'store/Facebook Network Booster/Facebook Network Booster.js'
 		'Facebook Page Likers.js': 'store/Facebook Page Likers/Facebook Page Likers.js'
+		'Facebook Page Reviews Collector.js': 'store/Facebook Page Reviews Collector/Facebook Page Reviews Collector.js'
 		'Facebook Post Commenters.js': 'store/Facebook Post Commenters/Facebook Post Commenters.js'
 		'Facebook Post Likers.js': 'store/Facebook Post Likers/Facebook Post Likers.js'
 		'Facebook Profile Scraper.js': 'store/Facebook Profile Scraper/Facebook Profile Scraper.js'
@@ -97,6 +99,7 @@
 		'Twitter Auto Liker.js': 'store/Twitter Auto Liker/Twitter Auto Liker.js'
 		'Twitter Auto Retweeter.js': 'store/Twitter Auto Retweeter/Twitter Auto Retweeter.js'
 		'Web Elements Extractor.js': 'store/Web Elements Extractor/Web Elements Extractor.js'
+		'Youtube Channel Scraper.js': 'store/Youtube Channel Scraper/Youtube Channel Scraper.js'
 
 		# scraping-challenges
 		# -------------------
