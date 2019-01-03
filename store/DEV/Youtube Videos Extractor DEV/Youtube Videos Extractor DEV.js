@@ -53,27 +53,24 @@ const scrapeVideosData = (arg, cb) => {
 			videoData.duration = video.querySelector("ytd-thumbnail-overlay-time-status-renderer").textContent.trim()
 		}
 		if (video.querySelector("#metadata-line span")) {
-			let viewCount = video.querySelector("#metadata-line span").textContent
-			const viewCountArray = viewCount.split(" ")
-			viewCount = viewCountArray[0]
-			let multiplier
-			if (viewCountArray.length === 3) {
-				multiplier = viewCountArray[1].toLocaleLowerCase()
-			} else {
-				multiplier = viewCount.replace(/\d+/g, "").toLowerCase()
-				viewCount = viewCount.replace(/\D+/g, "")
+			try {
+				let viewCount = video.querySelector("#metadata-line span").textContent
+				const multiplier = viewCount.replace(/\d{1,2}[,.]\d{1,2}/, "").trim().split(" ")[0].toLowerCase()
+				viewCount = parseFloat(viewCount.match(/\d{1,2}[,.]\d{1,2}/)[0])
+				switch (multiplier) {
+					case "k":
+						viewCount *= 1000
+						break
+					case "m":
+						viewCount *= 1000000
+						break
+					case "md":
+						viewCount *= 1000000000
+				}
+				videoData.viewCount = viewCount
+			} catch (err) {
+				//
 			}
-			switch (multiplier) {
-				case "k":
-					viewCount *= 1000
-					break
-				case "m":
-					viewCount *= 1000000
-					break
-				case "md":
-					viewCount *= 1000000000
-			}
-			videoData.viewCount = viewCount
 		}
 		if (video.querySelector("#metadata-line > span:last-of-type")) {
 			videoData.postDate = video.querySelector("#metadata-line > span:last-of-type").textContent
@@ -104,9 +101,9 @@ const getChannelName = (arg, cb) => {
 const loadAndScrapeVideos = async (tab, channelUrl, videosPerChannel, sortBy) => {
 	await tab.open(channelUrl)
 	utils.log(`Opening ${channelUrl}`, "loading")
-	await tab.waitUntilVisible("#tabsContent")
+	await tab.waitUntilVisible("#tabsContent", 30000)
 	await tab.click("#tabsContent > paper-tab:nth-child(4)")
-	await tab.waitUntilVisible("#contents #items")
+	await tab.waitUntilVisible("#contents #items", 30000)
 	if (sortBy !== "Newest") {
 		const currentUrl = await tab.getUrl()
 		const urlObject = new URL(currentUrl)

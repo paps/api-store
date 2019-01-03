@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Youtube.js"
+"phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -34,13 +34,13 @@ const scrapeVideosData = (arg, cb) => {
 	const videos = document.querySelectorAll("#contents > ytd-grid-renderer > #items > ytd-grid-video-renderer")
 	const scrapedData = []
 	for (const video of videos) {
-		const videoData = { query: arg.channelUrl }
+		const videoData = { query: arg.channelUrl, timestamp: (new Date()).toISOString() }
 		if (video.querySelector("#video-title")) {
 			videoData.videoTitle = video.querySelector("#video-title").textContent
 		}
 		if (video.querySelector("img") && video.querySelector("img").src) {
 			const thumbnailObject = new URL(video.querySelector("img").src)
-			videoData.thumbnail = thumbnailObject.origin + thumbnailObject.pathname
+			videoData.thumbnailUrl = thumbnailObject.origin + thumbnailObject.pathname
 		}
 		if (video.querySelector("a")) {
 			videoData.videoUrl = video.querySelector("a").href
@@ -49,27 +49,24 @@ const scrapeVideosData = (arg, cb) => {
 			videoData.duration = video.querySelector("ytd-thumbnail-overlay-time-status-renderer").textContent.trim()
 		}
 		if (video.querySelector("#metadata-line span")) {
-			let viewCount = video.querySelector("#metadata-line span").textContent
-			const viewCountArray = viewCount.split(" ")
-			viewCount = viewCountArray[0]
-			let multiplier
-			if (viewCountArray.length === 3) {
-				multiplier = viewCountArray[1].toLocaleLowerCase()
-			} else {
-				multiplier = viewCount.replace(/\d+/g, "").toLowerCase()
-				viewCount = viewCount.replace(/\D+/g, "")
+			try {
+				let viewCount = video.querySelector("#metadata-line span").textContent
+				const multiplier = viewCount.replace(/\d{1,2}[,.]\d{1,2}/, "").trim().split(" ")[0].toLowerCase()
+				viewCount = parseFloat(viewCount.match(/\d{1,2}[,.]\d{1,2}/)[0])
+				switch (multiplier) {
+					case "k":
+						viewCount *= 1000
+						break
+					case "m":
+						viewCount *= 1000000
+						break
+					case "md":
+						viewCount *= 1000000000
+				}
+				videoData.viewCount = viewCount
+			} catch (err) {
+				//
 			}
-			switch (multiplier) {
-				case "k":
-					viewCount *= 1000
-					break
-				case "m":
-					viewCount *= 1000000
-					break
-				case "md":
-					viewCount *= 1000000000
-			}
-			videoData.viewCount = viewCount
 		}
 		if (video.querySelector("#metadata-line > span:last-of-type")) {
 			videoData.postDate = video.querySelector("#metadata-line > span:last-of-type").textContent
@@ -120,10 +117,9 @@ const loadAndScrapeVideos = async (tab, channelUrl, videosPerChannel, sortBy) =>
 		const newVideoCount = await tab.evaluate(getVideoCount)
 		if (newVideoCount > videoCount) {
 			videoCount = newVideoCount
-			console.log("got", videoCount, "videos in", new Date() - initDate, "ms")
+			utils.log(`Loaded ${videoCount} videos.`, "done")
 			initDate = new Date()
 			if (videosPerChannel && videoCount >= videosPerChannel) {
-				console.log("over")
 				break
 			}
 		}
@@ -135,13 +131,9 @@ const loadAndScrapeVideos = async (tab, channelUrl, videosPerChannel, sortBy) =>
 			break
 		}
 	} while (new Date() - initDate < 10000)
-	console.log("elapsed: ", new Date() - initDate)
 	await tab.wait(5000)
-	await tab.screenshot(`${Date.now()}not accessible.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}not accessible.html`)
 	const scrapedData = await tab.evaluate(scrapeVideosData, { channelUrl })
 	const channelName = await tab.evaluate(getChannelName)
-	// console.log("scrapedData", scrapedData)
 	utils.log(`Scraped ${scrapedData.length} videos of ${channelName}.`, "done")
 	return scrapedData
 }
@@ -170,15 +162,13 @@ nick.newTab().then(async (tab) => {
 		}
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(channelUrls, null, 4)}`)
+	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
 	let tempResult = []
 	for (const channelUrl of channelUrls) {
 		try {
 			tempResult = await loadAndScrapeVideos(tab, channelUrl, videosPerChannel, sortBy)
 		} catch (err) {
-			console.log("err:", err)
-			await tab.screenshot(`${Date.now()}err.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
+			//
 		}
 	}
 	for (let i = 0; i < tempResult.length; i++) {

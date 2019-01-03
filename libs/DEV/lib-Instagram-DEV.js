@@ -141,19 +141,27 @@ class Instagram {
 			secure: true,
 			httpOnly: true
 		})
+		const initDate = new Date()
 		try {
 			await tab.open("https://instagram.com")
 		} catch (err) {
+			console.log("erl", err.message)
 			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
 				await tab.wait(5000)
-				await tab.open("https://instagram.com")
 				this.utils.log("Retrying connection...", "loading")
+				await tab.open("https://instagram.com")
+			} else if (err.message.startsWith("timeout: load event did not fire")) {
+				console.log("timeout detected")
+				await tab.wait(5000)
+				this.utils.log("Retrying connection...", "loading")
+				await tab.open("https://instagram.com")
 			} else {
 				throw err
 			}
 		}
+		console.log("elapsed:", new Date() - initDate)
 		try {
-			await tab.waitUntilVisible("main", 15000)
+			await tab.waitUntilVisible("main", 30000)
 			const name = await tab.evaluate((arg, cb) => {
 				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
 				cb(null, url.pathname.replace(/\//g, ""))

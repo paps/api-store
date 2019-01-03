@@ -30,7 +30,7 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 }
 
 const scrapeChannelData = (arg, cb) => {
-	const scrapedData = { query: arg.channelUrl }
+	const scrapedData = { query: arg.channelUrl, timestamp: (new Date()).toISOString() }
 	if (document.querySelector("#channel-title")) {
 		scrapedData.channelTitle = document.querySelector("#channel-title").textContent
 	}

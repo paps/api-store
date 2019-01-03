@@ -146,8 +146,12 @@ class Instagram {
 		} catch (err) {
 			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
 				await tab.wait(5000)
-				await tab.open("https://instagram.com")
 				this.utils.log("Retrying connection...", "loading")
+				await tab.open("https://instagram.com")
+			} else if (err.message.startsWith("timeout: load event did not fire")) {
+				await tab.wait(5000)
+				this.utils.log("Retrying connection...", "loading")
+				await tab.open("https://instagram.com")
 			} else {
 				throw err
 			}
