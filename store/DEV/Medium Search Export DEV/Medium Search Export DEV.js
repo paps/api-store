@@ -290,10 +290,16 @@ const searchContent = async (tab, url, category, count = Infinity) => {
 	}
 
 	const db = await utils.getDb(csvName + ".csv")
-	try {
-		utils.isUrl(search) ? queries = await utils.getDataFromCsv2(search, columnName) : queries = [ search ]
-	} catch (err) {
-		queries = [ search ]
+	if (search) {
+		try {
+			utils.isUrl(search) ? queries = await utils.getDataFromCsv2(search, columnName) : queries = [ search ]
+		} catch (err) {
+			queries = [ search ]
+		}
+	}
+
+	if (typeof queries === "string") {
+		queries = [ queries ]
 	}
 
 	queries = queries.filter(el => db.findIndex(line => el === line.query && line.type === category) < 0).filter(el => el).slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
