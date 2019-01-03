@@ -1,12 +1,12 @@
 {
     "slug": "youtube-channel-scraper",
     "description": "Collect valuable information you need from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
-    "argumentDescription": "",
-    "hidden": false,
-    "new": false,
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
+    "gradientBegin": "#E42C27",
+    "gradientEnd": "#FFD80B",
+    "argumentDescription": "Extract every information from a list of Youtube Channels",
+    "hidden": true,
+    "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
         "sessionCookieHSID": "your_HSID_session_cookie",
