@@ -26,7 +26,7 @@ class Slack {
 			this.utils.log(`Connected as ${name} `, "done")
 		}
 
-		if ((typeof dCookie === "string" || dCookie.length < 1)) {
+		if (typeof dCookie !== "string" || dCookie.length < 1) {
 			this.utils.log("Invalid Slack session cookie. Did you specify the \"d\" cookie?", "warning")
 			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
@@ -47,9 +47,44 @@ class Slack {
 			})
 			await _login()
 		} catch (err) {
+			await tab.screenshot(`log-err-${Date.now()}.jpg`)
+			console.log(err.message || err)
 			this.utils.log("Could not connect to Slack with this session cookie", "error")
 			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
+	}
+
+	/**
+	 * @async
+	 * @param {Object} tab - NickJS tab instance with a slack session
+	 * @return {Promise<Array<Object>>} Channels found
+	 */
+	async getChannelsList(tab) {
+		/* global slackDebug */
+		const getSlackObject = (arg, cb) => {
+			if (!slackDebug) {
+				return cb(null)
+			}
+			const store = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
+			cb(null, store[arg.field])
+		}
+		const channelsObject = await tab.evaluate(getSlackObject, { field: "channels" })
+		const membersObject = await tab.evaluate(getSlackObject, { field: "members" })
+
+		const channels = []
+		for (const one of Object.keys(channelsObject)) {
+			let chan = channelsObject[one]
+			let members = []
+
+			if (chan.members) {
+				for (const member of chan.members) {
+					members.push(membersObject[member])
+				}
+			}
+
+			channels.push({ id: chan.id, name: chan.name_normalized || chan.name, members })
+		}
+		return channels
 	}
 }
 
