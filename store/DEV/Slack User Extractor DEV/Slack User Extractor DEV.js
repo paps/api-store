@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js"
+"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -30,8 +31,30 @@ const DEFAULT_LAUNCH = 1
 // }
 
 /**
- * @param { { chanName: String } } arg
+ * @return {Promise<String|null>}
  */
+const getChannelName = (arg, cb) => cb(null, document.querySelector("button#channel_title") ? document.querySelector("button#channel_title").textContent.trim() : null)
+
+/**
+ * @param { { chanName: String } } arg
+ * @return {Promise<Boolean>}
+ * @throws String when the switch is finished after 30s
+ */
+const waitWhileChanSwitch = (arg, cb) => {
+	const idleStarted = Date.now()
+	const idle = () => {
+		const chanName = document.querySelector("button#channel_title")
+
+		if (!chanName || (chanName.textContent.trim() === arg.chanName)) {
+			if (Date.now() - idleStarted >= 30000) {
+				return cb(`Still in channel ${arg.chanName} after 30s`)
+			}
+			setTimeout(idle, 100)
+		}
+		cb(null, true)
+	}
+	idle()
+}
 
 /**
  * @param {String} workspace - Slack Workspace URL
@@ -41,7 +64,7 @@ const DEFAULT_LAUNCH = 1
 const forgeChannelUrl = (workspace, chanId) => {
 	try {
 		let chan = new URL(workspace)
-		chan.pathname += `/messages/${chanId}`
+		chan.pathname += `messages/${chanId}`
 		return chan.toString()
 	} catch (err) {
 		return null
@@ -50,8 +73,12 @@ const forgeChannelUrl = (workspace, chanId) => {
 
 const switchChannel = async (tab, workspaceUrl, channelId) => {
 	let channelUrl = forgeChannelUrl(workspaceUrl, channelId)
+	const chanName = await tab.evaluate(getChannelName)
 
 	await tab.open(channelUrl)
+	await tab.evaluate(waitWhileChanSwitch, { chanName })
+	await tab.waitUntilVisible([ "div#team_menu", "span#team_menu_user_name" ], 30000, "and")
+	await tab.screenshot(`switch-${Date.now()}.jpg`)
 }
 
 ;(async () => {
@@ -78,7 +105,9 @@ const switchChannel = async (tab, workspaceUrl, channelId) => {
 			const error = `The channel ${channel} doesn't exists in ${slackWorkspaceUrl}`
 			utils.log(error, "warning")
 			res.push({ query, workspaceUrl: slackWorkspaceUrl, error, timestamp: (new Date()).toISOString() })
+			continue
 		}
+		await switchChannel(tab, slackWorkspaceUrl, channel.id)
 	}
 
 	await utils.saveResults(res, res, csvName, null)
