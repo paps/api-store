@@ -450,7 +450,7 @@ const cleanUpInvitations = (invitations, msg) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
 
 	if (!hunterApiKey) {
 		hunterApiKey = ""
@@ -465,24 +465,33 @@ nick.newTab().then(async (tab) => {
 	}
 	await linkedIn.login(tab, sessionCookie)
 
-	spreadsheetUrl = spreadsheetUrl.trim()
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let rows = []
 	let columns = []
-	if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
-		rows = [{ "0": spreadsheetUrl }]
+	if (spreadsheetUrl) {
+		spreadsheetUrl = spreadsheetUrl.trim()
+		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
+			rows = [{ "0": spreadsheetUrl }]
+			columnName = "0"
+		} else {
+			rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
+			let csvHeader = rows[0].filter(cell => !isUrl(cell))
+			let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+			columns = [columnName, ...msgTags]
+			rows = utils.extractCsvRows(rows, columns)
+			if (!columnName) {
+				columnName = "0"
+			}
+		}
+	} else if (typeof profileUrls === "string") {
+		rows = [{ "0": profileUrls }]
 		columnName = "0"
 	} else {
-		rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
-		let csvHeader = rows[0].filter(cell => !isUrl(cell))
-		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-		columns = [columnName, ...msgTags]
-		rows = utils.extractCsvRows(rows, columns)
-		if (!columnName) {
-			columnName = "0"
-		}
+		rows = profileUrls.map(el => ({ "0": el }))
+		columnName = "0"
 	}
+
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	db = await utils.getDb(DB_NAME)

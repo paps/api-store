@@ -433,10 +433,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 }
 
 /**
-	* @description Removing all tags stored in the invitation object
-	* @param {Array<Object>} invitations - Invitations representations
-	* @param {String} msg - message
-	*/
+ * @description Removing all tags stored in the invitation object
+ * @param {Array<Object>} invitations - Invitations representations
+ * @param {String} msg - message
+ */
 const cleanUpInvitations = (invitations, msg) => {
 	if (msg) {
 		const tags = inflater.getMessageTags(msg)
@@ -450,7 +450,7 @@ const cleanUpInvitations = (invitations, msg) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookie, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
 
 	if (!hunterApiKey) {
 		hunterApiKey = ""
@@ -464,24 +464,34 @@ nick.newTab().then(async (tab) => {
 		disableScraping = true
 	}
 	await linkedIn.login(tab, sessionCookie)
-	spreadsheetUrl = spreadsheetUrl.trim()
+
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let rows = []
 	let columns = []
-	if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
-		rows = [{ "0": spreadsheetUrl }]
+	if (spreadsheetUrl) {
+		spreadsheetUrl = spreadsheetUrl.trim()
+		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
+			rows = [{ "0": spreadsheetUrl }]
+			columnName = "0"
+		} else {
+			rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
+			let csvHeader = rows[0].filter(cell => !isUrl(cell))
+			let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+			columns = [columnName, ...msgTags]
+			rows = utils.extractCsvRows(rows, columns)
+			if (!columnName) {
+				columnName = "0"
+			}
+		}
+	} else if (typeof profileUrls === "string") {
+		rows = [{ "0": profileUrls }]
 		columnName = "0"
 	} else {
-		rows = await utils.getRawCsv(spreadsheetUrl) // Get the entire CSV here
-		let csvHeader = rows[0].filter(cell => !isUrl(cell))
-		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-		columns = [columnName, ...msgTags]
-		rows = utils.extractCsvRows(rows, columns)
-		if (!columnName) {
-			columnName = "0"
-		}
+		rows = profileUrls.map(el => ({ "0": el }))
+		columnName = "0"
 	}
+	
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	db = await utils.getDb(DB_NAME)
@@ -512,10 +522,10 @@ nick.newTab().then(async (tab) => {
 		}
 	}
 	/**
-		* Issue #117
-		* "Successfull" invitations are stored here,
-		* in order to check later in the script execution if they're sent
-		*/
+	 * Issue #117
+	 * "Successfull" invitations are stored here,
+	 * in order to check later in the script execution if they're sent
+	 */
 	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds
@@ -534,7 +544,7 @@ nick.newTab().then(async (tab) => {
 	cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
 	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null, false)
-	await linkedIn.updateCookie()
+	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })
