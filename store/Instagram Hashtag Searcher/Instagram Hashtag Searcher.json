@@ -1,0 +1,117 @@
+{
+	"slug": "instagram-hashtag-searcher",
+	"description": "Extract the suggestion list for hashtags or locations on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentDescription": "",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgumentAllowed": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "#soloparking",
+		"sessionCookie": "your_session_cookie",
+		"numberOfLinesPerLaunch": 10
+	},
+	"outputDescription": {
+		"hashtagUrl": "",
+		"hashtag": "",
+		"postCount": "",
+		"location": ""
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/11501/instagram-hashtag-searcher#section_argument\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either an Instagram hashtag beginning with # (like <i>#iseefaces</i>)",
+							"<b>OR</b> an Instagram location (like <i>New York, New York</i>)",
+							"<b>OR</b> a Google Spreadsheet URL (make sure your file is publicly available)",
+							"<b>OR</b> a CSV URL (make sure your file is publicly available)"
+						]
+					},
+					"sessionCookie": {
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/11501/instagram-hashtag-searcher#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/11501/instagram-hashtag-searcher#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
+					},
+					"columnName": {
+						"label": "Spreadsheet column name for Instagram hashtags",
+						"placeholder": "Hashtag",
+						"default": "Hashtag",
+						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
+					},
+					"csvName": {
+						"label": "Output CSV name",
+						"type": "text",
+						"placeholder": "result"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/11501/instagram-hashtag-searcher#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

@@ -45,6 +45,7 @@
 		'Instagram Follower Collector DEV.js': 'store/DEV/Instagram Follower Collector DEV/Instagram Follower Collector DEV.js'
 		'Instagram Following Collector DEV.js': 'store/DEV/Instagram Following Collector DEV/Instagram Following Collector DEV.js'
 		'Instagram Hashtag Collector DEV.js': 'store/DEV/Instagram Hashtag Collector DEV/Instagram Hashtag Collector DEV.js'
+		'Instagram Hashtag Searcher DEV.js': 'store/DEV/Instagram Hashtag Searcher DEV/Instagram Hashtag Searcher DEV.js'
 		'Instagram Multi Hashtag Search DEV.js': 'store/DEV/Instagram Multi Hashtag Search DEV/Instagram Multi Hashtag Search DEV.js'
 		'Instagram Photo Likers DEV.js': 'store/DEV/Instagram Photo Likers DEV/Instagram Photo Likers DEV.js'
 		'Instagram Post Data Extractor DEV.js': 'store/DEV/Instagram Post Data Extractor DEV/Instagram Post Data Extractor DEV.js'
@@ -98,7 +99,7 @@
 		'Twitter Profile Scraper DEV.js': 'store/DEV/Twitter Profile Scraper DEV/Twitter Profile Scraper DEV.js'
 		'Twitter Profile URL Finder DEV.js': 'store/DEV/Twitter Profile URL Finder DEV/Twitter Profile URL Finder DEV.js'
 		'Web Elements Extractor DEV.js': 'store/DEV/Web Elements Extractor DEV/Web Elements Extractor DEV.js'
-		'Youtube Channel Scraper DEV.js': 'store/DEV/Youtube Channel Scraper DEV/Youtube Channel Scraper DEV.js'
-		'Youtube Videos Extractor DEV.js': 'store/DEV/Youtube Videos Extractor DEV/Youtube Videos Extractor DEV.js'
+		'YouTube Channel Scraper DEV.js': 'store/DEV/YouTube Channel Scraper DEV/YouTube Channel Scraper DEV.js'
+		'YouTube Videos Extractor DEV.js': 'store/DEV/YouTube Videos Extractor DEV/YouTube Videos Extractor DEV.js'
 
 ]
