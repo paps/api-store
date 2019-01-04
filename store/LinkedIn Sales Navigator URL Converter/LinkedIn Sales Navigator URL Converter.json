@@ -9,7 +9,8 @@
 	"argumentHelpAnchor": "#section_argument",
 	"argumentDescription": "",
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
@@ -43,7 +44,6 @@
 					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
 						"inputType": "number"
 					}
 				}
