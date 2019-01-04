@@ -172,14 +172,18 @@ const loadLikes = async (tab, count = Infinity) => {
 			break
 		}
 	}
-	const scrapeData = await tab.evaluate(scrapeLikes, { count })
+	let scrapeData = await tab.evaluate(scrapeLikes, { count })
+	if (isFinite(count)) {
+		scrapeData = scrapeData.slice(0, count)
+	}
 	utils.log(`${scrapeData.length} like${ scrapeData.length === 1 ? "" : "s" } scraped`, "done")
+
 	return scrapeData
 }
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, csvName, queries, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, likesPerProfile, csvName, queries, noDatabase } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DB_SHORT_NAME
@@ -205,7 +209,7 @@ const loadLikes = async (tab, count = Infinity) => {
 	for (const query of queries) {
 		try {
 			await twitter.openProfile(tab, utils.isUrl(query) ? appendLikesPages(query) : `https://twitter.com/${query}/likes`)
-			let likes = await loadLikes(tab)
+			let likes = await loadLikes(tab, likesPerProfile)
 			likes.forEach(el => el.query = query)
 			results.push(...likes)
 		} catch (err) {

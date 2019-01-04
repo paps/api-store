@@ -38,6 +38,11 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)",
 						"placeholder": "Twitter Profile"
 					},
+					"likesPerProfile": {
+						"label": "Amount of likes to extract per profiles",
+						"inputType": "number",
+						"helper": "All likes are loaded when this field is empty"
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -58,6 +63,10 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"likesPerProfile": {
+				"type": "number",
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string"
