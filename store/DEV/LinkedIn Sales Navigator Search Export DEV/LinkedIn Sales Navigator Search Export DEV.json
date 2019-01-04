@@ -55,6 +55,11 @@
 						"inputType": "number",
 						"helper": "<b>LinkedIn limits search results to the first 1 000 profiles."
 					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
@@ -91,6 +96,9 @@
 				"minimum": 1,
 				"maximum": 1000,
 				"required": true
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"numberOfLinesPerLaunch": {
 				"type": "number",

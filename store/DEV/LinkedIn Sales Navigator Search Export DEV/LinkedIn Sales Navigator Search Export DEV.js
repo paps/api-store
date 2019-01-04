@@ -269,6 +269,9 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
 
 		utils.log(`Getting ${resultsCount} results`, "done")
+		if (resultsCount === "0") {
+			return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
+		}
 		let multiplicator = 1
 		if (resultsCount.includes("K")) { multiplicator = 1000 }
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
@@ -348,6 +351,9 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
 
 		utils.log(`Getting ${resultsCount} results`, "done")
+		if (resultsCount === "0") {
+			return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
+		}
 		let multiplicator = 1
 		if (resultsCount.includes("K")) { multiplicator = 1000 }
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
@@ -396,7 +402,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 				try {
 					const clickDone = await tab.evaluate(clickNextPage)
 					if (!clickDone) {
-						utils.log("No more profiles found on this page", "warning")
+						utils.log("No more profiles found on this page.", "warning")
 						break
 					}
 				} catch (err) {
@@ -404,7 +410,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 					break
 				}
 			} else {
-				utils.log("No more profiles found on this page", "warning")
+				utils.log("No more profiles found on this page.", "warning")
 				break
 			}
 		} catch (err) {
@@ -439,7 +445,7 @@ const isLinkedInSearchURL = (url) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, searches, numberOfProfiles, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
+	let { sessionCookie, searches, numberOfProfiles, columnName, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
 	await linkedIn.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
@@ -451,7 +457,7 @@ const isLinkedInSearchURL = (url) => {
 			throw "Not a valid Sales Navigator Search Link"
 		}
 		try { 		// Link not from LinkedIn, trying to get CSV
-			searches = await utils.getDataFromCsv2(searches)
+			searches = await utils.getDataFromCsv2(searches, columnName)
 			searches = searches.filter(str => str) // removing empty lines
 			const lastUrl = searches[searches.length - 1]
 			searches = searches.filter(str => utils.checkDb(str, result, "query")).slice(0, numberOfLinesPerLaunch)
@@ -459,7 +465,7 @@ const isLinkedInSearchURL = (url) => {
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
 			if (searches.startsWith("http")) {
-				utils.log("Couldn't open CSV, make sure it's public", "error")
+				utils.log("Couldn't open CSV, make sure it's public.", "error")
 				nick.exit(1)
 			}
 			searches = [ searches ]
@@ -513,7 +519,8 @@ const isLinkedInSearchURL = (url) => {
 			break
 		}
 	}
-	utils.log(`${result.length} profiles found.`, "done")
+	const profilesFoundCount = result.filter(el => !el.error).length
+	utils.log(`${profilesFoundCount} profiles found.`, "done")
 	await utils.saveResults(result, result, csvName)
 	await linkedIn.updateCookie()
 	nick.exit(0)
