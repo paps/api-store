@@ -165,7 +165,7 @@ const isUrl = target => url.parse(target).hostname !== null
 			if (facebook.isFacebookUrl(spreadsheetUrl)) {
 				queries = [ spreadsheetUrl ]
 			} else {
-				queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+				queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 			}
 		} else {
 			queries = spreadsheetUrl
