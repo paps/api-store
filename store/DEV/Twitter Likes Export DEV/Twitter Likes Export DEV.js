@@ -164,17 +164,25 @@ const getTweetsInfos = async (tab, url) => {
 
 	// Get likers
 	utils.log(`Scraping likers on ${url}...`, "loading")
-	await openPopUp(tab, "li.js-stat-count > a.request-favorited-popup", infosToExtract.baseSelector)
-	likers.push(...await tab.evaluate(scrapePopUp, infosToExtract))
-	res.likers = likers
-	await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+	if (await tab.isPresent("li.js-stat-count > a.request-favorited-popup")) {
+		await openPopUp(tab, "li.js-stat-count > a.request-favorited-popup", infosToExtract.baseSelector)
+		likers.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+		res.likers = likers
+		await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+	} else {
+		res.likers = []
+	}
 
 	// Get retweets
 	utils.log(`Scraping retweeters on ${url}...`, "loading")
-	await openPopUp(tab, "li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup", infosToExtract.baseSelector)
-	retweets.push(...await tab.evaluate(scrapePopUp, infosToExtract))
-	res.retweets = retweets
-	await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+	if (await tab.isPresent("li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup")) {
+		await openPopUp(tab, "li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup", infosToExtract.baseSelector)
+		retweets.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+		res.retweets = retweets
+		await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+	} else {
+		res.retweets = []
+	}
 
 	utils.log(`${url} scraped`, "done")
 	return res
