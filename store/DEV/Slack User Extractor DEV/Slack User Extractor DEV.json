@@ -9,6 +9,8 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
+		"sessionCookie": "d_cookie",
+		"slackWorkspaceUrl": "slack_workspace_url"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

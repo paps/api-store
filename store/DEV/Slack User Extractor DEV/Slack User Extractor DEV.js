@@ -2,7 +2,8 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js"
-"phantombuster flags: save-folder"
+
+const { URL } = require("url")
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -25,25 +26,62 @@ const Slack = require("./lib-Slack-DEV")
 const slack = new Slack(nick, buster, utils)
 
 const DEFAULT_DB = "result"
-
+const DEFAULT_LAUNCH = 1
 // }
 
+/**
+ * @param { { chanName: String } } arg
+ */
+
+/**
+ * @param {String} workspace - Slack Workspace URL
+ * @param {String} chanId - Channel ID
+ * @return {String|null}
+ */
+const forgeChannelUrl = (workspace, chanId) => {
+	try {
+		let chan = new URL(workspace)
+		chan.pathname += `/messages/${chanId}`
+		return chan.toString()
+	} catch (err) {
+		return null
+	}
+}
+
+const switchChannel = async (tab, workspaceUrl, channelId) => {
+	let channelUrl = forgeChannelUrl(workspaceUrl, channelId)
+
+	await tab.open(channelUrl)
+}
+
 ;(async () => {
-	/* eslint-disable no-unused-vars */
-	let { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, csvName, queries } = utils.validateArguments()
+	let db = null
+	const res = []
+	let { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, queries } = utils.validateArguments()
 	const tab = await nick.newTab()
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
 	}
 
-	queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
-
 	await slack.login(tab, slackWorkspaceUrl, sessionCookie)
-	const res = await slack.getChannelsList(tab)
-	await tab.screenshot(`login-${Date.now()}.jpg`)
 
-	await utils.saveResults(res, [], csvName, null)
+	queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
+	db = await utils.getDb(csvName + ".csv")
+	queries = queries.filter(el => db.findIndex(line => line.query === el && line.slackWorkspaceUrl === slackWorkspaceUrl) < 0).slice(0, numberOfLinesPerLaunch || DEFAULT_LAUNCH)
+
+	const channels = await slack.getChannelsMeta(tab)
+
+	for (const query of queries) {
+		let channel = channels.find(el => el.name === query)
+		if (!channel) {
+			const error = `The channel ${channel} doesn't exists in ${slackWorkspaceUrl}`
+			utils.log(error, "warning")
+			res.push({ query, workspaceUrl: slackWorkspaceUrl, error, timestamp: (new Date()).toISOString() })
+		}
+	}
+
+	await utils.saveResults(res, res, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
