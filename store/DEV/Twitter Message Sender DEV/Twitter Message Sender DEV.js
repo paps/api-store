@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Twitter.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -16,7 +16,7 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
 const Twitter = require("./lib-Twitter")
@@ -205,6 +205,7 @@ const sendMessage = async (tab, message) => {
 	if (typeof numberOfLinesPerLaunch === "number") {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
 	}
+	await twitter.login(tab, sessionCookie)
 
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
@@ -237,8 +238,6 @@ const sendMessage = async (tab, message) => {
 	}
 
 	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
-
-	await twitter.login(tab, sessionCookie)
 	for (const one of rows) {
 		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
 		profile.query = one[columnName]

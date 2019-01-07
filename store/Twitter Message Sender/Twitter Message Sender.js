@@ -201,6 +201,7 @@ const sendMessage = async (tab, message) => {
 	if (!message || !message.trim()) {
 		throw "No message supplied from the API configuration"
 	}
+	await twitter.login(tab, sessionCookie)
 
 	if (typeof numberOfLinesPerLaunch === "number") {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
@@ -238,7 +239,6 @@ const sendMessage = async (tab, message) => {
 
 	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 
-	await twitter.login(tab, sessionCookie)
 	for (const one of rows) {
 		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
 		profile.query = one[columnName]

@@ -303,9 +303,11 @@ class StoreUtilities {
 		if (typeof columnName === "string" && columnName) {
 			column = csv[0].findIndex(el => el === columnName)
 			if (column < 0) {
-				throw `The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet.`
+				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
+				column = 0
+			} else {
+				csv.shift()
 			}
-			csv.shift()
 			rows = csv.map(line => line[column])
 		} else if (Array.isArray(columnName)) {
 			let columns = Object.assign([], columnName)
@@ -317,7 +319,8 @@ class StoreUtilities {
 			for (const field of columns) {
 				let index = csv[0].findIndex(cell => cell === field)
 				if (index < 0) {
-					throw `The Column Name is set to '${field}' but there's no column named '${field}' in your input spreadsheet.`
+					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
+					index = 0
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
