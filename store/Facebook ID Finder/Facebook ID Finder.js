@@ -60,7 +60,7 @@ const checkDb = (str, db) => {
 		csvName = DB_NAME
 	}
 
-	let facebookLinks = await utils.getDataFromCsv(spreadsheetUrl)
+	let facebookLinks = await utils.getDataFromCsv2(spreadsheetUrl)
 	let result = await utils.getDb(csvName + ".csv")
 	facebookLinks = facebookLinks.filter(el => checkDb(el, result))
 	if (facebookLinks.length < 1) {
