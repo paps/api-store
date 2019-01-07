@@ -98,7 +98,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 		csvObject = craftObjectFromCsv(csv, false)
 		columnName = "profileUrl"
 	}
-	csvObject = filterCsvObject(csvObject, result, columnName).slice(0, numberOfLinesPerLaunch)
+	csvObject = filterCsvObject(csvObject, result, columnName).filter(el => !el.defaultProfileUrl).slice(0, numberOfLinesPerLaunch)
 	let i
 	let conversionCount = 0
 	for (i = 0; i < csvObject.length; i++) {
