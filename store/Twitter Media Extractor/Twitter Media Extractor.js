@@ -254,7 +254,7 @@ const createCsvOutput = json => {
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, accountsPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already processed", "warning")
-		nick.exit(1)
+		nick.exit()
 	}
 
 	await twitter.login(tab, sessionCookie)
