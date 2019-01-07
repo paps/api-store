@@ -8,9 +8,9 @@ const isUrl = url => {
 	}
 }
 
+
 class Slack {
-	constructor(nick, buster, utils) {
-		this.nick = nick
+	constructor(buster, utils) {
 		this.buster = buster
 		this.utils = utils
 	}
@@ -18,48 +18,49 @@ class Slack {
 	/**
 	 * @async
 	 * @description Log into a Slack workspace with a specific session cookie
-	 * @param {Object} tab - NickJS tab instance
+	 * @param {Page} tab - Puppeteer Page instance
 	 * @param {String} url - Slack Workspace URL
 	 * @param {String} dCookie - Slack session cookie named "d"
 	 * @throws String on CSS selectors failures / BAD session cookie value
 	 */
-	async login(tab, url, dCookie) {
-		const _scrapeUsername = (arg, cb) => cb(null, document.querySelector("span#team_menu_user_name").textContent.trim())
+	async login(page, url, dCookie) {
 		const _login = async () => {
-			const [ httpCode ] = await tab.open(url)
-			if (httpCode && httpCode !== 200) {
-				return `Slack responded with ${httpCode}`
+			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
+			if (response.status() !== 200)
+				return `Slack responsed with ${response.status()}`
+			try {
+				await Promise.all([ page.waitForSelector("div#team_menu", { timeout: 30000 }), page.waitFor(() => !document.querySelector("body").classList.contains("loading")) ])
+				const name = await page.evaluate(() => document.querySelector("span#team_menu_user_name").textContent.trim())
+				this.utils.log(`Connected as ${name}`, "done")
+			} catch (err) {
+				await page.screenshot({ path: `err-login-${Date.now()}.jpg`, type: "jpeg", quality: 50 })
+				this.utils.log(`Error: ${err.message || err}`, "warning")
 			}
-			// Need to wait until both the sidebar AND the username are loaded by Slack
-			await tab.waitUntilVisible([ "div#team_menu", "span#team_menu_user_name" ], 30000, "and")
-			const name = await tab.evaluate(_scrapeUsername)
-			this.utils.log(`Connected as ${name}`, "done")
-		}
 
+		}
 		if (typeof dCookie !== "string" || dCookie.trim().length < 1) {
 			this.utils.log("Invalid Slack session cookie. Did you specify the \"d\" cookie?", "warning")
-			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
+			process.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
 
 		if (typeof url !== "string" || url.trim().length < 1 || !isUrl(url)) {
 			this.utils.log("Invalid Slack Workspace URL. Did you specify one?", "warning")
-			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_WORKSPACE)
+			process.exit(this.utils.ERROR_CODES.SLACK_BAD_WORKSPACE)
 		}
 
 		if (url === "slack_workspace_url") {
 			this.utils.log("", "warning")
-			this.nick.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_WORKSPACE)
+			process.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_WORKSPACE)
 		}
-
 
 		if (dCookie === "d_cookie") {
 			this.utils.log("You didn't set the Slack \"d\" cookie in your API configuration", "warning")
-			this.nick.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_COOKIE)
+			process.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_COOKIE)
 		}
 
 		this.utils.log("Connecting to Slack...", "loading")
 		try {
-			await this.nick.setCookie({
+			await page.setCookie({
 				name: "d",
 				value: dCookie,
 				domain: ".slack.com",
@@ -69,27 +70,20 @@ class Slack {
 			await _login()
 		} catch (err) {
 			this.utils.log("Could not connect to Slack with this session cookie", "error")
-			this.nick.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
+			process.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
 	}
 
-	/**
-	 * @async
-	 * @description Get the channels list from a specific workspace
-	 * @param {Object} tab - NickJS tab instance with a slack session
-	 * @return {Promise<Array<Object>>} Channels found
-	 */
-	async getChannelsMeta(tab) {
+	async getChannelsMeta(page) {
 		/* global slackDebug */
-		const getSlackObject = (arg, cb) => {
-			if (!slackDebug) {
-				return cb(null)
-			}
+		const getSlackObject = field => {
+			if (!slackDebug)
+				return Promise.resolve(null)
 			const store = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
-			cb(null, store[arg.field])
+			return Promise.resolve(store[field])
 		}
-		const channelsObject = await tab.evaluate(getSlackObject, { field: "channels" })
-		const membersObject = await tab.evaluate(getSlackObject, { field: "members" })
+		const channelsObject = await page.evaluate(getSlackObject, "channels")
+		const membersObject = await page.evaluate(getSlackObject, "members")
 
 		const channels = []
 		for (const one of Object.keys(channelsObject)) {
