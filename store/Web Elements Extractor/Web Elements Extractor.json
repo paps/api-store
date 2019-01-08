@@ -7,7 +7,7 @@
 	"argumentDescription": "",
 	"argumentHelpAnchor": "",
 	"defaultArgumentAllowed": false,
-	"hidden": true,
+	"hidden": false,
 	"new": false,
 	"defaultArgument": {
 		"urls": [
