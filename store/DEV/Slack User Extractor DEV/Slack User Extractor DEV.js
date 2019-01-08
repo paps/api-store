@@ -10,7 +10,7 @@ const Puppeteer = require("puppeteer")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const nick = null // TODO: remove this hack to not make utils throw errors
+const nick = { exit: (code = 0) => process.exit(code) } // prevent undefined function
 
 const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
