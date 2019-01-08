@@ -178,8 +178,13 @@ const scrapeCompanyInfo = (arg, callback) => {
 	// "View in Sales Navigator" link, only present for LI premium users
 	if (document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn")) { result.salesNavigatorLink = document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn").href }
 	// Use link text from "see all employees" to get number of employees on LI
-	if (document.querySelector("a.snackbar-description-see-all-link > strong")) {
-		const employees = document.querySelector("a.snackbar-description-see-all-link > strong").textContent.match(/ ([\d,. ]+) /)
+	if (document.querySelector("a.snackbar-description-see-all-link > strong") || document.querySelector("a[data-control-name=\"topcard_see_all_employees\"] > span")) {
+		let employees
+		if (document.querySelector("a.snackbar-description-see-all-link > strong")) {
+			employees = document.querySelector("a.snackbar-description-see-all-link > strong").textContent.match(/ ([\d,. ]+) /)
+		} else {
+			employees = document.querySelector("a[data-control-name=\"topcard_see_all_employees\"] > span").textContent.match(/ ([\d,. ]+) /)
+		}
 		if (Array.isArray(employees) && typeof(employees[1]) === "string") {
 			result.employeesOnLinkedIn = parseInt(employees[1].trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10)
 		}
