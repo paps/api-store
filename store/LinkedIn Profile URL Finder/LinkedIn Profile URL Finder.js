@@ -90,6 +90,10 @@ const normalizeLinkedInURL = url => {
 		}
 		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search("linkedin.com " + one)
+		if (search.error === "No more search engines available") {
+			utils.log("No more search engines available, please retry later.", "warning")
+			break
+		}
 		let link = null
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {

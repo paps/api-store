@@ -52,6 +52,10 @@ let db
 
 		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search(one + " site:instagram.com")
+		if (search.error === "No more search engines available") {
+			utils.log("No more search engines available, please retry later.", "warning")
+			break
+		}
 		let link = null
 		for (const res of search.results) {
 			if (res.link.match(/^(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)\/([A-Za-z0-9-_.]+)\/$/g)) {

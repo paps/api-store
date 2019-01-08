@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const { URL } = require("url")
@@ -9,7 +9,7 @@ const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -90,6 +90,10 @@ const normalizeLinkedInURL = url => {
 		}
 		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search(one + " linkedin.com")
+		if (search.error === "No more search engines available") {
+			utils.log("No more search engines available, please retry later.", "warning")
+			break
+		}
 		let link = null
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {
@@ -104,6 +108,9 @@ const normalizeLinkedInURL = url => {
 		} else {
 			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
+			console.log("url:", await tab.getUrl())
+			await tab.screenshot(`${Date.now()}noresult.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}noresult.html`)
 		}
 		toReturn.push(foundData)
 		i++
