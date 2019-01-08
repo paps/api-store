@@ -65,12 +65,20 @@ const scrapeUser = () => {
 
 	profile.createdYear = accountCreationYear ? accountCreationYear.textContent.trim() : null
 	profile.pinnedRepos = [ ...pinnedRepos ].map(el => el.querySelector("span.d-block a").href)
+
+	const infos = [...document.querySelectorAll("nav a.UnderlineNav-item span.Counter")]
+
+	for (const el of infos) {
+		const name = [...el.parentNode.childNodes].filter(content => content.nodeType === Node.TEXT_NODE).map(el => el.textContent.trim()).filter(el => el).pop().toLowerCase()
+		const data = el.textContent.trim()
+		profile[name] = data
+	}
+
 	return Promise.resolve(profile)
 }
 
 
 const openProfile = async (page, url) => {
-	utils.log(`Opening ${url}...`, "loading")
 	const response = await page.goto(url)
 
 	if (response.status() !== 200) {
@@ -86,6 +94,7 @@ const openProfile = async (page, url) => {
 	const Browser = await Puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const Page = await Browser.newPage()
 	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, noDatabase, csvName } = utils.validateArguments()
+	const profiles = []
 	let db = null
 
 	if (!csvName) {
@@ -116,12 +125,23 @@ const openProfile = async (page, url) => {
 	}
 
 	for (const query of queries) {
+		utils.log(`Opening ${query}...`, "loading")
 		const url = utils.isUrl(query) ? query : `https://www.github.com/${query}`
-		const res = await openProfile(Page, url)
-		console.log(res)
+		let res = null
+		try {
+			res = await openProfile(Page, url)
+			res.query = query
+			res.timestamp = (new Date()).toISOString()
+			utils.log(`${query} scraped`, "done")
+			profiles.push(res)
+		} catch (err) {
+			const error = `Error while scraping ${url}: ${err.message || err}`
+			utils.log(error, "warning")
+			profiles.push({ query, error, timestamp: (new Date()).toISOString() })
+		}
 	}
-
-	await utils.saveResults([], [], csvName, null, false)
+	db.push(...utils.filterRightOuter(db, profiles))
+	await utils.saveResults(db, profiles, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
