@@ -30,6 +30,7 @@ const isGithubUrl = url => {
 
 const scrapeUser = () => {
 	const profile = {}
+	const profilePicture = document.querySelector("a[itemprop=\"image\"] img.avatar")
 	const nameSelector = document.querySelector("div.vcard-names-container")
 	const bioSelector = document.querySelector("div.user-profile-bio")
 	const locationSelector = document.querySelector("ul.vcard-details li[itemprop=\"homeLocation\"]")
@@ -51,7 +52,7 @@ const scrapeUser = () => {
 		const count = commitsCount.textContent.trim().match(/[\d,. ]+/g).filter(el => !isNaN(parseInt(el, 10))).pop().trim()
 		profile.yearlyCommits = parseInt(count.replace(/[,. ]/g, ""), 10)
 	}
-
+	profile.pictureUrl = profilePicture ? profilePicture.src : null
 	profile.bio = bioSelector ? bioSelector.textContent.trim() : null
 	profile.worksFor = organization ? organization.textContent.trim() : null
 	profile.orgainizations = [ ...organizations ].map(el => el.href)
