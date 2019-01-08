@@ -36,11 +36,10 @@ const getTotalSendInvitations = (arg, cb) => {
 	 * whitespaces, dots or commas
 	 * It will depends on the language used in the current page
 	 */
-	let digits = raw.match(/([\d,. ]+)/g)
+	let digits = raw.match(/([\d,.\s ]+)/g)
 	if (Array.isArray(digits)) {
-		digits = digits.map(el => parseInt(el.trim().replace(/ /g, "").replace(/\./g, "").replace(/,/g, ""), 10)).filter(el => !isNaN(el))
-	}
-	else {
+		digits = digits.map(el => parseInt(el.trim().replace(/\s/g, "").replace(/\./g, "").replace(/,/g, ""), 10)).filter(el => !isNaN(el))
+	} else {
 		return cb("Cannot find the invitations count", null)
 	}
 	const max = Math.max.apply(null, digits)
@@ -180,7 +179,6 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	} else {
 		utils.log(`${inviteCount} invitations kept.`, "done")
 	}
-	await linkedIn.saveCookie()
 	nick.exit()
 })()
 .catch(err => {
