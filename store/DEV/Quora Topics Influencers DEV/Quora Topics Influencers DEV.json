@@ -14,7 +14,7 @@
 		"mb": "RrKk9vyA0DXcQwuuZjwJ-Q\\075\\075"
 	},
 	"defaultArgumentAllowed": false,
-	"argumentFormTest": {
+	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
 			"options": {
@@ -75,7 +75,7 @@
 		"twitter": "Twitter Url",
 		"linkedin": "LinkedIn Url"
 	},
-	"argumentSchemaTest": {
+	"argumentSchema": {
 		"type": "object",
 		"properties": {
 			"ms": {
