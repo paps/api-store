@@ -169,18 +169,20 @@ const getIdFromUrl = async (url, tab) => {
 			if (httpCode === 404) {
 				throw "could not get id: 404 error when tracking linkedIn company ID"
 			}
+			let linkSelector
+			// different links selector depending on accounts
 			try {
-				await tab.untilVisible(".org-company-employees-snackbar__details-highlight")
+				linkSelector = await tab.untilVisible([".org-company-employees-snackbar__details-highlight", "a[data-control-name=\"topcard_see_all_employees\"]"], "or")
 			} catch (err) {
 				throw "No employees found"
 			}
 			let tmp = await tab.evaluate((argv, cb) => {
-				let ids = document.querySelector(".org-company-employees-snackbar__details-highlight").href
+				let ids = document.querySelector(argv.linkSelector).href
 				let u = new URL(ids)
 				ids = u.searchParams.get("facetCurrentCompany").split("\",\"").pop()
 				ids = ids.replace("[\"", "").replace("\"]", "")
 				cb(null, ids)
-			})
+			}, { linkSelector })
 			return tmp.includes(",") ? tmp : parseInt(tmp, 10)
 		} else if (url.match(/linkedin\.com\/company\/(\d+)/) && url.match(/linkedin\.com\/company\/(\d+)/)[1]) {
 			return parseInt(url.match(/linkedin\.com\/company\/(\d+)/)[1], 10)
