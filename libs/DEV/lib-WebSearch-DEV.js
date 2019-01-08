@@ -80,17 +80,36 @@ const _defaultEngines = [
 				return url
 			}
 		}
-	// },
-	// {
-	// 	"name": "qwant",
-	// 	"codename": "Q",
-	// 	"baseUrl": "https://www.qwant.com/?q=",
-	// 	"baseSelector": "div.result_fragment > div.result",
-	// 	"titleSelector" : "span.result--web--title",
-	// 	"linkSelector": "a.result--web--link",
-	// 	"descriptionSelector": "p",
-	// 	"noResultsSelector": "div.no_result",
-	// 	"recaptcha": "div.anti_robot"
+	},
+	{
+		"name": "qwant",
+		"codename": "Q",
+		"baseUrl": "https://www.qwant.com/?q=",
+		"baseSelector": "div.result_fragment > div.result",
+		"titleSelector" : "span.result--web--title",
+		"linkSelector": "a.result--web--link",
+		"descriptionSelector": "p",
+		"noResultsSelector": "div.no_result",
+		"recaptcha": "div.anti_robot"
+	},
+	{
+		"name": "excite",
+		"codename": "X",
+		"baseUrl": "https://search.excite.com/search/web?q=",
+		"baseSelector": "div#resultsMain div.searchResult",
+		"titleSelector" : "div.resultTitlePane",
+		"linkSelector": "a.resultTitle",
+		"descriptionSelector": "div.resultDescription",
+		"noResultsSelector": "div#csrNoResultsWarning",
+		"processUrl": url => {
+			try {
+				const params = new URL(url).searchParams.get("encp")
+				const keptParams = params.slice(params.indexOf("&ru=") + 4)
+				return decodeURIComponent(keptParams.slice(0, keptParams.indexOf("&")))
+			} catch (err) {
+				return url
+			}
+		}
 	}
 ]
 
@@ -261,10 +280,10 @@ class WebSearch {
 		 * No need to continue if all engines are down
 		 */
 		if (this.allEnginesDown()) {
-			console.log("No more search engines available")
 			results = Object.assign({}, emptyResult)
 			results.engine = this.engines[this.engineUsed].name
 			results.codename = this.engines[this.engineUsed].codename
+			results.error = "No more search engines available"
 			return results
 		}
 
@@ -292,16 +311,16 @@ class WebSearch {
 				this.verbose && console.log(`-- Switching to a new engine because exception: ${e}`)
 				this.enginesDown.push(this.engineUsed)
 				if (this.allEnginesDown()) {
-					console.log("No more search engines available")
 					results = Object.assign({}, emptyResult)
 					results.engine = this.engines[this.engineUsed].name
 					results.codename = this.engines[this.engineUsed].codename
+					results.error = "No more search engines available"
 					break
 				}
 				codenameList += this.engines[this.engineUsed].codename
 				this.engineUsed = _switchEngine.call(this)
 				// slow down a little
-				await this.tab.wait(this.enginesDown.length * (1500 + (Math.random() * 500)))
+				await this.tab.wait(this.enginesDown.length * (1000 + (Math.random() * 500)))
 			}
 		}
 		results.codename = codenameList
@@ -330,7 +349,7 @@ class WebSearch {
 	 * and also randomly choose a new engine
 	 */
 	resetEngines() {
-		this.enginesDown = []
+		// this.enginesDown = []
 		this.engineUsed = _switchEngine.call(this)
 	}
 

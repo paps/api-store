@@ -57,6 +57,10 @@ let db
 
 		utils.log(`Searching for ${one} ...`, "loading")
 		let search = await webSearch.search(one + " site:facebook.com")
+		if (search.error === "No more search engines available") {
+			utils.log("No more search engines available, please retry later.", "warning")
+			break
+		}
 		let link = null
 		for (const res of search.results) {
 			if (res.link.match(/^(?:(?:(http|https)):\/\/)?(?:www\.|[a-z]{1,}-[a-z]{1,}\.)?(?:facebook.com)\/[^public][a-zA-Z0-9-_.]{1,}/g)) {

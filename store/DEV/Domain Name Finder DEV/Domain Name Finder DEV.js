@@ -1,12 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -130,6 +130,9 @@ const craftDomains = (argv, cb) => {
  */
 const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
+	if (names.error === "No more search engines available") {
+		return { error: names.error }
+	}
 	query = query.toLowerCase()
 	await tab.inject("../injectables/psl-1.1.24.min.js")
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
@@ -156,7 +159,9 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	} else if (typeof(companies) === "string") {
 		companies = [companies]
 	}
-
+	if (!numberOfLinesPerLaunch) {
+		numberOfLinesPerLaunch = companies.length
+	}
 	/**
 	 * We need to lowercase all inputs to check if there were already scraped,
 	 * since getDomainName return the query in lowercase
@@ -177,7 +182,6 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const webSearch = new WebSearch(tab, buster, null, null, utils)
 
 	let i = 0
-	let lastDate = new Date()
 	for (const query of companies) {
 		if (!query || query.trim().length < 1) {
 			utils.log("Empty line, skipping entry", "warning")
@@ -192,15 +196,17 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 		utils.log(`Getting domain name for ${query} ...`, "loading")
 		try {
 			const res = await getDomainName(webSearch, tab, query, blacklist)
+			if (res.error) {
+				utils.log("No more search engines available, please retry later.", "warning")
+				break
+			}
 			utils.log(`Got ${res.domain} for ${query} (${res.codename})`, "done")
-			console.log("elapsed: ", new Date() - lastDate)
-			lastDate = new Date()
 			delete res.codename
 			res.timestamp = (new Date()).toISOString()
 			result.push(res)
 		} catch (error) {
 			utils.log(`Could not get domain name for ${query}`, "error")
-			result.push({ query: query.toLowerCase(), domain: "Not found", timestamp: (new Date()).toISOString() })
+			result.push({ query: query.toLowerCase(), error: "Domain not found", timestamp: (new Date()).toISOString() })
 		}
 		i++
 	}
