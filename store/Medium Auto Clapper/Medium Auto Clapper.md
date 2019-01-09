@@ -1,4 +1,4 @@
-# Mass clap articles that you find interesting and be heard on Medium 👏
+# Automatically clap a list of Medium articles that you find interesting and get noticed by their authors 👏
 
 If you follow specific topics or authors on Medium, clapping is a great way to show your appreciation.
 
