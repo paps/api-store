@@ -429,6 +429,11 @@ const loadNetworkAndScrape = async (tab, numberOfPages, query) => {
 	let networkCount = 0
 	let lastDate = new Date()
 	do {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		const newNetworkCount = await tab.evaluate(getNetworkCount)
 		if (newNetworkCount > networkCount) {
 			networkCount = newNetworkCount
@@ -451,6 +456,107 @@ const loadNetworkAndScrape = async (tab, numberOfPages, query) => {
 		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} profiles.`, "done")
 	}
 	if (!result.length) {
+		utils.log("No results found!", "warning")
+	}
+	return result
+}
+
+
+// return the number of Connections profiles visible on the page
+const getConnectionsCount = (arg, cb) => cb(null, document.querySelectorAll(".mn-connections > ul > li").length)
+
+// Connections scraping
+const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
+	const results = document.querySelectorAll(".mn-connections > ul > li")
+	const scrapedData = []
+	for (let i = 0 ; i < results.length - arg.limiter ; i++) {
+		const scrapedObject = { query: arg.query, timestamp: (new Date()).toISOString() }
+		if (results[i].querySelector(".mn-connection-card__name")) {
+			scrapedObject.name = results[i].querySelector(".mn-connection-card__name").innerText
+		}
+		if (results[i].querySelector("a")) {
+			scrapedObject.profileUrl = results[i].querySelector("a").href
+		}
+		if (results[i].querySelector(".presence-entity__image")) {
+			const backgroundStyle = results[i].querySelector(".presence-entity__image")
+			if (backgroundStyle && backgroundStyle.style && backgroundStyle.style.backgroundImage) {
+				let backgroundImageUrl = backgroundStyle.style.backgroundImage
+				backgroundImageUrl = backgroundImageUrl.slice(backgroundImageUrl.indexOf("\"") + 1)
+				backgroundImageUrl = backgroundImageUrl.slice(0, backgroundImageUrl.indexOf("\""))
+				scrapedObject.profileImageUrl = backgroundImageUrl 
+			}
+		}
+		if (results[i].querySelector(".mn-discovery-person-card__name")) {
+			scrapedObject.name = results[i].querySelector(".mn-discovery-person-card__name").innerText
+		}
+		if (results[i].querySelector(".mn-connection-card__occupation")) {
+			scrapedObject.title = results[i].querySelector(".mn-connection-card__occupation").innerText
+		}
+		if (results[i].querySelector("time.time-ago")) {
+			let connectedDate = results[i].querySelector("time.time-ago").innerText
+			connectedDate = connectedDate.split(" ")
+			connectedDate.shift()
+			scrapedObject.connectedDate = connectedDate.join(" ")
+		}
+		scrapedData.push(scrapedObject)
+		results[i].parentElement.removeChild(results[i])
+	}
+	cb(null, scrapedData)
+}
+
+// handle loading and scraping of Connections profiles
+const loadConnectionsAndScrape = async (tab, numberOfPages, query) => {
+	utils.log("Loading Connections profiles...", "loading")
+	let totalCount
+	try {
+		totalCount = await tab.evaluate((arg, cb) => {
+			cb(null, document.querySelector(".mn-connections__header h1").textContent.replace(/\D+/g,""))
+		})
+		if (totalCount) {
+			utils.log(`Total Connections Count is ${totalCount}.`, "info")
+		}
+	} catch (err) {
+		//
+	}
+	let result = []
+	let scrapeCount = 0
+	let connectionsCount = 0
+	let lastDate = new Date()
+	const numberOfProfiles = numberOfPages * 10
+	do {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
+		const newConnectionsCount = await tab.evaluate(getConnectionsCount)
+		if (newConnectionsCount > connectionsCount) {
+			const tempResult = await tab.evaluate(scrapeConnectionsProfilesAndRemove, { query, limiter: 30 })
+			result = result.concat(tempResult)
+			scrapeCount = result.length
+			if (scrapeCount) {
+				utils.log(`Scraped ${Math.min(scrapeCount, numberOfProfiles)} profiles.`, "done")
+			}
+			buster.progressHint(Math.min(scrapeCount, numberOfProfiles) / numberOfProfiles, `${scrapeCount} profiles scraped`)
+			connectionsCount = 30
+			lastDate = new Date()
+			await tab.scroll(0, -2000)
+			await tab.wait(400)
+			await tab.scrollToBottom()
+		}
+		if (new Date() - lastDate > 10000) {
+			if (result.length) {
+				utils.log("Scrolling took too long!", "warning")
+			}
+			break
+		}
+		await tab.wait(1000)
+	} while (scrapeCount < numberOfProfiles)
+	result = result.concat(await tab.evaluate(scrapeConnectionsProfilesAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
+	result = result.slice(0, numberOfProfiles)
+	if (result.length) { // if we scraped posts without more loading
+		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} posts.`, "done")
+	} else {
 		utils.log("No results found!", "warning")
 	}
 	return result
@@ -485,6 +591,22 @@ const getNetwork = async (tab, searchUrl, numberOfPost, query) => {
 	return result
 }
 
+// handle scraping of Connections profiles
+const getConnections = async (tab, searchUrl, numberOfPages, query, onlyGetFirstResult) => {
+	let result = []
+	try {
+		await tab.open(searchUrl)
+		await tab.waitUntilVisible(".mn-connections__actions-container")
+		result = await loadConnectionsAndScrape(tab, numberOfPages, query)
+	} catch (err) {
+		utils.log(`Error getting Connections:${err}`, "error")
+	}
+	if (onlyGetFirstResult) {
+		result = [ result[0] ]
+	}
+	return result
+}
+
 const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL, category, onlyGetFirstResult) => {
 	utils.log(`Getting data for search ${query} ...`, "loading")
 	if (onlyGetFirstResult) {
@@ -501,6 +623,10 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	}
 	if (searchCat === "network") {
 		const result = await getNetwork(tab, searchUrl, numberOfPage, query, onlyGetFirstResult)
+		return result
+	}
+	if (searchCat === "connections") {
+		const result = await getConnections(tab, searchUrl, numberOfPage, query, onlyGetFirstResult)
 		return result
 	}
 	let result = []
@@ -587,7 +713,6 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					}
 					if (canScroll) {
 						result = result.concat(await tab.evaluate(scrapeResultsAll, { query, searchCat, onlyGetFirstResult }))
-						await buster.saveText(await tab.getContent(), `${Date.now()}geRsyk.html`)
 					} else {
 						break
 					}
@@ -649,6 +774,8 @@ const isLinkedInSearchURL = (targetUrl) => {
 			if (urlObject.pathname.includes("people") || urlObject.pathname.includes("all")) { return "people" } // People search
 		} else if (urlObject.hostname === "www.linkedin.com" && urlObject.pathname === "/mynetwork/") {
 			return "network"
+		} else if (targetUrl.includes("mynetwork/invite-connect/connections")) {
+			return "connections"
 		}
 	}
 	return 0
@@ -668,9 +795,6 @@ const isLinkedInSearchURL = (targetUrl) => {
 	if (!category) { category = "People" }
 	// 							//
 	if (typeof search === "string") {
-		if (search.includes("mynetwork/invite-connect/connections")) { // if it's the first connections list page, we replace it by the equivalent search URL
-			search = "https://www.linkedin.com/search/results/people/v2/?facetNetwork=%5B%22F%22%5D&origin=FACETED_SEARCH"
-		}
 		const typeOfSearch = isLinkedInSearchURL(search)
 		if (typeof typeOfSearch === "string") {
 			if (typeOfSearch === "salesnavigator") {
@@ -700,8 +824,17 @@ const isLinkedInSearchURL = (targetUrl) => {
 		}
 		try {
 			const tempResult = await getSearchResults(tab, searchUrl, numberOfPage, search, isSearchURL, category, onlyGetFirstResult)
-			result = removeDuplicates(result, tempResult, category)
-
+			if (tempResult) {
+				if (isSearchURL === "connections") {
+					for (let i = 0; i < tempResult.length; i++) {
+						if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
+							result.push(tempResult[i])
+						}
+					}
+				} else {
+					result = removeDuplicates(result, tempResult, category)
+				}
+			}	
 		} catch (err) {
 			utils.log(`Error : ${err}`, "error")
 		}
