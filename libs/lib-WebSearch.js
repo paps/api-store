@@ -79,7 +79,8 @@ const _defaultEngines = [
 			} catch (err) {
 				return url
 			}
-		}
+		},
+		"consent": ".consent-container"
 	},
 	{
 		"name": "qwant",
@@ -181,6 +182,9 @@ const _doSearch = async function(query) {
 	if (engine.recaptcha) {
 		selectors.push(engine.recaptcha)
 	}
+	if (engine.consent) {
+		selectors.push(engine.consent)
+	}
 	const selector = await this.tab.untilVisible(selectors, 7000, "or")
 
 	if (selector === engine.recaptcha) {
@@ -191,6 +195,12 @@ const _doSearch = async function(query) {
 		return result
 	}
 
+	if (selector === engine.consent) { // clicking on the Consent button and waiting for results
+		await this.tab.click(".consent-container button[name=\"agree\"]")
+		selectors.pop()
+		await this.tab.untilVisible(selectors, 7000, "or")
+	}
+	
 	result.results = await this.tab.evaluate(_scrapeResults, { engine })
 	if (engine.processUrl) {
 		for (let i = 0, len = result.results.length; i < len; i++) {

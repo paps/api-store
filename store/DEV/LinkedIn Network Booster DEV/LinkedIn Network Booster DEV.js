@@ -495,6 +495,9 @@ nick.newTab().then(async (tab) => {
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	db = await utils.getDb(DB_NAME)
+	if (db.length) {
+		utils.log(`${db.length} profiles have already been processed.`, "done")
+	}
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
@@ -544,6 +547,9 @@ nick.newTab().then(async (tab) => {
 	cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
 	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null, false)
+	if (db.length) {
+		utils.log(`${db.length} profiles have been processed.`, "done")
+	}
 	await linkedIn.saveCookie()
 	utils.log("Job is done!", "done")
 	nick.exit(0)

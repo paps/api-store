@@ -12,100 +12,118 @@ const { URL } = require("url")
  * - noResultsSelector: CSS selector used to check if we're facing a failed research
  */
 const _defaultEngines = [
+	// {
+	// 	"name": "google.com",
+	// 	"codename": "G",
+	// 	"baseUrl": "https://www.google.com/search?q=",
+	// 	"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
+	// 	"titleSelector": "a > h3",
+	// 	"linkSelector": "a",
+	// 	"descriptionSelector": "span.st",
+	// 	"noResultsSelector": "div.med ul"
+	// },
+	// {
+	// 	"name": "duckduckgo",
+	// 	"codename": "D",
+	// 	"baseUrl": "https://duckduckgo.com/?q=",
+	// 	"baseSelector": "div.results div.result.results_links_deep",
+	// 	"titleSelector": "h2 > a:first-child",
+	// 	"linkSelector": "h2 > a:first-child",
+	// 	"descriptionSelector": ".result__snippet",
+	// 	"noResultsSelector": "div.no-results"
+	// },
+	// {
+	// 	"name": "bing",
+	// 	"codename": "B",
+	// 	"baseUrl": "https://www.bing.com/search?q=",
+	// 	"baseSelector": "ol#b_results > li.b_algo",
+	// 	"titleSelector": "h2 > a",
+	// 	"linkSelector": "h2 > a",
+	// 	"descriptionSelector": "p",
+	// 	"noResultsSelector": "ol#b_results > li.b_no"
+	// },
+	// {
+	// 	"name": "ecosia",
+	// 	"codename": "E",
+	// 	"baseUrl": "https://www.ecosia.org/search?q=",
+	// 	"baseSelector": "div.result.js-result",
+	// 	"titleSelector": "a.result-title",
+	// 	"linkSelector": "a.result-url",
+	// 	"descriptionSelector": "p.result-snippet",
+	// 	"noResultsSelector": "div.empty-result"
+	// },
+	// {
+	// 	"name": "yahoo",
+	// 	"codename": "Y",
+	// 	"baseUrl": "https://search.yahoo.com/search?p=",
+	// 	"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
+	// 	"titleSelector": "h3.title",
+	// 	"linkSelector": "a.ac-algo",
+	// 	"descriptionSelector": "div.compText.aAbs",
+	// 	"noResultsSelector": "div.dd.zrp",
+	// 	"processUrl": url => {
+	// 		let pathnamePattern = "RU="
+	// 		try {
+	// 			let parsedUrl = new URL(url)
+	// 			if (parsedUrl.hostname === "r.search.yahoo.com") {
+	// 				let redirectionUrl = parsedUrl.pathname.split("/").find(el => el.startsWith(pathnamePattern))
+	// 				if (redirectionUrl) {
+	// 					redirectionUrl = decodeURIComponent(redirectionUrl.substr(pathnamePattern.length, redirectionUrl.length))
+	// 					return redirectionUrl
+	// 				} else {
+	// 					return url
+	// 				}
+	// 			} else {
+	// 				return url
+	// 			}
+	// 		} catch (err) {
+	// 			return url
+	// 		}
+	// 	},
+	// 	"consent": ".consent-container"
+	// },
+	// {
+	// 	"name": "qwant",
+	// 	"codename": "Q",
+	// 	"baseUrl": "https://www.qwant.com/?q=",
+	// 	"baseSelector": "div.result_fragment > div.result",
+	// 	"titleSelector" : "span.result--web--title",
+	// 	"linkSelector": "a.result--web--link",
+	// 	"descriptionSelector": "p",
+	// 	"noResultsSelector": "div.no_result",
+	// 	"recaptcha": "div.anti_robot"
+	// },
+	// {
+	// 	"name": "excite",
+	// 	"codename": "X",
+	// 	"baseUrl": "https://search.excite.com/search/web?q=",
+	// 	"baseSelector": "div#resultsMain div.searchResult",
+	// 	"titleSelector" : "div.resultTitlePane",
+	// 	"linkSelector": "a.resultTitle",
+	// 	"descriptionSelector": "div.resultDescription",
+	// 	"noResultsSelector": "div#csrNoResultsWarning",
+	// 	"processUrl": url => {
+	// 		try {
+	// 			const params = new URL(url).searchParams.get("encp")
+	// 			const keptParams = params.slice(params.indexOf("&ru=") + 4)
+	// 			return decodeURIComponent(keptParams.slice(0, keptParams.indexOf("&")))
+	// 		} catch (err) {
+	// 			return url
+	// 		}
+	// 	}
+	// },
 	{
-		"name": "google.com",
-		"codename": "G",
-		"baseUrl": "https://www.google.com/search?q=",
-		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-		"titleSelector": "a > h3",
-		"linkSelector": "a",
-		"descriptionSelector": "span.st",
-		"noResultsSelector": "div.med ul"
-	},
-	{
-		"name": "duckduckgo",
-		"codename": "D",
-		"baseUrl": "https://duckduckgo.com/?q=",
-		"baseSelector": "div.results div.result.results_links_deep",
-		"titleSelector": "h2 > a:first-child",
-		"linkSelector": "h2 > a:first-child",
-		"descriptionSelector": ".result__snippet",
-		"noResultsSelector": "div.no-results"
-	},
-	{
-		"name": "bing",
-		"codename": "B",
-		"baseUrl": "https://www.bing.com/search?q=",
-		"baseSelector": "ol#b_results > li.b_algo",
-		"titleSelector": "h2 > a",
-		"linkSelector": "h2 > a",
-		"descriptionSelector": "p",
-		"noResultsSelector": "ol#b_results > li.b_no"
-	},
-	{
-		"name": "ecosia",
-		"codename": "E",
-		"baseUrl": "https://www.ecosia.org/search?q=",
-		"baseSelector": "div.result.js-result",
-		"titleSelector": "a.result-title",
-		"linkSelector": "a.result-url",
-		"descriptionSelector": "p.result-snippet",
-		"noResultsSelector": "div.empty-result"
-	},
-	{
-		"name": "yahoo",
-		"codename": "Y",
-		"baseUrl": "https://search.yahoo.com/search?p=",
-		"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
-		"titleSelector": "h3.title",
-		"linkSelector": "a.ac-algo",
-		"descriptionSelector": "div.compText.aAbs",
-		"noResultsSelector": "div.dd.zrp",
+		"name": "lycos",
+		"codename": "L",
+		"baseUrl": "http://search.lycos.com/web/?q=",
+		"baseSelector": "div.col-main div.search-results",
+		"titleSelector" : "h2.result-title",
+		"linkSelector": "a.result-link",
+		"descriptionSelector": "span.result-description",
+		"noResultsSelector": "div.no-results",
 		"processUrl": url => {
-			let pathnamePattern = "RU="
 			try {
-				let parsedUrl = new URL(url)
-				if (parsedUrl.hostname === "r.search.yahoo.com") {
-					let redirectionUrl = parsedUrl.pathname.split("/").find(el => el.startsWith(pathnamePattern))
-					if (redirectionUrl) {
-						redirectionUrl = decodeURIComponent(redirectionUrl.substr(pathnamePattern.length, redirectionUrl.length))
-						return redirectionUrl
-					} else {
-						return url
-					}
-				} else {
-					return url
-				}
-			} catch (err) {
-				return url
-			}
-		}
-	},
-	{
-		"name": "qwant",
-		"codename": "Q",
-		"baseUrl": "https://www.qwant.com/?q=",
-		"baseSelector": "div.result_fragment > div.result",
-		"titleSelector" : "span.result--web--title",
-		"linkSelector": "a.result--web--link",
-		"descriptionSelector": "p",
-		"noResultsSelector": "div.no_result",
-		"recaptcha": "div.anti_robot"
-	},
-	{
-		"name": "excite",
-		"codename": "X",
-		"baseUrl": "https://search.excite.com/search/web?q=",
-		"baseSelector": "div#resultsMain div.searchResult",
-		"titleSelector" : "div.resultTitlePane",
-		"linkSelector": "a.resultTitle",
-		"descriptionSelector": "div.resultDescription",
-		"noResultsSelector": "div#csrNoResultsWarning",
-		"processUrl": url => {
-			try {
-				const params = new URL(url).searchParams.get("encp")
-				const keptParams = params.slice(params.indexOf("&ru=") + 4)
-				return decodeURIComponent(keptParams.slice(0, keptParams.indexOf("&")))
+				return new URL(url).searchParams.get("as")
 			} catch (err) {
 				return url
 			}
@@ -164,22 +182,33 @@ const _scrapeResults = (argv, cb) => {
 const _doSearch = async function(query) {
 	let result = Object.assign({}, emptyResult)
 	const engine = this.engines[this.engineUsed]
-	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
+	// if (engine.name === "lycos") {
+	// 	await this.tab.open("http://search.lycos.com/")
+	// 	await this.tab.waitUntilVisible("form .search-input")
+	// 	await this.tab.sendKeys("form .search-input", query)
+	// 	await this.tab.click("button.search")
+	// } else {
+		const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
 
-	result.engine = engine.name
-	result.codename = engine.codename
-
-	/**
-	 * Error while opening the url
-	 */
-	if ((httpCode >= 400) || (httpCode < 200)) {
-		this.verbose && console.log("No results from the engine", engine.name)
-		throw `Cannot open the page ${engine.baseUrl}${query}`
-	}
+		result.engine = engine.name
+		result.codename = engine.codename
+	
+		/**
+		 * Error while opening the url
+		 */
+		if ((httpCode >= 400) || (httpCode < 200)) {
+			this.verbose && console.log("No results from the engine", engine.name)
+			throw `Cannot open the page ${engine.baseUrl}${query}`
+		}
+	// }
+	
 
 	const selectors = [engine.baseSelector, engine.noResultsSelector]
 	if (engine.recaptcha) {
 		selectors.push(engine.recaptcha)
+	}
+	if (engine.consent) {
+		selectors.push(engine.consent)
 	}
 	const selector = await this.tab.untilVisible(selectors, 7000, "or")
 
@@ -191,7 +220,14 @@ const _doSearch = async function(query) {
 		return result
 	}
 
+	if (selector === engine.consent) { // clicking on the Consent button and waiting for results
+		await this.tab.click(".consent-container button[name=\"agree\"]")
+		selectors.pop()
+		await this.tab.untilVisible(selectors, 7000, "or")
+	}
+
 	result.results = await this.tab.evaluate(_scrapeResults, { engine })
+	console.log("result", result)
 	if (engine.processUrl) {
 		for (let i = 0, len = result.results.length; i < len; i++) {
 			result.results[i].link = engine.processUrl(result.results[i].link)
