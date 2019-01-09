@@ -44,8 +44,10 @@ class LinkedIn {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
+		} else if (cookie.includes("your_session_cookie")) {
+			this.utils.log("You left the 'your_session_cookie' string in the field after you copy-pasted.", "error")
+			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
-
 		this.utils.log("Connecting to LinkedIn...", "loading")
 		this.originalSessionCookie = cookie.trim()
 
