@@ -70,7 +70,50 @@ const openRepo = async (page, url) => {
 		utils.log(`${url} responded with HTTP code ${response.status()}`, "warning")
 		return false
 	}
+	try {
+		await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
+	} catch (err) {
+		return false
+	}
 	return true
+}
+
+const scrapePage = () => {
+	const stars = [ ...document.querySelectorAll("ol.follow-list > li.follow-list-item") ].map(el => {
+		const res = {}
+		const user = el.querySelector("span a[data-hovercard-type=\"user\"]")
+		const userImg = el.querySelector("a[data-hovercard-type=\"user\"] img")
+		res.profileUrl = user ? user.href : null
+		res.name = user ? user.textContent.trim() : null
+		res.profileImage = userImg ? userImg.src : null
+		res.timestamp = (new Date()).toISOString()
+		if (res.profileImage) {
+			const url = new URL(res.profileImage)
+			url.searchParams.forEach((value, key, params) => params.delete(key))
+			res.profileImage = url.toString()
+		}
+		return res
+	})
+	return Promise.resolve(stars)
+}
+
+const isListFinished = () => document.querySelector("div.pagination > *:last-child").classList.contains("disabled")
+
+const scrape = async page => {
+	const res = []
+	let hasNext = false
+
+	while (!hasNext) {
+		hasNext = await page.evaluate(isListFinished)
+		const tmp = await page.evaluate(scrapePage)
+		res.push(...utils.filterRightOuter(res, tmp))
+		utils.log(`${res.length} stargazers scraped`, "info")
+		if (!hasNext) {
+			await page.click("div.pagination > *:last-child")
+			await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
+		}
+	}
+	return res
 }
 
 ;(async () => {
@@ -101,7 +144,6 @@ const openRepo = async (page, url) => {
 	}
 
 	db = await utils.getDb(csvName + ".csv")
-	queries = queries.filter(el => utils.isUrl(el)).filter(el => db.findIndex(line => line.query === el) < 0)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR input is already scraped", "warning")
 		nick.exit()
@@ -109,14 +151,19 @@ const openRepo = async (page, url) => {
 
 	for (const query of queries) {
 		let url = isStargazersUrl(query) ? query : updateUrl(query, "stargazers")
+		utils.log(`Opening ${query} ...`, "loading")
 		const isOpen = await openRepo(Page, url)
 		if (!isOpen) {
 			stargazers.push({ error: `No access to ${query}`, timestamp: (new Date()).toISOString(), query })
 			continue
 		}
+		const res = await scrape(Page)
+		res.forEach(el => el.query = query)
+		utils.log(`${res.length} stargazers scraped for ${query}`, "done")
+		stargazers.push(...res)
 	}
 	db.push(...utils.filterRightOuter(db, stargazers))
-	utils.saveResults(db, stargazers, csvName, null)
+	await utils.saveResults(stargazers, db, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
