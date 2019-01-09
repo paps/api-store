@@ -307,6 +307,8 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 					utils.log("Profile has no follower.", "warning")
 					result.push({ query: url, error: "Profile has no follower" })
 					continue
+				} else {
+					utils.log(`Profile has around ${followerCount} followers.`, "info")
 				}
 			} catch (err) {
 				//

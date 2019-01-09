@@ -303,6 +303,8 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 					utils.log("Profile follows no one.", "warning")
 					result.push({ query: url, error: "Profile follows no one" })
 					continue
+				} else {
+					utils.log(`Profile follows around ${followingCount} accounts.`, "info")
 				}
 			} catch (err) {
 				//
