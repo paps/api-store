@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -101,6 +102,8 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 			return checkFollowData
 		} else {
 			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			await tab.screenshot(`${Date.now()}failed.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}failed.html`)
 			return null
 		}
 	} else if (!checkFollowData.status) {
@@ -224,6 +227,17 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			}
 			const profileUrl = await tab.getUrl()
 			const scrapedData = await instagram.scrapeProfile(jsonTab, url, profileUrl)
+			try {
+				const ownProfile = await tab.evaluate((arg, cb) => cb(null, document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href))
+				if (ownProfile === profileUrl) {
+					utils.log("It's your own profile!", "error")
+					scrapedData.error = "Own profile"
+					result.push(scrapedData)
+					continue
+				}
+			} catch (err) {
+				//
+			}
 			let tempResult
 			if (action.includes("ollow")) {
 				tempResult = await followProfile(tab, jsonTab, url, profileUrl, action, scrapedData)
