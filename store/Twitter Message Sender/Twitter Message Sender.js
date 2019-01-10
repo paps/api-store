@@ -201,11 +201,11 @@ const sendMessage = async (tab, message) => {
 	if (!message || !message.trim()) {
 		throw "No message supplied from the API configuration"
 	}
-	await twitter.login(tab, sessionCookie)
 
 	if (typeof numberOfLinesPerLaunch === "number") {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
 	}
+	await twitter.login(tab, sessionCookie)
 
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
@@ -229,6 +229,8 @@ const sendMessage = async (tab, message) => {
 		rows = queries.map(el => ({ columnName: el }))
 	}
 
+	// Remove rows with an empty columnName row value
+	rows = rows.filter(el => el[columnName])
 	// Don't process data in the DB even if it was an error
 	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName]) < 0)
 	rows = rows.slice(0, numberOfLinesPerLaunch)
@@ -238,7 +240,6 @@ const sendMessage = async (tab, message) => {
 	}
 
 	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
-
 	for (const one of rows) {
 		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
 		profile.query = one[columnName]
