@@ -545,7 +545,7 @@ const loadConnectionsAndScrape = async (tab, numberOfPages, query) => {
 			await tab.scrollToBottom()
 		}
 		if (new Date() - lastDate > 10000) {
-			if (result.length) {
+			if (result.length && await tab.isVisible(".artdeco-spinner-bars")) {
 				utils.log("Scrolling took too long!", "warning")
 			}
 			break
@@ -555,7 +555,7 @@ const loadConnectionsAndScrape = async (tab, numberOfPages, query) => {
 	result = result.concat(await tab.evaluate(scrapeConnectionsProfilesAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfProfiles)
 	if (result.length) { // if we scraped posts without more loading
-		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} posts.`, "done")
+		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} profiles.`, "done")
 	} else {
 		utils.log("No results found!", "warning")
 	}
@@ -756,7 +756,9 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			await tab.wait(1000)
 		}
 	} while (pageCounter < numberOfPage)
-	utils.log("All pages with result scrapped.", "done")
+	if (result.length) {
+		utils.log("All pages with result scrapped.", "done")
+	}
 	return result
 }
 
@@ -828,7 +830,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		}
 		try {
 			const tempResult = await getSearchResults(tab, searchUrl, numberOfPage, search, isSearchURL, category, onlyGetFirstResult)
-			if (tempResult) {
+			if (tempResult && tempResult.length) {
 				if (isSearchURL === "connections") {
 					for (let i = 0; i < tempResult.length; i++) {
 						if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
@@ -838,7 +840,9 @@ const isLinkedInSearchURL = (targetUrl) => {
 				} else {
 					result = removeDuplicates(result, tempResult, category)
 				}
-			}	
+			} else {
+				result.push({ query: search, timestamp: (new Date()).toISOString(), error: "No result found" })
+			}
 		} catch (err) {
 			utils.log(`Error : ${err}`, "error")
 		}

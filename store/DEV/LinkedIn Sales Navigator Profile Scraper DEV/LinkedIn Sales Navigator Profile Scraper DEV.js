@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Hunter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Hunter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,9 +20,9 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 
 const { URL } = require("url")
 // }
@@ -157,11 +157,37 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 		await tab.open(salesNavigatorUrl)
 		await tab.waitUntilVisible(".profile-topcard")
 	} catch (err) {
+		const location = await tab.getUrl()
+		if (location.startsWith("https://www.linkedin.com/in/")) {
+			utils.log("Error opening the profile, you may not have a Sales Navigator Account.", "error")
+			return { query, timestamp: (new Date()).toISOString(), error: "Not a Sales Navigator Account" }
+		}
 		utils.log(`Couldn't open profile: ${err}`, "error")
 	}
-	let scrapedData
+	let scrapedData = {}
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { query, salesNavigatorUrl })
+		if (saveImg || takeScreenshot) {
+			try {
+				let slug = scrapedData.linkedinProfileUrl.slice(28)
+				try {
+					if (saveImg) {
+						scrapedData.savedImg = await buster.save(scrapedData.imgUrl, `${slug}.jpeg`)
+					}
+				} catch (err) {
+					//
+				}
+				try {
+					if (takeScreenshot) {
+						scrapedData.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+					}
+				} catch (err) {
+					//
+				}
+			} catch (err) {
+				//
+			}
+		}
 		if (scrapedData.name) {
 			utils.log(`Successfully scraped profile of ${scrapedData.name}.`, "done")
 		}
