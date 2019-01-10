@@ -100,41 +100,23 @@ const scrapePage = () => {
 const isListFinished = () => document.querySelector("div.pagination > *:last-child").classList.contains("disabled")
 
 const scrape = async page => {
-	const res = { rateLimitPage: null, stars : [] }
+	const res = []
 	let hasNext = false
 
 	while (!hasNext) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			break
-		}
-		try {
-			await page.waitForSelector("div.pagination")
-			hasNext = await page.evaluate(isListFinished)
-		} catch (err) {
-			break
-		}
+		hasNext = await page.evaluate(isListFinished)
 		const tmp = await page.evaluate(scrapePage)
-		res.stars.push(...utils.filterRightOuter(res.stars, tmp))
-		utils.log(`${res.stars.length} stargazers scraped`, "info")
+		res.push(...utils.filterRightOuter(res, tmp))
+		utils.log(`${res.length} stargazers scraped`, "info")
 		if (!hasNext) {
-			try {
-				await page.click("div.pagination > *:last-child")
-				await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
-			} catch (err) {
-				res.rateLimitPage = await page.url()
-				break
-			}
+			await page.click("div.pagination > *:last-child")
+			await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
 		}
 	}
 	return res
 }
 
 ;(async () => {
-	/* eslint-disable no-unused-vars */
-	let wasRateLimited = false
-	let ao = await buster.getAgentObject()
 	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, csvName } = utils.validateArguments()
 	let db = null
 	const stargazers = []
@@ -162,12 +144,6 @@ const scrape = async page => {
 	}
 
 	db = await utils.getDb(csvName + ".csv")
-	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, numberOfLinesPerLaunch)
-	if (ao.rateLimitPage) {
-		wasRateLimited = true
-		utils.log(`Resuming Stargazers scraping at ${ao.rateLimitPage}`, "info")
-		queries.unshift(ao.rateLimitPage)
-	}
 	if (queries.length < 1) {
 		utils.log("Input is empty OR input is already scraped", "warning")
 		nick.exit()
@@ -182,25 +158,11 @@ const scrape = async page => {
 			continue
 		}
 		const res = await scrape(Page)
-		res.stars.forEach(el => el.query = query)
-		utils.log(`${res.stars.length} stargazers scraped for ${query}`, "done")
-		if (res.rateLimitPage) {
-			utils.log(`Github rate limit reached at ${res.rateLimitPage}, next launch will continue the scraping `, "warning")
-			ao = { rateLimitPage: res.rateLimitPage }
-			stargazers.push(...res.stars)
-			break
-		} else {
-			wasRateLimited = false
-			ao = {}
-		}
-		stargazers.push(...res.stars)
+		res.forEach(el => el.query = query)
+		utils.log(`${res.length} stargazers scraped for ${query}`, "done")
+		stargazers.push(...res)
 	}
 	db.push(...utils.filterRightOuter(db, stargazers))
-	try {
-		await buster.setAgentObject(ao)
-	} catch (err) {
-		// ...
-	}
 	await utils.saveResults(stargazers, db, csvName, null)
 	nick.exit()
 })()
