@@ -765,6 +765,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 	if (urlObject && urlObject.hostname) {
 		if (urlObject.pathname.startsWith("/sales/search")) { return "salesnavigator" } // Sales Navigator search
+		if (urlObject.pathname.startsWith("/recruiter/smartsearch")) { return "recruiter" } // Recruiter search
 		if (urlObject.hostname === "www.linkedin.com" && (urlObject.pathname.startsWith("/search/results/") || urlObject.pathname.startsWith("/jobs/search/"))) {
 			if (urlObject.pathname.includes("companies")) { return "companies" } // Companies search
 			if (urlObject.pathname.includes("groups")) { return "groups" } // Groups search
@@ -799,6 +800,9 @@ const isLinkedInSearchURL = (targetUrl) => {
 		if (typeof typeOfSearch === "string") {
 			if (typeOfSearch === "salesnavigator") {
 				throw "It seems you used a Sales Navigator Search URL, this API only handles regular LinkedIn URLs.\n Please use our other API LinkedIn Sales Navigator Search Export for this type of URL."
+			}
+			if (typeOfSearch === "recruiter") {
+				throw "It seems you used a Recruiter Search URL, this API only handles regular LinkedIn URLs."
 			}
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {

@@ -77,8 +77,12 @@ const openChatPage = async (tab, profileUrl) => {
 		utils.log(`Opened chat with ${name}.`, "done")
 		return { profileUrl, name, firstName, lastName }
 	} catch (err) {
+		if (await facebook.checkLock(tab)) {
+			utils.log("Facebook is asking for an account verification.", "error")
+			return { profileUrl, error: "Account verification" }
+		}
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
-		return { profileUrl, error: "Could get profile name"}
+		return { profileUrl, error: "Could get profile name" }
 	}
 }
 
@@ -203,7 +207,10 @@ nick.newTab().then(async (tab) => {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
 							tempResult.error = err
 						}
-					}		
+					}
+					if (tempResult.error === "Account verification") {
+						break
+					}
 					result.push(tempResult)
 				} catch (err) {
 					const isBlocked = await tab.evaluate(checkIfBlocked)
