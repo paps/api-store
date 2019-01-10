@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -193,8 +192,6 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false,
 			if (await tab.isVisible(SELECTORS.addRequestNote)) {
 				throw "Request network is pending OR you're not connected with the user, can't scrape messages"
 			}
-			await tab.screenshot(`${Date.now()}notvisible.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}notvisible.html`)
 			throw `Can't open conversation due to: ${err.message || err}`
 		}
 	}
@@ -324,7 +321,7 @@ const jsonToCsvOutput = json => {
 		currentScraping.push(conversation)
 	}
 	db.push(...jsonToCsvOutput(currentScraping))
-	await utils.saveResults(noDatabase ? [] : currentScraping, noDatabase ? [] : db, csvName, null, false)
+	await utils.saveResults(noDatabase ? [] : currentScraping, noDatabase ? [] : db, csvName, null)
 	nick.exit()
 })().catch(err => {
 	utils.log(`Error during the API execution: ${err.message || err}`, "error")

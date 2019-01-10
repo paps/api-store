@@ -264,7 +264,7 @@ const sendMessage = async (tab, message, tags) => {
 		}
 	}
 	db.push(...result)
-	await utils.saveResults(result, db, DB_SHORT_NAME, null, false)
+	await utils.saveResults(result, db, DB_SHORT_NAME, null)
 	await linkedin.updateCookie()
 	nick.exit(0)
 })().catch(err => {
