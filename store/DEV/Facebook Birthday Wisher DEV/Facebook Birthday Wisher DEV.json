@@ -1,79 +1,79 @@
 {
-    "slug": "facebook-birthday-wisher",
-    "description": "Wish Happy Birthday to your Facebook Friends!",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
-    "argumentDescription": "",
-    "hidden": false,
-    "new": true,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "sessionCookieCUser": "your_c-user_session_cookie",
-        "sessionCookieXs": "your_xs_session_cookie",
-        "csvName": "result"
-    },
-    "outputDescription": {
+	"slug": "facebook-birthday-wisher",
+	"description": "Wish Happy Birthday to your Facebook Friends!",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentDescription": "",
+	"hidden": false,
+	"new": true,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieXs": "your_xs_session_cookie",
+		"csvName": "result"
+	},
+	"outputDescription": {
 		"profileURL": "Facebook profile URL",
 		"profilePictureUrl": "Profile picture URL",
 		"name": "Full name",
 		"status": "Friend or not",
-        "work": "",
-        "education": "",
-        "cities": "",
-        "contactInfo": "",
-        "familyMembers": "",
-        "lifeEvents": ""
+		"work": "",
+		"education": "",
+		"cities": "",
+		"contactInfo": "",
+		"familyMembers": "",
+		"lifeEvents": ""
 	},
-    "defaultArgumentAllowed": true,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
-                    },
-                    "message": {
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookieCUser": {
+						"label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
+					"message": {
 						"label": "Message <a href=\"/api-store/8852/facebook-message-sender#section_6personalizeyourmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
 						"helper": "Use #firstName# to insert the first name of the person you are adding in your message. <a href=\"/api-store/8852/facebook-message-sender#section_6addaprivatepersonalizedmessage\", target=\"_blank\">Many more tags are available.</a>"
-                    },
+					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
-            "message": {
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookieCUser": {
 				"type": "string",
-                "maxLength": 1000,
-                "minLength": 1
-            },
-            "csvName": {
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 1000,
+				"minLength": 1
+			},
+			"csvName": {
 				"type": "string",
 				"required": false
 			}
-        }
-    }
+		}
+	}
 }
