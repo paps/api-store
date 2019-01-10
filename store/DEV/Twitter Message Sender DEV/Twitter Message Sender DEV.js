@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Twitter.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js, lib-Messaging.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -16,7 +16,7 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const Twitter = require("./lib-Twitter")
@@ -229,6 +229,8 @@ const sendMessage = async (tab, message) => {
 		rows = queries.map(el => ({ columnName: el }))
 	}
 
+	// Remove rows with an empty columnName row value
+	rows = rows.filter(el => el[columnName])
 	// Don't process data in the DB even if it was an error
 	rows = rows.filter(el => db.findIndex(line => line.query === el[columnName]) < 0)
 	rows = rows.slice(0, numberOfLinesPerLaunch)
