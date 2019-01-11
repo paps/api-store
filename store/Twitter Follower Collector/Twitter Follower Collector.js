@@ -321,7 +321,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	}
 
 	twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
-	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls, null, 4)}`)
+	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls.slice(0, 500), null, 4)}`)
 
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let urlCount = 0

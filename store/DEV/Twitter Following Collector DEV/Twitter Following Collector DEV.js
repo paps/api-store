@@ -145,8 +145,7 @@ const scrapeFollowing = async (tab, profileUrl, twitterUrl, keepScraping) => {
 	return [ extractProfiles(response.items_html, profileUrl), twitterUrl, keepScraping ]
 }
 
-const getJsonUrl = async (tab, profileUrl) => {
-	await tab.open(profileUrl + "/following")
+const getJsonUrl = async (tab) => {
 	const selector = await tab.waitUntilVisible([".GridTimeline" , ".ProtectedTimeline"], 5000, "or")
 	if (selector === ".ProtectedTimeline") { isProtected = true }
 	await tab.scrollToBottom()
@@ -187,7 +186,7 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 		}
 		if (!isProtected && (resuming || !followersPerAccount || result.length < followersPerAccount)) {
 			if (!resuming) {
-				await getJsonUrl(tab, profileUrl)
+				await getJsonUrl(tab)
 			} else {
 				interceptedUrl = agentObject.nextUrl
 			}
@@ -210,7 +209,7 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 						if (resuming) {
 							utils.log(`${err}, restarting followers scraping`, "warning")
 							resuming = false
-							await getJsonUrl(tab, profileUrl)
+							await getJsonUrl(tab)
 							twitterUrl = interceptedUrl
 							profileCount = 0
 							continue
@@ -335,7 +334,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	if (!fullScrape) {
 		twitterUrls = getUrlsToScrape(twitterUrls.filter(el => checkDb(el, result)), numberofProfilesperLaunch)
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls, null, 4)}`)
+	console.log(`URLs to scrape: ${JSON.stringify(twitterUrls.slice(0, 500), null, 4)}`)
 
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let urlCount = 0

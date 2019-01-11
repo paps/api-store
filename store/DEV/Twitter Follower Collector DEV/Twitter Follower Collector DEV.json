@@ -10,7 +10,8 @@
 	"argumentHelpAnchor": "#section_4aimaspecifictwitteraccountorseveralatatime",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"numberofProfilesperLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Profile url of the person following the targeted account",
@@ -40,7 +41,6 @@
 					},
 					"numberofProfilesperLaunch": {
 						"label": "Number of lines to process per launch <a href=\"/api-store/4130/twitter-follower-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
 						"inputType": "number"
 					},
 					"csvName": {

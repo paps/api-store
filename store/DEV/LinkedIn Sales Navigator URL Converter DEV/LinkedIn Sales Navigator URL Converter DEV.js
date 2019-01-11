@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -103,6 +104,10 @@ const craftObjectFromCsv = (csv, header = true) => {
 	let conversionCount = 0
 	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
+			if (!csvObject[i][columnName].includes("linkedin.com/sales")) {
+				utils.log(`${csvObject[i][columnName]} isn't a Sales Navigator URL, skipping entry...`, "warning")
+				continue
+			}
 			const convertedObject = csvObject[i]
 			try {
 				let convertedUrl
@@ -115,7 +120,10 @@ const craftObjectFromCsv = (csv, header = true) => {
 					}
 					utils.log(`Converted ${csvObject[i][columnName]} to ${convertedUrl}`, "done")
 				} else {
+					console.log("csvObject[i][columnName", csvObject[i][columnName])
 					convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(csvObject[i][columnName])
+					await tab.screenshot(`${Date.now()}else.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}else.html`)
 					if (convertedUrl === csvObject[i][columnName]) { // exiting if we got logged out LinkedIn
 						utils.log("Stopping converting process...", "warning")
 						break

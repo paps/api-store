@@ -103,6 +103,10 @@ const craftObjectFromCsv = (csv, header = true) => {
 	let conversionCount = 0
 	for (i = 0; i < csvObject.length; i++) {
 		if (csvObject[i][columnName] && !csvObject[i].defaultProfileUrl) {
+			if (!csvObject[i][columnName].includes("linkedin.com/sales")) {
+				utils.log(`${csvObject[i][columnName]} isn't a Sales Navigator URL, skipping entry...`, "warning")
+				continue
+			}
 			const convertedObject = csvObject[i]
 			try {
 				let convertedUrl
