@@ -1,14 +1,3 @@
-const { URL } = require("url")
-
-const isUrl = url => {
-	try {
-		return (new URL(url)) !== null
-	} catch (err) {
-		return false
-	}
-}
-
-
 class Slack {
 	constructor(buster, utils) {
 		this.buster = buster
@@ -21,6 +10,7 @@ class Slack {
 	 * @param {Page} tab - Puppeteer Page instance
 	 * @param {String} url - Slack Workspace URL
 	 * @param {String} dCookie - Slack session cookie named "d"
+	 * @return {Promise<void>}
 	 * @throws String on CSS selectors failures / BAD session cookie value
 	 */
 	async login(page, url, dCookie) {
@@ -43,7 +33,7 @@ class Slack {
 			process.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
 
-		if (typeof url !== "string" || url.trim().length < 1 || !isUrl(url)) {
+		if (typeof url !== "string" || url.trim().length < 1 || !this.utils.isUrl(url)) {
 			this.utils.log("Invalid Slack Workspace URL. Did you specify one?", "warning")
 			process.exit(this.utils.ERROR_CODES.SLACK_BAD_WORKSPACE)
 		}
@@ -95,7 +85,6 @@ class Slack {
 					members.push(membersObject[member])
 				}
 			}
-
 			channels.push({ id: chan.id, name: chan.name_normalized || chan.name, members })
 		}
 		return channels
