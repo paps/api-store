@@ -17,6 +17,8 @@ const utils = new StoreUtilities(nick, buster)
 
 const DB_NAME = "result"
 const LINES_COUNT = 10
+
+let ao
 // }
 
 /**
@@ -67,7 +69,13 @@ const openRepo = async (page, url) => {
 	const response = await page.goto(url)
 
 	if (response.status() !== 200) {
-		utils.log(`${url} responded with HTTP code ${response.status()}`, "warning")
+		if (response.status() === 429) {
+			try {
+				ao = await buster.getAgentObject({ rateLimitPage: url })
+			} catch (err) { /* ... */ }
+		} else {
+			utils.log(`${url} responded with HTTP code ${response.status()}`, "warning")
+		}
 		return false
 	}
 	try {
@@ -132,9 +140,9 @@ const scrape = async page => {
 }
 
 ;(async () => {
+	ao = await buster.getAgentObject()
 	/* eslint-disable no-unused-vars */
 	let wasRateLimited = false
-	let ao = await buster.getAgentObject()
 	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, csvName } = utils.validateArguments()
 	let db = null
 	const stargazers = []
