@@ -614,9 +614,9 @@ class StoreUtilities {
 			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } }
 		)
 		const fileMgmt = res.body.data.fileMgmt
-		if (fileMgmt !== "Mix") {
+		if (fileMgmt !== "mix") {
 			let settings = fileMgmt === "folders" ? "Create a new folder per launch" : "Delete all previous files at launch"
-			this.log(`Your "File Storage" setting is currently on "${settings}", this API may not be able to continue its job where it left off next launch. Consider changing it to "Mix new and old files".`, "warning")
+			this.log(`Your "File Storage" setting is currently on "${settings}", this API may not be able to continue its job where it left off next launch. Consider changing it to "Mix new and old files".`, "info")
 		}
 		if (res.body && res.body.status === "success" && res.body.data.awsFolder && res.body.data.userAwsFolder) {
 			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
