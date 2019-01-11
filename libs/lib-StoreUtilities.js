@@ -757,6 +757,40 @@ class StoreUtilities {
 		})
 	}
 
+	// notify the user by mail when the spreadsheet's has been fully processed
+	async notifyByMail(){
+		const agentId = this.buster.agentId
+		try {
+			const agentData = await needle("get", `https://phantombuster.com/api/v1/agent/${agentId}`, {},
+			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } })
+			const agentName = agentData.body.data.name
+			const subject = `${agentName}: Your spreadsheet has been fully processed`
+
+			const text = `Your last launch of ${agentName} has finished processing your input spreadsheet.\n
+						Link: https://phantombuster.com/console/${agentId}`
+			this.log("Notifying by mail...", "loading")
+			await this.buster.mail(subject, text)
+		} catch (err) {
+			this.log(`Could not send the mail: ${err}`, "error")
+		}
+	}
+
+	// check the file storage settings and warns the users if they're not on default Mix
+	async fileStorageCheck(){
+		const agentId = this.buster.agentId
+		try {
+			const agentData = await needle("get", `https://phantombuster.com/api/v1/agent/${agentId}`, {},
+			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } })
+			const fileMgmt = agentData.body.data.fileMgmt
+			if (fileMgmt !== "Mix") {
+				let settings = fileMgmt === "folders" ? "Create a new folder per launch" : "Delete all previous files at launch"
+				this.log(`Your "File Storage" setting is currently on "${settings}", this API may not be able to continue its job where it left off next launch. Consider changing it to "Mix new and old files".`, "warning")
+			}
+		} catch (err) {
+			//
+		}
+	}
+
 }
 
 module.exports = StoreUtilities

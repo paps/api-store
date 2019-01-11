@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -18,7 +18,7 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
@@ -163,6 +163,7 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch, action, csvName } = utils.validateArguments()
+	await utils.fileStorageCheck()
 	if (!csvName) { csvName = "result" }
 	let urls, result
 	result = await utils.getDb(csvName + ".csv")
