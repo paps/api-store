@@ -81,7 +81,7 @@ const filterRows = (str, db) => {
 
 // main scraping function
 const scrapeProfile = (arg, cb) => {
-	const scrapedData = { query: arg.query, salesNavigatorUrl: arg.salesNavigatorUrl}
+	const scrapedData = { query: arg.query, timestamp: (new Date()).toISOString(), salesNavigatorUrl: arg.salesNavigatorUrl}
 	const urlObject = new URL(arg.salesNavigatorUrl)
 	const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 	if (vmid) {
@@ -156,13 +156,15 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 	try {
 		await tab.open(salesNavigatorUrl)
 		await tab.waitUntilVisible(".profile-topcard")
+		await tab.wait(1000)
 	} catch (err) {
 		const location = await tab.getUrl()
 		if (location.startsWith("https://www.linkedin.com/in/")) {
 			utils.log("Error opening the profile, you may not have a Sales Navigator Account.", "error")
 			return { query, timestamp: (new Date()).toISOString(), error: "Not a Sales Navigator Account" }
 		}
-		utils.log(`Couldn't open profile: ${err}`, "error")
+		utils.log(`Couldn't load the profile: ${err}`, "error")
+		return { query, timestamp: (new Date()).toISOString(), error: "Couldn't load the profile" }
 	}
 	let scrapedData = {}
 	try {
@@ -290,12 +292,17 @@ const getCompanyWebsite = async (tab, url, utils) => {
 				if (scrapedData.introducerSalesNavigatorUrl) {
 					scrapedData.introducerProfileUrl = linkedInScraper.salesNavigatorUrlCleaner(scrapedData.introducerSalesNavigatorUrl, true)
 				}
+				try {
+					const companyTab = await nick.newTab()
+					const companyData = await getCompanyWebsite(companyTab, scrapedData.currentCompanyUrl, utils)
+					await companyTab.close()
+					console.log("companyData:", companyData)
+					Object.assign(scrapedData, companyData)
+				} catch (err) {
+					//
+				}
 				if (hunterApiKey) {
 					try {
-						const companyTab = await nick.newTab()
-						const companyData = await getCompanyWebsite(companyTab, scrapedData.currentCompanyUrl, utils)
-						await companyTab.close()
-						Object.assign(scrapedData, companyData)
 						const hunterPayload = {}
 						if (scrapedData.firstName && scrapedData.lastName) {
 							hunterPayload.first_name = scrapedData.firstName
