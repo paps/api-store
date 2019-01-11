@@ -276,6 +276,7 @@ const getMailFromHunter = async (scrapedData, hunter) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	await utils.fileStorageCheck()
 	const tab = await nick.newTab()	
 	await linkedIn.recruiterLogin(tab, sessionCookie)
 	let singleProfile

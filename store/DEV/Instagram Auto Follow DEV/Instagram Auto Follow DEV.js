@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -18,7 +18,7 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)

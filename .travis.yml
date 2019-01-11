@@ -3,7 +3,8 @@ dist: trusty
 language: node_js
 node_js: 8
 before_script:
-  - npm run check
+  - npm run build
+  - npm run eslint
   - ./diff.sh lib
   - ./diff.sh js
   - ./diff.sh json

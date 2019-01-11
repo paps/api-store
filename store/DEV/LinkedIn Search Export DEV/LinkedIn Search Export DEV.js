@@ -785,6 +785,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
+	await utils.fileStorageCheck()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
