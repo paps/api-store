@@ -60,6 +60,7 @@ const craftObjectFromCsv = (csv, header = true) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, spreadsheetUrl, columnName, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
+	await utils.fileStorageCheck()
 	if (spreadsheetUrl && spreadsheetUrl.includes("linkedin.com/sales/search/")) {
 		throw "Input URL is a Search URL and not a Spreadsheet URL. Please use LinkedIn Sales Navigator Search Export first to extract profiles from a search URL."
 	}

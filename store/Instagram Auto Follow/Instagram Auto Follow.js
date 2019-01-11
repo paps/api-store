@@ -160,7 +160,6 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let { sessionCookie, spreadsheetUrl, columnName, numberOfProfilesPerLaunch, action, csvName } = utils.validateArguments()
-	await utils.fileStorageCheck()
 	if (!csvName) { csvName = "result" }
 	let urls, result
 	result = await utils.getDb(csvName + ".csv")

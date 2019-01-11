@@ -233,6 +233,7 @@ const getCompanyWebsite = async (tab, url, utils) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	await utils.fileStorageCheck()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -296,7 +297,6 @@ const getCompanyWebsite = async (tab, url, utils) => {
 					const companyTab = await nick.newTab()
 					const companyData = await getCompanyWebsite(companyTab, scrapedData.currentCompanyUrl, utils)
 					await companyTab.close()
-					console.log("companyData:", companyData)
 					Object.assign(scrapedData, companyData)
 				} catch (err) {
 					//

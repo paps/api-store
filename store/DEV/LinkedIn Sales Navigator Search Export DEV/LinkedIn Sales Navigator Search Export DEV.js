@@ -446,6 +446,7 @@ const isLinkedInSearchURL = (url) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, searches, numberOfProfiles, columnName, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
+	await utils.fileStorageCheck()
 	await linkedIn.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
