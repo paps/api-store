@@ -568,7 +568,7 @@ nick.newTab().then(async (tab) => {
 	}
 	cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
-	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null, false)
+	await utils.saveResults(invitations, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {
 		utils.log(`${db.length} profiles have been processed.`, "done")
 	}
