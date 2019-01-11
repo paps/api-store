@@ -178,7 +178,7 @@ const sendMessage = async (tab, message, tags) => {
 		payload.error = `LinkedIn internal error while sending message on: ${payload.profileUrl}`
 		utils.log(payload.error, "warning")
 	}
-	utils.log(`Message successfully send on: ${payload.profileUrl}`, "done")
+	utils.log(`Message sent to ${payload.profileUrl}: ${message}`, "done")
 	await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	return payload
 }

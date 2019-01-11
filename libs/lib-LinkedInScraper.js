@@ -412,6 +412,15 @@ const scrapeInfos = (arg, callback) => {
 			}
 			// Delete this (only needed to determine the first name)
 			delete infos.general.hasAccount
+			if (!infos.general.firstName) { // if we didn't find anything, we split the full name in two parts to get the firstName
+				const nameArray = infos.general.fullName.split(" ")
+				const firstName = nameArray.shift()
+				const lastName = nameArray.join(" ")
+				infos.general.firstName = firstName
+				if (lastName) {
+					infos.general.lastName = lastName
+				}
+			}
 		}
 	}
 	callback(null, infos)
