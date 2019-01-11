@@ -784,7 +784,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
@@ -832,6 +832,12 @@ const isLinkedInSearchURL = (targetUrl) => {
 				if (isSearchURL === "connections") {
 					for (let i = 0; i < tempResult.length; i++) {
 						if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
+							result.push(tempResult[i])
+						}
+					}
+				} else if (removeDuplicate && category === "People") {
+					for (let i = 0; i < tempResult.length; i++) {
+						if (!result.find(el => el.url === tempResult[i].url)) {
 							result.push(tempResult[i])
 						}
 					}

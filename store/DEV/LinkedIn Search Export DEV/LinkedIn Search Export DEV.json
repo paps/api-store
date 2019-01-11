@@ -70,7 +70,7 @@
 						"label": "Number of pages/posts to go through in the search results <a href=\"/api-store/3149/linkedin-search-export#section_7howmanypagesofresults\" target=\"_blank\">(?)</a>",
 						"placeholder": 5,
 						"inputType": "number",
-						"helper": "<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
+						"helper": "10 profiles per page. <b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
@@ -78,6 +78,9 @@
 					},
 					"onlyGetFirstResult": {
 						"rightLabel": "<b>Only get the first search result</b>"
+					},
+					"removeDuplicate": {
+						"rightLabel": "<b>Remove all duplicate profiles (People search)</b>"
 					}
 				}
 			}
@@ -125,6 +128,9 @@
 				"required": false
 			},
 			"onlyGetFirstResult": {
+				"type": "boolean"
+			},
+			"removeDuplicate": {
 				"type": "boolean"
 			}
 		}

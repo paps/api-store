@@ -209,21 +209,21 @@ const scrapeResultsAll = (arg, callback) => {
 
 }
 /**
- * @description Extract &page= value if present in the URL
- * @param {String} url - URL to inspect
- * @return {Number} Page index found in the given url (if not found return 1)
- */
+	* @description Extract &page= value if present in the URL
+	* @param {String} url - URL to inspect
+	* @return {Number} Page index found in the given url (if not found return 1)
+	*/
 const extractPageIndex = url => {
 	let parsedUrl = new URL(url)
 	return parsedUrl.searchParams.get("page") ? parseInt(parsedUrl.searchParams.get("page"), 10) : 1
 }
 
 /**
- * @description Tiny wrapper used to easly change the page index of LinkedIn search results
- * @param {String} url
- * @param {Number} index - Page index
- * @return {String} URL with the new page index
- */
+	* @description Tiny wrapper used to easly change the page index of LinkedIn search results
+	* @param {String} url
+	* @param {Number} index - Page index
+	* @return {String} URL with the new page index
+	*/
 const overridePageIndex = (url, index) => {
 	try {
 		let parsedUrl = new URL(url)
@@ -756,9 +756,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 			await tab.wait(1000)
 		}
 	} while (pageCounter < numberOfPage)
-	if (result.length) {
-		utils.log("All pages with result scrapped.", "done")
-	}
+	utils.log("All pages with result scrapped.", "done")
 	return result
 }
 
@@ -786,7 +784,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches } 
 	if (!search) {
@@ -837,12 +835,18 @@ const isLinkedInSearchURL = (targetUrl) => {
 							result.push(tempResult[i])
 						}
 					}
+				} else if (removeDuplicate && category === "People") {
+					for (let i = 0; i < tempResult.length; i++) {
+						if (!result.find(el => el.url === tempResult[i].url)) {
+							result.push(tempResult[i])
+						}
+					}
 				} else {
 					result = removeDuplicates(result, tempResult, category)
 				}
 			} else {
 				result.push({ query: search, timestamp: (new Date()).toISOString(), error: "No result found" })
-			}
+			}	
 		} catch (err) {
 			utils.log(`Error : ${err}`, "error")
 		}
