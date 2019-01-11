@@ -14,7 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 2147483647	/* Will timeout in 24 days */
+	timeout: 600000		/* Will timeout in 10 minutes */
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
