@@ -110,11 +110,10 @@ const loopThroughtProfiles = async (tab, urls) => {
 		} catch (e) {
 			waitAlternative = true
 		}
-
 		if (waitAlternative)
-			await tab.waitUntilPresent("div.header_content")
+			await tab.waitUntilPresent("div.header_content", 15000)
 		else
-			await tab.waitWhileVisible("div.UserDescriptionExpandable a.ui_qtext_more_link")
+			await tab.waitWhileVisible("div.UserDescriptionExpandable a.ui_qtext_more_link", 15000)
 
 		await tab.inject("http://code.jquery.com/jquery-3.2.1.min.js")
 		await expandLinks(tab)
@@ -127,9 +126,7 @@ const loopThroughtProfiles = async (tab, urls) => {
 	return res
 }
 
-const scrapeUserName = (arg, cb) => {
-	cb(null, document.querySelector("div.SiteHeader img.profile_photo_img").alt)
-}
+const scrapeUserName = (arg, cb) => cb(null, document.querySelector("div.SiteHeader img.profile_photo_img").alt)
 
 const logToQuora = async (tab, url, cookieMs, cookieMb) => {
 	await tab.setCookie({
