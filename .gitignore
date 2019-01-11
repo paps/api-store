@@ -6,4 +6,3 @@ node_modules/
 *.bson
 .vscode
 *.map
-tsconfig.json
