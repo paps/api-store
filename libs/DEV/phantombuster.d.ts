@@ -1,7 +1,7 @@
 declare module "phantombuster" {
 
 	class Buster {
-		public downlaod(url: string, saveAs?: string, headers?: {[name: string]: string}): Promise<string>
+		public download(url: string, saveAs?: string, headers?: {[name: string]: string}): Promise<string>
 		public save(url: string, saveAs?: string, headers?: {[name: string]: string}): Promise<string>
 		public saveFolder(localFolder?: string, storageFolder?: string): Promise<string>
 		public saveText(text: string, saveAs: string, mime?: string): Promise<string>
