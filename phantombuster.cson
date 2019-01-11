@@ -18,6 +18,7 @@
 		'lib-Youtube-DEV.js': 'libs/DEV/lib-Youtube-DEV.js'
 		'lib-Slack-DEV.js': 'libs/DEV/lib-Slack-DEV.js'
 		'lib-ProductHunt-DEV.js': 'libs/DEV/lib-ProductHunt-DEV.js'
+		'lib-api-store-DEV.js': 'libs/DEV/lib-api-store-DEV.js'
 
 		# API store DEV
 		# -------------
@@ -103,6 +104,7 @@
 		'Twitter Profile Scraper DEV.js': 'store/DEV/Twitter Profile Scraper DEV/Twitter Profile Scraper DEV.js'
 		'Twitter Profile URL Finder DEV.js': 'store/DEV/Twitter Profile URL Finder DEV/Twitter Profile URL Finder DEV.js'
 		'Web Elements Extractor DEV.js': 'store/DEV/Web Elements Extractor DEV/Web Elements Extractor DEV.js'
+		'Web Summit Scraper DEV.js': 'store/DEV/Web Summit Scraper DEV/Web Summit Scraper DEV.js'
 		'YouTube Channel Scraper DEV.js': 'store/DEV/YouTube Channel Scraper DEV/YouTube Channel Scraper DEV.js'
 		'YouTube Videos Extractor DEV.js': 'store/DEV/YouTube Videos Extractor DEV/YouTube Videos Extractor DEV.js'
 
