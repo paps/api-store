@@ -152,8 +152,25 @@ const loadChat = async tab => {
  */
 const sendMessage = async (tab, message, tags) => {
 	utils.log("Writting message...", "loading")
-	const firstname = await tab.evaluate(getFirstName)
-	tags = Object.assign({}, { firstName: firstname }, tags) // Custom tags are mandatory
+	let firstName = await tab.evaluate(getFirstName)
+	if (!firstName) {
+		try {
+			const name = await tab.evaluate((arg, cb) => {
+				let name = ""
+				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+				} else if (document.querySelector("div.presence-entity__image")) {
+					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+				}
+				cb(null, name)
+			})
+			const nameArray = name.split(" ")
+			firstName = nameArray.shift()
+		} catch (err) {
+			//
+		}
+	}
+	tags = Object.assign({}, { firstName }, tags) // Custom tags are mandatory
 	message = inflater.forgeMessage(message, tags)
 	const payload = { profileUrl: await tab.getUrl(), message, timestamp: (new Date()).toISOString() }
 	await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))

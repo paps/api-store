@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -18,11 +18,11 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let db
@@ -345,16 +345,35 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
-
+	console.log("invitation:", invitation)
 	if (message && !invitation.firstName) {
-		const firstname = await tab.evaluate(getFirstName)
-		invitation.firstName = firstname
+		let firstName = await tab.evaluate(getFirstName)
+		if (!firstName) {
+			try {
+				const name = await tab.evaluate((arg, cb) => {
+					let name = ""
+					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+					} else if (document.querySelector("div.presence-entity__image")) {
+						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+					}
+					cb(null, name)
+				})
+				const nameArray = name.split(" ")
+				firstName = nameArray.shift()
+			} catch (err) {
+				//
+			}
+		}
+		invitation.firstName = firstName
 	}
 	cleanUpEmojis(invitation)
 	if (message) {
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
+	console.log("message:", message)
+	await tab.wait(50000)
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -502,6 +521,9 @@ nick.newTab().then(async (tab) => {
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
+		console.log("buster", buster)
+		console.log("nick", nick)
+		await utils.notifyByMail()
 		nick.exit()
 	}
 	let invitations = []

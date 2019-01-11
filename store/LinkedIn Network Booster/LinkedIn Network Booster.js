@@ -347,8 +347,25 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	invitation.profileUrl = browserUrl
 
 	if (message && !invitation.firstName) {
-		const firstname = await tab.evaluate(getFirstName)
-		invitation.firstName = firstname
+		let firstName = await tab.evaluate(getFirstName)
+		if (!firstName) {
+			try {
+				const name = await tab.evaluate((arg, cb) => {
+					let name = ""
+					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+					} else if (document.querySelector("div.presence-entity__image")) {
+						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+					}
+					cb(null, name)
+				})
+				const nameArray = name.split(" ")
+				firstName = nameArray.shift()
+			} catch (err) {
+				//
+			}
+		}
+		invitation.firstName = firstName
 	}
 	cleanUpEmojis(invitation)
 	if (message) {
