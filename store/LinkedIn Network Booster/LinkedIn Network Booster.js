@@ -195,14 +195,18 @@ const connectTo = async (selector, tab, message) => {
 	await tab.click(".send-invite__actions > button:nth-child(2)")
 	try {
 		// Sometimes this alert isn't shown but the user is still added
-		await tab.waitUntilVisible([
+		const selector = await tab.waitUntilVisible([
 			".mn-invite-alert__svg-icon--success",
 			".mn-heathrow-toast__icon--success",
 			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
-			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
+			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
 		], 10000, "or")
+		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
+			utils.log("Invitation couldn't be sent.", "error")
+		}
 	} catch (error) {
-		utils.log("Button clicked but could not verify if the user was added.", "warning")
+		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
 	}
 }
 

@@ -241,8 +241,13 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 		try {
 			await tab.waitUntilVisible("#pages_side_column", 30000)
 		} catch (err) {
-			utils.log("Error loading the page, it may not be a Facebook page URL", "error")
-			continue
+			if (await facebook.checkLock(tab)) {
+				utils.log("Facebook is asking for an account verification.", "warning")
+				break
+			} else {
+				utils.log("Error loading the page, it may not be a Facebook page URL", "error")
+				continue
+			}
 		}
 		try {
 			const pageData = await tab.evaluate(scrapedPageIdNameandLikeCount)

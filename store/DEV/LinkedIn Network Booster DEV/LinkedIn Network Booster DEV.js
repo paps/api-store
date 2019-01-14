@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -151,6 +152,8 @@ const getFirstName = (arg, callback) => {
  */
 const connectTo = async (selector, tab, message) => {
 	await tab.click(selector)
+	await tab.screenshot(`${Date.now()}selector.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}selector.html`)
 	const selectorFound = await tab.waitUntilVisible([".send-invite__actions > button:nth-child(1)", "input#intentAnswer1", ".pv-s-profile-actions__overflow-toggle"], 15000, "or")
 	if (selectorFound === "input#intentAnswer1") {
 		throw "LinkedIn premium account needed to add this profile"
@@ -177,6 +180,8 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
+	await tab.screenshot(`${Date.now()}beforesend.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}beforesend.html`)
 	if (message && message.length > 0) {
 		try {
 			await tab.click(".send-invite__actions > button:nth-child(1)")
@@ -195,14 +200,20 @@ const connectTo = async (selector, tab, message) => {
 	await tab.click(".send-invite__actions > button:nth-child(2)")
 	try {
 		// Sometimes this alert isn't shown but the user is still added
-		await tab.waitUntilVisible([
+		const selector = await tab.waitUntilVisible([
 			".mn-invite-alert__svg-icon--success",
 			".mn-heathrow-toast__icon--success",
 			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
-			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]" // CSS selector used if the new UI is loaded
+			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
+			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
 		], 10000, "or")
+		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
+			utils.log("Invitation couldn't be sent.", "error")
+		}
 	} catch (error) {
-		utils.log("Button clicked but could not verify if the user was added.", "warning")
+		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
+		await tab.screenshot(`${Date.now()}buttonclicked.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}buttonclicked.html`)
 	}
 }
 
@@ -373,7 +384,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	}
 	invitation.message = message
 	console.log("message:", message)
-	await tab.wait(50000)
+	// await tab.wait(50000)
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -470,7 +481,6 @@ const cleanUpInvitations = (invitations, msg) => {
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
-
 	if (!hunterApiKey) {
 		hunterApiKey = ""
 	}
@@ -521,10 +531,13 @@ nick.newTab().then(async (tab) => {
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
-		console.log("buster", buster)
-		console.log("nick", nick)
-		await utils.notifyByMail()
+		// console.log("buster", buster)
+		// console.log("nick", nick)
+		// await utils.notifyByMail()
 		nick.exit()
+	} else {
+		// await utils.notifyByMail()
+		// nick.exit()	
 	}
 	let invitations = []
 	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
