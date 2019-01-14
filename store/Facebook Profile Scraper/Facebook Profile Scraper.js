@@ -284,7 +284,7 @@ const scrapeAboutPageFromPage = (arg, cb) => {
 	if (document.querySelector("a[href*=mailto]")) {
 		scrapedData.pageEmail = document.querySelector("a[href*=mailto]").textContent
 	}
-	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me"))[0]
+	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me") && !el.href.includes("share.here.com/r/mylocation"))[0]	
 	if (website) {
 		scrapedData.pageWebsite = website.textContent
 	}
@@ -373,8 +373,6 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		await tab.waitUntilVisible("._Interaction__ProfileSectionOverview")
 	} catch (err) {
 		utils.log("About Page still not visible", "error")
-		await tab.screenshot(`${Date.now()}About Page still not visible.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}About Page still not visible.html`)
 		return null
 	}
 	const aboutList = [ 

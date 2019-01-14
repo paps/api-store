@@ -15,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -285,7 +286,7 @@ const scrapeAboutPageFromPage = (arg, cb) => {
 	if (document.querySelector("a[href*=mailto]")) {
 		scrapedData.pageEmail = document.querySelector("a[href*=mailto]").textContent
 	}
-	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me"))[0]
+	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me") && !el.href.includes("share.here.com/r/mylocation"))[0]	
 	if (website) {
 		scrapedData.pageWebsite = website.textContent
 	}
@@ -431,7 +432,6 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	let { sessionCookieCUser, sessionCookieXs, profileUrls, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	let profilesToScrape = profileUrls
 	if (!csvName) { csvName = "result" }
 	let db = await utils.getDb(csvName + ".csv")
@@ -463,6 +463,7 @@ nick.newTab().then(async (tab) => {
 		nick.exit()
 	}								
 	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	
 	let profileCount = 0
 	for (let profileUrl of profilesToScrape) {

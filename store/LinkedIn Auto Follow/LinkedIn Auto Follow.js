@@ -61,7 +61,7 @@ const follow = async (selector, tab, unfollowProfiles) => {
 }
 
 // Full function to follow someone with different cases
-const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
+const addFollow = async (url, convertedUrl, tab, unfollowProfiles, disableScraping) => {
     let scrapedProfile = {}
 	scrapedProfile.baseUrl = url
 	scrapedProfile.timestamp = (new Date()).toISOString()
@@ -70,10 +70,10 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
          * NOTE: Now using lib linkedInScraper to open & scrape the LinkedIn profile
          */
         if (!disableScraping) {
-            const scrapingResult = await linkedInScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
+            const scrapingResult = await linkedInScraper.scrapeProfile(tab, convertedUrl.replace(/.+linkedin\.com/, "linkedin.com"))
             scrapedProfile = Object.assign(scrapedProfile, scrapingResult.csv)
         } else {
-            await tab.open(url)
+            await tab.open(convertedUrl)
             await tab.waitUntilVisible("#profile-wrapper", 15000)
         }
     } catch (error) {
@@ -97,31 +97,30 @@ const addFollow = async (url, tab, unfollowProfiles, disableScraping) => {
         throw (`${url} didn't load correctly`)
     }
     const currentUrl = await tab.getUrl()
+    scrapedProfile.profileUrl = currentUrl
     scrapedProfile.profileId = linkedIn.getUsername(currentUrl)
-    if (!checkDb(currentUrl, db)) {
-        utils.log(`Already followed ${scrapedProfile.profileId}.`, "done")
-    } else {
-        if (selector === selectors[0]) { //  Case when you need to use the (...) button before and (un)follow them from there
-            await tab.click(".pv-s-profile-actions__overflow-toggle")
-            try {
-                selector = await tab.waitUntilVisible([".pv-s-profile-actions--unfollow", ".pv-s-profile-actions--follow", ".pv-dashboard-section"], 5000, "or")
-            } catch (error) {
-                utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url}, they may have blocked follow requests outside their network.`, "warning")
-            }
-        }
-        if (selector === ".pv-dashboard-section") { // Own profile detected
-            utils.log(`Trying to ${unfollowProfiles ? "un" : ""}follow your own profile.`, "warning")
-        } else if (selector === selectors[1] || selector === selectors[2]) {
-            if (selector === ".pv-s-profile-actions--follow" && unfollowProfiles) {
-                utils.log(`We weren't following ${url}.`, "warning")
-            } else if (selector === ".pv-s-profile-actions--unfollow" && !unfollowProfiles) {
-                utils.log(`We were already following ${url}.`, "warning")
-            } else {
-                await follow(selector, tab, unfollowProfiles)
-                utils.log(`${unfollowProfiles ? "Unf" : "F"}ollowed ${url}.`, "done")
-            }
+
+    if (selector === selectors[0]) { //  Case when you need to use the (...) button before and (un)follow them from there
+        await tab.click(".pv-s-profile-actions__overflow-toggle")
+        try {
+            selector = await tab.waitUntilVisible([".pv-s-profile-actions--unfollow", ".pv-s-profile-actions--follow", ".pv-dashboard-section"], 5000, "or")
+        } catch (error) {
+            utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${currentUrl}, they may have blocked follow requests outside their network.`, "warning")
         }
     }
+    if (selector === ".pv-dashboard-section") { // Own profile detected
+        utils.log(`Trying to ${unfollowProfiles ? "un" : ""}follow your own profile.`, "warning")
+    } else if (selector === selectors[1] || selector === selectors[2]) {
+        if (selector === ".pv-s-profile-actions--follow" && unfollowProfiles) {
+            utils.log(`We weren't following ${currentUrl}.`, "warning")
+        } else if (selector === ".pv-s-profile-actions--unfollow" && !unfollowProfiles) {
+            utils.log(`We were already following ${currentUrl}.`, "warning")
+        } else {
+            await follow(selector, tab, unfollowProfiles)
+            utils.log(`${unfollowProfiles ? "Unf" : "F"}ollowed ${currentUrl}.`, "done")
+        }
+    }
+
     // Add them into the already added username object
     db.push(scrapedProfile)
 }
@@ -143,9 +142,9 @@ nick.newTab().then(async (tab) => {
 	for (let url of urls) {
 		try {
 			if (url) {
-				url = await linkedInScraper.salesNavigatorUrlConverter(url)
+				const convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
 				utils.log(`${unfollowProfiles ? "Unf" : "F"}ollowing ${url}...`, "loading")
-				await addFollow(url, tab, unfollowProfiles, disableScraping)
+				await addFollow(url, convertedUrl, tab, unfollowProfiles, disableScraping)
 			} else {
 				utils.log("Empty line...", "warning")
 		    }
