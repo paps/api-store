@@ -37,26 +37,31 @@ declare module "nickjs" {
 
 	type selectors = string[] | string
 
-	class Tab {
-		public open(url: string): Promise<[number, string]>
-		public waitUntilVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
-		public waitWhileVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
-		public waitUntilPresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
-		public waitWhilePresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
-		public click(selector: string): Promise<void>
-		public screenshot(filename: string, options?: IScreenshot): Promise<string>
-		public inject(urlOrPath: string): Promise<void>
-		public fill(selector: string, inputs: {[name: string]: string | boolean | number}, options?: IFill): Promise<void>
-	}
+
 
 	class Nick {
+		
 		constructor(options?: IOptions)
 		public exit(code?: number): void
 		public setCookie(cookie: ICookie): Promise<void>
 		public deleteCookie(cookieName: string, cookieDomain: string): Promise<void>
 		public deleteAllCookies(): Promise<void>
 		public getAllCookies(): Promise<Array<unknown>>
-		public newTab(): Promise<Tab>
+		public newTab(): Promise<Nick.Tab>
+	}
+	
+	namespace Nick{
+		interface Tab {
+			open(url: string): Promise<[number, string]>
+			waitUntilVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitWhileVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitUntilPresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitWhilePresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			click(selector: string): Promise<void>
+			screenshot(filename: string, options?: IScreenshot): Promise<string>
+			inject(urlOrPath: string): Promise<void>
+			fill(selector: string, inputs: {[name: string]: string | boolean | number}, options?: IFill): Promise<void>
+		}
 	}
 
 	export = Nick
