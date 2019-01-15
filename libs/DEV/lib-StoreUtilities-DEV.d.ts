@@ -1,25 +1,28 @@
 import Nick from "nickjs"
 import Buster from "phantombuster"
 
+import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+
 declare class StoreUtilities {
 	public ERROR_CODES: { [error in keyof typeof ERRORS]: number }
 	public constructor(nick: Nick, buster: Buster)
+	public constructor(buster: Buster)
 	public log(message: string, type?: string): void
-	public validateArguments(): { [key: string]: unknown }
+	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
-	public getRawCsv(url: string, printLogs?: boolean): Promise<Array<{ [key: string]: unknown }>>
-	public extractCsvRows(url: string, columnName?: string, printLogs?: boolean): Array<string|{ [key: string]: unknown }>
+	public getRawCsv(url: string, printLogs?: boolean): Promise<Array<IUnknownObject>>
+	public extractCsvRows(url: string, columnName?: string, printLogs?: boolean): Array<string|IUnknownObject>
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public getDataFromCsv2(url: string[], columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>|Promise<void>
-	public saveResults(jsonResult: Array<{ [key: string]: unknown }>, csvResult: Array<{ [key: string]: unknown }>, name?: "result" , schema?: string[], saveJson?: boolean): Promise<void>
-	public getDb(filename: string, parseContent?: boolean): Promise<string[]>|Promise<string>
-	public saveResult(result: Array<{ [key: string]: unknown }>, csvName?: "result", schema?: string[]): Promise<void>
-	public checkArguments(args: Array<{ [key: string]: unknown }>): Array<unknown>
+	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result" , schema?: string[], saveJson?: boolean): Promise<void>
+	public getDb(filename: string, parseContent?: boolean): Promise<Array<IUnknownObject>>
+	public saveResult(result: Array<IUnknownObject>, csvName?: "result", schema?: string[]): Promise<void>
+	public checkArguments(args: Array<IUnknownObject>): Array<unknown>
 	public adjustUrl(url: string, domain: string): string
 	public checkDb(str: string, db: Array<{ [key: string]: unknown }>, property: string): boolean
-	public filterRightOuter(left: Array<{ [key: string]: unknown }>, right: Array<{ [key: string]: unknown }>): Array<{ [key: string]: unknown }>
+	public filterRightOuter(left: Array<IUnknownObject>, right: Array<IUnknownObject>): Array<IUnknownObject>
 	public notifyByMail(): Promise<void>
 }
 
