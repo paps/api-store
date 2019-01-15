@@ -150,7 +150,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 	} catch (err) {
 		//
 	}
-	
+
 
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
@@ -160,13 +160,17 @@ const scrapeCompanyInfo = (arg, callback) => {
 	}
 
 
-	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link")) {
+	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link") || document.querySelector("a[data-control-name=\"topcard_see_all_employees\"]")) {
 		/**
 		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
 		 * In order to get all LinkedIn profiles we need to split and remove
 		 * brackets and generated backslashed when decoding the URI component
 		 */
-		let tmp = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link").href
+		let link = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link")
+		if (!link) {
+			link = document.querySelector("a[data-control-name=\"topcard_see_all_employees\"]")
+		}
+		let tmp = link.href
 		tmp = tmp.split("=").pop()
 		tmp = decodeURIComponent(tmp)
 		const linkedinId = tmp.replace("[", "")
