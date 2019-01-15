@@ -45,7 +45,7 @@ const buster = new Buster()
 
 	// exemple de l'utilisation du "user defined type guard" isUnknownObject()
 	// pour traverser un input inconnu de maniere safe
-	const b = JSON.parse("{ \"field\": { \"otherField\": 12 }}")
+	const b: unknown = JSON.parse("{ \"field\": { \"otherField\": 12 }}")
 	if (isUnknownObject(b)) {
 		if (isUnknownObject(b.field)) {
 			if (typeof(b.field.otherField) === "number") {

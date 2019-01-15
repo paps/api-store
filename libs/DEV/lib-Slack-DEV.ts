@@ -1,5 +1,5 @@
 import StoreUtilities from "./lib-StoreUtilities-DEV"
-import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 import Buster from "phantombuster"
 import * as Pupeppeteer from "puppeteer"
 
@@ -71,24 +71,29 @@ class Slack {
 	}
 
 	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<Array<{}>> {
-		const getSlackObject = (field: string): { [key: string]: unknown }|null => {
-			// @ts-ignore
-			if (!slackDebug) {
-				return null
+		const getSlackObject = (field: string): unknown | null => {
+			const slackDebug: IUnknownObject = (window as unknown as { slackDebug: IUnknownObject }).slackDebug
+			if (isUnknownObject(slackDebug) && isUnknownObject(slackDebug.storeInstance) && typeof(slackDebug.storeInstance.getStateByTeamId) === "function") {
+				const store: IUnknownObject = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
+				if (store[field]) {
+					return store[field]
+				}
 			}
-			// @ts-ignore
-			const store = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
-			return store[field]
+			return null
+		}
+		const getSlackObject2 = (field: string): unknown | null => {
+			const slackDebug: IEvalAny = (window as IEvalAny).slackDebug
+			return slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)[field]
 		}
 		const channelsObject = await page.evaluate(getSlackObject, "channels") as ReturnType<typeof getSlackObject>
 		const membersObject = await page.evaluate(getSlackObject, "members") as ReturnType<typeof getSlackObject>
 		const channels: Array<{}> = []
 
-		if (channelsObject) {
+		if (isUnknownObject(channelsObject)) {
 			Object.keys(channelsObject).forEach((key) => {
 				const chan = channelsObject[key] as ReturnType<typeof getSlackObject>
 				const members = []
-				if (chan && chan.members && membersObject) {
+				if (isUnknownObject(chan) && chan.members && isUnknownObject(membersObject)) {
 					const _members = chan.members as []
 					for (const member of _members) {
 						members.push(membersObject[member])
