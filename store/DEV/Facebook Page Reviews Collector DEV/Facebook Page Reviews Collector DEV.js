@@ -81,6 +81,7 @@ const scrollABit = async (tab) => {
 }
 
 const clickExpandButtons = async (tab) => {
+	utils.log("Expanding comments...", "loading")
 	const moreCommentsLength = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll("#recommendations_tab_main_feed .UFIPagerLink").length))
 	for (let i = 0; i < moreCommentsLength; i++) {
 		try {
@@ -132,7 +133,10 @@ const scrapeReviews = (arg, cb) => {
 				scrapedData.imgUrl = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img").src
 			}
 			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink") && review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href) {
-				scrapedData.profileUrl = cleanFacebookProfileUrl(review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href)
+				const profileUrl = cleanFacebookProfileUrl(review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href)
+				if (!profileUrl.includes("/reviews/")) {
+					scrapedData.profileUrl = profileUrl
+				}
 			}
 			if (review.querySelector("div[data-ad-preview=\"message\"]") && review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList")) {
 				scrapedData.tags = review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList").textContent
@@ -155,7 +159,10 @@ const scrapeReviews = (arg, cb) => {
 			for (const nestedComment of nestedComments) {
 				const nestedData = { query: arg.pageUrl, timestamp: (new Date()).toISOString() }
 				if (nestedComment.querySelector("a")) {
-					nestedData.profileUrl = cleanFacebookProfileUrl(nestedComment.querySelector("a").href)
+					const profileUrl = cleanFacebookProfileUrl(nestedComment.querySelector("a").href)
+					if (!profileUrl.includes("/reviews/")) {
+						nestedData.profileUrl = profileUrl
+					}
 				}
 				if (nestedComment.querySelector(".UFICommentBody")) {
 					nestedData.comment = nestedComment.querySelector(".UFICommentBody").textContent
@@ -260,6 +267,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 						break
 					}
 					reviewCount = newReviewCount
+					utils.log(`Loaded ${reviewCount} reviews.`, "done")
 					isLoading = false
 					lastDate = new Date()
 				}
@@ -283,7 +291,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			console.log(result)
 		} catch (err) {
 			utils.log(`Error accessing page!: ${err}`, "error")
-		}			
+		}
 	} catch (err) {
 		utils.log(`Can't scrape page at ${pageUrl} due to: ${err.message || err}`, "warning")
 		return []
@@ -292,7 +300,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
-;(async () => {	
+;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, numberofPagesperLaunch, csvName, maxReviews, orderBy } = utils.validateArguments()
 	let loggedIn
@@ -314,7 +322,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 	if (spreadsheetUrl) {
 		if (isFacebookUrl(spreadsheetUrl)) {
 			pageUrls = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (pageUrls) {	
+			if (pageUrls) {
 				pageUrls = [ pageUrls ]
 				singlePage = true
 			} else {
@@ -347,7 +355,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 	console.log(`URLs to process: ${JSON.stringify(pageUrls, null, 4)}`)
 	utils.log(`Trying to scrape ${maxReviews ? maxReviews : "all"} reviews per page.`, "info")
 	for (let pageUrl of pageUrls) {
-		if (isFacebookUrl(pageUrl)) { // Facebook Event URL
+		if (isFacebookUrl(pageUrl)) { // Facebook Page URL
 			const tempResult = await loadAndScrape(tab, pageUrl, orderBy, maxReviews)
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.postTimestamp === tempResult[i].postTimestamp)) {
@@ -364,9 +372,8 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 		}
 	}
 
-	
 	utils.log(`Got ${result.length} reviews in total.`, "done")
-	
+
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()

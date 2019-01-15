@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,24 +19,24 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 // }
 
 const { URL } = require("url")
 
-// Checks if a url is a facebook event url
+// Checks if a url is a facebook url
 const isFacebookUrl = (url) => {
 	try {
-		let urlObject = new URL(url.toLowerCase())
-		if (urlObject.pathname.startsWith("facebook")) {
-			urlObject = new URL("https://www." + url)
+		if (url.startsWith("facebook.com")) {
+			url = "https://www." + url
 		}
-		if (urlObject.pathname.startsWith("www.facebook")) {
-			urlObject = new URL("https://" + url)
+		if (url.startsWith("www.")) {
+			url = "https://" + url
 		}
+		const urlObject = new URL(url)
 		if (urlObject && urlObject.hostname === "www.facebook.com") {
 			return true
 		}
@@ -80,6 +81,7 @@ const scrollABit = async (tab) => {
 }
 
 const clickExpandButtons = async (tab) => {
+	utils.log("Expanding comments...", "loading")
 	const moreCommentsLength = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll("#recommendations_tab_main_feed .UFIPagerLink").length))
 	for (let i = 0; i < moreCommentsLength; i++) {
 		try {
@@ -90,6 +92,7 @@ const clickExpandButtons = async (tab) => {
 		await tab.wait(300 + 250 * Math.random())
 	}
 	const expandButtonsLength = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll(".UFICommentBody a").length))
+	// const clickExpandButton = (arg, cb) => cb(null, document.querySelector(".UFICommentBody a").click())
 	for (let i = 0; i < expandButtonsLength; i++) {
 		try {
 			await tab.click(".UFICommentBody a")
@@ -123,7 +126,10 @@ const scrapeReviews = (arg, cb) => {
 				scrapedData.imgUrl = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img").src
 			}
 			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink") && review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href) {
-				scrapedData.profileUrl = cleanFacebookProfileUrl(review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href)
+				const profileUrl = cleanFacebookProfileUrl(review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href)
+				if (!profileUrl.includes("/reviews/")) {
+					scrapedData.profileUrl
+				}
 			}
 			if (review.querySelector("div[data-ad-preview=\"message\"]") && review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList")) {
 				scrapedData.tags = review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList").textContent
@@ -140,13 +146,15 @@ const scrapeReviews = (arg, cb) => {
 			}
 		}
 		const nestedComments = review.querySelector(".userContentWrapper > div").nextElementSibling.querySelectorAll(".UFIComment")
-		// scrapedData.lengtho = nestedComments.length
 		results.push(scrapedData)
 		if (nestedComments.length) {
 			for (const nestedComment of nestedComments) {
 				const nestedData = { query: arg.pageUrl, timestamp: (new Date()).toISOString() }
 				if (nestedComment.querySelector("a")) {
-					nestedData.profileUrl = cleanFacebookProfileUrl(nestedComment.querySelector("a").href)
+					const profileUrl = cleanFacebookProfileUrl(nestedComment.querySelector("a").href)
+					if (!profileUrl.includes("/reviews/")) {
+						nestedData.profileUrl = profileUrl
+					}
 				}
 				if (nestedComment.querySelector(".UFICommentBody")) {
 					nestedData.comment = nestedComment.querySelector(".UFICommentBody").textContent
@@ -174,6 +182,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			await tab.open(pageUrl)
 		} catch (err1) {
 			try { // trying again
+				await tab.wait(5000)
 				await tab.open(pageUrl)
 			} catch (err2) {
 				utils.log(`Couldn't open ${pageUrl}`, "error")
@@ -198,17 +207,13 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 				utils.log("This page doesn't seem to have reviews...", "warning")
 				return []
 			}
-			try {
-				await tab.waitUntilVisible("#recommendations_tab_main_feed")
-			} catch (err) {
-				//
-			}
+			await tab.waitUntilVisible("#recommendations_tab_main_feed")
 			try {
 				if (orderBy === "Most Recent") {
-				await tab.waitUntilVisible("ul[defaultactivetabkey] li:last-of-type")
-				await tab.click("ul[defaultactivetabkey] li:last-of-type")
-				await tab.wait(1000)
-			}
+					await tab.waitUntilVisible("ul[defaultactivetabkey] li:last-of-type")
+					await tab.click("ul[defaultactivetabkey] li:last-of-type")
+					await tab.wait(1000)
+				}
 			} catch (err) {
 				//
 			}
@@ -231,6 +236,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 						break
 					}
 					reviewCount = newReviewCount
+					utils.log(`Loaded ${reviewCount} reviews.`, "done")
 					isLoading = false
 					lastDate = new Date()
 				}
@@ -250,7 +256,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 			utils.log(`Got ${gotAll ? "all " : ""}${result.length} reviews for ${pageUrl}`, "done")
 		} catch (err) {
 			utils.log(`Error accessing page!: ${err}`, "error")
-		}			
+		}
 	} catch (err) {
 		utils.log(`Can't scrape page at ${pageUrl} due to: ${err.message || err}`, "warning")
 		return []
@@ -259,7 +265,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
-;(async () => {	
+;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, numberofPagesperLaunch, csvName, maxReviews, orderBy } = utils.validateArguments()
 	let loggedIn
@@ -275,13 +281,15 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 		utils.log("We're not logged in on Facebook.", "info")
 		orderBy = "Most Helpful"
 	}
-	if (!csvName) { csvName = "result" }
+	if (!csvName) {
+		csvName = "result"
+	}
 	let result = []
 	let singlePage
 	if (spreadsheetUrl) {
 		if (isFacebookUrl(spreadsheetUrl)) {
 			pageUrls = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (pageUrls) {	
+			if (pageUrls) {
 				pageUrls = [ pageUrls ]
 				singlePage = true
 			} else {
@@ -314,7 +322,7 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 	console.log(`URLs to process: ${JSON.stringify(pageUrls, null, 4)}`)
 	utils.log(`Trying to scrape ${maxReviews ? maxReviews : "all"} reviews per page.`, "info")
 	for (let pageUrl of pageUrls) {
-		if (isFacebookUrl(pageUrl)) { // Facebook Event URL
+		if (isFacebookUrl(pageUrl)) { // Facebook Page URL
 			const tempResult = await loadAndScrape(tab, pageUrl, orderBy, maxReviews)
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.postTimestamp === tempResult[i].postTimestamp)) {
@@ -331,9 +339,8 @@ const loadAndScrape = async (tab, pageUrl, orderBy, maxReviews) => {
 		}
 	}
 
-	
 	utils.log(`Got ${result.length} reviews in total.`, "done")
-	
+
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
