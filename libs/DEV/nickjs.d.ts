@@ -42,12 +42,17 @@ declare module "nickjs" {
 
 	class Nick {
 
+		public readonly options: IOptions
+		public readonly tabs: Nick.Tab[]
+		public readonly driver: unknown // maybe change this?
+		public readonly browserDriver: unknown // maybe change this?
+
 		constructor(options?: IOptions)
 		public exit(code?: number): void
 		public setCookie(cookie: ICookie): Promise<void>
 		public deleteCookie(cookieName: string, cookieDomain: string): Promise<void>
 		public deleteAllCookies(): Promise<void>
-		public getAllCookies(): Promise<Array<unknown>>
+		public getAllCookies(): Promise<Array<unknown>> // maybe type what is a cookie?
 		public newTab(): Promise<Nick.Tab>
 
 	}
@@ -57,6 +62,13 @@ declare module "nickjs" {
 		interface Tab { // tslint:disable-line:interface-name
 
 			readonly nick: Nick
+			readonly actionInProgress: boolean
+			readonly closed: boolean
+			readonly crashed: boolean
+			readonly id: number
+
+			readonly driver: unknown // maybe change this?
+			readonly tabDriver: unknown // maybe change this?
 
 			onPrompt: (message: string) => string
 			onConfirm: (message: string) => boolean
