@@ -72,10 +72,14 @@ const _downloadCsv = url => {
 				reject(`Could not download csv (cause: Redirected to another URL than the given one), maybe csv is not public, HTTP code: ${httpCodeRedirection}`)
 			}
 
-			if (resp.statusCode >= 400) {
+			if (resp && resp.statusCode >= 400) {
 				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
 			}
-			resolve(resp.raw.toString())
+			if (resp) {
+				resolve(resp.raw.toString())
+			} else {
+				reject("No HTTP response found")
+			}
 		})
 
 		httpStream.on("redirect", () => {
@@ -188,10 +192,14 @@ const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 class StoreUtilities {
 
 	constructor(nick, buster) {
-		this.nick = nick
-		this.buster = buster
+		if (arguments.length > 1) {
+			this.nick = nick
+			this.buster = buster
+		} else {
+			this.buster = nick
+		}
 		this.minTimeBeforeExit = null // will be decided on the first call to checkTimeLeft()
-		if (buster.arguments.testRunObject) {
+		if (this.buster.arguments.testRunObject) {
 			this.test = true
 			this.testRunObject = buster.arguments.testRunObject
 			this.output = "|START|\n"
@@ -558,10 +566,10 @@ class StoreUtilities {
 		} else {
 			// date = new Date()
 			const newResult = []
-			// console.log("part1")			
+			// console.log("part1")
 			const fields = this._getFieldsFromArray(csvResult)
 			// console.log("part2:", new Date() - date)
-			// date = new Date()			
+			// date = new Date()
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {

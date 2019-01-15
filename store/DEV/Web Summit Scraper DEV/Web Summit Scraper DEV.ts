@@ -1,61 +1,38 @@
+// Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster flags: save-folder"
-"phantombuster dependencies: lib-api-store-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+// import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+import StoreUtilities from "./lib-StoreUtilities-DEV"
 
 const buster = new Buster()
+const utils: StoreUtilities = new StoreUtilities(buster)
+// }
 
-;
+const scrapeWebsubmit = async (page: puppeteer.Page, url: string): Promise<Array<unknown>> => {
+	const startups: Array<unknown> = []
+	const res = await page.goto(url, { waitUntil: "domcontentloaded" })
+	if (res && res.status() === 200) {
+		const research = await page.waitForResponse((xhr) => {
+			return xhr.url().indexOf("/1/indexes/*/queries") > -1 && xhr.status() === 200
+		}, { timeout: 60000 })
+		const xhrJson = await research.json()
+		console.log(JSON.stringify(xhrJson.results, null, 2), xhrJson.results.length)
+	}
+	return startups
+}
+
 (async () => {
-
-	const browser = await puppeteer.launch({
-		args: ["--no-sandbox"], // this is needed to run Puppeteer in a Phantombuster container
-	})
-
+	const browser = await puppeteer.launch({ args: ["--no-sandbox"] })
+	utils.log("Opening https://websummit.com/featured-startups", "info")
 	const page = await browser.newPage()
-	await page.goto("https://news.ycombinator.com")
-	await page.screenshot({path: "screenshot.png"})
-
-	const lambda = () => {
-		const a = document.getElementById("#main")
-		if (a) {
-			const x = a.childNodes
-		}
-		return {
-			width: document.documentElement.clientWidth,
-			height: document.documentElement.clientHeight,
-			deviceScaleFactor: window.devicePixelRatio,
-			toto: "aaa",
-		}
-	}
-	const ret = await page.evaluate(lambda)
-
-	await buster.setResultObject({pageTitle: await page.title()})
-
-	// exemple de check pour utiliser unknown
-	// le terme officiel est "type guard"
-	const toto: unknown = 12
-	if (typeof toto === "string") {
-		await page.goto(toto)
-	}
-
-	// exemple de l'utilisation du "user defined type guard" isUnknownObject()
-	// pour traverser un input inconnu de maniere safe
-	const b: unknown = JSON.parse("{ \"field\": { \"otherField\": 12 }}")
-	if (isUnknownObject(b)) {
-		if (isUnknownObject(b.field)) {
-			if (typeof(b.field.otherField) === "number") {
-				let c: number
-				c = b.field.otherField
-				console.log(c)
-			}
-		}
-	}
-
+	await scrapeWebsubmit(page, "https://websummit.com/featured-startups")
 	await browser.close()
-
 })()
+.catch((err) => {
+	process.exit(1)
+})
