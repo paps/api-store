@@ -7,7 +7,7 @@ declare class StoreUtilities {
 	public ERROR_CODES: { [error in keyof typeof ERRORS]: number }
 	public constructor(nick: Nick, buster: Buster)
 	public constructor(buster: Buster)
-	public log(message: string, type?: string): void
+	public log(message: unknown, type?: string): void
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
 	public getRawCsv(url: string, printLogs?: boolean): Promise<Array<IUnknownObject>>
@@ -16,12 +16,12 @@ declare class StoreUtilities {
 	public getDataFromCsv2(url: string[], columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>|Promise<void>
-	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result" , schema?: string[], saveJson?: boolean): Promise<void>
+	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result"|null , schema?: string[]|null, saveJson?: boolean): Promise<void>
 	public getDb(filename: string, parseContent?: boolean): Promise<Array<IUnknownObject>>
 	public saveResult(result: Array<IUnknownObject>, csvName?: "result", schema?: string[]): Promise<void>
-	public checkArguments(args: Array<IUnknownObject>): Array<unknown>
+	public checkArguments(args: Array<IUnknownObject>): Array<IUnknownObject>
 	public adjustUrl(url: string, domain: string): string
-	public checkDb(str: string, db: Array<{ [key: string]: unknown }>, property: string): boolean
+	public checkDb(str: string, db: Array<IUnknownObject>, property: string): boolean
 	public filterRightOuter(left: Array<IUnknownObject>, right: Array<IUnknownObject>): Array<IUnknownObject>
 	public notifyByMail(): Promise<void>
 }
