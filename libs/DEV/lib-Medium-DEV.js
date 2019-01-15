@@ -13,7 +13,7 @@ class Medium {
 	 * @param {String} sid - sid session cookie
 	 */
 	async login(tab, uid, sid) {
-		const _getUsername = (arg, cb) => cb(null, document.querySelector("button > div.avatar > img.avatar-image").alt)
+		const _getUsername = (arg, cb) => cb(null, document.querySelector("button > div.avatar img.avatar-image").alt)
 		if ((typeof uid !== "string" || uid.trim().length < 1) || (typeof sid !== "string" || sid.trim().length < 1)) {
 			this.utils.log("Invalid Medium session cookie(s). Did you specify both uid & sid cookies?", "error")
 			this.nick.exit(this.utils.ERROR_CODES.MEDIUM_BAD_COOKIE)
@@ -91,4 +91,3 @@ class Medium {
 }
 
 module.exports = Medium
-
