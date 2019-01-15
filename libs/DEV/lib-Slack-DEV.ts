@@ -2,7 +2,6 @@ import StoreUtilities from "./lib-StoreUtilities-DEV"
 import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
 import Buster from "phantombuster"
 import * as Pupeppeteer from "puppeteer"
-import { cpus } from "os";
 
 class Slack {
 	private buster: Buster
@@ -72,16 +71,32 @@ class Slack {
 	}
 
 	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<Array<{}>> {
-		const getSlackObject = (field: string): Array<{}>|null => {
-			if (!window.slackDebug) {
+		const getSlackObject = (field: string): { [key: string]: unknown }|null => {
+			// @ts-ignore
+			if (!slackDebug) {
 				return null
 			}
+			// @ts-ignore
 			const store = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
 			return store[field]
 		}
 		const channelsObject = await page.evaluate(getSlackObject, "channels") as ReturnType<typeof getSlackObject>
 		const membersObject = await page.evaluate(getSlackObject, "members") as ReturnType<typeof getSlackObject>
 		const channels: Array<{}> = []
+
+		if (channelsObject) {
+			Object.keys(channelsObject).forEach((key) => {
+				const chan = channelsObject[key] as ReturnType<typeof getSlackObject>
+				const members = []
+				if (chan && chan.members && membersObject) {
+					const _members = chan.members as []
+					for (const member of _members) {
+						members.push(membersObject[member])
+					}
+					channels.push({ id: chan.id, name: chan.name_normalized || chan.name, members })
+				}
+			})
+		}
 		return channels
 	}
 }
