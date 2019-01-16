@@ -44,7 +44,7 @@
 						"placeholder": "Medium Posts"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_repetition_setup\">(?)</a>",
+						"label": "Number of lines to process per launch (Default: 10) <a target=\"_blank\" href=\"/api-store/10910/medium-auto-clapper#section_repetition_setup\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10

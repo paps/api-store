@@ -1,4 +1,4 @@
-# Automatically clap a list of Medium articles that you find interesting and get noticed by their authors 👏
+# Mass clap articles that you find interesting and be heard on Medium 👏
 
 If you follow specific topics or authors on Medium, clapping is a great way to show your appreciation.
 
@@ -9,7 +9,7 @@ Start Clapping like a real Fan and automate this action with this API.
 ## 0. What you'll need
 
 - **"Medium UID"** &&  **"SID session cookie"**: Those are the 2 cookies that Phantombuster'll need to connect to your Medium account. More about that in Step 4.
-- **"spreadsheetUrl"**: This is the URL of the spreadsheet containing every Medium posts you want to scrape. We recommend hosting it on Google Spreadsheet and making the URL public so Phantombuster can access it.
+- **"spreadsheetUrl"**: This is the URL of the spreadsheet containing every Medium posts you want to scrape. We recommend hosting it on Google Spreadsheet and making the URL public so Phantombuster puisse y accéder.
 
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. 

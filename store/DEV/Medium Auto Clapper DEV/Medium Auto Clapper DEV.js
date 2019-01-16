@@ -23,7 +23,7 @@ const Medium = require("./lib-Medium")
 const medium = new Medium(nick, buster, utils)
 
 const DEFAULT_DB = "result"
-const DEFAULT_LINES = 1
+const DEFAULT_LINES = 10
 const DEFAULT_CLAP = 1
 // }
 
@@ -119,7 +119,14 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 	}
 
 	if (spreadsheetUrl) {
-		queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		try {
+			utils.log(`Getting data from ${spreadsheetUrl}...`, "loading")
+			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName, false)
+			utils.log(`Got ${queries.length} lines from csv`, "done")
+		} catch (err) {
+			queries = [ spreadsheetUrl ]
+			utils.log(`Got ${queries.length} line`, "done")
+		}
 	}
 
 	if (typeof queries === "string") {
@@ -127,8 +134,14 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 	}
 
 	const db = await utils.getDb(csvName + ".csv")
+	queries = queries.filter(el => db.findIndex(line => line.url === el && line.action === action) < 0).slice(0, numberOfLinesPerLaunch)
+	if (queries.length < 1) {
+		utils.log(`Input is empty OR every articles are already clapped`, "warning")
+		nick.exit()
+	}
 
 	await medium.login(tab, uid, sid)
+	utils.log(`${action === "clap" ? "Clapping" : "Unclapping" } ${JSON.stringify(queries.slice(0, 100), null, 2)}`, "info")
 	for (const query of queries) {
 		utils.log(`${action === "clap" ? `Clapping ${numberOfClapsPerPost} times` : "Undo all claps for" } ${query}`, "info")
 		const timeLeft = await utils.checkTimeLeft()
