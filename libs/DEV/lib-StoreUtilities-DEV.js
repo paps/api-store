@@ -541,6 +541,7 @@ class StoreUtilities {
 		if (res.statusCode === 200) {
 			return res.raw.toString()
 		}
+		return ""
 	}
 
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()

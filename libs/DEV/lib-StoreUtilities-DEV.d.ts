@@ -11,14 +11,14 @@ declare class StoreUtilities {
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
 	public getRawCsv(url: string, printLogs?: boolean): Promise<Array<IUnknownObject>>
-	public extractCsvRows(url: string, columnName?: string, printLogs?: boolean): Array<string|IUnknownObject>
+	public extractCsvRows(url: string, columnName?: string|string[], printLogs?: boolean): Array<string|IUnknownObject>
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
-	public getDataFromCsv2(url: string[], columnName?: string|string[], printLogs?: boolean): Promise<string[]>
+	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
-	public getIP(): Promise<string>|Promise<void>
-	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result"|null , schema?: string[]|null, saveJson?: boolean): Promise<void>
+	public getIP(): Promise<string>
+	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<void>
 	public getDb(filename: string, parseContent?: boolean): Promise<Array<IUnknownObject>>
-	public saveResult(result: Array<IUnknownObject>, csvName?: "result", schema?: string[]): Promise<void>
+	public saveResult(result: Array<IUnknownObject>, csvName?: "result"|null|string, schema?: string[]): Promise<void>
 	public checkArguments(args: Array<IUnknownObject>): Array<IUnknownObject>
 	public adjustUrl(url: string, domain: string): string
 	public checkDb(str: string, db: Array<IUnknownObject>, property: string): boolean
