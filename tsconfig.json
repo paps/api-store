@@ -43,7 +43,8 @@
 
     // List of root folders whose combined content represents the structure of the project at runtime.
     "rootDirs": [
-      "store/DEV/Web Summit Scraper DEV",
+	  "store/DEV/Web Summit Scraper DEV",
+	  "store/DEV/Slack User Extractor DEV",
       "libs/DEV"
     ],
 

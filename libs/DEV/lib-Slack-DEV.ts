@@ -1,5 +1,5 @@
 import StoreUtilities from "./lib-StoreUtilities-DEV"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, isUnknownObject, IEvalAny } from './lib-api-store-DEV';
 import Buster from "phantombuster"
 import * as Pupeppeteer from "puppeteer"
 
@@ -70,36 +70,63 @@ class Slack {
 		}
 	}
 
-	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<Array<{}>> {
-		const getSlackObject = (field: string): unknown | null => {
-			const slackDebug: IUnknownObject = (window as unknown as { slackDebug: IUnknownObject }).slackDebug
-			if (isUnknownObject(slackDebug) && isUnknownObject(slackDebug.storeInstance) && typeof(slackDebug.storeInstance.getStateByTeamId) === "function") {
-				const store: IUnknownObject = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)
-				if (store[field]) {
-					return store[field]
-				}
-			}
-			return null
+	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<IUnknownObject[]> {
+
+		const channels: IUnknownObject[] = []
+
+		const getChannels = (endpoint: string) => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.api.call(endpoint, { limit: 1000, types: "public_channel,private_channel,mpim,im" })
 		}
 
-		const channelsObject = await page.evaluate(getSlackObject, "channels") as ReturnType<typeof getSlackObject>
-		const membersObject = await page.evaluate(getSlackObject, "members") as ReturnType<typeof getSlackObject>
-		const channels: Array<{}> = []
-
-		if (isUnknownObject(channelsObject)) {
-			Object.keys(channelsObject).forEach((key) => {
-				const chan = channelsObject[key] as ReturnType<typeof getSlackObject>
-				const members = []
-				if (isUnknownObject(chan) && chan.members && isUnknownObject(membersObject)) {
-					const _members = chan.members as []
-					for (const member of _members) {
-						members.push(membersObject[member])
-					}
-					channels.push({ id: chan.id, name: chan.name_normalized || chan.name, members })
-				}
+		const rawChannels = await page.evaluate(getChannels, "conversations.list")
+		if (isUnknownObject(rawChannels) && isUnknownObject(rawChannels.data) && isUnknownObject(rawChannels.data.channels)) {
+			const chans = rawChannels.data.channels as IUnknownObject[]
+			chans.forEach((el) => {
+				channels.push({ id: el.id, name: el.name || el.name_normalized })
 			})
 		}
 		return channels
+	}
+
+	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string): Promise<IUnknownObject[]> {
+		const members: IUnknownObject[] = []
+
+		const getUsersId = (endpoint: string, channel: string) => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.api.call(endpoint, { channel })
+		}
+
+		const getUserProfile = (endpoint: string, id: string) => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.api.call(endpoint, { user: id })
+		}
+
+		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
+			const res = { name: "", firstname: "", lastname: "", picture: "", nickname: "", title: "", phone: "", email: "", skype: "" }
+			res.name = user.real_name ? user.real_name as string : ""
+			res.lastname = user.last_name ? user.last_name as string : ""
+			res.firstname = user.first_name ? user.first_name as string : ""
+			res.nickname = user.display_name ? user.display_name as string : ""
+			res.title = user.title ? user.title as string : ""
+			res.phone = user.phone ? user.phone as string : ""
+			res.skype = user.skype ? user.skype as string : ""
+			res.email = user.email ? user.email as string : ""
+			res.picture = user.image_original ? user.image_original as string : ""
+			return res
+		}
+
+		const userIds = await page.evaluate(getUsersId, "conversations.members", channelId)
+		if (isUnknownObject(userIds) && isUnknownObject(userIds.data) && isUnknownObject(userIds.data.members)) {
+			const ids = userIds.data.members as string[]
+			for (const user of ids) {
+				const member = await page.evaluate(getUserProfile, "users.profile.get", user)
+				if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.profile)) {
+					members.push(formatUserInformation(member.data.profile))
+				}
+			}
+		}
+		return members
 	}
 }
 

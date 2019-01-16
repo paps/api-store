@@ -60,33 +60,54 @@ class Slack {
         }
     }
     async getChannelsMeta(page) {
-        const getSlackObject = (field) => {
-            const slackDebug = window.slackDebug;
-            if (lib_api_store_DEV_1.isUnknownObject(slackDebug) && lib_api_store_DEV_1.isUnknownObject(slackDebug.storeInstance) && typeof (slackDebug.storeInstance.getStateByTeamId) === "function") {
-                const store = slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId);
-                if (store[field]) {
-                    return store[field];
-                }
-            }
-            return null;
-        };
-        const channelsObject = await page.evaluate(getSlackObject, "channels");
-        const membersObject = await page.evaluate(getSlackObject, "members");
         const channels = [];
-        if (lib_api_store_DEV_1.isUnknownObject(channelsObject)) {
-            Object.keys(channelsObject).forEach((key) => {
-                const chan = channelsObject[key];
-                const members = [];
-                if (lib_api_store_DEV_1.isUnknownObject(chan) && chan.members && lib_api_store_DEV_1.isUnknownObject(membersObject)) {
-                    const _members = chan.members;
-                    for (const member of _members) {
-                        members.push(membersObject[member]);
-                    }
-                    channels.push({ id: chan.id, name: chan.name_normalized || chan.name, members });
-                }
+        const getChannels = (endpoint) => {
+            const TS = window.TS;
+            return TS.interop.api.call(endpoint, { limit: 1000, types: "public_channel,private_channel,mpim,im" });
+        };
+        const rawChannels = await page.evaluate(getChannels, "conversations.list");
+        if (lib_api_store_DEV_1.isUnknownObject(rawChannels) && lib_api_store_DEV_1.isUnknownObject(rawChannels.data) && lib_api_store_DEV_1.isUnknownObject(rawChannels.data.channels)) {
+            const chans = rawChannels.data.channels;
+            chans.forEach((el) => {
+                channels.push({ id: el.id, name: el.name || el.name_normalized });
             });
         }
         return channels;
+    }
+    async getChannelsUser(page, channelId) {
+        const members = [];
+        const getUsersId = (endpoint, channel) => {
+            const TS = window.TS;
+            return TS.interop.api.call(endpoint, { channel });
+        };
+        const getUserProfile = (endpoint, id) => {
+            const TS = window.TS;
+            return TS.interop.api.call(endpoint, { user: id });
+        };
+        const formatUserInformation = (user) => {
+            const res = { name: "", firstname: "", lastname: "", picture: "", nickname: "", title: "", phone: "", email: "", skype: "" };
+            res.name = user.real_name ? user.real_name : "";
+            res.lastname = user.last_name ? user.last_name : "";
+            res.firstname = user.first_name ? user.first_name : "";
+            res.nickname = user.display_name ? user.display_name : "";
+            res.title = user.title ? user.title : "";
+            res.phone = user.phone ? user.phone : "";
+            res.skype = user.skype ? user.skype : "";
+            res.email = user.email ? user.email : "";
+            res.picture = user.image_original ? user.image_original : "";
+            return res;
+        };
+        const userIds = await page.evaluate(getUsersId, "conversations.members", channelId);
+        if (lib_api_store_DEV_1.isUnknownObject(userIds) && lib_api_store_DEV_1.isUnknownObject(userIds.data) && lib_api_store_DEV_1.isUnknownObject(userIds.data.members)) {
+            const ids = userIds.data.members;
+            for (const user of ids) {
+                const member = await page.evaluate(getUserProfile, "users.profile.get", user);
+                if (lib_api_store_DEV_1.isUnknownObject(member) && lib_api_store_DEV_1.isUnknownObject(member.data) && lib_api_store_DEV_1.isUnknownObject(member.data.profile)) {
+                    members.push(formatUserInformation(member.data.profile));
+                }
+            }
+        }
+        return members;
     }
 }
 module.exports = Slack;
