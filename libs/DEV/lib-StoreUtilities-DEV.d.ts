@@ -10,19 +10,19 @@ declare class StoreUtilities {
 	public log(message: unknown, type?: string): void
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
-	public getRawCsv(url: string, printLogs?: boolean): Promise<Array<IUnknownObject>>
-	public extractCsvRows(url: string, columnName?: string|string[], printLogs?: boolean): Array<string|IUnknownObject>
+	public getRawCsv(url: string, printLogs?: boolean): Promise<IUnknownObject[]>
+	public extractCsvRows(url: string, columnName?: string|string[], printLogs?: boolean): string[]|IUnknownObject[]
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>
-	public saveResults(jsonResult: Array<IUnknownObject>, csvResult: Array<IUnknownObject>, name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<void>
-	public getDb(filename: string, parseContent?: boolean): Promise<Array<IUnknownObject>>
-	public saveResult(result: Array<IUnknownObject>, csvName?: "result"|null|string, schema?: string[]): Promise<void>
-	public checkArguments(args: Array<IUnknownObject>): Array<IUnknownObject>
+	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<void>
+	public getDb(filename: string, parseContent?: boolean): Promise<IUnknownObject[]>
+	public saveResult(result: IUnknownObject[], csvName?: "result"|null|string, schema?: string[]): Promise<void>
+	public checkArguments(args: IUnknownObject[]): IUnknownObject[]
 	public adjustUrl(url: string, domain: string): string
-	public checkDb(str: string, db: Array<IUnknownObject>, property: string): boolean
-	public filterRightOuter(left: Array<IUnknownObject>, right: Array<IUnknownObject>): Array<IUnknownObject>
+	public checkDb(str: string, db: IUnknownObject[], property: string): boolean
+	public filterRightOuter(left: IUnknownObject[], right: IUnknownObject[]): IUnknownObject[]
 	public notifyByMail(): Promise<void>
 }
 
