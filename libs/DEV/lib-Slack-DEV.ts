@@ -81,10 +81,7 @@ class Slack {
 			}
 			return null
 		}
-		const getSlackObject2 = (field: string): unknown | null => {
-			const slackDebug: IEvalAny = (window as IEvalAny).slackDebug
-			return slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)[field]
-		}
+
 		const channelsObject = await page.evaluate(getSlackObject, "channels") as ReturnType<typeof getSlackObject>
 		const membersObject = await page.evaluate(getSlackObject, "members") as ReturnType<typeof getSlackObject>
 		const channels: Array<{}> = []

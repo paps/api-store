@@ -70,10 +70,6 @@ class Slack {
             }
             return null;
         };
-        const getSlackObject2 = (field) => {
-            const slackDebug = window.slackDebug;
-            return slackDebug.storeInstance.getStateByTeamId(slackDebug.activeTeamId)[field];
-        };
         const channelsObject = await page.evaluate(getSlackObject, "channels");
         const membersObject = await page.evaluate(getSlackObject, "members");
         const channels = [];
