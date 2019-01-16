@@ -510,7 +510,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	 */
 	if (await tab.isPresent(UI_SELECTORS.trigger)) {
 		await tab.click(UI_SELECTORS.trigger)
-		await tab.waitUntilVisible([ UI_SELECTORS.overlay, UI_SELECTORS.modal ], 75000, "and")
+		await tab.waitUntilVisible([ UI_SELECTORS.overlay, UI_SELECTORS.modal ], 20000, "and")
 		infos.details = await tab.evaluate(getDetails)
 		await tab.click(UI_SELECTORS.overlay)
 	}

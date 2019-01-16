@@ -172,12 +172,12 @@ const scrapeLivingPage = (arg, cb) => {
 
 const scrapeContactInfoPage = (arg, cb) => {
 	const camelCaser = str => str.charAt(0).toLowerCase() + str.replace(/ /g,"").substr(1)
-	
+
 	const extractData = selector => {
 		return Array.from(document.querySelector(selector).querySelectorAll("li")).map(el => {
 			const data = {}
 			let property
-			if (el.querySelector("div span")) { 
+			if (el.querySelector("div span")) {
 				property = el.querySelector("div span").textContent
 				const value = el.querySelector("div:last-of-type")
 				if (value) {
@@ -219,7 +219,7 @@ const scrapeRelationshipPage = (arg, cb) => {
 
 	if (relationship[1]){
 		const familyMembers = Array.from(relationship[1].querySelectorAll("li")).map(el => {
-		
+
 			const data = {}
 			if (el.querySelector("div > div > div > div > div > div:last-of-type > div")) {
 				data.name = el.querySelector("div > div > div > div > div > div:last-of-type > div").textContent
@@ -237,12 +237,12 @@ const scrapeRelationshipPage = (arg, cb) => {
 	cb(null, scrapedData)
 }
 const scrapeBioPage = (arg, cb) => {
-	
+
 	const scrapedData = {}
-	if (document.querySelector("#pagelet_bio > div > ul")) { 
+	if (document.querySelector("#pagelet_bio > div > ul")) {
 		scrapedData.bio = document.querySelector("#pagelet_bio > div > ul").textContent
 	}
-	if (document.querySelector("#pagelet_quotes > div > ul")) { 
+	if (document.querySelector("#pagelet_quotes > div > ul")) {
 		scrapedData.quotes = document.querySelector("#pagelet_quotes > div > ul").textContent
 	}
 	cb(null, scrapedData)
@@ -375,7 +375,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 		utils.log("About Page still not visible", "error")
 		return null
 	}
-	const aboutList = [ 
+	const aboutList = [
 		{ selector: "#pagelet_eduwork", function: scrapeWorkPage, name: "Work and Education", click: "._Interaction__ProfileSectionEducation", boolean: "workAndEducation" },
 		{ selector: "#pagelet_hometown", function: scrapeLivingPage, name: "Places", click: "._Interaction__ProfileSectionPlaces", boolean: "placesLived" },
 		{ selector: "#pagelet_basic", function: scrapeContactInfoPage, name: "Contact and basic info", click: "._Interaction__ProfileSectionContactBasic", boolean: "contactAndBasicInfo" },
@@ -397,7 +397,7 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
-		if (pagesToScrape[pagelet.boolean]) {	
+		if (pagesToScrape[pagelet.boolean]) {
 			utils.log(`Opening ${pagelet.name} section of ${profileUrl}`, "done")
 			try {
 				if (pagelet.click) { await tab.click(pagelet.click) }
@@ -458,9 +458,9 @@ nick.newTab().then(async (tab) => {
 	if (profilesToScrape.length < 1) {
 		utils.log("Spreadsheet is empty or everyone from this sheet's already been processed.", "warning")
 		nick.exit()
-	}								
-	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape, null, 2)}`, "done")
-	
+	}
+	utils.log(`Profiles to scrape: ${JSON.stringify(profilesToScrape.slice(0, 100), null, 2)}`, "done")
+
 	let profileCount = 0
 	for (let profileUrl of profilesToScrape) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -492,7 +492,7 @@ nick.newTab().then(async (tab) => {
 			} catch (err) {
 				utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
 			}
-		} else {  
+		} else {
 			utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 		}
 		if (profileCount < profilesToScrape.length) { // waiting before each page

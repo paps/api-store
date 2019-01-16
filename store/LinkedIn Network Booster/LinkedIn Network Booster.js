@@ -189,7 +189,8 @@ const connectTo = async (selector, tab, message) => {
 			await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
 			utils.log(`Message sent: ${message}`, "done")
 		} catch (err) {
-			utils.log(`Error while sending message: ${err}`, "error")
+			const currentUrl = await tab.getUrl()
+			utils.log(`Error while sending message: ${err}, url:${currentUrl}`, "error")
 		}
 	}
 	await tab.click(".send-invite__actions > button:nth-child(2)")
