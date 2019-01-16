@@ -179,6 +179,20 @@ const scrapeCompanyInfo = (arg, callback) => {
 		result.mainCompanyID = linkedinId[0]
 		result.linkedinID = linkedinId.join(",")
 	}
+	// if we can't find the ID in the page we find it inside a <code> tag
+	if (!result.mainCompanyID) {
+		try {
+			let codeData = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("normalized_company:"))[0].textContent
+			codeData = codeData.slice(codeData.indexOf("normalized_company:") + 19)
+			codeData = codeData.slice(0, codeData.indexOf("\""))
+			if (codeData) {
+				result.mainCompanyID = codeData
+				result.linkedinID = codeData
+			}
+		} catch (err) {
+			//
+		}
+	}
 	// "View in Sales Navigator" link, only present for LI premium users
 	if (document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn")) { result.salesNavigatorLink = document.querySelector("div.org-top-card-actions > a.org-top-card-actions__sales-nav-btn").href }
 	// Use link text from "see all employees" to get number of employees on LI
