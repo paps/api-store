@@ -92,9 +92,14 @@ class Slack {
 	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string): Promise<IUnknownObject[]> {
 		const members: IUnknownObject[] = []
 
-		const getUsersId = (endpoint: string, channel: string) => {
+		const getUsersId = (endpoint: string, channel: string, cursor?: string|null) => {
+			const bundle = { channel, limit: 1000 } as IUnknownObject
+
+			if (cursor) {
+				bundle.cursor = cursor
+			}
 			const TS: IEvalAny = (window as IEvalAny).TS
-			return TS.interop.api.call(endpoint, { channel })
+			return TS.interop.api.call(endpoint, bundle)
 		}
 
 		const getUserProfile = (endpoint: string, id: string) => {
@@ -116,14 +121,31 @@ class Slack {
 			return res
 		}
 
-		const userIds = await page.evaluate(getUsersId, "conversations.members", channelId)
-		if (isUnknownObject(userIds) && isUnknownObject(userIds.data) && isUnknownObject(userIds.data.members)) {
-			const ids = userIds.data.members as string[]
-			for (const user of ids) {
-				const member = await page.evaluate(getUserProfile, "users.profile.get", user)
-				if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.profile)) {
-					members.push(formatUserInformation(member.data.profile))
+		const userIds = []
+		let _cursor = null
+		while (true) {
+			const rawRes = await page.evaluate(getUsersId, "conversations.members", channelId, _cursor)
+			if (isUnknownObject(rawRes) && isUnknownObject(rawRes.data)) {
+				if (Array.isArray(rawRes.data.members)) {
+					userIds.push(...rawRes.data.members)
+					this.utils.log(`${userIds.length} IDs found`, "loading")
 				}
+				if (!rawRes.data.response_metadata) {
+					break
+				} else {
+					const meta = rawRes.data.response_metadata as IUnknownObject
+					if (!meta.next_cursor) {
+						break
+					}
+					_cursor = meta.next_cursor
+				}
+			}
+		}
+		for (const user of userIds) {
+			const member = await page.evaluate(getUserProfile, "users.profile.get", user)
+			if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.profile)) {
+				members.push(formatUserInformation(member.data.profile))
+				this.utils.log(`${members.length} users scraped`, "loading")
 			}
 		}
 		return members
