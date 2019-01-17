@@ -8,7 +8,7 @@ import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 import Buster from "phantombuster"
 import Slack from "./lib-Slack-DEV"
-import { IUnknownObject } from "./lib-api-store-DEV"
+import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
 
 const buster = new Buster()
 const utils = new StoreUtilities(buster)
@@ -21,6 +21,7 @@ const DEFAULT_LAUNCH = 1
 ;
 (async () => {
 	const res = [] as IUnknownObject[]
+	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
 	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName } = args
 	let { numberOfLinesPerLaunch, csvName, queries } = args
@@ -35,10 +36,28 @@ const DEFAULT_LAUNCH = 1
 		numberOfLinesPerLaunch = DEFAULT_LAUNCH
 	}
 
+	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
+	db = await utils.getDb(csvName as string)
+
 	if (typeof spreadsheetUrl === "string") {
 		queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName as string) : [ spreadsheetUrl ]
 	}
-	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
+
+	if (typeof queries === "string") {
+		queries = [ queries ]
+	}
+
+	if (Array.isArray(queries)) {
+		queries = (queries.filter((el) => db.findIndex((line) => line.query === el && line.workspaceUrl === slackWorkspaceUrl) < 0).slice(0, DEFAULT_LAUNCH))
+		if (isUnknownObject(queries)) {
+			const len = queries.length as number
+			if (len < 1) {
+				utils.log("Input is empty OR every channels in the specified workspace are scraped", "warning")
+				process.exit()
+			}
+		}
+	}
+
 	const channels = await slack.getChannelsMeta(page)
 	for (const query of queries as string[]) {
 		const channel = channels.find((el) => el.name === query)
@@ -49,8 +68,12 @@ const DEFAULT_LAUNCH = 1
 			continue
 		}
 		utils.log(`Scraping to ${query} channel`, "loading")
-		const members = await slack.getChannelsUser(page, channel.id as string)
-		members.forEach((el) => el.channel = query)
+		const members = await slack.getChannelsUser(page, channel.id as string, true)
+		members.forEach((el) => {
+			el.query = query
+			el.channel = query
+			el.workspaceUrl = slackWorkspaceUrl
+		})
 		utils.log(`${members.length} users scraped in ${query} channel`, "done")
 		res.push(...members)
 	}

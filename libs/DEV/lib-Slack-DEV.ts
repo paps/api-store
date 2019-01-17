@@ -89,7 +89,7 @@ class Slack {
 		return channels
 	}
 
-	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string): Promise<IUnknownObject[]> {
+	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
 		const members: IUnknownObject[] = []
 
 		const getUsersId = (endpoint: string, channel: string, cursor?: string|null) => {
@@ -108,44 +108,74 @@ class Slack {
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { name: "", firstname: "", lastname: "", picture: "", nickname: "", title: "", phone: "", email: "", skype: "" }
-			res.name = user.real_name ? user.real_name as string : ""
-			res.lastname = user.last_name ? user.last_name as string : ""
-			res.firstname = user.first_name ? user.first_name as string : ""
-			res.nickname = user.display_name ? user.display_name as string : ""
-			res.title = user.title ? user.title as string : ""
-			res.phone = user.phone ? user.phone as string : ""
-			res.skype = user.skype ? user.skype as string : ""
-			res.email = user.email ? user.email as string : ""
-			res.picture = user.image_original ? user.image_original as string : ""
+			const res = { id: "", name: "", firstName: "", lastName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const profile = user.profile as IUnknownObject
+			res.id = profile && profile.id ? profile.id as string : ""
+			res.name = profile && profile.real_name ? profile.real_name as string : ""
+			res.lastName = profile && profile.last_name ? profile.last_name as string : ""
+			res.firstName = profile && profile.first_name ? profile.first_name as string : ""
+			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
+			res.title = profile && profile.title ? profile.title as string : ""
+			res.phone = profile && profile.phone ? profile.phone as string : ""
+			res.skype = profile && profile.skype ? profile.skype as string : ""
+			res.email = profile && profile.email ? profile.email as string : ""
+			res.pictureUrl = profile && profile.image_original ? profile.image_original as string : ""
+			res.timezone = user && user.tz ? user.tz as string : ""
+			res.lastUpdate = user && user.updated ? (new Date(user.updated as number * 1000)).toISOString() : ""
 			return res
 		}
 
 		const userIds = []
 		let _cursor = null
-		while (true) {
+		let interrupted = false
+		let continueXhr = true
+		while (continueXhr) {
+			const timeLeft = await this.utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				this.utils.log(timeLeft.message, "warning")
+				continueXhr = false
+				interrupted = true
+				break
+			}
 			const rawRes = await page.evaluate(getUsersId, "conversations.members", channelId, _cursor)
+			if (isUnknownObject(rawRes) && rawRes.ok === false) {
+				this.utils.log("Slack API call failed", "warning")
+				continueXhr = false
+				continue
+			}
 			if (isUnknownObject(rawRes) && isUnknownObject(rawRes.data)) {
 				if (Array.isArray(rawRes.data.members)) {
 					userIds.push(...rawRes.data.members)
-					this.utils.log(`${userIds.length} IDs found`, "loading")
+					if (verbose) {
+						this.utils.log(`${userIds.length} IDs found`, "loading")
+					}
 				}
 				if (!rawRes.data.response_metadata) {
-					break
+					continueXhr = false
 				} else {
 					const meta = rawRes.data.response_metadata as IUnknownObject
 					if (!meta.next_cursor) {
-						break
+						continueXhr = false
+					} else {
+						_cursor = meta.next_cursor
 					}
-					_cursor = meta.next_cursor
 				}
 			}
 		}
-		for (const user of userIds) {
-			const member = await page.evaluate(getUserProfile, "users.profile.get", user)
-			if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.profile)) {
-				members.push(formatUserInformation(member.data.profile))
-				this.utils.log(`${members.length} users scraped`, "loading")
+		if (!interrupted) {
+			for (const user of userIds) {
+				const timeLeft = await this.utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					this.utils.log(timeLeft.message, "warning")
+					break
+				}
+				const member = await page.evaluate(getUserProfile, "users.info", user)
+				if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.user)) {
+					members.push(formatUserInformation(member.data.user))
+					if (verbose) {
+						this.utils.log(`${members.length} users scraped`, "loading")
+					}
+				}
 			}
 		}
 		return members
