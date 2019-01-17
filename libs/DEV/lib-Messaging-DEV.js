@@ -5,7 +5,7 @@ class Messaging {
 
 	/**
 	* @param {String} message - message
-	* @return {Array<Strign>} all tags
+	* @return {Array<String>} all tags
 	*/
 	getMessageTags(message) {
 		const matches = message.match(/#[a-zA-Z0-9-_]+#/gm)
@@ -16,7 +16,7 @@ class Messaging {
 	 * @param {String} message - Message to inflate
 	 * @param {Object|null} tags - Object containing all necessary data to inflate the message
 	 * @param {Object|null} firstName - firstName of the person to message, to bypass the one from the spreadsheet it unavailable there
-	 * @return {Promise<String>} - inflated message
+	 * @return {String} - inflated message
 	 */
 	forgeMessage(message, tags, firstName) {
 		const matches = message.match(/#[a-zA-Z0-9-_]+#/gm)
