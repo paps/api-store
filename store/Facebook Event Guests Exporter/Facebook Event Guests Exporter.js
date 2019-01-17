@@ -15,6 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -225,7 +226,13 @@ const getEventFirstInfo = (arg, cb) => {
 
 // checks if the event is public (true) or private (false)
 const eventIsPublic = (arg, cb) => {
-	const link = document.querySelector("#event_guest_list a").href
+	let link = ""
+	if (document.querySelector("#event_guest_list a")) {
+		link = document.querySelector("#event_guest_list a").href
+	}
+	if (document.querySelector("#reaction_units a")) {
+		link = document.querySelector("#reaction_units a").href
+	}
 	cb(null, link.includes("public_guest_list"))
 }
 
@@ -312,14 +319,13 @@ const checkUnavailable = (arg, cb) => {
 				}
 
 				try {
-					await tab.waitUntilVisible("#event_guest_list")
+					const selector = await tab.waitUntilPresent(["#event_guest_list a", "#reaction_units a"], "or", 30000)
 					const firstInfo = await tab.evaluate(getEventFirstInfo)
 					if (firstInfo.date && firstInfo.name) {
 						utils.log(`${firstInfo.name} event of ${firstInfo.date}.`, "info")
 					}
 					const isPublic = await tab.evaluate(eventIsPublic)
-
-					await tab.click("#event_guest_list a")
+					await tab.click(selector)
 
 					const initDate = new Date()
 					do {
