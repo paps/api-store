@@ -66,8 +66,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	let peopleToRemove = 0
 	let inviteCount = 0
 
-	if (typeof peopleCountToKeep !== "number")
-	{
+	if (typeof peopleCountToKeep !== "number") {
 		utils.log("Using default value 1000 for number of connections requests to keep", "info")
 		peopleCountToKeep = 1000
 	}

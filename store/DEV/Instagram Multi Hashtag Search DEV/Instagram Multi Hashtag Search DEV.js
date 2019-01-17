@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js, lib-WebSearch.js"
 
 const url = require("url")
 const { URL } = require("url")
@@ -21,7 +21,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const WebSearch = require("./lib-WebSearch")
 
@@ -56,7 +56,7 @@ const filterResults = (results, terms, leastTerm) => {
 			for (const result of results) {
 				if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
 					result.matches = `${leastTerm} AND ${term}`
-					filterResult.push(result) 
+					filterResult.push(result)
 				}
 			}
 		}
@@ -90,7 +90,7 @@ const interceptGraphQLHash = e => {
 		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
 		hashWasFound = true
 	}
-	
+
 }
 
 const forgeAjaxURL = () => {
@@ -207,9 +207,9 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 }
 
 ;(async () => {
+	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
-	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	const webSearch = new WebSearch(tab, buster)
 	const scrapedData = []
 	if (!csvName) { csvName = "result" }
@@ -222,6 +222,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		}
 	}
 	if (!hasSpreadsheet) { csvData = [ search.join(", ") ] }
+
 	for (const line of csvData) {
 		utils.log(`Searching for ${line}`, "done")
 		let terms = line.split(",")
@@ -252,7 +253,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				}
 
 				try {
-					await tab.waitUntilVisible("main", 15000)
+					await tab.waitUntilVisible("main", 30000)
 				} catch (err) {
 					utils.log(`Page is not opened: ${err.message || err}`, "error")
 					removeTerm.push(term)
@@ -327,7 +328,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl }) 
 
 			try {
-				await tab.waitUntilVisible("main", 15000)
+				await tab.waitUntilVisible("main", 30000)
 			} catch (err) {
 				utils.log(`Page is not opened: ${err.message || err}`, "error")
 				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
@@ -340,8 +341,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			scrapedResult = await scrapeFirstPage(tab, term)
 			tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
 
-
-			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
+			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly
 			if (graphql && (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount))) {
 				try {
 					await scrapePosts(tab, scrapedResult, maxPosts, term)

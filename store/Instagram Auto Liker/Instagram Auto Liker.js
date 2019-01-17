@@ -171,7 +171,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	let result = await utils.getDb(csvName + ".csv")
 	if (spreadsheetUrl && spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(spreadsheetUrl)
-		if (urls) {	
+		if (urls) {
 			urls = [ urls ]
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
@@ -198,7 +198,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 				urls = oldUrls.slice(0, numberOfLinesPerLaunch)
 			}
 		}
-	}	
+	}
 	if (urls.length === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
 		nick.exit()
@@ -208,7 +208,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	await instagram.login(tab, sessionCookie)
 
 	let pageCount = 0
-	
+
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {

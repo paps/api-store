@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,38 +17,13 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-/* eslint-disable no-unused-vars */
-
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const { URL } = require("url")
 let rateLimited
-let graphqlUrl, headers
-let click = false
-/* global $ */
-
-
 // }
-
-const ajaxCall = (arg, cb) => {
-	try {
-		$.ajax({
-			url: arg.url,
-			type: "POST",
-			headers: arg.headers
-		})
-		.done(res => {
-			cb(null, res)
-		})
-		.fail(err => {
-			cb(err.toString())
-		})
-	} catch (err) {
-		cb(err)
-	}
-}
 
 const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -86,32 +60,6 @@ const isProfileOrPost = (url) => {
 	}
 }
 
-const interceptInstagramApiCalls = e => {
-	if (e.response.url.indexOf("graphql/query/?query_hash") > -1 && e.response.url.includes("child_comment_coun")) {
-		// if (e.response.status === 200) {
-			graphqlUrl = e.response.url
-			console.log("graphqlUrl", graphqlUrl)
-		// }
-	}
-	// if (click && false) {
-	// 	console.log("resp:", e.response.url)
-	// 	console.log("stat:", e.response.status)
-	// }
-
-}
-
-
-const onHttpRequest = (e) => {
-	if (!headers && e.request.url.indexOf("instagram.com/graphql/query/") > -1) {
-		headers = e.request.headers
-		console.log("headersset", headers)
-	}
-	// if (click) {
-	// 	console.log("head:", e.request.headers)
-
-	// }
-}
-
 const getPostUsername = (arg, cb) => {
 	let username
 	if (document.querySelector("header h2 a")) {
@@ -120,16 +68,7 @@ const getPostUsername = (arg, cb) => {
 	cb(null, username)
 }
 
-const getPostID = (arg, cb) => {
-	let InstID = document.querySelector("meta[property=\"al:ios:url\"]").getAttribute("content")
-	InstID = InstID.slice(InstID.indexOf("id=") + 3)
-	cb(null, InstID)
-}
-
 const likePost = async (tab, postUrl, query, action) => {
-	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
-	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	console.log("likePost")
 	await tab.open(postUrl)
 	const selector = await tab.waitUntilVisible([".coreSpriteHeartOpen", ".p-error"], "or")
 	if (selector === ".p-error") {
@@ -144,74 +83,27 @@ const likePost = async (tab, postUrl, query, action) => {
 	}
 	const postUsername = await tab.evaluate(getPostUsername)
 	const profileUrl = `https://www.instagram.com/${postUsername}`
-	// if (action === "Like" && await tab.isPresent(".glyphsSpriteHeart__filled__24__red_5")) {
-	// 	utils.log(`Post ${postUrl} ${postUsername ? `by ${postUsername}` : ""} is already liked.`, "info")
-	// 	return { query, postUrl, postUsername, error: "Aready liked" }
-	// }
-	console.log("actions:", action)
-	console.log("postUrl", postUrl)
-
-	// const postID = await tab.evaluate(getPostID)
-	// console.log("postID:", postID)
-	// const ajaxPOSTUrl = `https://www.instagram.com/web/likes/${postID}/like/`
-	// headers["x-instagram-ajax"] = "3243f72b04b2"
-	// headers["origin"] = "https://www.instagram.com"
-	// headers["content-type"] = "application/x-www-form-urlencoded"
-	// headers["x-csrftoken"] = "Ws2JXnJRFDqH8a3V9tQHIbt9Vay9WRVW"
-	
-
-	// await tab.inject("../injectables/jquery-3.0.0.min.js")
-	// try {
-	// 	const interceptedData = await tab.evaluate(ajaxCall, { url:ajaxPOSTUrl, headers })
-	// 	console.log("interceptedData", interceptedData)
-	// } catch (err) {
-	// 	console.log("errici", err)
-	// }
 	if (await tab.isPresent(selectorAfter)) {
-		console.log("already")
 		return { query, postUrl, postUsername, error: `Aready ${action === "Unlike" ? "un" : ""}liked` }
 	}
-	await tab.wait(2000)
-	// click = true
-	// await tab.wait(2000)
-	await tab.evaluate((arg, cb) => cb(null, document.querySelector(".coreSpriteHeartOpen").click()))
-	
-	// console.log("clickAJAX", clickAJAX)
-	// await tab.click(".coreSpriteHeartOpen")
-	// await tab.wait(1000)
-	
-	// utils.log(`Post ${postUrl} is unliked.`, "info")
-
+	await tab.click(".coreSpriteHeartOpen")
 	try {
+		await tab.wait(7000)
 		await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 		await tab.waitUntilVisible(".coreSpriteHeartOpen")
-		await tab.screenshot(`${Date.now()}checkcoeur.png`)
-		if (await tab.isPresent(selectorAfter)) {
-			utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
-			return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
-		} else if (action === "Like") {
-			console.log("didn't happen, let's wait again")
-			await tab.wait(10000)
-			await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-			await tab.waitUntilVisible(".coreSpriteHeartOpen")
-			if (await tab.isPresent(selectorAfter)) {
-				utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
-				return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
-			} else {
-				await tab.screenshot(`${Date.now()}rate limited.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}rate limited.html`)
-				utils.log(`Couldn't like post ${postUrl}: rate limited by Instagram.`, "warning")
-				rateLimited = true
-				return {}
-			}
-		} else {
-			utils.log(`Couldn't unlike post ${postUrl}`, "warning")
-			return {}
-		}
+		// if (await tab.isPresent(selectorAfter)) {
+		utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
+		return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
+		// } else if (action === "Like") {
+		// 	utils.log(`Couldn't like post ${postUrl}: rate limited by Instagram.`, "warning")
+		// 	rateLimited = true
+		// 	return {}
+		// } else {
+		// 	utils.log(`Couldn't unlike post ${postUrl}`, "warning")
+		// 	return {}
+		// }
 	} catch (err) {
-		console.log("eee", err)
-		await tab.screenshot(`${Date.now()}eee.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}eee.html`)
+		utils.log(`Error checking like status: ${err}`, "warning")
 		return null
 	}
 }
@@ -225,8 +117,6 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 		return { query: pageUrl, error: "Broken link or page has been removed" }
 	}
 	const profileUrl = await tab.getUrl()
-	// await tab.screenshot(`${Date.now()}openProfile.png`)
-	// await buster.saveText(await tab.getContent(), `${Date.now()}openProfile.html`)
 	const jsonUrl = `${profileUrl}?__a=1`
 	await tab.open(jsonUrl)
 	let instagramJsonCode = await tab.getContent()
@@ -238,7 +128,6 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 		return { query: pageUrl, error: "Private profile" }
 	}
 	let posts = userData.edge_owner_to_timeline_media.edges
-	console.log("postsL", posts.length)
 	posts = posts.slice(0, numberOfPostsPerProfile)
 	const result = []
 	for (const post of posts) {
@@ -249,12 +138,12 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 				result.push(tempResult)
 			}
 		} catch (err) {
-			console.log("er:r:", err)
+			//
 		}
 		await tab.wait(2500 + Math.random() * 2000)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			utils.log(`Process stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 	}
@@ -266,69 +155,64 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	likeResults.newLikeCount = postsLiked.length
 	if (rateLimited && likeResults.newLikeCount !== 0) {
 		rateLimited = false
-		console.log("false rate limited")
 	}
 	if (likeResults.newLikeCount === 0 && !rateLimited) {
 		utils.log(`No new post of ${userData.username} to like.`, "info")
 	}
 	likeResults.username = userData.username
-	console.log("result:", result)
-	console.log("likeResults:", likeResults)
 	return likeResults
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberOfPostsPerProfile, action, csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, profileUrls, columnName, numberOfLinesPerLaunch, numberOfPostsPerProfile, action, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let urls
+	let urls = profileUrls
 	let result = await utils.getDb(csvName + ".csv")
-	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
+	if (spreadsheetUrl && spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		urls = cleanInstagramUrl(spreadsheetUrl)
-		if (urls) {	
+		if (urls) {
 			urls = [ urls ]
 		} else {
 			utils.log("The given url is not a valid instagram profile url.", "error")
 		}
-	} else { // CSV
-		urls = await utils.getDataFromCsv(spreadsheetUrl, columnName)
-		urls = urls.filter(str => str) // removing empty lines
-		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
-			urls[i] = cleanInstagramUrl(urls[i])
+	} else {
+		if (spreadsheetUrl) { // CSV
+			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		} else if (typeof profileUrls === "string") {
+			urls = [profileUrls]
 		}
-		if (!numberOfLinesPerLaunch) {
-			numberOfLinesPerLaunch = urls.length
-		}
-		console.log("UU", urls)
-		const oldUrls = urls
-		const savedUrls = urls.filter(el => utils.checkDb(el, result, "query"))
-		console.log("savedUrls:", savedUrls)
-		urls = savedUrls.splice(0, numberOfLinesPerLaunch)
-		console.log("urls:", urls)
-		console.log("savedUrls:", savedUrls)
-		// urls = getUrlsToScrape(savedUrls, numberOfLinesPerLaunch)
-		if (urls.length === 0) {
-			utils.log(`All ${oldUrls.length} lines have been processed. Restarting from line 1.`, "info")
-			result = []
-			urls = oldUrls.slice(0, numberOfLinesPerLaunch)
-		}
-		if (urls.length === 0) {
-			utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-			nick.exit()
+		if (urls.length) {
+			urls = urls.filter(str => str) // removing empty lines
+			for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
+				urls[i] = cleanInstagramUrl(urls[i])
+			}
+			if (!numberOfLinesPerLaunch) {
+				numberOfLinesPerLaunch = urls.length
+			}
+			const oldUrls = urls
+			urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfLinesPerLaunch)
+			if (urls.length === 0) {
+				utils.log(`All ${oldUrls.length} lines have been processed. Restarting from line 1.`, "info")
+				result = []
+				urls = oldUrls.slice(0, numberOfLinesPerLaunch)
+			}
 		}
 	}
-	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
-
+	if (urls.length === 0) {
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		nick.exit()
+	}
+	console.log(`URLs to process: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
-
 	await instagram.login(tab, sessionCookie)
 
 	let pageCount = 0
-	
+
 	for (let url of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			utils.log(`Process stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 		try {
@@ -348,13 +232,11 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 			continue
 		}
 		if (rateLimited) {
-			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (15min+).", "warning")
+			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (30min+).", "warning")
 			break
 		}
 		await tab.wait(2500 + Math.random() * 2000)
 	}
-	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
-	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()

@@ -56,7 +56,7 @@ const filterResults = (results, terms, leastTerm) => {
 			for (const result of results) {
 				if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
 					result.matches = `${leastTerm} AND ${term}`
-					filterResult.push(result) 
+					filterResult.push(result)
 				}
 			}
 		}
@@ -90,7 +90,7 @@ const interceptGraphQLHash = e => {
 		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
 		hashWasFound = true
 	}
-	
+
 }
 
 const forgeAjaxURL = () => {
@@ -341,8 +341,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			scrapedResult = await scrapeFirstPage(tab, term)
 			tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
 
-
-			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly 
+			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly
 			if (graphql && (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount))) {
 				try {
 					await scrapePosts(tab, scrapedResult, maxPosts, term)

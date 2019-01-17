@@ -86,7 +86,7 @@ class Facebook {
 		const gender = await tab.evaluate(guessFunction)
 		return gender
 	}
-	
+
 	// Scrape main information about the visited profile
 	async scrapeAboutPage(tab, arg){
 		const scrapePage = (arg, cb) => {
@@ -142,7 +142,7 @@ class Facebook {
 			if (document.querySelector(".FriendRequestAdd")) {
 				scrapedData.status = document.querySelector(".FriendRequestAdd").classList.contains("hidden_elem") ? "Friend" : "Not friend"
 			}
-		
+
 			try {
 				if (!arg.pagesToScrape || !arg.pagesToScrape.workAndEducation) { // only scraping if we're not also scraping Work and Education page
 					const workAndEducationDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div"))
@@ -175,7 +175,7 @@ class Facebook {
 			} catch (err) {
 				//
 			}
-		
+
 			if (!arg.pagesToScrape || !arg.pagesToScrape.placesLived) {
 				const citiesDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "places")[0]
 				if (citiesDiv) {
@@ -190,7 +190,7 @@ class Facebook {
 					if (cities) { scrapedData.cities = [ cities ] }
 				}
 			}
-			
+
 			if (!arg.pagesToScrape || !arg.pagesToScrape.familyAndRelationships) {
 				const relationshipDiv = Array.from(document.querySelector("#pagelet_timeline_medley_about > div:last-of-type > div > ul > li > div > div:last-of-type ul").querySelectorAll("li > div")).filter(el => el.getAttribute("data-overviewsection") === "all_relationships")[0]
 				if (relationshipDiv) {
@@ -251,12 +251,12 @@ class Facebook {
 		}
 
 		const scrapedData = await tab.evaluate(scrapePage, arg)
-		
+
 		if (scrapedData.birthday) {
 			const moment = require("moment")
 			moment.locale(scrapedData.language)
 			const age = moment().diff(moment(scrapedData.birthday, "LL"), "years")
-			 if (age) { // if year isn't displayed, age = 0 
+			 if (age) { // if year isn't displayed, age = 0
 				 scrapedData.age = age
 				 scrapedData.birthYear = moment(scrapedData.birthday, "LL").year()
 				 scrapedData.birthday = moment(scrapedData.birthday, "LL").format()
@@ -271,7 +271,7 @@ class Facebook {
 
 		return scrapedData
 	}
-	
+
 	// replace #fbFirstName#, #fbName", #fbLastName" by the real values
 	replaceTags(message, name, firstName) {
 		const lastName = name.replace(firstName,"").trim()
@@ -301,7 +301,7 @@ class Facebook {
 		return { firstName, lastName }
 	}
 
-	// check if we're locked by facebook 
+	// check if we're locked by facebook
 	checkLock(tab) {
 		return tab.evaluate((arg, cb) => {
 			if (document.querySelector(".UIPage_LoggedOut #checkpointBottomBar") || document.querySelector("#globalContainer form.checkpoint")) {

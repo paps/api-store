@@ -282,7 +282,7 @@ const checkUnavailable = (arg, cb) => {
 	if (eventsToScrape.length === 0) {
 		if (lastUrl) {
 			utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
-			eventsToScrape = [lastUrl]  // if every event's already been scraped, we're scraping the last one
+			eventsToScrape = [lastUrl] // if every event's already been scraped, we're scraping the last one
 		} else {
 			utils.log("Input spreadsheet is empty.", "error")
 			nick.exit(1)

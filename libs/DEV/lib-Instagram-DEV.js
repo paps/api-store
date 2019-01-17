@@ -250,16 +250,14 @@ class Instagram {
 			if (baseSelector[1].querySelector(arg.selectors.likeSelector)) {
 				// we only need digits from the scraped text
 				data.likes = parseInt(baseSelector[1].querySelector(arg.selectors.likeSelector).textContent.trim().replace(/\D+/g, "").replace(/\s/g, ""), 10)
+			} else if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
+				data.likes =
+					Array
+						.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
+						.filter(el => el.href !== `${document.location.href}#`)
+						.length
 			} else {
-				if (baseSelector[1].querySelector(arg.selectors.alternativeLikeSelector)) {
-					data.likes =
-						Array
-							.from(baseSelector[1].querySelectorAll(arg.selectors.alternativeLikeSelector))
-							.filter(el => el.href !== `${document.location.href}#`)
-							.length
-				} else {
-					data.likes = 0
-				}
+				data.likes = 0
 			}
 
 			data.profileUrl = document.querySelector(arg.selectors.profileSelector).href || ""
@@ -308,7 +306,7 @@ class Instagram {
 		scrapedData.postUrl = await tab.getUrl()
 		return scrapedData
 	}
-	
+
 	/**
 	 * @description
 	 * @param {*} tab - Nickjs Tab with a Instagram post opened

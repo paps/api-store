@@ -70,7 +70,7 @@ const _scrapeResults = (argv, cb) => {
  * @param {String} search - The query to use the web engine
  * @return {Promise<Array>}
  */
-const _doSearch = async function (query) {
+const _doSearch = async function(query) {
 	let result = Object.assign({}, emptyResult)
 	const engine = this.engines[this.engineUsed]
 	const [httpCode] = await this.tab.open(engine.baseUrl + encodeURIComponent(query).replace(/[!'()*]/g, escape))
@@ -107,7 +107,7 @@ const _doSearch = async function (query) {
  * @description Function used to choose which engine will be used for a next research
  * @return {Number}
  */
-const _switchEngine = function () {
+const _switchEngine = function() {
 	if (typeof this.lockEngine === "string") {
 		this.verbose && console.log("-- _switchEngine(): using test parameter")
 		const engine = this.engines.findIndex(el => el.name === this.lockEngine)
@@ -216,7 +216,7 @@ class WebSearch {
 				this.engineUsed = _switchEngine.call(this)
 				// slow down a little
 				const waitTime = this.enginesDown.length * (1500 + (Math.random() * 500))
-				await this.tab.wait(waitTime)			
+				await this.tab.wait(waitTime)
 			}
 		}
 		results.codename = codenameList

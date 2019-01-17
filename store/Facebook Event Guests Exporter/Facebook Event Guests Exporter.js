@@ -48,7 +48,7 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
-// Removes any duplicate profile 
+// Removes any duplicate profile
 const removeDuplicates = (arr) => {
 	let resultArray = []
 	for (let i = 0; i < arr.length ; i++) {
@@ -97,7 +97,7 @@ const getJsonResponse = async (tab, url) => {
 
 
 const extractGuestsFromArray = (array, eventUrl, eventName, eventStatus) => {
-	const result = [] 
+	const result = []
 	for (const item of array) {
 		const guest = { eventUrl, eventName, eventStatus }
 		guest.facebookID = item.uniqueID
@@ -137,7 +137,7 @@ const loadGuests = async (tab, url, cursor, eventUrl, eventName, eventStatus) =>
 	} else {
 		urlObject.searchParams.set("cursor[watched]", cursor)
 	}
-	
+
 	if (eventStatus !== "Going") {
 		// urlObject.searchParams.delete("tabs[1]")
 		urlObject = deleteParams(urlObject, "going")
@@ -149,7 +149,7 @@ const loadGuests = async (tab, url, cursor, eventUrl, eventName, eventStatus) =>
 		// urlObject.searchParams.delete("tabs[2]")
 		urlObject = deleteParams(urlObject, "invited")
 		urlObject.searchParams.delete("bucket_schema[invited]")
-		urlObject.searchParams.delete("order[invited]")	
+		urlObject.searchParams.delete("order[invited]")
 	} else {
 		urlObject.searchParams.set("cursor[invited]", cursor)
 	}
@@ -206,11 +206,11 @@ const extractGuests = async (tab, url, eventUrl, eventName, isPublic) => {
 							break
 						}
 					} while (nextCursor)
-				}	
+				}
 			} catch (err) {
 				utils.log(`Error getting the full list of attendees: ${err}`, "error")
-			}	
-		}	
+			}
+		}
 	}
 	return results
 }
@@ -247,7 +247,7 @@ const checkUnavailable = (arg, cb) => {
 			interceptedUrl = e.response.url
 		}
 	}
-	
+
 	const onHttpRequest = (e) => {
 		if (e.request.url.indexOf("?gid=") > -1) {
 			interceptedHeaders = e.request.headers
@@ -262,7 +262,7 @@ const checkUnavailable = (arg, cb) => {
 	const initialResultLength = result.length
 	if (isFacebookEventUrl(inputUrl)) {
 		eventsToScrape = utils.adjustUrl(inputUrl, "facebook")
-		if (eventsToScrape) {	
+		if (eventsToScrape) {
 			eventsToScrape = [ eventsToScrape ]
 		} else {
 			utils.log("The given url is not a valid facebook profile url.", "error")
@@ -282,7 +282,7 @@ const checkUnavailable = (arg, cb) => {
 	if (eventsToScrape.length === 0) {
 		if (lastUrl) {
 			utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
-			eventsToScrape = [lastUrl]  // if every event's already been scraped, we're scraping the last one
+			eventsToScrape = [lastUrl] // if every event's already been scraped, we're scraping the last one
 		} else {
 			utils.log("Input spreadsheet is empty.", "error")
 			nick.exit(1)
@@ -320,13 +320,13 @@ const checkUnavailable = (arg, cb) => {
 					const isPublic = await tab.evaluate(eventIsPublic)
 
 					await tab.click("#event_guest_list a")
-					
+
 					const initDate = new Date()
 					do {
 						if (new Date() - initDate > 10000) {
 							utils.log("Took too long!", "error")
 							break
-						}	
+						}
 						await tab.wait(1000)
 					} while (!interceptedUrl)
 					const extractedGuests = await extractGuests(tab, interceptedUrl, eventUrl, firstInfo.name, isPublic)
@@ -339,7 +339,7 @@ const checkUnavailable = (arg, cb) => {
 					} else {
 						utils.log(`Error accessing page!: ${err}`, "error")
 					}
-				}			
+				}
 			} catch (err) {
 				utils.log(`Can't scrape event at ${eventUrl} due to: ${err.message || err}`, "warning")
 				continue
@@ -355,7 +355,7 @@ const checkUnavailable = (arg, cb) => {
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	
+
 	result = removeDuplicates(result)
 	if (initialResultLength && result.length > initialResultLength) {
 		utils.log(`Got ${result.length - initialResultLength} new profiles, ${result.length} in total.`, "done")

@@ -50,7 +50,7 @@ if (typeof(phantom) !== "undefined") {
 			let contentSet = true
 			let parse = false
 			xhr.onreadystatechange = () => {
-				if(xhr.readyState === xhr.HEADERS_RECEIVED) {
+				if (xhr.readyState === xhr.HEADERS_RECEIVED) {
 					const contentType = xhr.getResponseHeader("Content-Type")
 					if (contentType.indexOf("application/javascript") >= 0 || contentType.indexOf("application/json") >= 0) {
 						parse = true
@@ -65,8 +65,7 @@ if (typeof(phantom) !== "undefined") {
 							resolve(xhr.response)
 							return callback(null, xhr.response)
 						}
-					}
-					else {
+					} else {
 						reject(`${xhr.statusText} : got HTTP ${xhr.status} with response: ${xhr.response}`)
 						return callback(`${xhr.statusText} : got HTTP ${xhr.status} with response: ${xhr.response}`)
 					}
