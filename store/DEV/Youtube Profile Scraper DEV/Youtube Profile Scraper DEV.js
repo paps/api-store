@@ -25,9 +25,10 @@ const youtube = new Youtube(nick, buster, utils)
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
+	/* eslint-disable no-unused-vars */
 	let { sessionCookieHSID, sessionCookieSID, sessionCookieSSID, profileUrls, spreadsheetUrl, columnName, pagesToScrape, profilesPerLaunch, csvName } = utils.validateArguments()
 	await youtube.login(tab, sessionCookieHSID, sessionCookieSID, sessionCookieSSID)
-	
+
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

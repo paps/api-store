@@ -101,6 +101,7 @@ const loadAndScrapeChannel = async (tab, channelUrl) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
+	/* eslint-disable no-unused-vars */
 	let { sessionCookieHSID, sessionCookieSID, sessionCookieSSID, channelUrls, spreadsheetUrl, columnName, channelsPerLaunch, csvName } = utils.validateArguments()
 	// await youtube.login(tab, sessionCookieHSID, sessionCookieSID, sessionCookieSSID)
 	if (!csvName) { csvName = "result" }
@@ -125,7 +126,7 @@ nick.newTab().then(async (tab) => {
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
-	
+
 	for (const channelUrl of channelUrls) {
 		result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
 		const timeLeft = await utils.checkTimeLeft()
