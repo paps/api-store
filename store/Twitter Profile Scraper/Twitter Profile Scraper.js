@@ -75,7 +75,7 @@ const isTwitterProfile = url => {
 		nick.exit()
 	}
 
-	utils.log(`Profiles to scrape: ${JSON.stringify(profileUrls, null, 2)}`, "info")
+	utils.log(`Profiles to scrape: ${JSON.stringify(profileUrls.slice(0, 100), null, 2)}`, "info")
 	await twitter.login(tab, sessionCookie)
 
 	for (const profile of profileUrls) {
