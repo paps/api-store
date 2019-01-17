@@ -54,8 +54,7 @@ class Hubspot {
 			.then(response => {
 				if (response.status === "error") {
 					reject(response.message)
-				}
-				else if (response.lists) {
+				} else if (response.lists) {
 					resolve(response)
 				} else {
 					reject(`Could not find any lists: ${response}`)

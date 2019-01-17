@@ -80,7 +80,7 @@ const getVideoCount = (arg, cb) => {
 	cb(null, document.querySelectorAll("#contents > ytd-grid-renderer > #items > ytd-grid-video-renderer").length)
 }
 
-const scrollLast = (arg, cb) =>  {
+const scrollLast = (arg, cb) => {
 	const videosList = document.querySelectorAll("#contents > ytd-grid-renderer > #items > ytd-grid-video-renderer")
 	const videoCount = videosList.length
 	cb(null, videosList[videoCount - 1].scrollIntoView())

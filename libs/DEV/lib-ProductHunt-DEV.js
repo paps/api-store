@@ -24,8 +24,7 @@ class ProductHunt {
                 if ((typeof (sessionCookie) !== "string") || (sessionCookie.length <= 0)) {
                     throw new Error(`Could not find a non empty string at path ${path}`);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error");
                 process.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE);
             }
@@ -37,8 +36,7 @@ class ProductHunt {
             // console.log("open1")
             try {
                 await page.goto("https://www.producthunt.com/", { timeout: 30000, waitUntil: "load" });
-            }
-            catch (err) {
+            } catch (err) {
                 // await tab.screenshot(`timeout${new Date()}.png`)
                 // await this.buster.saveText(await tab.getContent(), `timeout${Date.now()}.html`)
                 // console.log("open2", err)
@@ -52,8 +50,7 @@ class ProductHunt {
             try {
                 sel = await Promise.race([page.waitForSelector(SELECTORS.LOGGED), page.waitForSelector(SELECTORS.UNLOGGED)]);
                 // console.log("open3")
-            }
-            catch (e) {
+            } catch (e) {
                 // console.log("open4", e)
                 return e.toString();
             }
@@ -105,8 +102,7 @@ class ProductHunt {
                 console.log("loginResult", loginResult);
                 throw loginResult;
             }
-        }
-        catch (error) {
+        } catch (error) {
             this.utils.log("Can't connect to ProductHunt with these session cookies.", "error");
             await page.screenshot({ path: `${Date.now()}err-login-.jpg`, type: "jpeg", quality: 50 });
             process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_BAD_COOKIE);
