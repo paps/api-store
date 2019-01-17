@@ -313,6 +313,10 @@ class Facebook {
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
+		if (this.nick._options.httpProxy.startsWith("http://undefined")) {
+			this.utils.log("Public proxy used, please enter a username for it to work.", "info")
+			process.exit()
+		}
 		if ((typeof(cookieCUser) !== "string") || (cookieCUser.trim().length <= 0) || (typeof(cookieXs) !== "string") || (cookieXs.trim().length <= 0)) {
 			this.utils.log("Invalid Facebook session cookie. Did you specify one?", "error")
 			this.nick.exit(117)
