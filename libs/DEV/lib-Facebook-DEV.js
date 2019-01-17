@@ -314,7 +314,7 @@ class Facebook {
 
 	// url is optional (will open Facebook feed by default)
 	async login(tab, cookieCUser, cookieXs, url) {
-		if (this.nick._options.httpProxy.startsWith("http://undefined")) {
+		if (this.nick._options.httpProxy && this.nick._options.httpProxy.startsWith("http://undefined")) {
 			this.utils.log("Public proxy used, please enter a username for it to work.", "info")
 			process.exit()
 		}
