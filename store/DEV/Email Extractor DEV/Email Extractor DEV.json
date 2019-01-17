@@ -33,7 +33,7 @@
 					"pagesPerLaunch": {
 						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
-						"helper": "If the field is empty, the API will scrape only 2 pages"
+						"helper": "If the field is empty, the API will process 2 URLs from your CSV"
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
