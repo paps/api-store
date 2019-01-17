@@ -44,7 +44,7 @@ const getNameFromChat = (arg, cb) => {
 		cb(null, Array.from(document.querySelectorAll(".uiScrollableAreaContent"))[3].querySelector("div + div > div a").textContent)
 	} else {
 		cb(null, null)
-	}	
+	}
 }
 
 const openChatPage = async (tab, profileUrl) => {
@@ -183,7 +183,7 @@ nick.newTab().then(async (tab) => {
 							await sendMessage(tab, forgedMessage)
 							await tab.wait(4000)
 							const isBanned = await tab.evaluate(checkIfBanned)
-							const isBlocked = await tab.evaluate(checkIfBlocked)							
+							const isBlocked = await tab.evaluate(checkIfBlocked)
 							if (!isBanned && !isBlocked) {
 								tempResult.message = forgedMessage
 							} else {
@@ -221,11 +221,11 @@ nick.newTab().then(async (tab) => {
 						utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
 					}
 				}
-			} else {  
+			} else {
 				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 			}
 		}
-	
+
 	}
 	const messageCount = result.filter(el => el.message).length
 	utils.log(`${messageCount} message${messageCount > 1 ? "s" : ""} sent in total.`, "done")

@@ -318,7 +318,7 @@ const isUrl = target => url.parse(target).hostname !== null
 	if (results.length !== initialResultLength) {
 		await utils.saveResults(results, results, csvName)
 		if (agentObject) {
-			if (!allCollected)  {
+			if (!allCollected) {
 				agentObject.nextUrl = nextUrl
 				agentObject.lastQuery = lastHashtag
 			} else {
