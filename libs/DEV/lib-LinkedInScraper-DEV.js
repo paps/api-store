@@ -472,25 +472,25 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 			let slug = infos.general.profileUrl.slice(28)
 			slug = slug.slice(0, slug.indexOf("/"))
 			try {
-				if (saveImg) {
+				if (saveImg && infos.general.imgUrl) {
 					infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
 				}
 			} catch (err) {
-				//
+				utils.log(`Error while saving profile picture: ${err}`, "error")
 			}
 			try {
 				if (takeScreenshot) {
 					infos.general.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
 				}
 			} catch (err) {
-				//
+				utils.log(`Error while saving screenshot: ${err}`, "error")
 			}
 			try {
 				if (takePartialScreenshot) {
 					infos.general.partialScreenshot = await buster.save((await tab.screenshot(`partial_screenshot_${slug}.jpeg`, { fullPage: false })))
 				}
 			} catch (err) {
-				//
+				utils.log(`Error while saving partial screenshot: ${err}`, "error")
 			}
 		}
 	} catch (err) {
