@@ -464,7 +464,7 @@ class Facebook {
 
 	async saveCookie() {
 		try {
-			const cookie = (await this.nick.getAllCookies()).filter((c) => ((c.name === "c_user" || c.name === "xs" ) && c.domain === "www.facebook.com"))
+			const cookie = (await this.nick.getAllCookies()).filter((c) => ((c.name === "c_user" || c.name === "xs") && c.domain === "www.facebook.com"))
 			if (cookie.length === 2) {
 				await this.buster.setAgentObject({
 					".sessionCookieCUser": cookie[0].value,
