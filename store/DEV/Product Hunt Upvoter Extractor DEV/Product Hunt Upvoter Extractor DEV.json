@@ -9,7 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://github.com/julesmaregiano"
+		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -27,6 +27,11 @@
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+					},
+					"numberOfProfilesPerProduct": {
+						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "All of them if empty",
+						"inputType": "number"
 					},
 					"columnName": {
 						"label": "Column name where Product Hunt profiles URLs are stored in the spreadhsheet",
@@ -52,6 +57,10 @@
 		"properties": {
 			"spreadsheetUrl": {
 				"type": "string"
+			},
+			"numberOfProfilesPerProduct": {
+				"type": "number",
+				"minimum": 1
 			},
 			"columnName": {
 				"type": "string"
