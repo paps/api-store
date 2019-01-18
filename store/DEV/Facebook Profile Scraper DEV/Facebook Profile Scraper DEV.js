@@ -286,11 +286,29 @@ const scrapeAboutPageFromPage = (arg, cb) => {
 	if (document.querySelector("a[href*=mailto]")) {
 		scrapedData.pageEmail = document.querySelector("a[href*=mailto]").textContent
 	}
-	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me") && !el.href.includes("share.here.com/r/mylocation"))[0]	
+	const website = Array.from(document.querySelectorAll("a[rel=\"noopener nofollow\"]")).filter(el => !el.textContent.startsWith("m.me") && !el.href.includes("share.here.com%2Fr%2Fmylocation"))[0]
 	if (website) {
 		scrapedData.pageWebsite = website.textContent
 	}
-
+	try {
+		const shareLocationSelector = document.querySelector("a[href*=\"share.here.com%2Fr%2Fmylocation\"]")
+		const shareLocationSelectorParent = shareLocationSelector.parentElement
+		shareLocationSelectorParent.removeChild(shareLocationSelector)
+		const address = shareLocationSelectorParent.parentElement.innerText.trim()
+		if (address) {
+			scrapedData.pageAddress = address
+		}
+	} catch (err) {
+		//
+	}
+	try {
+		const openHours = document.querySelector("img[alt=\"clock\"]").parentElement.parentElement.innerText.trim()
+		if (openHours) {
+			scrapedData.openHours = openHours
+		}
+	} catch (err) {
+		//
+	}
 	cb(null, scrapedData)
 }
 
@@ -363,9 +381,13 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	if (await tab.isVisible("div[data-key=\"tab_ads\"]")) { // if Page
 		try {
 			let result = await tab.evaluate(scrapeAboutPageFromPage, { profileUrl })
+			await tab.screenshot(`${Date.now()}pageavant.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}pageavant.html`)
 			await tab.click("div[data-key=\"tab_home\"] a")
 			await tab.waitUntilVisible("#pages_side_column")
 			result = Object.assign(result, await tab.evaluate(scrapeMainPageData, { profileUrl }))
+			await tab.screenshot(`${Date.now()}page.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}page.html`)
 			return result
 		} catch (err) {
 			return { profileUrl, error: "Error scraping that Page"}
@@ -490,7 +512,7 @@ nick.newTab().then(async (tab) => {
 					}
 				}
 				if (blocked) {
-					utils.log("Temporarily blocked by Facebook!", "error")
+					utils.log("Temporarily blocked by Facebook! (too many profiles viewing in a short, please wait for a while)", "error")
 					break
 				}
 			} catch (err) {

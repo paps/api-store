@@ -477,6 +477,18 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 				}
 			} catch (err) {
 				utils.log(`Error while saving profile picture: ${err}`, "error")
+				await tab.wait(1000)
+				try {
+					infos.general.savedImg2 = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+				} catch (err) {
+					utils.log(`Error while saving profile picture again: ${err}`, "error")
+				await tab.wait(1000)
+					try {
+						infos.general.savedImg3 = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+					} catch (err) {
+						utils.log(`Error while saving profile picture again2: ${err}`, "error")
+					}
+				}
 			}
 			try {
 				if (takeScreenshot) {

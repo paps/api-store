@@ -1,0 +1,98 @@
+{
+	"slug": "github-profile-scraper",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35CDBF",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://github.com/julesmaregiano"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+					},
+					"columnName": {
+						"label": "Column name where Product Hunt profiles URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Github"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
