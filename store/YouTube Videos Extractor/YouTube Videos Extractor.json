@@ -1,23 +1,22 @@
 {
-    "slug": "youtube-channel-scraper",
-    "description": "Collect valuable information you need from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
+    "slug": "youtube-videos-extractor",
+    "description": "Extract every videos from a list of Youtube channels",
+    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Videos+Extractor/Youtube+Videos+Extractor.png",
     "gradientBegin": "#E42C27",
     "gradientEnd": "#FFD80B",
-    "argumentDescription": "Extract every information from a list of Youtube Channels",
+    "argumentDescription": "",
     "hidden": false,
     "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
-        "sessionCookieHSID": "your_HSID_session_cookie",
-        "sessionCookieSID": "your_SID_session_cookie",
-        "sessionCookieSSID": "your_SSID_session_cookie",
-        "channelsPerLaunch": 10
+        "videosPerChannel": 100,
+        "channelsPerLaunch": 10,
+        "sortBy": "Newest"
     },
     "outputDescription": {
 		"channelTitle": "",
         "subscriberCount": "",
-        "viewCount": "",        
+        "viewCount": "",
 		"description": "",
 		"joinedDate": "",
 		"country": ""
@@ -28,22 +27,15 @@
         "alpaca": {
             "options": {
                 "fields": {
-                    "sessionCookieHSID": {
-                        "label": "Session cookie HSID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your HSID session cookie here"
-                    },
-                    "sessionCookieSID": {
-                        "label": "Session cookie SID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your SID session cookie here"
-                    },
-                    "sessionCookieSSID": {
-                        "label": "Session cookie SSID <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your SSID session cookie here"
-                    },
                     "spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+                    },
+                    "videosPerChannel": {
+						"label": "Number of videos to scrape per channel <a href=\"/api-store/11472/youtube-videos-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+                        "inputType": "number",
+                        "helper": "All of them if empty"
 					},
 					"columnName": {
 						"label": "Column name from which to get channels URLs",
@@ -51,12 +43,18 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"channelsPerLaunch": {
-						"label": "Number of channels to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of channels to scrape per launch <a href=\"/api-store/11472/youtube-videos-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
+                    },
+                    "sortBy": {
+						"label": "Posts order",
+						"helper": "Sort by Most popular, most recent or oldest post",
+						"removeDefaultNone": true,
+						"sort": false
 					}
                 }
             }
@@ -65,23 +63,12 @@
     "argumentSchema": {
         "type": "object",
         "properties": {
-            "sessionCookieHSID": {
-                "type": "string",
-                "required": true,
-                "minLength": 10
-            },
-            "sessionCookieSID": {
-                "type": "string",
-                "required": true,
-                "minLength": 20
-            },
-            "sessionCookieSSID": {
-                "type": "string",
-                "required": true,
-                "minLength": 10
-            },
             "spreadsheetUrl": {
 				"type": "string"
+            },
+            "videosPerChannel": {
+				"type": "number",
+				"minimum": 1
 			},
 			"columnName": {
 				"type": "string"
@@ -93,6 +80,10 @@
             "csvName": {
 				"type": "string",
 				"required": false
+            },
+            "sortBy": {
+				"enum": ["Most popular", "Newest", "Oldest"],
+				"default": "Most Helpful"
 			}
 		},
 		"oneOf": [
