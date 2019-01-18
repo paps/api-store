@@ -42,53 +42,59 @@ const forceCount = (url) => {
 }
 
 const scrapeResults = (arg, callback) => {
-	const results = document.querySelectorAll("div.search-results ul > li, ul#results-list > li")
+	const results = document.querySelectorAll(".search-results__result-list > li")
+	// const results = document.querySelectorAll("div.search-results ul > li, ul#results-list > li")
 	const data = []
 	let profilesScraped = 0
 	for (const result of results) {
 		if (result.querySelector(".name-link.profile-link")) {
-			const profileUrl = result.querySelector(".name-link.profile-link").href
 			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
-			const urlObject = new URL(profileUrl)
-			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
-			if (vmid) {
-				newData.vmid = vmid
-			}
-			if (result.querySelector(".name a")) {
-				newData.name = result.querySelector(".name a").title.trim()
-				if (newData.name) {
-					const nameArray = newData.name.split(" ")
-					const firstName = nameArray.shift()
-					const lastName = nameArray.join(" ")
-					newData.firstName = firstName
-					if (lastName) {
-						newData.lastName = lastName
+			const profileUrl = result.querySelector(".name-link.profile-link").href
+			if (profileUrl && profileUrl.startsWith("https://www.linkedin.com/sales/company/")) { // company results
+				newData.companyId = "b"
+			} else {
+				const urlObject = new URL(profileUrl)
+				const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
+				if (vmid) {
+					newData.vmid = vmid
+				}
+				if (result.querySelector(".name a")) {
+					newData.name = result.querySelector(".name a").title.trim()
+					if (newData.name) {
+						const nameArray = newData.name.split(" ")
+						const firstName = nameArray.shift()
+						const lastName = nameArray.join(" ")
+						newData.firstName = firstName
+						if (lastName) {
+							newData.lastName = lastName
+						}
 					}
 				}
-			}
-			if (result.querySelector(".details-container abbr")) { newData.degree = result.querySelector(".details-container abbr").textContent.trim() }
-			newData.profileImageUrl = result.querySelector(".entity-image") ? result.querySelector(".entity-image").src : result.querySelector(".person-ghost").src
-			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newData.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
-			if (result.querySelector(".premium-icon")) { newData.premium = "Premium" }
-			if (result.querySelector(".openlink-badge")) { newData.openProfile = "Open Profile" }
-			if (result.querySelector(".company-name")) { 
-				newData.companyName = result.querySelector(".company-name").title
-				if (result.querySelector(".company-name").href) {
-					const salesCompanyUrl = new URL(result.querySelector(".company-name").href)
-					if (salesCompanyUrl.searchParams.get("companyId")) {
-						const companyId = salesCompanyUrl.searchParams.get("companyId")
-						newData.companyId = companyId
-						newData.companyUrl = "https://www.linkedin.com/company/" + companyId
+				if (result.querySelector(".details-container abbr")) { newData.degree = result.querySelector(".details-container abbr").textContent.trim() }
+				newData.profileImageUrl = result.querySelector(".entity-image") ? result.querySelector(".entity-image").src : result.querySelector(".person-ghost").src
+				if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newData.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
+				if (result.querySelector(".premium-icon")) { newData.premium = "Premium" }
+				if (result.querySelector(".openlink-badge")) { newData.openProfile = "Open Profile" }
+				if (result.querySelector(".company-name")) {
+					newData.companyName = result.querySelector(".company-name").title
+					if (result.querySelector(".company-name").href) {
+						const salesCompanyUrl = new URL(result.querySelector(".company-name").href)
+						if (salesCompanyUrl.searchParams.get("companyId")) {
+							const companyId = salesCompanyUrl.searchParams.get("companyId")
+							newData.companyId = companyId
+							newData.companyUrl = "https://www.linkedin.com/company/" + companyId
+						}
 					}
 				}
+				const memberId = result.className.split(" ").pop()
+				if (memberId.startsWith("m")) {
+					newData.memberId = memberId.substr(1)
+				}
+				newData.title = result.querySelector(".info-value").textContent.trim()
+				if (result.querySelector(".info-value:nth-child(2)")) { newData.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
+				if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
 			}
-			const memberId = result.className.split(" ").pop()
-			if (memberId.startsWith("m")) {
-				newData.memberId = memberId.substr(1)
-			}
-			newData.title = result.querySelector(".info-value").textContent.trim()
-			if (result.querySelector(".info-value:nth-child(2)")) { newData.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
-			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
+
 			if (arg.query) { newData.query = arg.query }
 			profilesScraped++
 			data.push(newData)
@@ -192,7 +198,7 @@ const scrapeLists = (arg, cb) => {
 			}
 			profilesScraped++
 			scrapedData.push(newData)
-		}		
+		}
 		if (profilesScraped >= arg.numberOnThisPage) { break }
 	}
 	cb(null, scrapedData)
@@ -446,7 +452,6 @@ const isLinkedInSearchURL = (url) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { sessionCookie, searches, numberOfProfiles, columnName, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
-	await utils.fileStorageCheck()
 	await linkedIn.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")

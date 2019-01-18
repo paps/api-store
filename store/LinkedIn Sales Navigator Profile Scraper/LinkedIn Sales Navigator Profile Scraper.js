@@ -29,7 +29,7 @@ const { URL } = require("url")
 
 const isLinkedInUrl = (url) => {
 	try {
-		if (url.startsWith("linkedin")) { 
+		if (url.startsWith("linkedin")) {
 			url = "https://" + url
 		}
 		const { URL } = require("url")
@@ -42,7 +42,7 @@ const isLinkedInUrl = (url) => {
 
 const isLinkedInProfile = (url) => {
 	try {
-		if (url.startsWith("linkedin")) { 
+		if (url.startsWith("linkedin")) {
 			url = "https://" + url
 		}
 		let urlObject = new URL(url)
@@ -87,13 +87,13 @@ const scrapeProfile = (arg, cb) => {
 	if (vmid) {
 		scrapedData.vmid = vmid
 	}
-	let jsonData	
+	let jsonData
 	const jsonCode = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("contactInfo") && !el.textContent.includes("request"))[0]
 
 	if (jsonCode) {
 		jsonData = JSON.parse(jsonCode.textContent)
 	}
-	
+
 
 	scrapedData.name = jsonData.fullName
 	scrapedData.firstName = jsonData.firstName
@@ -233,7 +233,6 @@ const getCompanyWebsite = async (tab, url, utils) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
-	await utils.fileStorageCheck()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls

@@ -241,7 +241,7 @@ const getPageNumber = url => {
 		if (pageValue) { return pageValue }
 	} catch (err) {
 		//
-	} 
+	}
 	return 1
 }
 
@@ -483,7 +483,7 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 				let backgroundImageUrl = backgroundStyle.style.backgroundImage
 				backgroundImageUrl = backgroundImageUrl.slice(backgroundImageUrl.indexOf("\"") + 1)
 				backgroundImageUrl = backgroundImageUrl.slice(0, backgroundImageUrl.indexOf("\""))
-				scrapedObject.profileImageUrl = backgroundImageUrl 
+				scrapedObject.profileImageUrl = backgroundImageUrl
 			}
 		}
 		if (results[i].querySelector(".mn-discovery-person-card__name")) {
@@ -670,10 +670,10 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(err.message || err, "warning")
 					return result
 				}
-				if (selector === selectors[0] || selector === selectors[2]) { 
+				if (selector === selectors[0] || selector === selectors[2]) {
 					// fixing the "No results" bug by simply reloading the page until results show up
 					let retryCount = 0
-					do {				
+					do {
 						await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 						selector = await tab.waitUntilVisible(selectors, 15000, "or")
 						if (retryCount++ === 6) {
@@ -785,9 +785,8 @@ const isLinkedInSearchURL = (targetUrl) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
-	await utils.fileStorageCheck()
 	// old version compatibility //
-	if (searches) { search = searches } 
+	if (searches) { search = searches }
 	if (!search) {
 		utils.log("Empty search field.", "error")
 		nick.exit(1)
@@ -813,7 +812,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 		}
 	}
 	await linkedIn.login(tab, sessionCookie)
-	
+
 	for (const search of searches) {
 		let searchUrl = ""
 		const isSearchURL = isLinkedInSearchURL(search)
@@ -847,7 +846,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 				}
 			} else {
 				result.push({ query: search, timestamp: (new Date()).toISOString(), error: "No result found" })
-			}	
+			}
 		} catch (err) {
 			utils.log(`Error : ${err}`, "error")
 		}

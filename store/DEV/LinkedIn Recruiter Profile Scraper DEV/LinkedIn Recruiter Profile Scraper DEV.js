@@ -25,7 +25,7 @@ const { URL } = require("url")
 
 const isLinkedInProfileUrl = (url) => {
 	try {
-		if (url.startsWith("linkedin")) { 
+		if (url.startsWith("linkedin")) {
 			url = "https://" + url
 		}
 		let urlObject = new URL(url)
@@ -242,7 +242,7 @@ const findRecruiterUrl = async (tab, profileUrl) => {
 	if (recruiterUrl) {
 		utils.log(`Found Recruiter profile URL: ${recruiterUrl}`, "done")
 	} else {
-		utils.log("Couldn't find Recruiter URL!", "warning")	
+		utils.log("Couldn't find Recruiter URL!", "warning")
 	}
 	return recruiterUrl
 }
@@ -276,8 +276,7 @@ const getMailFromHunter = async (scrapedData, hunter) => {
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
-	await utils.fileStorageCheck()
-	const tab = await nick.newTab()	
+	const tab = await nick.newTab()
 	await linkedIn.recruiterLogin(tab, sessionCookie)
 	let singleProfile
 	if (spreadsheetUrl) {
