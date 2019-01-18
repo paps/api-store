@@ -5,7 +5,7 @@
     "gradientBegin": "#E42C27",
     "gradientEnd": "#FFD80B",
     "argumentDescription": "Extract every information from a list of Youtube Channels",
-    "hidden": true,
+    "hidden": false,
     "new": true,
     "argumentHelpAnchor": "#section_argument",
     "defaultArgument": {
