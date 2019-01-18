@@ -149,8 +149,12 @@ const loadAndScrapeVideos = async (tab, channelUrl, videosPerChannel, sortBy) =>
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
+<<<<<<< Updated upstream
 	/* eslint-disable no-unused-vars */
 	let { sessionCookieHSID, sessionCookieSID, sessionCookieSSID, channelUrls, spreadsheetUrl, videosPerChannel, columnName, channelsPerLaunch, csvName, sortBy } = utils.validateArguments()
+=======
+	let { channelUrls, spreadsheetUrl, videosPerChannel, columnName, channelsPerLaunch, csvName, sortBy } = utils.validateArguments()
+>>>>>>> Stashed changes
 	// await youtube.login(tab, sessionCookieHSID, sessionCookieSID, sessionCookieSSID)
 	if (!csvName) { csvName = "result" }
 	let singleProfile
