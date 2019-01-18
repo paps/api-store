@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Youtube.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,9 +19,6 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-// const Youtube = require("./lib-Youtube")
-// const youtube = new Youtube(nick, buster, utils)
-
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
@@ -34,7 +30,7 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 }
 
 const scrapeChannelData = (arg, cb) => {
-	const scrapedData = { query: arg.channelUrl }
+	const scrapedData = { query: arg.channelUrl, timestamp: (new Date()).toISOString() }
 	if (document.querySelector("#channel-title")) {
 		scrapedData.channelTitle = document.querySelector("#channel-title").textContent
 	}
@@ -101,8 +97,7 @@ const loadAndScrapeChannel = async (tab, channelUrl) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	/* eslint-disable no-unused-vars */
-	let { sessionCookieHSID, sessionCookieSID, sessionCookieSSID, channelUrls, spreadsheetUrl, columnName, channelsPerLaunch, csvName } = utils.validateArguments()
+	let { channelUrls, spreadsheetUrl, columnName, channelsPerLaunch, csvName } = utils.validateArguments()
 	// await youtube.login(tab, sessionCookieHSID, sessionCookieSID, sessionCookieSSID)
 	if (!csvName) { csvName = "result" }
 	let singleProfile
@@ -126,7 +121,7 @@ nick.newTab().then(async (tab) => {
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
-
+	
 	for (const channelUrl of channelUrls) {
 		result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
 		const timeLeft = await utils.checkTimeLeft()
