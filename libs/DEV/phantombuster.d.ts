@@ -16,7 +16,8 @@ declare module "phantombuster" {
 		public overrideTimeLimit(seconds: number): Promise<void>
 		public getTimeLeft(): Promise<number>
 		public setAgentObject(agentId: number, object: object): Promise<void>
-		public getAgentObject(agentId: number): Promise<unknown>
+		public setAgentObject(object: object): Promise<void>
+		public getAgentObject(agentId?: number): Promise<unknown>
 		public setGlobalObject(object: object): Promise<void>
 		public getGlobalObject(): Promise<unknown>
 		public setResultObject(object: object): Promise<void>
