@@ -234,7 +234,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberMaxOfPosts, csvName} = utils.validateArguments()
+	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberMaxOfPosts, csvName, reprocessAll } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let profileUrls
 	if (isLinkedUrl(spreadsheetUrl)) {
@@ -249,13 +249,15 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 	}
 
 	let result = await utils.getDb(csvName + ".csv")
-	profileUrls = getUrlsToScrape(profileUrls.filter(el => utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
+	if (!reprocessAll) {
+		profileUrls = getUrlsToScrape(profileUrls.filter(el => utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
+	}
 	console.log(`Profiles to process: ${JSON.stringify(profileUrls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, null, nick)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
-
+	let currentResult = []
 	for (let profileUrl of profileUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -267,11 +269,17 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 
 			const activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts)
 
-			result = result.concat(activityResults)
+			currentResult = currentResult.concat(activityResults)
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${profileUrl} due to: ${err.message || err}`, "error")
 		}
 	}
+	for (let i = 0; i < currentResult.length; i++) {
+		if (!result.find(el => el.postUrl === currentResult[i].postUrl && el.query === currentResult[i].query)) {
+			result.push(currentResult[i])
+		}
+	}
+	console.log("resultsLength", result.length)
 	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()

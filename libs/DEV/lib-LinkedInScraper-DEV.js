@@ -471,23 +471,24 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = infos.general.profileUrl.slice(28)
 			slug = slug.slice(0, slug.indexOf("/"))
-			try {
-				if (saveImg && infos.general.imgUrl) {
-					infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
-				}
-			} catch (err) {
-				utils.log(`Error while saving profile picture: ${err}`, "error")
-				await tab.wait(1000)
-				try {
-					infos.general.savedImg2 = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
-				} catch (err) {
-					utils.log(`Error while saving profile picture again: ${err}`, "error")
-				await tab.wait(1000)
-					try {
-						infos.general.savedImg3 = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
-					} catch (err) {
-						utils.log(`Error while saving profile picture again2: ${err}`, "error")
+			if (saveImg) {
+				if (infos.general.imgUrl) {
+					let success
+					for (let i = 0; i < 10; i++) {
+						try {
+							infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
+							success = true
+							break
+						} catch (err) {
+							console.log("err:", err)
+						}
+						await tab.wait(500)
 					}
+					if (!success) {
+						utils.log("Error while saving profile picture.", "error")
+					}
+				} else {
+					utils.log("This profile has no profile picture to save.", "info")
 				}
 			}
 			try {
