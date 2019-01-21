@@ -134,7 +134,7 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 	}
 
 	const db = await utils.getDb(csvName + ".csv")
-	queries = queries.filter(el => db.findIndex(line => line.url === el && line.action === action) < 0).slice(0, numberOfLinesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR every articles are already clapped", "warning")
 		nick.exit()
