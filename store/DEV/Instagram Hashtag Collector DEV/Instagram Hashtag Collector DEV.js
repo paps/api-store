@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram-DEV.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -19,10 +18,10 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
 let headers
@@ -58,14 +57,25 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
+const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	const maxLength = data.length
+	if (!numberOfLinesPerLaunch) {
+		numberOfLinesPerLaunch = maxLength
+	}
+	if (maxLength === 0) {
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		nick.exit()
+	}
+	return data.slice(0, Math.min(numberOfLinesPerLaunch, maxLength)) // return the first elements
+}
+
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.includes("graphql/query/?query_hash") && e.response.status === 200 && e.response.url.includes("show_ranked")) {
 		graphqlUrl = e.response.url
-		console.log("GRAPH:", graphqlUrl)
 	}
 	if (isLocation && e.response.url.includes("graphql/query/?query_hash")) {
 		graphqlUrl = e.response.url
-		console.log("LOCGRAPH:", graphqlUrl)
 	}
 }
 
@@ -77,7 +87,6 @@ const onHttpRequest = (e) => {
 
 const forgeNewUrl = (endCursor) => {
 	const newUrl = graphqlUrl.slice(0, graphqlUrl.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
-	console.log("newUrl:", newUrl)
 	return newUrl
 }
 
@@ -101,7 +110,6 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		try {
 			await tab.open(nextUrl)
 			let instagramJsonCode = await tab.getContent()
-			console.log("instagramJsonCode", instagramJsonCode)
 			instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
 			if (instagramJsonCode && instagramJsonCode.status === "fail") {
 				utils.log(`Error getting hashtags : ${instagramJsonCode.message}`, "warning")
@@ -112,7 +120,6 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		}
 		return [null, null, null, "rate limited"]
 	}
-	console.log("jsonData", jsonData.data.location)
 	let edge
 	if (isLocation) {
 		edge = jsonData.data.location.edge_location_to_media
@@ -121,10 +128,6 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	}
 	totalHashtagsCount = edge.count
 	const results = edge.edges
-
-	console.log("totalHashtagsCount", totalHashtagsCount)
-
-	console.log("edgesLength", results.length)
 	const scrapedHashtags = []
 	for (const result of results) {
 		const node = result.node
@@ -155,7 +158,7 @@ const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
 				const scrapedData = await instagram.scrapePost2(tab, query)
 				results[i] = scrapedData
 			} catch (err) {
-				console.log("err:", err)
+				//
 			}
 		}
 		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
@@ -177,14 +180,10 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 	let results = []
 	if (!resuming) {
 		results = await tab.evaluate(scrapeFirstResults, { query })
-		// console.log("fr:", firstResults)
 		newlyScraped = results.length
-		console.log("frLength:", newlyScraped)
 		const postTab = await nick.newTab()
-		console.log("extracting first posts")
 		results = await extractFirstPosts(postTab, results, newlyScraped, query)
 		await postTab.close()
-		// console.log("first:", results)
 		const initDate = new Date()
 		graphqlUrl = ""
 		do {
@@ -192,9 +191,6 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 			await tab.scroll(0, - 1000)
 			await tab.scrollToBottom()
 			if (new Date() - initDate > 10000) {
-				console.log("Took too long")
-				await tab.screenshot(`${Date.now()}Took too long.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}Took too long.html`)
 				return results
 			}
 		} while (!graphqlUrl)
@@ -218,14 +214,9 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 				newlyScraped += tempResult.length
 				results = results.concat(tempResult)
 			} else {
-				console.log("MOerr", error)
 				allCollected = false
 				break
 			}
-			// console.log("results: ", tempResult)
-			console.log("resultsLength: ", results.length)
-			console.log("endCursor: ", endCursor)
-			console.log("hasNextPage: ", hasNextPage)
 			if (!maxToScrape) {
 				maxToScrape = totalHashtagsCount
 			}
@@ -237,11 +228,9 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 				lastDate = new Date()
 			} else {
 				allCollected = true
-				console.log("allCollected")
 				break
 			}
 		} catch (err) {
-			console.log("Err: ", err)
 			break
 		}
 		if (new Date() - lastDate > 7500) {
@@ -266,19 +255,16 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
-
+	let { spreadsheetUrl, sessionCookie, columnName, numberOfLinesPerLaunch, csvName, hashtags, maxPosts } = utils.validateArguments()
 	if (!csvName) {
 		csvName = "result"
 	}
 	let results = await utils.getDb(csvName + ".csv")
 	const initialResultLength = results.length
-	console.log("initResL", initialResultLength)
 	if (results.length) {
 		try {
 			agentObject = await buster.getAgentObject()
 			alreadyScraped = results.filter(el => el.query === agentObject.lastHashtag).length
-			console.log("alreadyScraped:", alreadyScraped)
 		} catch (err) {
 			utils.log("Could not access agent Object.", "warning")
 		}
@@ -291,11 +277,12 @@ const isUrl = target => url.parse(target).hostname !== null
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
 			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+			hashtags = hashtags.filter(el => el).map(el => el.trim())
+			hashtags = getUrlsToScrape(hashtags.filter(el => utils.checkDb(el, results, "query")), numberOfLinesPerLaunch)
 		} else if (typeof spreadsheetUrl === "string") {
 			hashtags = [ spreadsheetUrl ]
 		}
 	}
-
 	await instagram.login(tab, sessionCookie)
 
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
@@ -333,10 +320,10 @@ const isUrl = target => url.parse(target).hostname !== null
 		}
 		let resuming = false
 		if (alreadyScraped && hashtag === agentObject.lastHashtag) {
-			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
+			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 			resuming = true
 		} else {
-			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
+			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 		}
 		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
 	}
@@ -363,6 +350,5 @@ const isUrl = target => url.parse(target).hostname !== null
 })()
 	.catch(err => {
 		utils.log(`Error during execution: ${err}`, "error")
-		console.log("st", err.stack)
 		nick.exit(1)
 	})

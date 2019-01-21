@@ -12,7 +12,8 @@
 	"defaultArgument": {
 		"spreadsheetUrl": "#soloparking",
 		"sessionCookie": "your_session_cookie",
-		"maxPosts": 5000
+		"maxPosts": 5000,
+		"numberOfLinesPerLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",
@@ -61,6 +62,11 @@
 						"default": "Hashtag",
 						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
 					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number",
+						"helper": "All of them if empty"
+					},
 					"maxPosts": {
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
@@ -88,6 +94,10 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string"

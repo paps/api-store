@@ -33,6 +33,7 @@ let rateLimited
 let agentObject
 let totalHashtagsCount
 let isLocation = false
+
 /* global $ */
 
 // }
@@ -54,6 +55,19 @@ const ajaxCall = (arg, cb) => {
 	} catch (err) {
 		cb(err)
 	}
+}
+
+const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	const maxLength = data.length
+	if (!numberOfLinesPerLaunch) {
+		numberOfLinesPerLaunch = maxLength
+	}
+	if (maxLength === 0) {
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		nick.exit()
+	}
+	return data.slice(0, Math.min(numberOfLinesPerLaunch, maxLength)) // return the first elements
 }
 
 const interceptInstagramApiCalls = e => {
@@ -241,8 +255,7 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, sessionCookie, columnName, csvName, hashtags, maxPosts } = utils.validateArguments()
-
+	let { spreadsheetUrl, sessionCookie, columnName, numberOfLinesPerLaunch, csvName, hashtags, maxPosts } = utils.validateArguments()
 	if (!csvName) {
 		csvName = "result"
 	}
@@ -264,11 +277,12 @@ const isUrl = target => url.parse(target).hostname !== null
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
 			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+			hashtags = hashtags.filter(el => el).map(el => el.trim())
+			hashtags = getUrlsToScrape(hashtags.filter(el => utils.checkDb(el, results, "query")), numberOfLinesPerLaunch)
 		} else if (typeof spreadsheetUrl === "string") {
 			hashtags = [ spreadsheetUrl ]
 		}
 	}
-
 	await instagram.login(tab, sessionCookie)
 
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
@@ -282,6 +296,7 @@ const isUrl = target => url.parse(target).hostname !== null
 		if (hashtag.startsWith("#")) {
 			inputType = "tags"
 			targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
+			isLocation = false
 		} else {
 			inputType = "locations"
 			targetUrl = await instagram.searchLocation(tab, hashtag)
@@ -305,10 +320,10 @@ const isUrl = target => url.parse(target).hostname !== null
 		}
 		let resuming = false
 		if (alreadyScraped && hashtag === agentObject.lastHashtag) {
-			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
+			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 			resuming = true
 		} else {
-			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} ...`, "loading")
+			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 		}
 		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
 	}
