@@ -150,24 +150,29 @@ const loadChat = async tab => {
  * @throws on CSS selectors failure
  * @return {Promise<{ profileUrl: String, timestamp: String }>} returns the when the message was send and the profile URL
  */
-const sendMessage = async (tab, message, tags) => {
+const sendMessage = async (tab, message, tags, profile) => {
 	utils.log("Writting message...", "loading")
-	let firstName = await tab.evaluate(getFirstName)
-	if (!firstName) {
-		try {
-			const name = await tab.evaluate((arg, cb) => {
-				let name = ""
-				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-				} else if (document.querySelector("div.presence-entity__image")) {
-					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-				}
-				cb(null, name)
-			})
-			const nameArray = name.split(" ")
-			firstName = nameArray.shift()
-		} catch (err) {
-			//
+	let firstName
+	if (profile && profile.csv && profile.csv.firstName) {
+		firstName = profile.csv.firstName
+	} else {
+		firstName = await tab.evaluate(getFirstName)
+		if (!firstName) {
+			try {
+				const name = await tab.evaluate((arg, cb) => {
+					let name = ""
+					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+					} else if (document.querySelector("div.presence-entity__image")) {
+						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+					}
+					cb(null, name)
+				})
+				const nameArray = name.split(" ")
+				firstName = nameArray.shift()
+			} catch (err) {
+				//
+			}
 		}
 	}
 	tags = Object.assign({}, { firstName }, tags) // Custom tags are mandatory
@@ -269,7 +274,7 @@ const sendMessage = async (tab, message, tags) => {
 			utils.log(`${row[columnName]} loaded`, "done")
 			utils.log(`Sending message to: ${row[columnName]}`, "info")
 			await loadChat(tab)
-			let payload = await sendMessage(tab, message, row)
+			let payload = await sendMessage(tab, message, row, profile)
 			if (profile !== null) {
 				payload = Object.assign({}, profile.csv, payload)
 			}

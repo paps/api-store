@@ -159,14 +159,14 @@ const scrapeFirstPage = async (tab, query) => {
 }
 
 /**
- * @async
- * @description
- * @param {Object} tab - Nickjs Tab instance
- * @param {Array<Object>} arr - Array holding scraping results
- * @param {Number} maxPosts - Max posts to scrape
- * @param {String} term - Scraped term
- * @return {Promise<Boolean>} false is abort or rate limit
- */
+	* @async
+	* @description
+	* @param {Object} tab - Nickjs Tab instance
+	* @param {Array<Object>} arr - Array holding scraping results
+	* @param {Number} maxPosts - Max posts to scrape
+	* @param {String} term - Scraped term
+	* @return {Promise<Boolean>} false is abort or rate limit
+	*/
 const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let i = 0
 	graphql.variables.first = 50
@@ -216,7 +216,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let hasSpreadsheet = false
 	let csvData = []
 	for (const el of search) {
-		if (isUrl(el)) {
+		if (isUrl(el) && !el.includes("instagram.com/explore")) {
 			csvData = await utils.getDataFromCsv2(el, columnName)
 			hasSpreadsheet = true
 		}
@@ -296,36 +296,42 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 			leastTerm = sortArray[minPos].term
 			const term = leastTerm
 			let targetUrl = ""
-			let inputType = term.startsWith("#") ? "tags" : "locations"
-			if (term.startsWith("#")) {
-				targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
+			let inputType
+			if (term.startsWith("https://www.instagram.com/explore/locations/")) {
+				targetUrl = term
+				inputType = "locations"
 			} else {
-				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-				try {
-					await tab.waitUntilVisible("nav input", 5000)
-				} catch (err) { // if the previous page had no result, there's no input field
-					await tab.open("https://www.instagram.com")
-					await tab.waitUntilVisible("nav input", 5000)
+				inputType = term.startsWith("#") ? "tags" : "locations"
+				if (term.startsWith("#")) {
+					targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
+				} else {
+					await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
+					try {
+						await tab.waitUntilVisible("nav input", 5000)
+					} catch (err) { // if the previous page had no result, there's no input field
+						await tab.open("https://www.instagram.com")
+						await tab.waitUntilVisible("nav input", 5000)
+					}
+					if (await tab.isVisible("nav input")) {
+						targetUrl = await instagram.searchLocation(tab, term)
+					}
 				}
-				if (await tab.isVisible("nav input")) {
-					targetUrl = await instagram.searchLocation(tab, term)
-				}
-			}
-			if (!targetUrl) { // Using webSearch if we can't find location through instagram
-				let search = await webSearch.search(term + "location instagram")
-				let firstSearch
-				if (search && search.results[0] && search.results[0].link) {
-					firstSearch = search.results[0].link
-					if (firstSearch.startsWith("https://www.instagram.com/explore/locations/")) {
-						targetUrl = firstSearch
-					} else {
-						utils.log(`No search result page found for ${term}.`, "error")
-						terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
-						continue
+				if (!targetUrl) { // Using webSearch if we can't find location through instagram
+					let search = await webSearch.search(term + "location instagram")
+					let firstSearch
+					if (search && search.results[0] && search.results[0].link) {
+						firstSearch = search.results[0].link
+						if (firstSearch.startsWith("https://www.instagram.com/explore/locations/")) {
+							targetUrl = firstSearch
+						} else {
+							utils.log(`No search result page found for ${term}.`, "error")
+							terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
+							continue
+						}
 					}
 				}
 			}
-			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl }) 
+			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl })
 
 			try {
 				await tab.waitUntilVisible("main", 30000)
