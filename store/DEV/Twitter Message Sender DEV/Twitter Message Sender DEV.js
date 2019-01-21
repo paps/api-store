@@ -147,9 +147,11 @@ const startConversation = async (tab, handle) => {
 		await tab.sendKeys(SELECTORS.msgDestinationSelector, key, { reset: false, keepFocus: false })
 		await tab.wait(250)
 	}
+	await tab.wait(1000)
 	await tab.click(SELECTORS.initConvSelector)
 	try {
 		await tab.waitWhileVisible(SELECTORS.initConvSelector, 30000)
+		await tab.wait(1000)
 	} catch (err) {
 		utils.log(`Can't start conversation with ${handle}: ${err.message || err}`, "error")
 		return false
@@ -226,7 +228,7 @@ const sendMessage = async (tab, message) => {
 	if (typeof queries === "string") {
 		rows = [ { columnName: queries } ]
 	} else if (Array.isArray(queries)) {
-		rows = queries.map(el => ({ columnName: el }))
+		rows = queries.map(el => ({ [columnName]: el }))
 	}
 
 	// Remove rows with an empty columnName row value
@@ -272,4 +274,3 @@ const sendMessage = async (tab, message) => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
 	nick.exit(1)
 })
-
