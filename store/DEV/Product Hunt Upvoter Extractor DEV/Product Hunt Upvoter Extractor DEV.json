@@ -1,5 +1,5 @@
 {
-	"slug": "github-profile-scraper",
+	"slug": "product-hunt-upvoter-extractor",
 	"description": "",
 	"image": "",
 	"argumentDescription": "",
@@ -9,7 +9,8 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something"
+		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
+		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -35,18 +36,19 @@
 					},
 					"columnName": {
 						"label": "Column name where Product Hunt profiles URLs are stored in the spreadhsheet",
-						"helper": "If empty, the first column of your spreadsheet will be used",
-						"placeholder": "Github"
+						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
+						"inputType": "number"
 					},
 					"csvName": {
 					   "label": "Name of resulting CSV file",
 					   "placeholder": "result"
+					},
+					"reprocessAll": {
+						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
 					}
 				}
 			}
@@ -73,6 +75,9 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"reprocessAll": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [
