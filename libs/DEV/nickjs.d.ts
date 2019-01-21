@@ -75,9 +75,13 @@ declare module "nickjs" {
 
 			wait(duration: number): Promise<void>
 			waitUntilVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitUntilVisible(selectors: selectors, condition?: "and" | "or", timeout?: number): Promise<string>
 			waitWhileVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitWhileVisible(selectors: selectors, condition?: "and" | "or", timeout?: number): Promise<string>
 			waitUntilPresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitUntilPresent(selectors: selectors, condition?: "and" | "or", timeout?: number): Promise<string>
 			waitWhilePresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
+			waitWhilePresent(selectors: selectors, condition?: "and" | "or", timeout?: number): Promise<string>
 			untilVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
 			whileVisible(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
 			untilPresent(selectors: selectors, timeout?: number, condition?: "and" | "or"): Promise<string>
