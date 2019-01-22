@@ -16,6 +16,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -105,44 +106,73 @@ const scrapeResultsLeads = (arg, callback) => {
 	for (const result of results) {
 		if (result.querySelector(".result-lockup__name")) {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
-			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
 			const urlObject = new URL(profileUrl)
-			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
-			if (vmid) {
-				newData.vmid = vmid
-			}
-			if (result.querySelector(".result-lockup__name")) {
-				newData.name = result.querySelector(".result-lockup__name").textContent.trim()
-				if (newData.name) {
-					const nameArray = newData.name.split(" ")
-					const firstName = nameArray.shift()
-					const lastName = nameArray.join(" ")
-					newData.firstName = firstName
-					if (lastName) {
-						newData.lastName = lastName
-					}
-				}
-			}
-			if (result.querySelector(".result-lockup__highlight-keyword > span")) {
-				newData.title = result.querySelector(".result-lockup__highlight-keyword > span").innerText
-				if (result.querySelector(".result-lockup__position-company > a > span")) {
-					newData.companyName = result.querySelector(".result-lockup__position-company > a > span").innerText
-				}
-			}
-			if (result.querySelector(".result-context.relative.pt1 dl dd")) { newData.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
-			if (result.querySelector("span[data-entity-hovercard-id]")) {
-				const companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
-				newData.companyId = companyId
-				newData.companyUrl = "https://www.linkedin.com/company/" + companyId
-			}
-			if (result.querySelector(".result-lockup__misc-item")) {
-				newData.location = result.querySelector(".result-lockup__misc-item").innerText
-			}
-			if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
-				newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
-			}
+			let newData = { timestamp: (new Date()).toISOString() }
 			if (arg.query) {
 				newData.query = arg.query
+			}
+			if (profileUrl && profileUrl.startsWith("https://www.linkedin.com/sales/company/")) { // company results
+				newData.companyUrl = urlObject.hostname + urlObject.pathname
+				newData.companyId = urlObject.pathname.slice(15)
+				newData.regularCompanyUrl = `https://www.linkedin.com/company/${newData.companyId}`
+				if (result.querySelector(".result-lockup__name")) {
+					newData.name = result.querySelector(".result-lockup__name").textContent.trim()
+				}
+				if (result.querySelector("figure img")) {
+					newData.logoUrl = result.querySelector("figure img").src
+				}
+				if (result.querySelector(".result-description-see-more-link")) {
+					result.querySelector(".result-description-see-more-link").parentElement.removeChild(result.querySelector(".result-description-see-more-link"))
+				}
+				if (result.querySelector(".result-lockup__description")) {
+					newData.description = result.querySelector(".result-lockup__description").innerText
+				}
+				const miscData = result.querySelectorAll("ul.result-lockup__misc-list > li.result-lockup__misc-item")
+				if (miscData[0]) {
+					newData.companyType = miscData[0].innerText
+				}
+				if (miscData[1]) {
+					newData.employeesCount = miscData[1].innerText
+				}
+				if (miscData[1]) {
+					newData.location = miscData[2].innerText
+				}
+			} else {
+				newData.profileUrl = profileUrl
+				const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
+				if (vmid) {
+					newData.vmid = vmid
+				}
+				if (result.querySelector(".result-lockup__name")) {
+					newData.name = result.querySelector(".result-lockup__name").textContent.trim()
+					if (newData.name) {
+						const nameArray = newData.name.split(" ")
+						const firstName = nameArray.shift()
+						const lastName = nameArray.join(" ")
+						newData.firstName = firstName
+						if (lastName) {
+							newData.lastName = lastName
+						}
+					}
+				}
+				if (result.querySelector(".result-lockup__highlight-keyword > span")) {
+					newData.title = result.querySelector(".result-lockup__highlight-keyword > span").innerText
+					if (result.querySelector(".result-lockup__position-company > a > span")) {
+						newData.companyName = result.querySelector(".result-lockup__position-company > a > span").innerText
+					}
+				}
+				if (result.querySelector(".result-context.relative.pt1 dl dd")) { newData.pastRole = result.querySelector(".result-context.relative.pt1 dl dd").innerText }
+				if (result.querySelector("span[data-entity-hovercard-id]")) {
+					const companyId = result.querySelector("span[data-entity-hovercard-id]").getAttribute("data-entity-hovercard-id").replace(/\D+/g, "")
+					newData.companyId = companyId
+					newData.companyUrl = "https://www.linkedin.com/company/" + companyId
+				}
+				if (result.querySelector(".result-lockup__misc-item")) {
+					newData.location = result.querySelector(".result-lockup__misc-item").innerText
+				}
+				if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
+					newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
+				}
 			}
 			profilesScraped++
 			data.push(newData)
@@ -341,7 +371,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
-		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 15000, "or")
+		const selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 45000, "or")
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		if (selector === ".artdeco-tab-primary-text") {
 			numberPerPage = 25
@@ -378,7 +408,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
 				return result
 			}
-			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 15000, "or")
+			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 45000, "or")
 			await tab.scrollToBottom()
 			await tab.wait(1500)
 			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
