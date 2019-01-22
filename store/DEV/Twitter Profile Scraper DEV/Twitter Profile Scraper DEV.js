@@ -79,9 +79,9 @@ const isTwitterProfile = url => {
 	await twitter.login(tab, sessionCookie)
 
 	for (const profile of profileUrls) {
-		const timeLeft = await this.utils.checkTimeLeft()
+		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			this.utils.log(timeLeft.message, "warning")
+			utils.log(timeLeft.message, "warning")
 			break
 		}
 		try {

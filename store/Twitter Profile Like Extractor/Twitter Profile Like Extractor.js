@@ -207,9 +207,9 @@ const loadLikes = async (tab, count = Infinity) => {
 	await twitter.login(tab, sessionCookie)
 	utils.log(`Urls to scrape ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
-		const timeLeft = await this.utils.checkTimeLeft()
+		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			this.utils.log(timeLeft.message, "warning")
+			utils.log(timeLeft.message, "warning")
 			break
 		}
 		try {

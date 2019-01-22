@@ -243,9 +243,9 @@ const sendMessage = async (tab, message) => {
 
 	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 	for (const one of rows) {
-		const timeLeft = await this.utils.checkTimeLeft()
+		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			this.utils.log(timeLeft.message, "warning")
+			utils.log(timeLeft.message, "warning")
 			break
 		}
 		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
