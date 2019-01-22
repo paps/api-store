@@ -57,7 +57,7 @@ const filterRows = (str, db) => {
  * @param {Number} skillsToRet - Count of skills to add
  * @return {Object} Formatted CSV output
  */
-const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
+const addSkills = (scrapedData, csv, skillsToRet = MAX_SKILLS) => {
 
 	if (!csv) {
 		return csv
@@ -66,18 +66,18 @@ const addSkills = (infos, csv, skillsToRet = MAX_SKILLS) => {
 	delete csv.skill1
 	delete csv.skill2
 	delete csv.skill3
-	if (infos.skills && infos.skills.length > 0) {
+	if (scrapedData.skills && scrapedData.skills.length > 0) {
 		for (let i = 0; i < skillsToRet; i++) {
-			if (i > infos.skills.length) {
+			if (i > scrapedData.skills.length) {
 				break
 			}
-			if (infos.skills[i] && infos.skills[i].name) {
-				csv[`skill${i + 1}`] = infos.skills[i].name
+			if (scrapedData.skills[i] && scrapedData.skills[i].name) {
+				csv[`skill${i + 1}`] = scrapedData.skills[i].name
 			} else {
 				csv[`skill${i + 1}`] = null
 			}
-			if (infos.skills[i] && infos.skills[i].endorsements) {
-				csv[`endorsement${i + 1}`] = infos.skills[i].endorsements
+			if (scrapedData.skills[i] && scrapedData.skills[i].endorsements) {
+				csv[`endorsement${i + 1}`] = scrapedData.skills[i].endorsements
 			} else {
 				csv[`endorsement${i + 1}`] = null
 			}
@@ -153,18 +153,22 @@ const removeLinkedinSubdomains = url => {
 			const scrapingUrl = await linkedInScraper.salesNavigatorUrlCleaner(url)
 			if (linkedIn.isLinkedInProfile(scrapingUrl)) {
 				utils.log(`Opening page ${scrapingUrl}`, "loading")
-				const infos = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot, takePartialScreenshot)
+				const scrapedData = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot, takePartialScreenshot)
+				if (scrapedData.json && scrapedData.json.error === "ERR_TOO_MANY_REDIRECTS") {
+					utils.log("Disconnected from LinkedIn, exiting...", "warning")
+					break
+				}
 				/**
 				 * the csv output from the lib is no more used in this API,
 				 * since the issue #40 require to give more than 3 skills & their endorsements count
 				 * the lib still return the "basic" csv output
 				 */
-				const finalCsv = addSkills(infos.json, infos.csv)
+				const finalCsv = addSkills(scrapedData.json, scrapedData.csv)
 				finalCsv.baseUrl = url
 				finalCsv.profileId = linkedIn.getUsername(await tab.getUrl())
 				finalCsv.timestamp = (new Date()).toISOString()
 				db.push(finalCsv)
-				result.push(infos.json)
+				result.push(scrapedData.json)
 			} else {
 				throw "Not a LinkedIn profile URL."
 			}

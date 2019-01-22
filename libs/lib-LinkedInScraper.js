@@ -789,6 +789,9 @@ class LinkedInScraper {
 			if (!silence) {
 				this.utils.log(`Could not scrape ${url} because: ${err}`, "error")
 			}
+			if (err.message && err.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+				result.error = "ERR_TOO_MANY_REDIRECTS"
+			}
 		}
 
 		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {

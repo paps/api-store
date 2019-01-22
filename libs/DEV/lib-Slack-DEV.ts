@@ -1,7 +1,7 @@
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 import Buster from "phantombuster"
-import * as Pupeppeteer from "puppeteer"
+import * as Puppeteer from "puppeteer"
 
 class Slack {
 	private buster: Buster
@@ -12,7 +12,7 @@ class Slack {
 		this.utils = utils
 	}
 
-	public async login(page: Pupeppeteer.Page, url: string, dCookie: string): Promise<void> {
+	public async login(page: Puppeteer.Page, url: string, dCookie: string): Promise<void> {
 		const _login = async () => {
 			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
 			if (response !== null && response.status() !== 200) {
@@ -70,7 +70,7 @@ class Slack {
 		}
 	}
 
-	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<IUnknownObject[]> {
+	public async getChannelsMeta(page: Puppeteer.Page): Promise<IUnknownObject[]> {
 
 		const channels: IUnknownObject[] = []
 
@@ -89,7 +89,7 @@ class Slack {
 		return channels
 	}
 
-	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
+	public async getChannelsUser(page: Puppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
 		const members: IUnknownObject[] = []
 
 		const getUsersId = (endpoint: string, channel: string, cursor?: string|null) => {
@@ -179,6 +179,74 @@ class Slack {
 			}
 		}
 		return members
+	}
+
+	public async isUserExist(page: Puppeteer.Page, userId: string): Promise<boolean> {
+		const checkId = async (user: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let xhr: IUnknownObject
+			try {
+				xhr = await TS.interop.api.call("users.info", { user })
+			} catch (err) {
+				xhr = err
+			}
+			return xhr
+		}
+
+		let res: boolean = false
+		const xhrRes: IUnknownObject = await page.evaluate(checkId, userId) as IUnknownObject
+		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
+			if (xhrRes.ok) {
+				res = true
+			}
+		}
+		return res
+	}
+
+	public async sendDM(page: Puppeteer.Page, userId: string, message: string): Promise<boolean> {
+		let res = false
+		const getDmChannel = async (user: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let _xhr: IUnknownObject
+			try {
+				_xhr = await TS.interop.api.call("im.open", { user })
+			} catch (err) {
+				_xhr = err
+			}
+			return _xhr
+		}
+
+		const _DM = async (chan: string, text: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let xhr: IUnknownObject
+			try {
+				xhr = await TS.interop.api.call("chat.postMessage", { channel: chan, text })
+			} catch (err) {
+				xhr = err
+			}
+			return xhr
+		}
+		const dmChannel: IUnknownObject = await page.evaluate(getDmChannel, userId) as IUnknownObject
+		let channel: string = ""
+		if (dmChannel && isUnknownObject(dmChannel.data) && typeof dmChannel.ok === "boolean") {
+			if (dmChannel.ok && isUnknownObject(dmChannel.data.channel)) {
+				channel = dmChannel.data.channel.id as string || ""
+			} else {
+				return false
+			}
+		}
+
+		if (!channel) {
+			return false
+		}
+
+		const xhrRes: IUnknownObject = await page.evaluate(_DM, channel, message) as IUnknownObject
+		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
+			if (xhrRes.ok) {
+				res = true
+			}
+		}
+		return res
 	}
 }
 
