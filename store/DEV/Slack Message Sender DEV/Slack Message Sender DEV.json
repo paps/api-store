@@ -56,6 +56,9 @@
 						"helpers": [
 							"You are limited to 40.000 characters"
 						]
+					},
+					"onlyActiveUsers": {
+						"rightLabel": "<b>Send message only to connected users</b>"
 					}
 				}
 			}
@@ -91,6 +94,9 @@
 				"type": "string",
 				"minLength": 1,
 				"maxLength": 40000
+			},
+			"onlyActiveUsers": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [

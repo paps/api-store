@@ -18,6 +18,7 @@ const slack = new Slack(buster, utils)
 const DEFAULT_DB = "result"
 const DEFAULT_LAUNCH = 1
 // }
+
 ;
 (async () => {
 	const res = [] as IUnknownObject[]
