@@ -108,12 +108,18 @@ class Slack {
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { id: "", name: "", firstName: "", lastName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
 			const profile = user.profile as IUnknownObject
+			const fullName = profile.real_name as string
+
+			if (fullName) {
+				const tmp = fullName.split(" ")
+				res.fullName = fullName
+				res.firstName = tmp.shift() as string
+				res.lastName = tmp.join(" ")
+			}
+
 			res.id = profile && profile.id ? profile.id as string : ""
-			res.name = profile && profile.real_name ? profile.real_name as string : ""
-			res.lastName = profile && profile.last_name ? profile.last_name as string : ""
-			res.firstName = profile && profile.first_name ? profile.first_name as string : ""
 			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
 			res.title = profile && profile.title ? profile.title as string : ""
 			res.phone = profile && profile.phone ? profile.phone as string : ""
@@ -181,6 +187,54 @@ class Slack {
 		return members
 	}
 
+	public async scrapeProfile(page: Puppeteer.Page, userId: string, verbose?: boolean): Promise<IUnknownObject|null> {
+		let _user = null
+
+		const getUserProfile = (endpoint: string, id: string) => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.api.call(endpoint, { user: id })
+		}
+
+		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const profile = user.profile as IUnknownObject
+			const fullName = profile.real_name as string
+
+			if (fullName) {
+				const tmp = fullName.split(" ")
+				res.fullName = fullName
+				res.firstName = tmp.shift() as string
+				res.lastName = tmp.join(" ")
+			}
+
+			res.id = profile && profile.id ? profile.id as string : ""
+			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
+			res.title = profile && profile.title ? profile.title as string : ""
+			res.phone = profile && profile.phone ? profile.phone as string : ""
+			res.skype = profile && profile.skype ? profile.skype as string : ""
+			res.email = profile && profile.email ? profile.email as string : ""
+			res.pictureUrl = profile && profile.image_original ? profile.image_original as string : ""
+			res.timezone = user && user.tz ? user.tz as string : ""
+			res.lastUpdate = user && user.updated ? (new Date(user.updated as number * 1000)).toISOString() : ""
+			return res
+		}
+
+		if (!this.isUserExist(page, userId)) {
+			if (verbose) {
+				this.utils.log(`${userId} doesn't`, "warning")
+			}
+		}
+
+		const member = await page.evaluate(getUserProfile, "users.info", userId)
+		if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.user)) {
+			_user = Object.assign({}, formatUserInformation(member.data.user))
+		}
+		if (verbose) {
+			this.utils.log(`${userId} profile scraped`, "done")
+		}
+		return _user
+	}
+
 	public async isUserExist(page: Puppeteer.Page, userId: string): Promise<boolean> {
 		const checkId = async (user: string): Promise<IUnknownObject> => {
 			const TS: IEvalAny = (window as IEvalAny).TS
@@ -203,7 +257,7 @@ class Slack {
 		return res
 	}
 
-	public async sendDM(page: Puppeteer.Page, userId: string, message: string): Promise<boolean> {
+	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<boolean> {
 		let res = false
 		const getDmChannel = async (user: string): Promise<IUnknownObject> => {
 			const TS: IEvalAny = (window as IEvalAny).TS

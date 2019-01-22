@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js, lib-api-store-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js, lib-api-store-DEV.js, lib-Messaging-DEV.js"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
@@ -17,6 +17,7 @@ const slack = new Slack(buster, utils)
 const inflater = new Messaging(utils)
 
 const DB_NAME = "result"
+const COLUMN = "0"
 const DEFAULT_LINE = 1
 // }
 
@@ -24,8 +25,12 @@ const DEFAULT_LINE = 1
 (async () => {
 	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
-	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName } = args
-	let { numberOfLinesPerLaunch, csvName, queries, message } = args
+	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, onlyActiveUsers } = args
+	let { columnName, numberOfLinesPerLaunch, csvName, queries, message } = args
+	let rows = []
+	let msgTags = []
+	let columns: string[] = []
+	let csvHeaders: string[] = []
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
@@ -37,14 +42,23 @@ const DEFAULT_LINE = 1
 		numberOfLinesPerLaunch = DEFAULT_LINE
 	}
 
+	if (!columnName) {
+		columnName = COLUMN
+	}
+
 	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
 	db = await utils.getDb(csvName + ".csv")
 
 	if (typeof spreadsheetUrl === "string") {
 		try {
-			queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName as string)
+			rows = await utils.getRawCsv(spreadsheetUrl)
+			csvHeaders = (rows[0] as string[]).filter((cell: string) => !utils.isUrl(cell))
+			msgTags = inflater.getMessageTags(message as string).filter((el) => csvHeaders.includes(el))
+			columns = [ columnName as string, ...msgTags ]
+			queries = utils.extractCsvRows(rows, columns)
 		} catch (err) {
 			queries = [ spreadsheetUrl ]
+			msgTags = inflater.getMessageTags(message as string)
 		}
 	}
 
@@ -58,7 +72,9 @@ const DEFAULT_LINE = 1
 			utils.log(`${query} doesn't exist in the workspace ${slackWorkspaceUrl}`, "warning")
 			continue
 		}
-		const sent = await slack.sendDM(page, query, message as string)
+		const profile = await slack.scrapeProfile(page, query)
+		message = inflater.forgeMessage(message as string, profile)
+		const sent = await slack.sendDM(page, query, message as string, onlyActiveUsers as boolean)
 		if (sent) {
 			utils.log(`Message sent to ${query}`, "done")
 		} else {
