@@ -207,7 +207,7 @@ const connectTo = async (selector, tab, message) => {
 			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
 			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
 			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
-		], 10000, "or")
+		], 30000, "or")
 		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
 			utils.log("Invitation couldn't be sent.", "error")
 		}
@@ -235,6 +235,7 @@ const openProfile = async (tab, url, noScraping = true, libScraper) => {
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
 	} else {
 		const scrapedProfile = await libScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
+		console.log("scrapedProfile:", scrapedProfile)
 		retData = Object.assign({}, scrapedProfile.csv)
 	}
 	return retData
@@ -384,7 +385,9 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
+	await buster.saveText(await tab.getContent(), `${Date.now()}sel.html`)
 	console.log("message:", message)
+	return invitation
 	// await tab.wait(50000)
 	// nick.exit()
 	switch (selector) {
@@ -561,12 +564,14 @@ nick.newTab().then(async (tab) => {
 			step++
 		}
 	}
+	console.log("invitation:", invitations)
+	db.push(invitations[0])
 	/**
 	 * Issue #117
 	 * "Successfull" invitations are stored here,
 	 * in order to check later in the script execution if they're sent
 	 */
-	if (invitations.length > 0) {
+	if (false && invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds
 		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)

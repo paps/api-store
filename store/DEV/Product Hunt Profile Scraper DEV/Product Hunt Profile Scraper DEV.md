@@ -5,7 +5,7 @@ From their names to their Twitter handles often, follower counts, upvotes counts
 
 Super useful if you want to use that data for further marketing action or simply thanking at scale a list of people who upvoted your Product afterward.
 
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 - **"Product Hunt account or Spreadsheet URL"**: Choose a sepcific Product Hunt account like `https://www.producthunt.com/@jack` or choose an **open** spreadsheet url with a list of Product Hunt profiles.
 
 # Which steps to follow?

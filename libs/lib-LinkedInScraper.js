@@ -781,7 +781,7 @@ class LinkedInScraper {
 			}
 			if (!silence) {
 				this.utils.log(`${currentUrl} successfully scraped.`, "done")
-			}			
+			}
 		} catch (err) {
 			result.details = {}
 			result.jobs = []

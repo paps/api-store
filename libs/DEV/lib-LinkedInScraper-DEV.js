@@ -619,6 +619,10 @@ const craftCsvObject = infos => {
 		siretZipFromDropContact: (hasDropcontact) ? (infos.dropcontact.siret_zip || null) : null,
 		vatFromDropContact: (hasDropcontact) ? (infos.dropcontact.vat || null) : null,
 		websiteFromDropContact: (hasDropcontact) ? (infos.dropcontact.website || null) : null,
+		facebookFromDropContact: (hasDropcontact) ? (infos.dropcontact.facebook || null) : null,
+		googleplusFromDropContact: (hasDropcontact) ? (infos.dropcontact.googleplus || null) : null,
+		githubFromDropContact: (hasDropcontact) ? (infos.dropcontact.github || null) : null,
+		generate_idFromDropContact: (hasDropcontact) ? (infos.dropcontact.generate_id || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
@@ -825,6 +829,7 @@ class LinkedInScraper {
 					hunterPayload.company = result.jobs[0].companyName
 					hunterPayload.siren = true
 					const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
+					console.log("hundropcontactSearchtS", dropcontactSearch)
 					this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
 					result.details.mailFromDropcontact = dropcontactSearch.email
 					result.dropcontact = Object.assign({}, dropcontactSearch)

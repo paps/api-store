@@ -97,7 +97,7 @@ const validateInvitations = async (invitations, sentCount) => {
 	const withdrawTab = await nick.newTab()
 	try {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
-		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
+		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 30000)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
@@ -202,12 +202,13 @@ const connectTo = async (selector, tab, message) => {
 			"mn-heathrow-toast > .mn-heathrow-toast__confirmation-text > li-icon[type=\"success-pebble-icon\"]", // CSS selector used if there were an redirection
 			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
 			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
-		], 10000, "or")
+		], 30000, "or")
 		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
 			utils.log("Invitation couldn't be sent.", "error")
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
+		await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
 	}
 }
 
