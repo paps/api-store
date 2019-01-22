@@ -207,6 +207,11 @@ const loadLikes = async (tab, count = Infinity) => {
 	await twitter.login(tab, sessionCookie)
 	utils.log(`Urls to scrape ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
+		const timeLeft = await this.utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			this.utils.log(timeLeft.message, "warning")
+			break
+		}
 		try {
 			await twitter.openProfile(tab, utils.isUrl(query) ? appendLikesPages(query) : `https://twitter.com/${query}/likes`)
 			let likes = await loadLikes(tab, likesPerProfile)

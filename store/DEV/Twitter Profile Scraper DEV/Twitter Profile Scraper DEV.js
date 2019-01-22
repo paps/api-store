@@ -79,6 +79,11 @@ const isTwitterProfile = url => {
 	await twitter.login(tab, sessionCookie)
 
 	for (const profile of profileUrls) {
+		const timeLeft = await this.utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			this.utils.log(timeLeft.message, "warning")
+			break
+		}
 		try {
 			const scrapedProfile = await twitter.scrapeProfile(tab, isUrl(profile) ? profile : `https://www.twitter.com/${profile}`, true)
 			scrapedProfile.query = profile
