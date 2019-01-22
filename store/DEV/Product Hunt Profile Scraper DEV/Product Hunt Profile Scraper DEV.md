@@ -45,6 +45,3 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
