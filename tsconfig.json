@@ -45,9 +45,14 @@
 		"rootDirs": [
 		"store/DEV/Web Summit Scraper DEV",
 		"store/DEV/Slack User Extractor DEV",
+		"store/DEV/Product Hunt Auto Upvoter DEV",
 		"store/DEV/Product Hunt Profile Scraper DEV",
 		"store/DEV/Product Hunt Upvoter Extractor DEV",
-		"libs/DEV"
+		"libs/DEV",
+		"libs",
+		"store/Product Hunt Auto Upvoter",
+		"store/Product Hunt Profile Scraper",
+		"store/Product Hunt Upvoter Extractor",
 		],
 
 		// "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
@@ -66,6 +71,8 @@
 	},
 	"include": [
 		"store/DEV/**/*",
-		"libs/DEV/**/*"
+		"libs/DEV/**/*",
+		"store/**/*",
+		"libs/*"
 	]
 }

@@ -16,6 +16,10 @@ const ERROR_CODES = {
 	LINKEDIN_BLOCKED_ACCOUNT: 85,
 	LINKEDIN_DEFAULT_COOKIE: 82,
 	LINKEDIN_INVALID_COOKIE: 87,
+	SLACK_DEFAULT_COOKIE: 88,
+	SLACK_BAD_COOKIE: 89,
+	SLACK_DEFAULT_WORKSPACE: 90,
+	SLACK_BAD_WORKSPACE: 91,
 	TWITTER_RATE_LIMIT: 92,
 	TWITTER_BAD_COOKIE: 93,
 	TWITTER_EXPIRED_COOKIE: 94,
@@ -24,6 +28,8 @@ const ERROR_CODES = {
 	TWITTER_INVALID_COOKIE: 97,
 	MEDIUM_DEFAULT_COOKIE: 98,
 	MEDIUM_BAD_COOKIE: 99,
+	PRODUCTHUNT_BAD_COOKIE: 100,
+	PRODUCTHUNT_DEFAULT_COOKIE: 101,
 	INSTAGRAM_BAD_COOKIE: 103,
 	INSTAGRAM_EXPIRED_COOKIE: 104,
 	INSTAGRAM_BLOCKED_ACCOUNT: 105,
@@ -36,6 +42,7 @@ const ERROR_CODES = {
 	FACEBOOK_INVALID_COOKIE: 117,
 	FACEBOOK_TIMEOUT: 118,
 }
+
 // }
 
 /**
@@ -170,11 +177,16 @@ const _handleGoogle = async urlObject => {
 const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
 class StoreUtilities {
+
 	constructor(nick, buster) {
-		this.nick = nick
-		this.buster = buster
+		if (arguments.length > 1) {
+			this.nick = nick
+			this.buster = buster
+		} else {
+			this.buster = nick
+		}
 		this.minTimeBeforeExit = null // will be decided on the first call to checkTimeLeft()
-		if (buster.arguments.testRunObject) {
+		if (this.buster.arguments.testRunObject) {
 			this.test = true
 			this.testRunObject = buster.arguments.testRunObject
 			this.output = "|START|\n"

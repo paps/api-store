@@ -5,20 +5,21 @@
 
 		# Global libs DEV
 		# ---------------
-		'lib-StoreUtilities-DEV.js': 'libs/DEV/lib-StoreUtilities-DEV.js'
-		'lib-LinkedIn-DEV.js': 'libs/DEV/lib-LinkedIn-DEV.js'
-		'lib-WebSearch-DEV.js': 'libs/DEV/lib-WebSearch-DEV.js'
-		'lib-LinkedInScraper-DEV.js': 'libs/DEV/lib-LinkedInScraper-DEV.js'
-		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
-		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
-		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
-		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
-		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
-		'lib-Medium-DEV.js': 'libs/DEV/lib-Medium-DEV.js'
-		'lib-Youtube-DEV.js': 'libs/DEV/lib-Youtube-DEV.js'
-		'lib-Slack-DEV.js': 'libs/DEV/lib-Slack-DEV.js'
-		'lib-ProductHunt-DEV.js': 'libs/DEV/lib-ProductHunt-DEV.js'
 		'lib-api-store-DEV.js': 'libs/DEV/lib-api-store-DEV.js'
+		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
+		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
+		'lib-Instagram-DEV.js': 'libs/DEV/lib-Instagram-DEV.js'
+		'lib-LinkedIn-DEV.js': 'libs/DEV/lib-LinkedIn-DEV.js'
+		'lib-LinkedInScraper-DEV.js': 'libs/DEV/lib-LinkedInScraper-DEV.js'
+		'lib-Medium-DEV.js': 'libs/DEV/lib-Medium-DEV.js'
+		'lib-Messaging-DEV.js': 'libs/DEV/lib-Messaging-DEV.js'
+		'lib-ProductHunt-DEV.js': 'libs/DEV/lib-ProductHunt-DEV.js'
+		'lib-Slack-DEV.js': 'libs/DEV/lib-Slack-DEV.js'
+		'lib-StoreUtilities-DEV.js': 'libs/DEV/lib-StoreUtilities-DEV.js'
+		'lib-Twitter-DEV.js': 'libs/DEV/lib-Twitter-DEV.js'
+		'lib-Youtube-DEV.js': 'libs/DEV/lib-Youtube-DEV.js'
+		'lib-WebSearch-DEV.js': 'libs/DEV/lib-WebSearch-DEV.js'
+
 
 		# API store DEV
 		# -------------
