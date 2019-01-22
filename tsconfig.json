@@ -43,16 +43,17 @@
 
 		// List of root folders whose combined content represents the structure of the project at runtime.
 		"rootDirs": [
-		"store/DEV/Web Summit Scraper DEV",
-		"store/DEV/Slack User Extractor DEV",
-		"store/DEV/Product Hunt Auto Upvoter DEV",
-		"store/DEV/Product Hunt Profile Scraper DEV",
-		"store/DEV/Product Hunt Upvoter Extractor DEV",
-		"libs/DEV",
-		"libs",
-		"store/Product Hunt Auto Upvoter",
-		"store/Product Hunt Profile Scraper",
-		"store/Product Hunt Upvoter Extractor",
+			"libs/DEV",
+			"libs",
+			"store/Product Hunt Auto Upvoter",
+			"store/Product Hunt Profile Scraper",
+			"store/Product Hunt Upvoter Extractor",
+			"store/DEV/Web Summit Scraper DEV",
+			"store/DEV/Slack User Extractor DEV",
+			"store/DEV/Slack Message Sender DEV",
+			"store/DEV/Product Hunt Auto Upvoter DEV",
+			"store/DEV/Product Hunt Profile Scraper DEV",
+			"store/DEV/Product Hunt Upvoter Extractor DEV",
 		],
 
 		// "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
