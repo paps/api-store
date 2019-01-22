@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js"
 
 const { URL } = require("url")
 
@@ -20,7 +19,7 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -79,8 +78,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.fundingRecentUrl = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").href
 		}
 		try {
-			const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]")
-			.parentElement.nextElementSibling
+			const recentFunding = document.querySelector(".org-grid__right-rail .container-with-shadow a[data-control-name=\"funding_most_recent_round_link\"]").parentElement.nextElementSibling
 			if (recentFunding && recentFunding.textContent) {
 				result.fundingRecentAmount = recentFunding.textContent.trim()
 			}
@@ -150,7 +148,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 	} catch (err) {
 		//
 	}
-
+	
 
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
@@ -162,10 +160,10 @@ const scrapeCompanyInfo = (arg, callback) => {
 
 	if (document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link") || document.querySelector("a[data-control-name=\"topcard_see_all_employees\"]")) {
 		/**
-		 * NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
-		 * In order to get all LinkedIn profiles we need to split and remove
-		 * brackets and generated backslashed when decoding the URI component
-		 */
+			* NOTE: the url has a specific pattern "=[\"xxx\",\"xx\",\"xxxx\",\"xxxx\"]"
+			* In order to get all LinkedIn profiles we need to split and remove
+			* brackets and generated backslashed when decoding the URI component
+			*/
 		let link = document.querySelector(".org-company-employees-snackbar__details-highlight.snackbar-description-see-all-link")
 		if (!link) {
 			link = document.querySelector("a[data-control-name=\"topcard_see_all_employees\"]")
@@ -275,28 +273,7 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (!link.endsWith("/")) {
 			link = `${link}/`
 		}
-		// await tab.open(link)
-		// console.log("opening first page")
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.screenshot(`${Date.now()}FirstPage.png`)
-		// await buster.saveText(await tab.getContent(), `${Date.now()}FirstPage.html`)
-		// await tab.open(link + "jobs")
-		// console.log("opening jobs page")
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.screenshot(`${Date.now()}JobsPage.png`)
-		// await buster.saveText(await tab.getContent(), `${Date.now()}JobsPage.html`)
 		await tab.open(link + "about")
-		console.log("opening about page")
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		if (await tab.isPresent("section.org-similar-orgs")) {
 			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
@@ -305,15 +282,6 @@ const getCompanyInfo = async (tab, link, query) => {
 		if (await tab.isVisible("div.org-screen-loader")) {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		// await tab.wait(2000)
-		// await tab.scrollToBottom()
-		await tab.screenshot(`${Date.now()}NewgetCompanyInfo.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}NewgetCompanyInfo.html`)
-		
 		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
 		try {
 			if (await tab.isVisible(".org-page-navigation__item")) {
@@ -321,16 +289,10 @@ const getCompanyInfo = async (tab, link, query) => {
 				result = Object.assign(result, insights)
 			}
 		} catch (err) {
-			console.log("err1q:", err)
-			await tab.screenshot(`${Date.now()}err1q.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}err1q.html`)
+			//
 		}
-
 		return result
 	} catch (err) {
-		console.log("erraze:", err)
-		await tab.screenshot(`${Date.now()}erraze.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}erraze.html`)
 		return { link, query, invalidResults: "Couldn't access company profile" }
 	}
 }
@@ -347,7 +309,10 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch, csvName } = utils.validateArguments()
+	if (!csvName) {
+		csvName = "result"
+	}
 	if (typeof spreadsheetUrl === "string") {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
@@ -382,10 +347,10 @@ const isLinkedUrl = target => {
 				utils.log(`Getting data for ${company}`, "loading")
 				if (!fullUrl) {
 					/**
-					 * If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
-					 * the script will sraightforwardly forge an URL with the given ID
-					 * It coulds fail if the input is an number but doesn't represents an ID
-					 */
+						* If an input represents a number the script will automatically considers that the input is a LinkedIn ID,
+						* the script will sraightforwardly forge an URL with the given ID
+						* It coulds fail if the input is an number but doesn't represents an ID
+						*/
 					if (!isNaN(company)) {
 						link = `https://www.linkedin.com/company/${company}`
 					} else {
@@ -399,8 +364,6 @@ const isLinkedUrl = target => {
 								break
 							}
 						}
-						await tab.screenshot(`${Date.now()}linkfound.png`)
-						await buster.saveText(await tab.getContent(), `${Date.now()}linkfound.html`)
 						if (!link) {
 							result.push({ query: company, error:"No results found"})
 							throw "No results were found."
@@ -429,8 +392,9 @@ const isLinkedUrl = target => {
 			}
 		}
 	}
-	await linkedIn.updateCookie()
-	await utils.saveResult(result)
+	await linkedIn.saveCookie()
+	await utils.saveResults(result, result, csvName)
+	nick.exit()
 })()
 	.catch(err => {
 		utils.log(err, "error")

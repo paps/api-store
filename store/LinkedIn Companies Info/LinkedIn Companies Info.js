@@ -309,7 +309,10 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch, csvName } = utils.validateArguments()
+	if (!csvName) {
+		csvName = "result"
+	}
 	if (typeof spreadsheetUrl === "string") {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
@@ -390,7 +393,8 @@ const isLinkedUrl = target => {
 		}
 	}
 	await linkedIn.saveCookie()
-	await utils.saveResult(result)
+	await utils.saveResults(result, result, csvName)
+	nick.exit()
 })()
 	.catch(err => {
 		utils.log(err, "error")
