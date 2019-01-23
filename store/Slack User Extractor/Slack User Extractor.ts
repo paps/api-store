@@ -3,7 +3,6 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Slack.js, lib-api-store.js"
 
-import { URL } from "url"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities"
 import Buster from "phantombuster"
@@ -18,6 +17,7 @@ const slack = new Slack(buster, utils)
 const DEFAULT_DB = "result"
 const DEFAULT_LAUNCH = 1
 // }
+
 ;
 (async () => {
 	const res = [] as IUnknownObject[]

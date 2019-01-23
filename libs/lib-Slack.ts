@@ -119,7 +119,7 @@ class Slack {
 				res.lastName = tmp.join(" ")
 			}
 
-			res.id = profile && profile.id ? profile.id as string : ""
+			res.id = user && user.id ? user.id as string : ""
 			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
 			res.title = profile && profile.title ? profile.title as string : ""
 			res.phone = profile && profile.phone ? profile.phone as string : ""
@@ -207,7 +207,7 @@ class Slack {
 				res.lastName = tmp.join(" ")
 			}
 
-			res.id = profile && profile.id ? profile.id as string : ""
+			res.id = user && user.id ? user.id as string : ""
 			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
 			res.title = profile && profile.title ? profile.title as string : ""
 			res.phone = profile && profile.phone ? profile.phone as string : ""

@@ -1,5 +1,5 @@
 {
-	"slug": "slack-user-extractor",
+	"slug": "slack-channel-user-extractor",
 	"description": "",
 	"image": "",
 	"argumentDescription": "",
@@ -10,7 +10,8 @@
 	"update": false,
 	"defaultArgument": {
 		"sessionCookie": "d_cookie",
-		"slackWorkspaceUrl": "slack_workspace_url"
+		"slackWorkspaceUrl": "slack_workspace_url",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)/edit?usp=sharing"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
