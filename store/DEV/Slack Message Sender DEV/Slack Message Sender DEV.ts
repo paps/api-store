@@ -67,6 +67,11 @@ const DEFAULT_LINE = 1
 	}
 
 	for (const query of queries as string[]) {
+		const timeLeft = utils.checkTimeLeft() as IUnknownObject
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		const idExists = await slack.isUserExist(page, query)
 		if (!idExists) {
 			utils.log(`${query} doesn't exist in the workspace ${slackWorkspaceUrl}`, "warning")

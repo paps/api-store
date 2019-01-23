@@ -1,7 +1,7 @@
 import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
 import Buster from "phantombuster"
-import * as Pupeppeteer from "puppeteer"
+import * as Puppeteer from "puppeteer"
 
 class Slack {
 	private buster: Buster
@@ -12,7 +12,7 @@ class Slack {
 		this.utils = utils
 	}
 
-	public async login(page: Pupeppeteer.Page, url: string, dCookie: string): Promise<void> {
+	public async login(page: Puppeteer.Page, url: string, dCookie: string): Promise<void> {
 		const _login = async () => {
 			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
 			if (response !== null && response.status() !== 200) {
@@ -70,7 +70,7 @@ class Slack {
 		}
 	}
 
-	public async getChannelsMeta(page: Pupeppeteer.Page): Promise<IUnknownObject[]> {
+	public async getChannelsMeta(page: Puppeteer.Page): Promise<IUnknownObject[]> {
 
 		const channels: IUnknownObject[] = []
 
@@ -89,7 +89,7 @@ class Slack {
 		return channels
 	}
 
-	public async getChannelsUser(page: Pupeppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
+	public async getChannelsUser(page: Puppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
 		const members: IUnknownObject[] = []
 
 		const getUsersId = (endpoint: string, channel: string, cursor?: string|null) => {
@@ -108,12 +108,18 @@ class Slack {
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { id: "", name: "", firstName: "", lastName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
 			const profile = user.profile as IUnknownObject
+			const fullName = profile.real_name as string
+
+			if (fullName) {
+				const tmp = fullName.split(" ")
+				res.fullName = fullName
+				res.firstName = tmp.shift() as string
+				res.lastName = tmp.join(" ")
+			}
+
 			res.id = profile && profile.id ? profile.id as string : ""
-			res.name = profile && profile.real_name ? profile.real_name as string : ""
-			res.lastName = profile && profile.last_name ? profile.last_name as string : ""
-			res.firstName = profile && profile.first_name ? profile.first_name as string : ""
 			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
 			res.title = profile && profile.title ? profile.title as string : ""
 			res.phone = profile && profile.phone ? profile.phone as string : ""
@@ -179,6 +185,122 @@ class Slack {
 			}
 		}
 		return members
+	}
+
+	public async scrapeProfile(page: Puppeteer.Page, userId: string, verbose?: boolean): Promise<IUnknownObject|null> {
+		let _user = null
+
+		const getUserProfile = (endpoint: string, id: string) => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.api.call(endpoint, { user: id })
+		}
+
+		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const profile = user.profile as IUnknownObject
+			const fullName = profile.real_name as string
+
+			if (fullName) {
+				const tmp = fullName.split(" ")
+				res.fullName = fullName
+				res.firstName = tmp.shift() as string
+				res.lastName = tmp.join(" ")
+			}
+
+			res.id = profile && profile.id ? profile.id as string : ""
+			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
+			res.title = profile && profile.title ? profile.title as string : ""
+			res.phone = profile && profile.phone ? profile.phone as string : ""
+			res.skype = profile && profile.skype ? profile.skype as string : ""
+			res.email = profile && profile.email ? profile.email as string : ""
+			res.pictureUrl = profile && profile.image_original ? profile.image_original as string : ""
+			res.timezone = user && user.tz ? user.tz as string : ""
+			res.lastUpdate = user && user.updated ? (new Date(user.updated as number * 1000)).toISOString() : ""
+			return res
+		}
+
+		if (!this.isUserExist(page, userId)) {
+			if (verbose) {
+				this.utils.log(`${userId} doesn't`, "warning")
+			}
+		}
+
+		const member = await page.evaluate(getUserProfile, "users.info", userId)
+		if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.user)) {
+			_user = Object.assign({}, formatUserInformation(member.data.user))
+		}
+		if (verbose) {
+			this.utils.log(`${userId} profile scraped`, "done")
+		}
+		return _user
+	}
+
+	public async isUserExist(page: Puppeteer.Page, userId: string): Promise<boolean> {
+		const checkId = async (user: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let xhr: IUnknownObject
+			try {
+				xhr = await TS.interop.api.call("users.info", { user })
+			} catch (err) {
+				xhr = err
+			}
+			return xhr
+		}
+
+		let res: boolean = false
+		const xhrRes: IUnknownObject = await page.evaluate(checkId, userId) as IUnknownObject
+		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
+			if (xhrRes.ok) {
+				res = true
+			}
+		}
+		return res
+	}
+
+	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<boolean> {
+		let res = false
+		const getDmChannel = async (user: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let _xhr: IUnknownObject
+			try {
+				_xhr = await TS.interop.api.call("im.open", { user })
+			} catch (err) {
+				_xhr = err
+			}
+			return _xhr
+		}
+
+		const _DM = async (chan: string, text: string): Promise<IUnknownObject> => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			let xhr: IUnknownObject
+			try {
+				xhr = await TS.interop.api.call("chat.postMessage", { channel: chan, text })
+			} catch (err) {
+				xhr = err
+			}
+			return xhr
+		}
+		const dmChannel: IUnknownObject = await page.evaluate(getDmChannel, userId) as IUnknownObject
+		let channel: string = ""
+		if (dmChannel && isUnknownObject(dmChannel.data) && typeof dmChannel.ok === "boolean") {
+			if (dmChannel.ok && isUnknownObject(dmChannel.data.channel)) {
+				channel = dmChannel.data.channel.id as string || ""
+			} else {
+				return false
+			}
+		}
+
+		if (!channel) {
+			return false
+		}
+
+		const xhrRes: IUnknownObject = await page.evaluate(_DM, channel, message) as IUnknownObject
+		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
+			if (xhrRes.ok) {
+				res = true
+			}
+		}
+		return res
 	}
 }
 

@@ -1,14 +1,13 @@
 // Phantombuser configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js, lib-api-store-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Slack.js, lib-api-store.js"
 
-import { URL } from "url"
 import puppeteer from "puppeteer"
-import StoreUtilities from "./lib-StoreUtilities-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
 import Buster from "phantombuster"
-import Slack from "./lib-Slack-DEV"
-import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+import Slack from "./lib-Slack"
+import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 
 const buster = new Buster()
 const utils = new StoreUtilities(buster)

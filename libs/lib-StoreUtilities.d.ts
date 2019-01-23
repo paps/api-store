@@ -11,7 +11,7 @@ declare class StoreUtilities {
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
 	public getRawCsv(url: string, printLogs?: boolean): Promise<IUnknownObject[]>
-	public extractCsvRows(url: string, columnName?: string|string[], printLogs?: boolean): string[]|IUnknownObject[]
+	public extractCsvRows(csv: IUnknownObject[], columnName?: string|string[], printLogs?: boolean): string[]|IUnknownObject[]
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
