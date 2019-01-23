@@ -440,7 +440,7 @@ class Facebook {
 				if (proxyUsed) {
 					errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
 					if (proxyUsed.includes(".proxymesh.com")) {
-						if (!proxyUsed.includes(":@")) {
+						if (proxyUsed.includes(":@")) {
 							errorMessage += " Your ProxyMesh password seems to be missing."
 						}
 						if (proxyUsed.startsWith("http://:")) {
@@ -453,10 +453,10 @@ class Facebook {
 			}
 			if (await this.checkLock(tab)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification. We highly recommend using a proxy.", "error")
-				this.nick.exit(115)
+				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BLOCKED_ACCOUNT)
 			} else {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
-				this.nick.exit(113)
+				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BAD_COOKIE)
 			}
 		}
 	}

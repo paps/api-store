@@ -446,7 +446,7 @@ class Facebook {
 				if (proxyUsed) {
 					errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
 					if (proxyUsed.includes(".proxymesh.com")) {
-						if (!proxyUsed.includes(":@")) {
+						if (proxyUsed.includes(":@")) {
 							errorMessage += " Your ProxyMesh password seems to be missing."
 						}
 						if (proxyUsed.startsWith("http://:")) {

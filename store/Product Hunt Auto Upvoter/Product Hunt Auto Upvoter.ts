@@ -9,7 +9,7 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
+import { IUnknownObject } from "./lib-api-store"
 
 import StoreUtilities from "./lib-StoreUtilities"
 const utils = new StoreUtilities(buster)
@@ -89,7 +89,8 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const { sessionCookie, spreadsheetUrl, numberOfProfilesPerProduct, columnName, numberOfLinesPerLaunch, csvName, profileUrls, reprocessAll } = utils.validateArguments()
-	let profileArray = []
+	const _sessionCookie = sessionCookie as string
+	let profileArray = profileUrls as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
@@ -103,14 +104,14 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 	if (typeof numberOfLinesPerLaunch !== "number") {
 		numberOfLines = LINES_COUNT
 	}
-	await producthunt.login(page, sessionCookie)
-	if (utils.isUrl(inputUrl)) {
-		profileArray = isProductHuntUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
-	} else {
-		profileArray = [ inputUrl ]
-	}
-
-	if (typeof profileUrls === "string") {
+	await producthunt.login(page, _sessionCookie)
+	if (inputUrl) {
+		if (utils.isUrl(inputUrl)) {
+			profileArray = isProductHuntUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
+		} else {
+			profileArray = [ inputUrl ]
+		}
+	} else if (typeof profileUrls === "string") {
 		profileArray = [ profileUrls ]
 	}
 	const result = await utils.getDb(_csvName + ".csv")

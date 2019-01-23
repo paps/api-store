@@ -9,7 +9,7 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
+import { IUnknownObject, IEvalAny } from "./lib-api-store"
 
 import StoreUtilities from "./lib-StoreUtilities"
 
@@ -200,7 +200,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 		profileArray = [ profileUrls ]
 	}
 
-	const result = await utils.getDb(_csvName + ".csv")
+	const result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 	followSuccessCount = result.filter((el) => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter((el) => el.unfollowAction === "Success").length
 	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
