@@ -45,7 +45,7 @@
 		"rootDirs": [
 			"libs/DEV",
 			"libs",
-			"store/Product Hunt Auto Folow",
+			"store/Product Hunt Auto Follow",
 			"store/Product Hunt Auto Upvoter",
 			"store/Product Hunt Profile Scraper",
 			"store/Product Hunt Upvoter Extractor",
@@ -76,6 +76,6 @@
 		"store/DEV/**/*",
 		"libs/DEV/**/*",
 		"store/**/*",
-		"libs/*"
+		"libs/**/*"
 	]
 }

@@ -1,0 +1,113 @@
+{
+	"slug": "product-hunt-auto-follow",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#DD6948",
+	"gradientEnd": "#DA552F",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "_producthunt_session_production_cookie",
+		"spreadsheetUrl": "",
+		"numberOfLinesPerLaunch": 10
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Product Hunt session cookie <a href=\"/api-store/3149/linkedin-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your '_producthunt_session_production' session cookie here"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a Product Hunt profile URL <a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+					},
+					"columnName": {
+						"label": "Column name where Product Hunt profiles URLs are stored in the spreadhsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (All of them if empty) <a href=\"/api-store/12134/product-hunt-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will try to follow 10 profiles per launch",
+						"inputType": "number"
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					},
+					"unfollow": {
+						"rightLabel": "<b>Unfollow profiles</b>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"unfollow": {
+				"type": "boolean"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

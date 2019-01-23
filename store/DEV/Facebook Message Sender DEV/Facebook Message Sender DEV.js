@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -87,6 +88,11 @@ const openChatPage = async (tab, profileUrl) => {
 }
 
 const sendMessage = async (tab, message) => {
+	if (await tab.isVisible("a._2xh6._2xh7")) { // for some pages you need to click on start before you can chat
+		await tab.click("a._2xh6._2xh7")
+		utils.log("Starting conversation...", "loading")
+		await tab.wait(500)
+	}
 	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
@@ -205,6 +211,9 @@ nick.newTab().then(async (tab) => {
 							}
 						} catch (err) {
 							utils.log(`Error sending message to ${tempResult.name}: ${err}`, "error")
+							await buster.saveText(await tab.getContent(), `${Date.now()}slectors.html`)
+							await tab.screenshot(`${Date.now()}slectors.png`)
+
 							tempResult.error = err
 						}
 					}

@@ -87,6 +87,11 @@ const openChatPage = async (tab, profileUrl) => {
 }
 
 const sendMessage = async (tab, message) => {
+	if (await tab.isVisible("a._2xh6._2xh7")) { // for some pages you need to click on start before you can chat
+		await tab.click("a._2xh6._2xh7")
+		utils.log("Starting conversation...", "loading")
+		await tab.wait(500)
+	}
 	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
