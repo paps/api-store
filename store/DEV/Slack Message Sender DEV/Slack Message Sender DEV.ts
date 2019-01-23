@@ -7,7 +7,7 @@ import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 import Slack from "./lib-Slack-DEV"
-import { IUnknownObject } from "./lib-api-store-DEV"
+import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 import Messaging from "./lib-Messaging-DEV"
 
 const buster = new Buster()
@@ -27,7 +27,7 @@ const DEFAULT_LINE = 1
 	const args = utils.validateArguments()
 	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, onlyActiveUsers } = args
 	let { columnName, numberOfLinesPerLaunch, csvName, queries, message } = args
-	let rows = []
+	let rows: IUnknownObject[] = []
 	let msgTags = []
 	let columns: string[] = []
 	let csvHeaders: string[] = []
@@ -55,35 +55,67 @@ const DEFAULT_LINE = 1
 			csvHeaders = (rows[0] as string[]).filter((cell: string) => !utils.isUrl(cell))
 			msgTags = inflater.getMessageTags(message as string).filter((el) => csvHeaders.includes(el))
 			columns = [ columnName as string, ...msgTags ]
-			queries = utils.extractCsvRows(rows, columns)
+			rows = utils.extractCsvRows(rows, columns) as IUnknownObject[]
 		} catch (err) {
-			queries = [ spreadsheetUrl ]
+			rows = [ { [columnName as string]: spreadsheetUrl } ]
 			msgTags = inflater.getMessageTags(message as string)
 		}
 	}
 
 	if (typeof queries === "string") {
-		queries = [ queries ]
+		rows = rows.map((el) => ({ [columnName as string]: el }))
+		msgTags = inflater.getMessageTags(message as string)
+	} else if (Array.isArray(queries)) {
+		rows = queries.map((el) => ({ [columnName as string]: el }))
 	}
 
-	for (const query of queries as string[]) {
-		const timeLeft = utils.checkTimeLeft() as IUnknownObject
+	rows = rows.filter((el) => db.findIndex((line) => el[columnName as string] === line.query) < 0).slice(0, numberOfLinesPerLaunch as number)
+	if (rows.length < 1) {
+		utils.log("Input is empty OR messages were send to every Slack user IDs specificied", "warning")
+		process.exit()
+	}
+	utils.log(`Sending a message to: ${JSON.stringify(rows.map((el) => el[columnName as string]), null, 2)}`, "done")
+	for (const query of rows) {
+		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		const idExists = await slack.isUserExist(page, query)
+		const idExists = await slack.isUserExist(page, (query[columnName as string] as string))
 		if (!idExists) {
-			utils.log(`${query} doesn't exist in the workspace ${slackWorkspaceUrl}`, "warning")
+			utils.log(`${query[columnName as string]} doesn't exist in the workspace ${slackWorkspaceUrl}`, "warning")
 			continue
 		}
-		const profile = await slack.scrapeProfile(page, query)
+		let profile = await slack.scrapeProfile(page, (query[columnName as string] as string))
+		profile = Object.assign(query, profile)
 		message = inflater.forgeMessage(message as string, profile)
-		const sent = await slack.sendDM(page, query, message as string, onlyActiveUsers as boolean)
-		if (sent) {
-			utils.log(`Message sent to ${query}`, "done")
+		utils.log(`Sending message: ${message}`, "info")
+		const sent = await slack.sendDM(page, (query[columnName as string] as string), message as string, onlyActiveUsers as boolean)
+		if (sent === 0) {
+			const res = Object.assign({}, profile)
+			res.message = message
+			res.timestamp = (new Date()).toISOString()
+			res.query = query[columnName as string]
+			utils.log(`Message sent to ${query[columnName as string]}`, "done")
+			db.push(res)
 		} else {
-			utils.log(`Message can't be send to ${query}`, "warning")
+			let err = "Message can't be send"
+			if (sent === -1) {
+				err += `: ${query[columnName as string]} doesn't represent a valid Slack user`
+				utils.log(err, "warning")
+			}
+
+			if (sent === -2) {
+				err += `: Slack internal error ${query[columnName as string]}`
+				utils.log(err, "warning")
+			}
+
+			if (sent === -3) {
+				err += `: ${query[columnName as string]} is not connected`
+				utils.log(err, "warning")
+				continue // Don't push in DB, the ID will be tested in a next launch
+			}
+			db.push({ query: query[columnName as string], error: err, timestamp: (new Date()).toISOString() })
 		}
 	}
 

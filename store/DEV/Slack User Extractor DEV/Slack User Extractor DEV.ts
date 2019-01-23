@@ -61,7 +61,7 @@ const DEFAULT_LAUNCH = 10
 	const channels = await slack.getChannelsMeta(page)
 	for (const query of queries as string[]) {
 		const _chan = query.startsWith("#") ? query.substring(1) : query
-		const channel = channels.find((el) => el.name === _chan)
+		const channel = channels.find((el: IUnknownObject) => el.name === _chan)
 		if (!channel) {
 			const error = `The channel ${query} doesn't exists in ${slackWorkspaceUrl}`
 			utils.log(error, "warning")
@@ -70,7 +70,7 @@ const DEFAULT_LAUNCH = 10
 		}
 		utils.log(`Scraping ${query} channel`, "loading")
 		const members = await slack.getChannelsUser(page, channel.id as string, true)
-		members.forEach((el) => {
+		members.forEach((el: IUnknownObject) => {
 			el.query = query
 			el.channel = query
 			el.workspaceUrl = slackWorkspaceUrl
