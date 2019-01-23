@@ -206,7 +206,7 @@ class StoreUtilities {
 			this.output += `${type}:>${message}\n`
 			if (type === "error" || (type === "warning" && !this.testRunObject.keepGoingOnWarning)) {
 				console.log(`Test failed, got error of type ${type}: ${message}`)
-				this.nick.exit(1)
+				process.exit(1)
 			}
 		}
 		const typeTab = {
@@ -622,7 +622,7 @@ class StoreUtilities {
 		if (minLength) {
 			if (result.length < minLength) {
 				console.log(`Test failed: Result has ${result.length} entries but minimum allowed to pass is ${minLength}.`)
-				this.nick.exit(1)
+				process.exit(1)
 			}
 		}
 		if (desiredOutput) {
@@ -631,11 +631,11 @@ class StoreUtilities {
 				const pos = this.output.indexOf(word)
 				if (pos === -1) {
 					console.log(`Test failed: Could not find ${word} in the output.`)
-					this.nick.exit(1)
+					process.exit(1)
 				}
 				if (!this.testRunObject.disableOutputOrderCheck && (pos < last)) {
 					console.log(`Test failed: Could not find ${word} in the right order.`)
-					this.nick.exit(1)
+					process.exit(1)
 				} else {
 					last = pos
 				}
@@ -677,7 +677,7 @@ class StoreUtilities {
 			this._testResult(result)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
-		this.nick.exit()
+		process.exit()
 	}
 
 	// Old way of checking arguments
