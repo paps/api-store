@@ -88,13 +88,12 @@ const scrapeProfile = (arg, cb) => {
 		scrapedData.vmid = vmid
 	}
 	let jsonData
-	const jsonCode = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("contactInfo") && !el.textContent.includes("request"))[0]
-
+	const jsonCode = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("contactInfo") && !el.textContent.includes("\"request\":"))[0]
 	if (jsonCode) {
 		jsonData = JSON.parse(jsonCode.textContent)
+	} else {
+		cb("Couldn't find profile data")
 	}
-
-
 	scrapedData.name = jsonData.fullName
 	scrapedData.firstName = jsonData.firstName
 	scrapedData.lastName = jsonData.lastName
@@ -170,21 +169,21 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { query, salesNavigatorUrl })
 		if (saveImg || takeScreenshot) {
-			try {
-				let slug = scrapedData.linkedinProfileUrl.slice(28)
-				try {
-					if (saveImg) {
+			let slug = scrapedData.linkedinProfileUrl.slice(28)
+			if (saveImg) {
+				for (let i = 0; i < 10; i++) {
+					try {
 						scrapedData.savedImg = await buster.save(scrapedData.imgUrl, `${slug}.jpeg`)
+						break
+					} catch (err) {
+						//
 					}
-				} catch (err) {
-					//
+					await tab.wait(500)
 				}
-				try {
-					if (takeScreenshot) {
-						scrapedData.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
-					}
-				} catch (err) {
-					//
+			}
+			try {
+				if (takeScreenshot) {
+					scrapedData.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
 				}
 			} catch (err) {
 				//
@@ -195,6 +194,8 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 		}
 	} catch (err) {
 		utils.log(`Error scraping profile: ${err}`, "error")
+		await tab.screenshot(`${Date.now()}error.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}error.html`)
 	}
 	return scrapedData
 }

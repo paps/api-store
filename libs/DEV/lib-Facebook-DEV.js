@@ -364,23 +364,19 @@ class Facebook {
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
 		const _login = async () => {
-			console.log("open1")
 			try {
 				 await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
 				// await tab.screenshot(`timeout${new Date()}.png`)
 				// await this.buster.saveText(await tab.getContent(), `timeout${Date.now()}.html`)
-				console.log("open2", err)
 				return "Timeout"
 			}
 			let sel
 			try {
 				sel = await tab.untilVisible(["#mainContainer", "form#login_form"], "or", 15000)
-				console.log("open3")
-			} catch (e) {
-				console.log("open4", e)
-
-				return e.toString()
+			} catch (err) {
+				console.log("Error", err)
+				return err.toString()
 			}
 			if (sel === "#mainContainer") {
 				await tab.untilVisible("div#userNav .linkWrap.noCount", 30000)
@@ -432,7 +428,6 @@ class Facebook {
 				value: this.originalSessionCookieXs,
 				domain: "www.facebook.com"
 			})
-			console.log(" await _login()")
 			// second login try with cookie from argument
 			const loginResult = await _login()
 			if (loginResult !== null) {
@@ -446,7 +441,20 @@ class Facebook {
 				console.log(error)
 			}
 			if (error === "Timeout") {
-				this.utils.log("Connection has timed out.", "error")
+				let errorMessage = "Connection has timed out."
+				const proxyUsed = this.nick._options.httpProxy
+				if (proxyUsed) {
+					errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
+					if (proxyUsed.includes(".proxymesh.com")) {
+						if (!proxyUsed.includes(":@")) {
+							errorMessage += " Your ProxyMesh password seems to be missing."
+						}
+						if (proxyUsed.startsWith("http://:")) {
+							errorMessage += " Your ProxyMesh username seems to be missing."
+						}
+					}
+				}
+				this.utils.log(errorMessage, "error")
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_TIMEOUT)
 			}
 			if (await this.checkLock(tab)) {

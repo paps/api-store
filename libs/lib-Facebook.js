@@ -435,8 +435,21 @@ class Facebook {
 				console.log(error)
 			}
 			if (error === "Timeout") {
-				this.utils.log("Connection has timed out.", "error")
-				this.nick.exit(118)
+				let errorMessage = "Connection has timed out."
+				const proxyUsed = this.nick._options.httpProxy
+				if (proxyUsed) {
+					errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
+					if (proxyUsed.includes(".proxymesh.com")) {
+						if (!proxyUsed.includes(":@")) {
+							errorMessage += " Your ProxyMesh password seems to be missing."
+						}
+						if (proxyUsed.startsWith("http://:")) {
+							errorMessage += " Your ProxyMesh username seems to be missing."
+						}
+					}
+				}
+				this.utils.log(errorMessage, "error")
+				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_TIMEOUT)
 			}
 			if (await this.checkLock(tab)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification. We highly recommend using a proxy.", "error")
