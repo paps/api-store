@@ -12,7 +12,7 @@
 		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
 		"numberOfLinesPerLaunch": 10
 	},
-	"defaultArgumentAllowed": false,
+	"defaultArgumentAllowed": true,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -39,7 +39,7 @@
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (All of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
 						"inputType": "number"
 					},
@@ -49,6 +49,9 @@
 					},
 					"reprocessAll": {
 						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
+					},
+					"removeAllDuplicates": {
+						"rightLabel": "<b>Remove all duplicate profiles</b> (If scraping multiple products)"
 					}
 				}
 			}
@@ -78,6 +81,9 @@
 			},
 			"reprocessAll": {
 				"type": "boolean"
+			},
+			"removeAllDuplicates": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [
@@ -88,7 +94,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"postUrls": {
 						"required": true,
 						"type": "array",
 						"items": {
@@ -100,7 +106,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"postUrls": {
 						"required": true,
 						"type": "string",
 						"minLength": 1

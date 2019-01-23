@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js, lib-ProductHunt.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js"
 
 const { URL } = require("url")
 
@@ -90,13 +89,15 @@ const getProductName = () => {
 	return ""
 }
 
-const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: string, query: string) => {
-	const response = await page.goto(url)
+const openProfile = async (page: puppeteer.Page, maxProfiles: number, query: string) => {
+	utils.log(`Opening ${query}...`, "loading")
+	const response = await page.goto(query)
 	if (response && response.status() !== 200) {
-		throw new Error(`${url} responded with HTTP code ${response.status()}`)
+		throw new Error(`${query} responded with HTTP code ${response.status()}`)
 	}
 	await page.waitForSelector("div[class*=voters]")
 	await page.waitFor(2000)
+	const url = page.url()
 	await page.click("div[class*=voters]")
 
 	await page.waitForSelector("div[data-test=\"popover\"]")
@@ -105,13 +106,14 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 	const totalUpvoteCount = await page.evaluate(getUpvoteCount) as number
 	const productName = await page.evaluate(getProductName) as string
 	if (productName && totalUpvoteCount) {
-		utils.log(`Prouct ${productName} has ${totalUpvoteCount} upvotes.`, "info")
+		utils.log(`Product ${productName} has ${totalUpvoteCount} upvotes.`, "info")
 	}
 	if (!maxProfiles || (totalUpvoteCount && totalUpvoteCount < maxProfiles)) {
 		maxProfiles = totalUpvoteCount
 	}
 	let lastDate = new Date().getTime()
 	let profilesArray = []
+	let displayLog = 0
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -125,11 +127,12 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 				await page.evaluate(scrollProfiles, i)
 				const profileData = await page.evaluate(scrapeProfile, query, url, i)
 				profilesArray.push(profileData)
-				// await page.waitFor(100)
 			}
 			lastDate = new Date().getTime()
 			profileCount = newProfileCount
-			utils.log(`Loaded ${Math.min(profileCount, maxProfiles)} profiles.`, "done")
+			if (displayLog++ % 2) {
+				utils.log(`Loaded ${Math.min(profileCount, maxProfiles)} profiles.`, "done")
+			}
 		}
 		} catch (err) {
 			utils.log(`Error during scraping: ${err}`, "error")
@@ -139,9 +142,6 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 			break
 		}
 	} while (profileCount < maxProfiles)
-
-	// await page.screenshot({ path: `${Date.now()}profile.jpg`, type: "jpeg", quality: 50 })
-	// await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}profile.html`)
 	profilesArray = profilesArray.slice(0, maxProfiles)
 	return profilesArray
 }
@@ -149,76 +149,72 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 (async () => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-	const { spreadsheetUrl, numberOfProfilesPerProduct, columnName, numberOfLinesPerLaunch, csvName, profileUrls, reprocessAll } = utils.validateArguments()
-	let profileArray = []
+	const { spreadsheetUrl, numberOfProfilesPerProduct, columnName, numberOfLinesPerLaunch, csvName, postUrls, reprocessAll, removeAllDuplicates } = utils.validateArguments()
+	let profileArray = postUrls as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
 	const maxProfiles = numberOfProfilesPerProduct as number
-	let numberOfLines = numberOfLinesPerLaunch as number
+	const numberOfLines = numberOfLinesPerLaunch as number
 	const _reprocessAll = reprocessAll as boolean
+	const _removeAllDuplicates = removeAllDuplicates as boolean
 	if (!_csvName) {
 		_csvName = DB_NAME
 	}
-
-	if (typeof numberOfLinesPerLaunch !== "number") {
-		numberOfLines = LINES_COUNT
-	}
-
-	if (utils.isUrl(inputUrl)) {
+	if (inputUrl) {
+		if (utils.isUrl(inputUrl)) {
 		profileArray = isProductHuntUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
-	} else {
-		profileArray = [ inputUrl ]
-	}
-
-	if (typeof profileUrls === "string") {
-		profileArray = [ profileUrls ]
+		} else {
+			profileArray = [ inputUrl ]
+		}
+	} else if (typeof postUrls === "string") {
+		profileArray = [ postUrls ]
 	}
 	const result = await utils.getDb(_csvName + ".csv")
-	console.log("res:", result)
-	// if (Array.isArray(profileArray)) {
-	console.log("pU", profileArray)
 	if (!_reprocessAll) {
 		profileArray = profileArray.filter((el) => utils.checkDb(el, result, "query"))
-		if (typeof numberOfLines === "number") {
+		if (numberOfLines) {
 			profileArray = profileArray.slice(0, numberOfLines)
 		}
 	}
-	console.log("pA", profileArray)
-
-	// }
 	let currentResult: IUnknownObject[] = []
 	if (Array.isArray(profileArray)) {
 		if (profileArray.length < 1) {
 			utils.log("Input is empty OR every profiles are already scraped", "warning")
 			process.exit()
 		}
-
+		console.log(`Posts to process: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
 		for (const query of profileArray) {
-			utils.log(`Opening ${query}...`, "loading")
-			const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
-			let res = null
-			try {
-				res = await openProfile(page, maxProfiles, url, query)
-				if (res && res.length) {
-					utils.log(`Got ${res.length} profiles for ${query}.`, "done")
-					currentResult = currentResult.concat(res)
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+				break
+			}
+			// const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
+			if (isProductHuntUrl(query)) {
+				let res = null
+				try {
+					res = await openProfile(page, maxProfiles, query)
+					if (res && res.length) {
+						utils.log(`Got ${res.length} profiles for ${query}.`, "done")
+						currentResult = currentResult.concat(res)
+					}
+				} catch (err) {
+					const error = `Error while scraping ${query}: ${err.message || err}`
+					utils.log(error, "warning")
+					result.push({ query, error, timestamp: (new Date()).toISOString() })
 				}
-			} catch (err) {
-				const error = `Error while scraping ${url}: ${err.message || err}`
-				await page.screenshot({ path: `${Date.now()}scree.jpg`, type: "jpeg", quality: 50 })
-				await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}scree.html`)
-				utils.log(error, "warning")
-				result.push({ query, error, timestamp: (new Date()).toISOString() })
+			} else {
+				utils.log(`${query} isn't a Product Hunt post URL.`, "warning")
+				result.push({ query, error: "Not a Product Hunt post URL", timestamp: (new Date()).toISOString() })
 			}
 		}
 		for (const obj of currentResult) {
-			if (!result.find((el) => el.userID === obj.userID && el.query === obj.query)) {
+			if (!obj.error && !result.find((el) => el.userID === obj.userID && (_removeAllDuplicates || el.query === obj.query))) {
 				result.push(obj)
 			}
 		}
-		result.push(...utils.filterRightOuter(result, result))
-		console.log("rL", result.length)
+		utils.log(`Got ${result.length} profiles in total.`, "done")
 		await utils.saveResults(result, result, _csvName, null)
 	}
 

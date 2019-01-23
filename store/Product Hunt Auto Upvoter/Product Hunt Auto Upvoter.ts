@@ -132,6 +132,11 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 		}
 
 		for (const query of profileArray) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+				break
+			}
 			utils.log(`Opening ${query}...`, "loading")
 			const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
 			let res = null

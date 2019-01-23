@@ -203,7 +203,7 @@ class StoreUtilities {
 		this.minTimeBeforeExit = null // will be decided on the first call to checkTimeLeft()
 		if (this.buster.arguments.testRunObject) {
 			this.test = true
-			this.testRunObject = buster.arguments.testRunObject
+			this.testRunObject = this.buster.arguments.testRunObject
 			this.output = "|START|\n"
 			console.log("Starting test session.")
 		} else {

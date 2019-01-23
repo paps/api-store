@@ -12,8 +12,7 @@
 		"sessionCookieXs": "your_xs_session_cookie",
 		"groupsUrl": "facebook_group_url",
 		"checkInCommon": true,
-		"checkLocal": true,
-		"csvName": "result"
+		"checkLocal": true
 	},
 	"outputDescription": {
 		"profileURL": "Facebook profile URL",
@@ -25,7 +24,7 @@
 		"additionalData": "Profile data such as job or location",
 		"groupName": "Name of the Facebook Group"
 	},
-	"defaultArgumentAllowed": true,
+	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {

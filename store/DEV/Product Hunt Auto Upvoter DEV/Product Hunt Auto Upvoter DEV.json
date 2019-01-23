@@ -9,6 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
+		"sessionCookie": "_producthunt_session_production_cookie",
 		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
 		"numberOfLinesPerLaunch": 10
 	},
@@ -25,6 +26,10 @@
 			},
 			"options": {
 				"fields": {
+					"sessionCookie": {
+						"label": "Product Hunt session cookie <a href=\"/api-store/3149/linkedin-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your '_producthunt_session_production' session cookie here"
+					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
@@ -57,6 +62,11 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
 			"spreadsheetUrl": {
 				"type": "string"
 			},
