@@ -135,6 +135,7 @@ class Slack {
 		let _cursor = null
 		let interrupted = false
 		let continueXhr = true
+		let count = 0
 		while (continueXhr) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -153,7 +154,7 @@ class Slack {
 				if (Array.isArray(rawRes.data.members)) {
 					userIds.push(...rawRes.data.members)
 					if (verbose) {
-						this.utils.log(`${userIds.length} IDs found`, "loading")
+						this.utils.log(`${userIds.length} IDs found`, "info")
 					}
 				}
 				if (!rawRes.data.response_metadata) {
@@ -178,7 +179,8 @@ class Slack {
 				const member = await page.evaluate(getUserProfile, "users.info", user)
 				if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.user)) {
 					members.push(formatUserInformation(member.data.user))
-					if (verbose) {
+					count++
+					if (verbose && (count && count % 10 === 0)) {
 						this.utils.log(`${members.length} users scraped`, "loading")
 					}
 				}
