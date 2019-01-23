@@ -26,7 +26,7 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or a Product Hunt profile URL <a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
 					},
 					"columnName": {
@@ -34,7 +34,7 @@
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (All of them if empty) <a href=\"/api-store/12134/product-hunt-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number"
 					},

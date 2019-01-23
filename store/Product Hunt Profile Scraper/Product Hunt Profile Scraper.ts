@@ -9,14 +9,13 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
 
-import StoreUtilities from "./lib-StoreUtilities-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
 
 const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
-const LINES_COUNT = 10
 // }
 
 const isProductHuntUrl = (url: string) => {
@@ -93,7 +92,10 @@ const scrapeProfile = (): IEvalAny => {
 	}
 	const followedTopicsSelector = document.querySelector("a[href*=\"/topics\"]")
 	if (followedTopicsSelector && followedTopicsSelector.textContent) {
-		profile.followedTopicCount = parseInt(followedTopicsSelector.textContent.replace(/\D+/g, ""), 10)
+		const followedTopicCount = parseInt(followedTopicsSelector.textContent.replace(/\D+/g, ""), 10)
+		if (!isNaN(followedTopicCount)) {
+			profile.followedTopicCount = followedTopicCount
+		}
 	}
 	const collectionSelector = document.querySelector("a[href*=\"/collections\"]")
 	if (collectionSelector && collectionSelector.textContent) {
@@ -112,10 +114,12 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	if (response && response.status() !== 200) {
 		throw new Error(`${url} responded with HTTP code ${response.status()}`)
 	}
-	const profileData = await page.evaluate(scrapeProfile)
-	await page.screenshot({ path: `${Date.now()}profile.jpg`, type: "jpeg", quality: 50 })
+	if (page.url() !== "https://www.producthunt.com/") {
+		return page.evaluate(scrapeProfile)
+	} else {
+		return { error: "Profile doesn't exist" }
+	}
 
-	return profileData
 }
 
 (async () => {
@@ -126,14 +130,9 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
-
-	let numberOfLines = numberOfLinesPerLaunch as number
+	const numberOfLines = numberOfLinesPerLaunch as number
 	if (_csvName) {
 		_csvName = DB_NAME
-	}
-
-	if (typeof numberOfLinesPerLaunch !== "number") {
-		numberOfLines = LINES_COUNT
 	}
 
 	if (inputUrl) {
@@ -149,7 +148,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	const result = await utils.getDb(csvName + ".csv")
 
 	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
-	if (typeof numberOfLines === "number") {
+	if (numberOfLines) {
 		profileArray = profileArray.slice(0, numberOfLines)
 	}
 	if (Array.isArray(profileArray)) {
@@ -170,10 +169,14 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 			try {
 				res = await openProfile(page, url) as ReturnType <typeof scrapeProfile>
 				if (res) {
-					res.profileUrl = page.url()
+					if (!res.error) {
+						res.profileUrl = page.url()
+						utils.log(`${query} scraped`, "done")
+					} else {
+						utils.log(`Profile ${query} doesn't exist!`, "warning")
+					}
 					res.query = query
 					res.timestamp = (new Date()).toISOString()
-					utils.log(`${query} scraped`, "done")
 					result.push(res)
 				}
 			} catch (err) {

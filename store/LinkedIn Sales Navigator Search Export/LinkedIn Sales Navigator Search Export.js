@@ -134,7 +134,7 @@ const scrapeResultsLeads = (arg, callback) => {
 				if (miscData[1]) {
 					newData.employeesCount = miscData[1].innerText
 				}
-				if (miscData[1]) {
+				if (miscData[2]) {
 					newData.location = miscData[2].innerText
 				}
 			} else {

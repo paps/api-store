@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js, lib-ProductHunt-DEV.js"
+"phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js"
 "phantombuster flags: save-folder"
 
 const { URL } = require("url")
@@ -123,7 +123,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, profileUrls } = utils.validateArguments()
-	let profileArray = []
+	let profileArray = profileUrls as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
@@ -137,31 +137,34 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 		numberOfLines = LINES_COUNT
 	}
 
-	if (utils.isUrl(inputUrl)) {
-		profileArray = isProductHuntUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
-	} else {
-		profileArray = [ inputUrl ]
-	}
-
-	if (typeof profileUrls === "string") {
+	if (inputUrl) {
+		if (utils.isUrl(inputUrl)) {
+			profileArray = isProductHuntUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
+		} else {
+			profileArray = [ inputUrl ]
+		}
+	} else if (typeof profileUrls === "string") {
 		profileArray = [ profileUrls ]
 	}
+
 	const result = await utils.getDb(csvName + ".csv")
 
-	if (Array.isArray(profileUrls)) {
-		profileArray = profileUrls.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
-		if (typeof numberOfLines === "number") {
-			profileArray = profileArray.slice(0, numberOfLines)
-		}
+	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	if (typeof numberOfLines === "number") {
+		profileArray = profileArray.slice(0, numberOfLines)
 	}
-	console.log("profileU", profileArray)
 	if (Array.isArray(profileArray)) {
 		if (profileArray.length < 1) {
 			utils.log("Input is empty OR every profiles are already scraped", "warning")
 			process.exit()
 		}
-
+		console.log(`Profiles to scrape: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
 		for (const query of profileArray) {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+				break
+			}
 			utils.log(`Opening ${query}...`, "loading")
 			const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
 			let res = null
@@ -180,10 +183,9 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 				result.push({ query, error, timestamp: (new Date()).toISOString() })
 			}
 		}
+		utils.log(`Scraped ${result.length} profiles in total.`, "done")
+		await utils.saveResults(result, result, _csvName, null)
 	}
-
-	result.push(...utils.filterRightOuter(result, result))
-	await utils.saveResults(result, result, _csvName, null)
 	process.exit()
 })()
 .catch((err) => {
