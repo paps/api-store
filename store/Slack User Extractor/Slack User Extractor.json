@@ -39,13 +39,13 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a XXX ZZZ"
 					},
 					"columnName": {
-						"label": "Column name where XXX ZZZ URLs are stored in the spreadhsheet",
+						"label": "Column name where Slack channels are stored in the spreadhsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
-						"placeholder": "XXX"
+						"placeholder": "channels"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will scrape 10 channels per launch",
 						"inputType": "number",
 						"placeholder": 10
 					},

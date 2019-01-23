@@ -15,7 +15,7 @@ const utils = new StoreUtilities(buster)
 const slack = new Slack(buster, utils)
 
 const DEFAULT_DB = "result"
-const DEFAULT_LAUNCH = 1
+const DEFAULT_LAUNCH = 10
 // }
 
 ;
