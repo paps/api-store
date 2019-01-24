@@ -138,7 +138,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		extractedData.ownerId = node.owner.id
 		extractedData.pudDate = new Date(node.taken_at_timestamp * 1000).toISOString()
 		extractedData.postId = node.id
-		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}`
+		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
 		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
 		if (node.edge_media_to_caption.edges[0]) {
 			extractedData.description = node.edge_media_to_caption.edges[0].node.text

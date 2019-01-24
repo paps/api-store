@@ -324,7 +324,7 @@ const isLinkedUrl = target => {
 		companies = []
 	}
 	companies = companies.filter(str => str) // removing empty lines
-	let result = await utils.getDb("result.csv")
+	let result = await utils.getDb(csvName + ".csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
 	companies = companies.filter(el => el !== "no url" && utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
 	utils.log(`Processing ${companies.length} lines...`, "info")
