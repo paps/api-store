@@ -135,7 +135,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	}
 	query = query.toLowerCase()
 	await tab.inject("../injectables/psl-1.1.24.min.js")
-	if (name.results) { // removing empty entries
+	if (names.results) { // removing empty entries
 		names.results = names.results.filter(el => el.link)
 	}
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
