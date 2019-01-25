@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -24,7 +24,7 @@ const nick = new Nick({
 	height: (700 + Math.round(Math.random() * 200)), // 700 <=> 900
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 
 /* global psl */
@@ -135,6 +135,9 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	}
 	query = query.toLowerCase()
 	await tab.inject("../injectables/psl-1.1.24.min.js")
+	if (name.results) { // removing empty entries
+		names.results = names.results.filter(el => el.link)
+	}
 	let results = await tab.evaluate(craftDomains, { results: names.results, blacklist })
 	const theDomain = getBestRankedDomain(results)
 	// Issue #56: return an empty line when no domain where found

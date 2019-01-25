@@ -22,7 +22,13 @@ const DB_NAME = "result"
 
 const doScraping = (arg, cb) => {
 	let data = Array.from(document.querySelectorAll(arg.selector))
-	cb(null, data.map(el => el.textContent.trim()))
+	cb(null, data.map(el => {
+		if (el.href) {
+			return { value: el.textContent.trim(), href: el.href }
+		} else {
+			return el.textContent.trim()
+		}
+	}))
 }
 
 /**
@@ -116,7 +122,12 @@ const createCsvOutput = json => {
 			if (scrapedElement.value) {
 				let elements = scrapedElement.value.map(el => {
 					let toRet = Object.assign({}, element)
-					toRet.value = el
+					if (el.href) {
+						toRet.value = el.value
+						toRet.href = el.href
+					} else {
+						toRet.value = el
+					}
 					return toRet
 				})
 				res.push(...elements)
