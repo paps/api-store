@@ -10,7 +10,7 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 
@@ -52,7 +52,7 @@ const followProfile = async (page: puppeteer.Page, unfollow: boolean, name: stri
 		return { error: "Don't Follow"}
 	}
 	await page.click(("button[data-test=\"follow-button\"]"))
-	await page.waitFor(500)
+	await page.waitFor(1500)
 	followStatus = await page.evaluate(checkFollow)
 	if (!unfollow) {
 		if (followStatus) {
@@ -182,6 +182,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, profileUrls, unfollow } = utils.validateArguments()
+	const _sessionCookie = sessionCookie as string
 	let profileArray = profileUrls as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
@@ -191,7 +192,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 	if (!_csvName) {
 		_csvName = DB_NAME
 	}
-	await producthunt.login(page, sessionCookie)
+	await producthunt.login(page, _sessionCookie)
 
 	if (inputUrl) {
 		if (utils.isUrl(inputUrl)) {
@@ -206,7 +207,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 	const result = await utils.getDb(_csvName + ".csv")
 	followSuccessCount = result.filter((el) => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter((el) => el.unfollowAction === "Success").length
-	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
 	if (numberOfLines) {
 		profileArray = profileArray.slice(0, numberOfLines)
 	}

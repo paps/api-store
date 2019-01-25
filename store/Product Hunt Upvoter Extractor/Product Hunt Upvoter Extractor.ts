@@ -171,6 +171,7 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, query: str
 		profileArray = [ postUrls ]
 	}
 	const result = await utils.getDb(_csvName + ".csv")
+	profileArray = profileArray.filter((el) => el)
 	if (!_reprocessAll) {
 		profileArray = profileArray.filter((el) => utils.checkDb(el, result, "query"))
 		if (numberOfLines) {

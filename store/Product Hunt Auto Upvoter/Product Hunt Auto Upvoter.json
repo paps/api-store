@@ -11,7 +11,8 @@
 	"defaultArgument": {
 		"sessionCookie": "_producthunt_session_production_cookie",
 		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
-		"numberOfLinesPerLaunch": 10
+		"numberOfLinesPerLaunch": 10,
+		"action": "Upvote"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -34,19 +35,19 @@
 						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
 					},
-					"numberOfProfilesPerProduct": {
-						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "All of them if empty",
-						"inputType": "number"
-					},
 					"columnName": {
 						"label": "Column name where Product Hunt profiles URLs are stored in the spreadhsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
 						"inputType": "number"
+					},
+					"action": {
+						"label": "Upvote/Downvote action",
+						"removeDefaultNone": true,
+						"sort": false
 					},
 					"csvName": {
 					   "label": "Name of resulting CSV file",
@@ -70,9 +71,9 @@
 			"spreadsheetUrl": {
 				"type": "string"
 			},
-			"numberOfProfilesPerProduct": {
-				"type": "number",
-				"minimum": 1
+			"action": {
+				"enum": ["Upvote", "Remove vote"],
+				"default": "Upvote"
 			},
 			"columnName": {
 				"type": "string"

@@ -10,7 +10,7 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 
@@ -129,7 +129,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	const _columnName = columnName as string
 
 	let numberOfLines = numberOfLinesPerLaunch as number
-	if (_csvName) {
+	if (!_csvName) {
 		_csvName = DB_NAME
 	}
 
@@ -149,7 +149,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 
 	const result = await utils.getDb(csvName + ".csv")
 
-	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
 	if (typeof numberOfLines === "number") {
 		profileArray = profileArray.slice(0, numberOfLines)
 	}

@@ -131,7 +131,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	let _csvName = csvName as string
 	const _columnName = columnName as string
 	const numberOfLines = numberOfLinesPerLaunch as number
-	if (_csvName) {
+	if (!_csvName) {
 		_csvName = DB_NAME
 	}
 
@@ -147,7 +147,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 
 	const result = await utils.getDb(csvName + ".csv")
 
-	profileArray = profileArray.filter((el) => result.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
 	if (numberOfLines) {
 		profileArray = profileArray.slice(0, numberOfLines)
 	}
