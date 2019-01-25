@@ -11,7 +11,7 @@ const nick = new Nick({
 	loadImages: true,
 	userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
 	printPageErrors: false,
-	printRessourceErrors: false,
+	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false
 })

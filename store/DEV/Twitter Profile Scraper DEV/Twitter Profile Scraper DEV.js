@@ -11,7 +11,7 @@ const Nick = require("nickjs")
 const nick = new Nick({
 	loadImages: true,
 	printPageErrors: false,
-	printRessourceErrors: false,
+	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false,
 	debug: false
