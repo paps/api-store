@@ -18,6 +18,7 @@
 		},
 		"category": "People",
 		"numberOfPage": 5,
+		"numberOfLinesPerLaunch": 10,
 		"queryColumn": true
 	},
 	"defaultArgumentAllowed": false,
@@ -72,6 +73,10 @@
 						"inputType": "number",
 						"helper": "10 profiles per page. <b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Browsing hundreds of pages in a short period of time is not recommended."
 					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (if using a spreadsheet)",
+						"inputType": "number"
+					},
 					"csvName": {
                         "label": "Name of resulting CSV file",
                         "placeholder": "result"
@@ -122,6 +127,10 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string",

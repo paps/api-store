@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js"
+"phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
 
@@ -670,6 +671,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(err.message || err, "warning")
 					return result
 				}
+				await tab.screenshot(`${Date.now()}sR.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}sR.html`)
 				if (selector === selectors[0] || selector === selectors[2]) {
 					// fixing the "No results" bug by simply reloading the page until results show up
 					let retryCount = 0
@@ -784,7 +787,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, numberOfLinesPerLaunch, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches }
 	if (!search) {
@@ -807,6 +810,10 @@ const isLinkedInSearchURL = (targetUrl) => {
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv2(search)
+			searches = searches.filter(str => utils.checkDb(str, result, "query"))
+			if (numberOfLinesPerLaunch) {
+				searches = searches.slice(0, numberOfLinesPerLaunch)
+			}
 		} else {
 			searches = [ search ]
 		}

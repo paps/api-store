@@ -784,7 +784,7 @@ const isLinkedInSearchURL = (targetUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { search, searches, sessionCookie, circles, category, numberOfPage, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
+	let { search, searches, sessionCookie, circles, category, numberOfPage, numberOfLinesPerLaunch, csvName, onlyGetFirstResult, removeDuplicate } = utils.validateArguments()
 	// old version compatibility //
 	if (searches) { search = searches }
 	if (!search) {
@@ -807,6 +807,10 @@ const isLinkedInSearchURL = (targetUrl) => {
 			searches = [ search ]
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv2(search)
+			searches = searches.filter(str => utils.checkDb(str, result, "query"))
+			if (numberOfLinesPerLaunch) {
+				searches = searches.slice(0, numberOfLinesPerLaunch)
+			}
 		} else {
 			searches = [ search ]
 		}
