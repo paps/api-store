@@ -237,7 +237,7 @@ const createCsvOutput = json => {
 		try {
 			await tab.untilVisible("div.LeaderboardMain")
 		} catch (e) {
-			if (tab.isPresent("div.ErrorMain")) {
+			if (await tab.isPresent("div.ErrorMain")) {
 				let error = `Topic ${one} cannot be loaded ! Please be carfull topics name are case sensitive`
 				utils.log(error, "error")
 				res.push({ error })
