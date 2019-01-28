@@ -1,7 +1,7 @@
 # Get highly qualified active Facebook members
-Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about all the likers (name, Facebook Profile URL).
+Wether you have found a post or have your own post that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers (name, Facebook Profile URL) - collecting around 4000 profiles per type of like reaction.
 
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook post URLs in it, OR the direct link of a single Facebook post. To get the URL of a Facebook post, just click on its timestamp.
@@ -29,10 +29,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Facebook authentication 🔑 { argument }
 Because the script will manipulate Facebook for you, it needs to be logged on your Facebook account. For that you just need to copy paste two session cookies in the script argument:
-* Using Chrome, go to your Facebook homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your Facebook homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab

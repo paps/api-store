@@ -58,15 +58,19 @@ const ajaxCall = (arg, cb) => {
 
 // Checks if a url is a facebook group url
 const isFacebookGroupUrl = (url) => {
-	let urlObject = parse(url.toLowerCase())
-	if (urlObject.pathname.startsWith("facebook")) {
-		urlObject = parse("https://www." + url)
-	}
-	if (urlObject.pathname.startsWith("www.facebook")) {
-		urlObject = parse("https://" + url)
-	}
-	if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
-		return true
+	try {
+		let urlObject = parse(url.toLowerCase())
+		if (urlObject.pathname.startsWith("facebook")) {
+			urlObject = parse("https://www." + url)
+		}
+		if (urlObject.pathname.startsWith("www.facebook")) {
+			urlObject = parse("https://" + url)
+		}
+		if (urlObject && urlObject.hostname.includes("facebook.com") && urlObject.pathname.startsWith("/groups")) {
+			return true
+		}
+	} catch (err) {
+		//
 	}
 	return false
 }

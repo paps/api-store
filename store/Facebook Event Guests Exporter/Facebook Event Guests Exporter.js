@@ -335,6 +335,9 @@ const checkUnavailable = (arg, cb) => {
 						}
 						await tab.wait(1000)
 					} while (!interceptedUrl)
+					if (!interceptedUrl) {
+						throw "Couldn't load any guest for that event."
+					}
 					const extractedGuests = await extractGuests(tab, interceptedUrl, eventUrl, firstInfo.name, isPublic)
 					utils.log(`${extractedGuests.length} guests have been scraped.`, "done")
 					result = result.concat(extractedGuests)
