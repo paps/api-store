@@ -43,6 +43,7 @@ const SELECTORS = {
 	closeSelector: "button.DMActivity-close",
 	messageSelector: "li.DirectMessage",
 	writeErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error",
+	debugErrorSelector: `div.DMNotice.DMResendMessage.DMNotice--error .DMResendMessage-customErrorMessage`,
 	convNameSelector: "span.DMUpdateName-name.u-textTruncate"
 }
 
@@ -85,6 +86,19 @@ const waitWhileEnabled = (arg, cb) => {
 		}
 	}
 	idle()
+}
+
+const getErrorMessage = (arg, cb) => {
+	el = document.querySelector(arg.sel)
+	let err = ""
+	if (el) {
+		const tmp = [...el.childNodes].filter(el => el.nodeType === Node.TEXT_NODE)
+		if (Array.isArray(tmp)) {
+			err = tmp.pop()
+			err = err && err.textContent ? err.textContent.trim() : ""
+		}
+	}
+	cb(null, err)
 }
 
 /**
@@ -176,7 +190,8 @@ const sendMessage = async (tab, message) => {
 
 	const sendResult = await tab.waitUntilVisible([ SELECTORS.messageSelector, SELECTORS.writeErrorSelector ], "or" , 15000)
 	if (sendResult === SELECTORS.writeErrorSelector) {
-		throw "Message can't be send: the user doesn't follow you"
+		const err = await tab.evaluate(getErrorMessage, { sel: SELECTORS.debugErrorSelector })
+		throw err
 	}
 	await tab.click(SELECTORS.closeSelector)
 }
@@ -266,9 +281,10 @@ const sendMessage = async (tab, message) => {
 			profile.timestamp = (new Date()).toISOString()
 			res.push(profile)
 		} catch (err) {
+			profile.timestamp = (new Date()).toISOString()
 			profile.error = err.message || err
 			res.push(profile)
-			utils.log(`Error while sending message to ${one[columnName]} (${profile.error})`, "warning")
+			utils.log(`Error while sending message to ${one[columnName]}: ${profile.error}`, "warning")
 		}
 	}
 	db.push(...res)
