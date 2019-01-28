@@ -86,7 +86,8 @@ const unfollow = async (tab, twitterHandle) => {
 
 	}
 	utils.log("Getting your followers...", "loading")
-	const followers = await twitter.collectFollowers(tab, "https://twitter.com/followers", -1, true)
+	let followers = await twitter.collectFollowers(tab, "https://twitter.com/followers", -1, true)
+	followers = followers.filter(el => el) // remove undefined elements
 	const peopleUnfollowed = []
 	for (const url of twitterProfiles) {
 		if (url) {
