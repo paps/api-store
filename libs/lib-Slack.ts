@@ -259,8 +259,21 @@ class Slack {
 		return res
 	}
 
-	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<boolean> {
-		let res = false
+	public async isUserActive(page: Puppeteer.Page, userId: string): Promise<boolean> {
+		const getStatus = (id: string): IUnknownObject => {
+			const TS: IEvalAny = (window as IEvalAny).TS
+			return TS.interop.members.getRawMemberById(id)
+		}
+
+		const profile = await page.evaluate(getStatus, userId) as IUnknownObject
+		if (!profile) {
+			return false
+		}
+		return profile && profile.presence === "active"
+	}
+
+	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<number> {
+		let res = 0
 		const getDmChannel = async (user: string): Promise<IUnknownObject> => {
 			const TS: IEvalAny = (window as IEvalAny).TS
 			let _xhr: IUnknownObject
@@ -282,24 +295,33 @@ class Slack {
 			}
 			return xhr
 		}
+
 		const dmChannel: IUnknownObject = await page.evaluate(getDmChannel, userId) as IUnknownObject
 		let channel: string = ""
 		if (dmChannel && isUnknownObject(dmChannel.data) && typeof dmChannel.ok === "boolean") {
 			if (dmChannel.ok && isUnknownObject(dmChannel.data.channel)) {
 				channel = dmChannel.data.channel.id as string || ""
 			} else {
-				return false
+				return -1
 			}
 		}
 
 		if (!channel) {
-			return false
+			return -1
+		}
+
+		if (sendIfActive) {
+			if (!this.isUserActive(page, userId)) {
+				return -3
+			}
 		}
 
 		const xhrRes: IUnknownObject = await page.evaluate(_DM, channel, message) as IUnknownObject
 		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
 			if (xhrRes.ok) {
-				res = true
+				res = 0
+			} else {
+				res = -2
 			}
 		}
 		return res

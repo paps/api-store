@@ -265,11 +265,11 @@ class Slack {
 			return TS.interop.members.getRawMemberById(id)
 		}
 
-		const profile = await page.evaluate(getStatus) as IUnknownObject
+		const profile = await page.evaluate(getStatus, userId) as IUnknownObject
 		if (!profile) {
 			return false
 		}
-		return profile && profile.presence === "presence"
+		return profile && profile.presence === "active"
 	}
 
 	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<number> {
