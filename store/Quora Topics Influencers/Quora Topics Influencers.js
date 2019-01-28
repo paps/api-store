@@ -102,6 +102,10 @@ const loopThroughtProfiles = async (tab, urls) => {
 	let res = []
 
 	for (let one of urls) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
 		await buster.progressHint((urls.indexOf(one) + 1) / urls.length, `${one.name}`)
 		await tab.open(one.link)
 		await tab.waitUntilPresent("body")
