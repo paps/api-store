@@ -103,9 +103,13 @@ const waitWhileLoading = (arg, cb) => {
 const scrapeTweets = (arg, cb) => {
 	const scraper = (el) => {
 		const res = {}
+		const timestamp = el.querySelector("span.js-short-timestamp")
 		res.tweetUrl = `https://www.twitter.com${el.dataset.permalinkPath}`
 		res.twitterProfile = (el.querySelector("a.js-user-profile-link")) ? el.querySelector(".js-user-profile-link").href : null
 		res.timestamp = (new Date()).toISOString()
+		if (timestamp) {
+			res.tweetDate = timestamp.dataset.timeMs ? (new Date(parseInt(timestamp.dataset.timeMs, 10))).toISOString() : null
+		}
 		return res
 	}
 	cb(null, [ ...document.querySelectorAll("div.tweet.js-actionable-tweet")].map(el => scraper(el)))
