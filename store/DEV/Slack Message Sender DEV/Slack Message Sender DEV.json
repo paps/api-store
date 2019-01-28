@@ -24,8 +24,8 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Slack session cookie <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Slack cookie"
+						"label": "Slack <b>d</b> session cookie <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Slack d session cookie cookie"
 					},
 					"slackWorkspaceUrl": {
 						"label": "Slack Workspace to use <a target=\"_blank\" href=\"\">(?)</a>",

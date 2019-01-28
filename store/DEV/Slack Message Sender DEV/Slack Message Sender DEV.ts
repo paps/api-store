@@ -7,7 +7,7 @@ import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities-DEV"
 import Slack from "./lib-Slack-DEV"
-import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject } from "./lib-api-store-DEV"
 import Messaging from "./lib-Messaging-DEV"
 
 const buster = new Buster()
@@ -69,10 +69,13 @@ const DEFAULT_LINE = 1
 		rows = queries.map((el) => ({ [columnName as string]: el }))
 	}
 
-	rows = rows.filter((el) => db.findIndex((line) => el[columnName as string] === line.query) < 0).slice(0, numberOfLinesPerLaunch as number)
-	if (rows.length < 1) {
-		utils.log("Input is empty OR messages were send to every Slack user IDs specificied", "warning")
-		process.exit()
+	rows = rows.filter((el) => db.findIndex((line) => el[columnName as string] === line.query) < 0)
+	if (typeof numberOfLinesPerLaunch === "number") {
+		rows = rows.slice(0, numberOfLinesPerLaunch as number)
+		if (rows.length < 1) {
+			utils.log("Input is empty OR messages were send to every Slack user IDs specificied", "warning")
+			process.exit()
+		}
 	}
 	utils.log(`Sending a message to: ${JSON.stringify(rows.map((el) => el[columnName as string]), null, 2)}`, "done")
 	for (const query of rows) {
