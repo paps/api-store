@@ -147,6 +147,42 @@ const scrapeProfile = (arg, cb) => {
 	if (document.querySelector(".recent-activity-entity__link")) {
 		scrapedData.recentActivityUrl = document.querySelector(".recent-activity-entity__link").href
 	}
+	if (document.querySelector(".profile-topcard__connection-since")) {
+		scrapedData.connectionSince = document.querySelector(".profile-topcard__connection-since").innerText
+	}
+	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]").nextElementSibling) {
+		let phoneNumber = document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]").nextElementSibling.href
+		if (phoneNumber) {
+			if (phoneNumber.startsWith("tel:")) {
+				phoneNumber = phoneNumber.slice(4)
+			}
+			scrapedData.phoneNumber = phoneNumber
+		}
+	}
+	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]").nextElementSibling) {
+		let email = document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]").nextElementSibling.href
+		if (email) {
+			if (email.startsWith("mailto:")) {
+				email = email.slice(7)
+			}
+			scrapedData.email = email
+		}
+	}
+	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling) {
+		let email = document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling.href
+		if (email) {
+			if (email.startsWith("mailto:")) {
+				email = email.slice(7)
+			}
+			scrapedData.email = email
+		}
+	}
+	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling) {
+		const address = document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling.innerText
+		if (address) {
+			scrapedData.address = address
+		}
+	}
 	cb(null, scrapedData)
 }
 
