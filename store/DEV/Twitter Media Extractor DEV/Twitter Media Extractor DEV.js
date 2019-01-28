@@ -13,7 +13,7 @@ const buster = new Buster()
 const nick = new Nick({
 	loadImages: true,
 	printPageErrors: false,
-	printRessourceErrors: false,
+	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false
 })
