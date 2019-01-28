@@ -65,7 +65,8 @@ const isTwitterProfile = url => {
 		profileUrls = [ profileUrls ]
 	}
 
-	profileUrls = profileUrls.filter(el => db.findIndex(line => line.query === el && !line.error) < 0)
+	profileUrls = Array.from(new Set(profileUrls))
+	profileUrls = profileUrls.filter(el => el).filter(el => db.findIndex(line => line.query === el && !line.error) < 0)
 	if (typeof numberProfilesPerLaunch === "number") {
 		profileUrls = profileUrls.slice(0, numberProfilesPerLaunch)
 	}
