@@ -233,6 +233,11 @@ const createCsvOutput = json => {
 	await logToQuora(tab, "https://www.quora.com/", ms, mb)
 	utils.log(`Topics to scrape: ${JSON.stringify(topic, null, 2)}`, "info")
 	for (const one of topic) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		await tab.open(`https://www.quora.com/topic/${handleUrl(one)}/writers`)
 		try {
 			await tab.untilVisible("div.LeaderboardMain")
