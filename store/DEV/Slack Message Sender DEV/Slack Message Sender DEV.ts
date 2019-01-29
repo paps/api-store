@@ -1,14 +1,14 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Slack-DEV.js, lib-api-store-DEV.js, lib-Messaging-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Slack.js, lib-api-store.js, lib-Messaging.js"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
-import StoreUtilities from "./lib-StoreUtilities-DEV"
-import Slack from "./lib-Slack-DEV"
-import { IUnknownObject } from "./lib-api-store-DEV"
-import Messaging from "./lib-Messaging-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
+import Slack from "./lib-Slack"
+import { IUnknownObject } from "./lib-api-store"
+import Messaging from "./lib-Messaging"
 
 const buster = new Buster()
 const utils = new StoreUtilities(buster)
@@ -53,13 +53,11 @@ const COLUMN = "0"
 			rows = utils.extractCsvRows(rows, columns) as IUnknownObject[]
 		} catch (err) {
 			rows = [ { [columnName as string]: spreadsheetUrl } ]
-			msgTags = inflater.getMessageTags(message as string)
 		}
 	}
 
 	if (typeof queries === "string") {
 		rows = rows.map((el) => ({ [columnName as string]: el }))
-		msgTags = inflater.getMessageTags(message as string)
 	} else if (Array.isArray(queries)) {
 		rows = queries.map((el) => ({ [columnName as string]: el }))
 	}
@@ -123,6 +121,5 @@ const COLUMN = "0"
 })()
 .catch((err) => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
 	process.exit(1)
 })
