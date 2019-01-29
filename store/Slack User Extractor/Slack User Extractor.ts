@@ -37,7 +37,7 @@ const DEFAULT_LAUNCH = 10
 	}
 
 	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
-	db = await utils.getDb(csvName as string)
+	db = await utils.getDb(csvName + ".csv")
 
 	if (typeof spreadsheetUrl === "string") {
 		queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName as string) : [ spreadsheetUrl ]
@@ -58,6 +58,7 @@ const DEFAULT_LAUNCH = 10
 		}
 	}
 
+	utils.log(`Scraping channels: ${JSON.stringify(queries.slice(0, 100), null, 2)}`, "done")
 	const channels = await slack.getChannelsMeta(page)
 	for (const query of queries as string[]) {
 		const _chan: string = query.startsWith("#") ? query.substring(1) : query

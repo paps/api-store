@@ -70,7 +70,7 @@ const COLUMN = "0"
 		utils.log("Input is empty OR every messages were send to every Slack user IDs", "warning")
 		process.exit()
 	}
-	utils.log(`Sending a message to: ${JSON.stringify(rows.map((el) => el[columnName as string]), null, 2)}`, "done")
+	utils.log(`Sending a message to: ${JSON.stringify(rows.map((el) => el[columnName as string]).slice(0, 100), null, 2)}`, "done")
 	for (const query of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
