@@ -1,14 +1,12 @@
-# It's time to engage with developers where they hang out.
+# Scrape every public info out of a Github profile.
 
-Recruiters, if you're specific about the skills you're looking for, stop LinkedIn, start reaching out for to the right persons in the right place. 
+Github profiles are a goldmine for recruiters and CTO's who know what they're looking for.
 
-Github is not only a code repository, it's also a social network where developers hang out. If you're specific about the technology you're looking for, go the its Github repository and extract everyone who ever starred that project. 
-
-You'll get super targeted leads interesting in that techno and if you're lucky some valuable email addresses.
+Extract every publicly available info (name, follower count, often email addresses, etc.) of a Github Profile in order to know them better. 
 
 # What will you need? ⚙️ 
 
-- **Spreadsheet URL or a Github repository URL**: The URL of the project you're interested in. That's it.
+- **Spreadsheet URL or a Github repository URL**: The URL of the Github profile you're interested in. Or the URL of a list of Github Profiles gathered in one Google Spreadsheet.
 
 
 # What you need to do.
@@ -29,8 +27,8 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/config.png)</center>
 
 
-## 4. Specify the project you're interested in.
-Either fill in one github projet, such as `https://github.com/phantombuster/nickjs` or fill in a Google spreadsheet with many projects.
+## 4. Specify the user(s) you're interested in.
+Either fill in one Github profile, such as `https://github.com/torvalds`, or fill in a Google spreadsheet with many user profiles' URLs.
 If you chose the latter, don't forget to make it public!
 
 
@@ -38,7 +36,3 @@ If you chose the latter, don't forget to make it public!
 It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-# Limits
-
-Github will let you retrieve the latest 5000 users. 
