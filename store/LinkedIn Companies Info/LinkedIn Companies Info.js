@@ -299,11 +299,25 @@ const getInsights = async (tab, link) => {
 
 const getCompanyInfo = async (tab, link, query, saveImg) => {
 	try {
-		if (!link.endsWith("/")) {
-			link = `${link}/`
+		let isSchool
+		if (link.startsWith("https://www.linkedin.com/school/")) { // handling school pages
+			await tab.open(link)
+			isSchool = true
+		} else {
+			if (!link.endsWith("/")) {
+				link = `${link}/`
+			}
+			await tab.open(link + "about")
 		}
-		await tab.open(link + "about")
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
+		let currentUrl = await tab.getUrl()
+		if (currentUrl.endsWith("/about/")) {
+			currentUrl = currentUrl.slice(0, currentUrl.length - 6)
+		}
+		if (isSchool) {
+			await tab.click("a[data-control-name=\"page_member_main_nav_about_tab\"]")
+			await tab.wait(1500)
+		}
 		if (await tab.isPresent("section.org-similar-orgs")) {
 			await tab.waitUntilVisible("section.org-similar-orgs > ul", 15000)
 		}
@@ -320,8 +334,11 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 		} catch (err) {
 			//
 		}
-		if (saveImg && result.logo && result.name) {
-			if (result.logo.startsWith("data:")) {
+		if (result.logo && result.logo.startsWith("data:")) {
+			delete result.logo
+		}
+		if (saveImg && result.name) {
+			if (!result.logo) {
 				utils.log("This company has no logo to save.", "info")
 			} else {
 				const savedImg = await utils.saveImg(tab, result.logo, result.name, "Error while saving logo.")
@@ -330,6 +347,7 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 				}
 			}
 		}
+		result.companyUrl = currentUrl
 		return result
 	} catch (err) {
 		return { link, query, invalidResults: "Couldn't access company profile" }

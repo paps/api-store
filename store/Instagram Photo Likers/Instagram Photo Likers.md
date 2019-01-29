@@ -4,12 +4,12 @@ You noticed one or multiple Instagram pictures and felt that people liking those
 
 Our tool will scroll down for you those pictures and get each liker's information. Once it's done, you'll receive a list of all their profiles neatly arranged in one spreadsheet.
 
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 
 - **Session cookie**: Your session cookie from Instagram.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in it.
-- **Number of likers per post**: The number of likers you want to collect per post. If left empty, the API will scrape all likiers.
-- **Number of posts per launch**: The number of posts to process per API launch. 
+- **Number of likers per post**: The number of likers you want to collect per post. If left empty, the API will scrape all likers.
+- **Number of posts per launch**: The number of posts to process per API launch.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
