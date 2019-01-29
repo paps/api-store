@@ -53,13 +53,11 @@ const COLUMN = "0"
 			rows = utils.extractCsvRows(rows, columns) as IUnknownObject[]
 		} catch (err) {
 			rows = [ { [columnName as string]: spreadsheetUrl } ]
-			msgTags = inflater.getMessageTags(message as string)
 		}
 	}
 
 	if (typeof queries === "string") {
 		rows = rows.map((el) => ({ [columnName as string]: el }))
-		msgTags = inflater.getMessageTags(message as string)
 	} else if (Array.isArray(queries)) {
 		rows = queries.map((el) => ({ [columnName as string]: el }))
 	}
@@ -123,6 +121,5 @@ const COLUMN = "0"
 })()
 .catch((err) => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
 	process.exit(1)
 })
