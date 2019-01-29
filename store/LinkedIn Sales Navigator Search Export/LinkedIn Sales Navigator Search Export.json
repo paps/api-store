@@ -56,8 +56,8 @@
 						"helper": "<b>LinkedIn limits search results to the first 1 000 profiles."
 					},
 					"columnName": {
-						"label": "Column name from which to get profile URLs",
-						"placeholder": "LinkedIn Profile Link",
+						"label": "Column name from which to search terms or URLs",
+						"placeholder": "LinkedIn Search",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"numberOfLinesPerLaunch": {

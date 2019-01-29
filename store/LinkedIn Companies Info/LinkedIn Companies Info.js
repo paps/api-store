@@ -321,9 +321,13 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			//
 		}
 		if (saveImg && result.logo && result.name) {
-			const savedImg = await utils.saveImg(tab, result.logo, result.name, "Error while saving logo.")
-			if (savedImg) {
-				result.savedImg = savedImg
+			if (result.logo.startsWith("data:")) {
+				utils.log("This company has no logo to save.", "info")
+			} else {
+				const savedImg = await utils.saveImg(tab, result.logo, result.name, "Error while saving logo.")
+				if (savedImg) {
+					result.savedImg = savedImg
+				}
 			}
 		}
 		return result
