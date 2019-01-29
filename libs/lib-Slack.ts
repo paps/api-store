@@ -45,7 +45,7 @@ class Slack {
 		}
 
 		if (url === "slack_workspace_url") {
-			this.utils.log("", "warning")
+			this.utils.log("You didn't set a valid Slack Workspace URL, it's a mandatory setup to let the API run", "warning")
 			process.exit(this.utils.ERROR_CODES.SLACK_DEFAULT_WORKSPACE)
 		}
 

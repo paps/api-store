@@ -9,6 +9,11 @@
 	"new": true,
 	"updated": false,
 	"defaultArgument": {
+		"sessionCookie": "d_cookie",
+		"slackWorkspaceUrl": "slack_workspace_url",
+		"spreadsheetUrl": "USLACKBOT",
+		"message": "",
+		"onlyActiveUsers": true
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -92,6 +97,7 @@
 			},
 			"message": {
 				"type": "string",
+				"required": true,
 				"minLength": 1,
 				"maxLength": 40000
 			},
