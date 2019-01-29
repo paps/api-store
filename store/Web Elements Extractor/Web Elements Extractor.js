@@ -92,6 +92,8 @@ const handleArguments = async argv => {
 	for (const arg of argv) {
 		try {
 			let urls = await utils.getDataFromCsv2(arg.link, null, false)
+			urls = Array.from(new Set(urls)) // Remove duplicated
+			urls = urls.filter(el => el) // Filter empty strings
 			utils.log(`Getting data from ${arg.link}...`, "loading")
 			utils.log(`Got ${urls.length} lines from csv`, "done")
 			urls = urls.map(el => {
