@@ -211,7 +211,9 @@ class Twitter {
 		try {
 			await this.openProfile(tab, url)
 		} catch (err) {
-			const loadingErr = `Error while loading ${url}: ${err.message || err}`
+			let loadingErr = `Error while loading ${url}: `
+			const _url = await tab.getUrl()
+			loadingErr += _url.indexOf("suspended") > -1 ? "account suspended" : `${err.message || err}`
 			this.utils.log(loadingErr, "warning")
 			throw loadingErr
 		}
@@ -310,12 +312,12 @@ class Twitter {
 					// const emailFound = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).filter(el => el.textContent.includes("@"))[0].textContent))
 					const twitterDataArray = await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("strong")).map(el => el.textContent)))
 					const twitterData = {}
-					twitterDataArray.map(el => { 
-						if (el.includes("@")) { 
+					twitterDataArray.map(el => {
+						if (el.includes("@")) {
 							twitterData.email = el
 						} else {
 							twitterData.phoneNumber = el
-						} 
+						}
 					})
 					console.log("twitterData", twitterData)
 					return twitterData
