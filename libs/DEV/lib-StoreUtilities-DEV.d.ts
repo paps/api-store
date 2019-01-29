@@ -24,6 +24,7 @@ declare class StoreUtilities {
 	public checkDb(str: string, db: IUnknownObject[], property: string): boolean
 	public filterRightOuter(left: IUnknownObject[], right: IUnknownObject[]): IUnknownObject[]
 	public notifyByMail(): Promise<void>
+	public saveImg(tab:Nick.Tab, imgUrl: string, fileName: string, errorMessage: string): Promise<string[]>
 }
 
 declare const enum ERRORS {

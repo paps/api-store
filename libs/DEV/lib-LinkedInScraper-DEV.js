@@ -481,19 +481,9 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 			slug = slug.slice(0, slug.indexOf("/"))
 			if (saveImg) {
 				if (infos.general.imgUrl) {
-					let success
-					for (let i = 0; i < 10; i++) {
-						try {
-							infos.general.savedImg = await buster.save(infos.general.imgUrl, `${slug}.jpeg`)
-							success = true
-							break
-						} catch (err) {
-							console.log("err:", err)
-						}
-						await tab.wait(500)
-					}
-					if (!success) {
-						utils.log("Error while saving profile picture.", "error")
+					const savedImg = await utils.saveImg(tab, infos.general.imgUrl, slug, "Error while saving profile picture.")
+					if (savedImg) {
+						infos.general.savedImg = savedImg
 					}
 				} else {
 					utils.log("This profile has no profile picture to save.", "info")

@@ -824,6 +824,33 @@ class StoreUtilities {
 		}
 	}
 
+	/**
+	 * @description save a img from its URL
+	 * @param {Object} tab
+	 * @param {String} imgUrl
+	 * @param {String} fileName
+	 * @param {String} errorMessage // message to be displayed if failed to save
+	 * @return {String} Unmatched right objects from right parameters
+	 */
+	async saveImg(tab, imgUrl, fileName, errorMessage) {
+		let success
+		let savedImg = ""
+		for (let i = 0; i < 10; i++) {
+			try {
+				savedImg = await this.buster.save(imgUrl, `${fileName}.jpeg`)
+				success = true
+				break
+			} catch (err) {
+				console.log("err:", err)
+			}
+			await tab.wait(500)
+		}
+		if (!success) {
+			this.log(errorMessage, "error")
+		}
+		return savedImg
+	}
+
 }
 
 StoreUtilities.ERROR_CODES = ERROR_CODES
