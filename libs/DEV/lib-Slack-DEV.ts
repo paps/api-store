@@ -12,6 +12,15 @@ class Slack {
 		this.utils = utils
 	}
 
+	/**
+	 * @async
+	 * @description Log as method for Slack
+	 * @param page {Puppeteer.Page} - Page
+	 * @param url {String} - Slack workspace URL (ex: https://xxx.slack.com)
+	 * @param dCookie {String} - Slack d cookie
+	 * @throws Error on default API setup for url or dCookie values / on CSS failures
+	 * @return {Promise<void>}
+	 */
 	public async login(page: Puppeteer.Page, url: string, dCookie: string): Promise<void> {
 		const _login = async () => {
 			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
@@ -70,6 +79,12 @@ class Slack {
 		}
 	}
 
+	/**
+	 * @async
+	 * @description Method used to gather all publics / private / DM & grouped DMs channels names & IDs visible by the logged in user
+	 * @param page {Puppeteer.Page} - Page
+	 * @return {Promise<IUnknownObject{ id: String, name: String }>} Channels
+	 */
 	public async getChannelsMeta(page: Puppeteer.Page): Promise<IUnknownObject[]> {
 
 		const channels: IUnknownObject[] = []
@@ -237,6 +252,13 @@ class Slack {
 		return _user
 	}
 
+	/**
+	 * @async
+	 * @description Simple wrapper to check if a Slack User ID exists in the current workspace
+	 * @param page {Puppeteer.Page} - Page
+	 * @param userId {String} - Slack User ID
+	 * @return {Promise<boolean>}
+	 */
 	public async isUserExist(page: Puppeteer.Page, userId: string): Promise<boolean> {
 		const checkId = async (user: string): Promise<IUnknownObject> => {
 			const TS: IEvalAny = (window as IEvalAny).TS
@@ -259,6 +281,13 @@ class Slack {
 		return res
 	}
 
+	/**
+	 * @async
+	 * @description Simple wrapper to check if a Slack User is currently active
+	 * @param page {Puppeteer.Page} - Page
+	 * @param userId {String} - Slack User ID
+	 * @return {Promise<boolean>}
+	 */
 	public async isUserActive(page: Puppeteer.Page, userId: string): Promise<boolean> {
 		const getStatus = (id: string): IUnknownObject => {
 			const TS: IEvalAny = (window as IEvalAny).TS
@@ -272,6 +301,15 @@ class Slack {
 		return profile && profile.presence === "active"
 	}
 
+	/**
+	 * @async
+	 * @description Method used to send a DM to userId parameter
+	 * @param page {Puppeteer.Page} - Page
+	 * @param userId {String} - Slack User ID
+	 * @param message {String} - message
+	 * @param sendIfActive {boolean} - send message if the user is currently active
+	 * @return {Promise<Number>} -1 if the User doesn't exists / -2 Slack internal error OR rate limit / -3 userId is not active when sending DM with sendIfActive = true
+	 */
 	public async sendDM(page: Puppeteer.Page, userId: string, message: string, sendIfActive: boolean): Promise<number> {
 		let res = 0
 		const getDmChannel = async (user: string): Promise<IUnknownObject> => {
@@ -321,7 +359,6 @@ class Slack {
 			if (xhrRes.ok) {
 				res = 0
 			} else {
-				console.log(JSON.stringify(xhrRes, null, 2))
 				res = -2
 			}
 		}
