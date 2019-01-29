@@ -63,6 +63,9 @@
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file <a href=\"/api-store/2852/linkedin-group-members#section_csv\" target=\"_blank\">(?)</a>"
+					},
+					"saveImg": {
+						"rightLabel": "<b>Save the company logo as a jpeg</b>"
 					}
 				}
 			}
@@ -90,6 +93,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"saveImg": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [

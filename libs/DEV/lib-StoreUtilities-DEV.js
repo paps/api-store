@@ -65,7 +65,7 @@ const _downloadCsv = url => {
 			}
 
 			if (hasTimeout) {
-				reject(`Could not download specified URL, socket hang up, HTTP code: ${resp.statusCode}`)
+				reject(`Could not download specified URL, socket hang up, HTTP code:  ${resp ? resp.statusCode : "can't get status code"}`)
 			}
 
 			const parsedRequestURL = new URL(url)

@@ -371,10 +371,12 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let numberPerPage
 	await tab.open(searchUrl)
 	try {
-		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser"], 30000, "or")
+		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 30000, "or")
 		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
 			await tab.click("article.contract-chooser ul > li > button")
 			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 30000, "or")
+		} else if (selector === ".generic-error > p.error-message") {
+			throw "LinkedIn is experiencing technical difficulties."
 		}
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		if (selector === ".artdeco-tab-primary-text") {

@@ -63,17 +63,21 @@ const _downloadCsv = url => {
 				reject(err)
 			}
 			if (hasTimeout) {
-				reject("Could not download specified URL, socket hang up")
+				reject(`Could not download specified URL, socket hang up, HTTP code:  ${resp ? resp.statusCode : "can't get status code"}`)
 			}
 
 			const parsedRequestURL = new URL(url)
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
 				reject("Could not download csv, maybe csv is not public")
 			}
-			if (resp.statusCode >= 400) {
-				reject(`${url} is not available`)
+			if (resp && resp.statusCode >= 400) {
+				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
 			}
-			resolve(resp.raw.toString())
+			if (resp) {
+				resolve(resp.raw.toString())
+			} else {
+				reject("No HTTP response found")
+			}
 		})
 		httpStream.on("redirect", () => { hasRedirection = true })
 		httpStream.on("timeout", () => { hasTimeout = true })

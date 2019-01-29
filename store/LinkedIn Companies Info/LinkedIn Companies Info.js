@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const { URL } = require("url")
@@ -148,7 +148,6 @@ const scrapeCompanyInfo = (arg, callback) => {
 	} catch (err) {
 		//
 	}
-	
 
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
@@ -258,6 +257,36 @@ const scrapeInsights = (arg, cb) => {
 	if (document.querySelector(".org-insights-module__facts strong")) {
 		result.averageTenure = document.querySelector(".org-insights-module__facts strong").textContent
 	}
+	try {
+		const employeeDistributionSelectors = Array.from(document.querySelectorAll(".org-function-growth-table > table > tr"))
+		employeeDistributionSelectors.shift()
+		employeeDistributionSelectors.forEach(el => {
+			const camelCaser = str => {
+				str = str.toLowerCase().split(" ")
+				for (let i = 0; i < str.length; i++) {
+				if (str[i]) {
+					str[i] = str[i].charAt(0).toUpperCase() + str[i].substr(1)
+				}
+				}
+				str = str.join("")
+				return str
+			}
+			const funct = el.querySelector("td[headers=\"org-function-growth-table__a11y-functions-function\"]")
+			const employeeCount = el.querySelector("td[headers=\"org-function-growth-table__a11y-functions-num-employees\"]")
+			const percentage = el.querySelector("td[headers=\"org-function-growth-table__a11y-functions-percentage\"]")
+			if (funct) {
+				const property = "distribution" + camelCaser(funct.textContent)
+				if (employeeCount) {
+					result[property] = parseInt(employeeCount.textContent, 10)
+				}
+				if (percentage) {
+					result[property + "Percentage"] = parseInt(percentage.textContent, 10)
+				}
+			}
+		})
+	} catch (err) {
+		//
+	}
 	cb(null, result)
 }
 
@@ -268,7 +297,7 @@ const getInsights = async (tab, link) => {
 	return insights
 }
 
-const getCompanyInfo = async (tab, link, query) => {
+const getCompanyInfo = async (tab, link, query, saveImg) => {
 	try {
 		if (!link.endsWith("/")) {
 			link = `${link}/`
@@ -291,6 +320,12 @@ const getCompanyInfo = async (tab, link, query) => {
 		} catch (err) {
 			//
 		}
+		if (saveImg && result.logo && result.name) {
+			const savedImg = await utils.saveImg(tab, result.logo, result.name, "Error while saving logo.")
+			if (savedImg) {
+				result.savedImg = savedImg
+			}
+		}
 		return result
 	} catch (err) {
 		return { link, query, invalidResults: "Couldn't access company profile" }
@@ -309,7 +344,7 @@ const isLinkedUrl = target => {
 ;(async () => {
 	let fullUrl = false
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, companies, columnName, companiesPerLaunch, csvName, saveImg } = utils.validateArguments()
 	if (!csvName) {
 		csvName = "result"
 	}
@@ -376,7 +411,7 @@ const isLinkedUrl = target => {
 						link = link.replace(/\/sales\/company/, "/company")
 					}
 				}
-				const newResult = await getCompanyInfo(tab, link, company)
+				const newResult = await getCompanyInfo(tab, link, company, saveImg)
 				newResult.timestamp = (new Date()).toISOString()
 				if (newResult === "invalid") {
 					utils.log("Cookie session invalidated, exiting...", "error")
