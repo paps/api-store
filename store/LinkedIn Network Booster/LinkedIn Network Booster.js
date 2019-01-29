@@ -208,7 +208,6 @@ const connectTo = async (selector, tab, message) => {
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
-		await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
 	}
 }
 
