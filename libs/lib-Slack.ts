@@ -311,7 +311,7 @@ class Slack {
 		}
 
 		if (sendIfActive) {
-			if (!this.isUserActive(page, userId)) {
+			if (!await this.isUserActive(page, userId)) {
 				return -3
 			}
 		}
