@@ -174,7 +174,6 @@ const sendChatMessage = async (tab, message, invite) => {
 	message = inflater.forgeMessage(message, invite)
 	try {
 		await tab.click(`#${invite.chatMessageIndex} button.message-anywhere-button`)
-		// await tab.click(`button.message-anywhere-button.invitation-card__custom-message-btn:nth-child(${invite.chatMessageIndex})`)
 		await tab.waitUntilVisible(SELECTORS.chatWidget, 15000)
 		await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 15000)
 		await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))

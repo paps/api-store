@@ -96,7 +96,12 @@ const unfollow = async (tab, twitterHandle) => {
 				utils.log(`Stopped unfollowing: ${timeLeft.message}`, "warning")
 				break
 			}
-			if (followers.find(el => (el.profileUrl === url || el.profileUrl.indexOf(url) > -1 || url.indexOf(el.profileUrl) > -1))) {
+			const tmp = followers.find(el => {
+				if (!el) return false
+				if (typeof el.profileUrl !== "string") return false
+				return (el.profileUrl === url || el.profileUrl.indexOf(url) > -1 || url.indexOf(el.profileUrl) > -1)
+			})
+			if (tmp) {
 				utils.log(`${url} is following you back`, "info")
 			} else {
 				try {
@@ -113,5 +118,6 @@ const unfollow = async (tab, twitterHandle) => {
 })()
 .catch(err => {
 	utils.log(err, "error")
+	console.log(err.stack || "no stack")
 	nick.exit(1)
 })
