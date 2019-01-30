@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -78,7 +77,6 @@ const scrapeUser = () => {
 	return Promise.resolve(profile)
 }
 
-
 const openProfile = async (page, url) => {
 	const response = await page.goto(url)
 
@@ -91,10 +89,25 @@ const openProfile = async (page, url) => {
 	return profile
 }
 
+const scrapeHireStatus = async username => {
+	let res = false
+	try {
+		const httpRes = await fetch(`https://api.github.com/users/${username}`)
+		if (httpRes.status !== 200) {
+			throw `Can't get hireable field: ${httpRes.status === 429 ? "Github rate limit" : "internal error"}`
+		}
+		const data = await httpRes.json()
+		res = typeof data.hireable !== "boolean" ? false : data.hireable
+	} catch (err) {
+		res = err.message || err
+	}
+	return Promise.resolve(res)
+}
+
 ;(async () => {
 	const Browser = await Puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const Page = await Browser.newPage()
-	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, noDatabase, csvName } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, noDatabase, csvName, scrapeHireable } = utils.validateArguments()
 	const profiles = []
 	let db = null
 
@@ -131,6 +144,14 @@ const openProfile = async (page, url) => {
 		let res = null
 		try {
 			res = await openProfile(Page, url)
+			if (scrapeHireable) {
+				const status = await Page.evaluate(scrapeHireStatus, res.username)
+				if (typeof status === "string") {
+					utils.log(status, "warning")
+				} else {
+					res.hireable = status
+				}
+			}
 			res.query = query
 			res.timestamp = (new Date()).toISOString()
 			utils.log(`${query} scraped`, "done")
