@@ -191,6 +191,17 @@ const _handleGoogle = async urlObject => {
  */
 const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
 
+/**
+ * @async
+ * @internal
+ * @description remove special characters from a CSV name
+ * @param {String} csvName
+ * @return {String} filtered csvName
+ */
+const _filterName = (csvName) => {
+	return csvName.replace(/[%#+\\,|]+/g, "")
+}
+
 class StoreUtilities {
 
 	constructor(nick, buster) {
@@ -548,6 +559,7 @@ class StoreUtilities {
 
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
+		name = _filterName(name)
 		this.log("Saving data...", "loading")
 		// const v8 = require("v8")
 		// let date
@@ -621,6 +633,7 @@ class StoreUtilities {
 	 * @throws when the file can't be loaded
 	 */
 	async getDb(filename, parseContent = true) {
+		filename = _filterName(filename)
 		const res = await needle("get", `https://phantombuster.com/api/v1/agent/${this.buster.agentId}`, {},
 			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } }
 		)
