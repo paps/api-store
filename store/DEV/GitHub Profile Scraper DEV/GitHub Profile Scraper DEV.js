@@ -16,7 +16,6 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 const DB_NAME = "result"
-const LINES_COUNT = 10
 // }
 
 const isGithubUrl = url => {
@@ -115,10 +114,6 @@ const scrapeHireStatus = async username => {
 		csvName = DB_NAME
 	}
 
-	if (typeof numberOfLinesPerLaunch !== "number") {
-		numberOfLinesPerLaunch = LINES_COUNT
-	}
-
 	if (spreadsheetUrl) {
 		if (utils.isUrl(spreadsheetUrl)) {
 			queries = isGithubUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
@@ -132,7 +127,12 @@ const scrapeHireStatus = async username => {
 	}
 
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, numberOfLinesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+
+	if (typeof numberOfLinesPerLaunch === "number") {
+		queries = queries.slice(0, numberOfLinesPerLaunch)
+	}
+
 	if (queries.length < 1) {
 		utils.log("Input is empty OR every profiles are already scraped", "warning")
 		nick.exit()
@@ -163,7 +163,7 @@ const scrapeHireStatus = async username => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, profiles))
-	await utils.saveResults(db, profiles, csvName, null)
+	await utils.saveResults(profiles, db, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
