@@ -160,7 +160,7 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 		}
 	}
 	db.push(...res)
-	await utils.saveResults(db, res, csvName, null)
+	await utils.saveResults(res, db, csvName, null)
 	nick.exit()
 })()
 .catch(err => {
