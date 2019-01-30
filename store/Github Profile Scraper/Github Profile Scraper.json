@@ -3,8 +3,8 @@
 	"description": "Extract every information publicly available on a Github Profile",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Github+Profile+Scraper/Github+Profile+Scraper.png",
 	"argumentDescription": "",
-	"gradientBegin": "#35C2DB",
-	"gradientEnd": "#35CDBF",
+	"gradientBegin": "#DBEDFF",
+	"gradientEnd": "#EBFFF0",
 	"hidden": true,
 	"new": true,
 	"update": false,
@@ -40,8 +40,11 @@
 						"placeholder": 10
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"scrapeHireable": {
+						"rightLabel": "<b>Scrape Github profile hireable status</b>"
 					}
 				}
 			}
@@ -64,6 +67,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"scrapeHireable": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [

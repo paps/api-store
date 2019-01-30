@@ -40,8 +40,11 @@
 						"placeholder": 10
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"scrapeHireable": {
+						"rightLabel": "<b>Scrape Github profile hireable status</b>"
 					}
 				}
 			}
@@ -64,6 +67,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"scrapeHireable": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [
