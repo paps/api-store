@@ -24,6 +24,10 @@
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
 					},
+					"numberOfLinesToProcess": {
+						"label": "Number of lines to process per launch (all of them if empty)",
+						"inputType": "number"
+					},
 					"queries": {
 						"hidden": true,
 						"disabled": true
@@ -45,6 +49,9 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"numberOfLinesToProcess": {
+				"type": "number"
 			},
 			"queries": {
 				"type": "array",

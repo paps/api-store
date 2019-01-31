@@ -28,7 +28,7 @@ let db
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
-	let { spreadsheetUrl, columnName, csvName } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, csvName, numberOfLinesToProcess } = utils.validateArguments()
 	let queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const toReturn = []
 	let i = 1
@@ -39,6 +39,9 @@ let db
 
 	db = await utils.getDb(csvName + ".csv")
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (typeof numberOfLinesToProcess === "number") {
+		queries = queries.slice(0, numberOfLinesToProcess)
+	}
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
@@ -74,7 +77,6 @@ let db
 	}
 
 	db.push(...toReturn)
-
 	await tab.close()
 	await utils.saveResults(toReturn, db, csvName, null, false)
 	nick.exit()
