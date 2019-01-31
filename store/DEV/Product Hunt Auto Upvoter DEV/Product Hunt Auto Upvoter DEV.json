@@ -28,7 +28,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Product Hunt session cookie <a href=\"/api-store/3149/linkedin-search-export#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Product Hunt session cookie <a href=\"/api-store/12132/product-hunt-auto-upvoter#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your '_producthunt_session_production' session cookie here"
 					},
 					"spreadsheetUrl": {
