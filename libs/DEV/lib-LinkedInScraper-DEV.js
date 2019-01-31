@@ -10,10 +10,10 @@ const { URL } = require ("url")
 const fullScroll = async tab => {
 	for (let i = 1000; i < 4000; i += 1000) {
 		await tab.scroll(0, i)
-		await tab.wait(2000)
+		await tab.wait(1000)
 	}
 	await tab.scrollToBottom()
-	await tab.wait(2000)
+	await tab.wait(1000)
 }
 
 // Load all data hidden behind "load more" buttons
@@ -436,6 +436,8 @@ const scrapeInfos = (arg, callback) => {
 
 // Function to handle errors and execute all steps of the scraping of ONE profile
 const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot, takePartialScreenshot, fullLoad, silence) => {
+	console.log("Starting scraping...")
+	const initS = new Date()
 	const [httpCode] = await tab.open(url)
 	if (httpCode && httpCode !== 200 && httpCode !== 999) {
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
@@ -464,7 +466,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		}
 		try {
 			await loadProfileSections(tab)
-			if (!silence) {			
+			if (!silence) {
 				utils.log("All data loaded", "done")
 			}
 		} catch (error) {
@@ -474,6 +476,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 			utils.log("Scraping page...", "loading")
 		}
 	}
+	console.log("Elapsed:T1", new Date() - initS, " ms.")
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
@@ -527,7 +530,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	}
 
 	infos.allSkills = (infos.skills) ? infos.skills.map(el => el.name ? el.name : "").join(", ") : ""
-
+	console.log("Elapsed Final:", new Date() - initS, " ms.")
 	return infos
 }
 
@@ -796,46 +799,54 @@ class LinkedInScraper {
 		}
 
 		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
-			try {
-				let companyUrl = null
-				if (this.nick) {
-					const companyTab = await this.nick.newTab()
-					companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
-					await companyTab.close()
-					result.details.companyWebsite = companyUrl || ""
+			const init = new Date()
+			console.log("Getting email...")
+			const timeLeft = await this.utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				this.utils.log(timeLeft.message, "warning")
+			} else {
+				try {
+					let companyUrl = null
+					if (this.nick) {
+						const companyTab = await this.nick.newTab()
+						companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
+						await companyTab.close()
+						result.details.companyWebsite = companyUrl || ""
+					}
+					const hunterPayload = {}
+					if (result.general.firstName && result.general.lastName) {
+						hunterPayload.first_name = result.general.firstName
+						hunterPayload.last_name = result.general.lastName
+					} else {
+						hunterPayload.full_name = result.general.fullName
+					}
+					if (!companyUrl) {
+						hunterPayload.company = result.jobs[0].companyName
+					} else {
+						hunterPayload.domain = companyUrl
+					}
+					//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
+					if (this.hunter) {
+						const hunterSearch = await this.hunter.find(hunterPayload)
+						this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
+						result.details.mailFromHunter = hunterSearch.email
+						result.hunter = Object.assign({}, hunterSearch)
+					}
+					if (this.dropcontact) {
+						hunterPayload.company = result.jobs[0].companyName
+						hunterPayload.siren = true
+						const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
+						console.log("hundropcontactSearchtS", dropcontactSearch)
+						this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
+						console.log("Elapsed:", new Date() - init, " ms.")
+						result.details.mailFromDropcontact = dropcontactSearch.email
+						result.dropcontact = Object.assign({}, dropcontactSearch)
+					}
+				} catch (err) {
+					this.utils.log(err.toString(), "error")
+					result.details.mailFromHunter = ""
+					result.details.companyWebsite = ""
 				}
-				const hunterPayload = {}
-				if (result.general.firstName && result.general.lastName) {
-					hunterPayload.first_name = result.general.firstName
-					hunterPayload.last_name = result.general.lastName
-				} else {
-					hunterPayload.full_name = result.general.fullName
-				}
-				if (!companyUrl) {
-					hunterPayload.company = result.jobs[0].companyName
-				} else {
-					hunterPayload.domain = companyUrl
-				}
-				//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
-				if (this.hunter) {
-					const hunterSearch = await this.hunter.find(hunterPayload)
-					this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
-					result.details.mailFromHunter = hunterSearch.email
-					result.hunter = Object.assign({}, hunterSearch)
-				}
-				if (this.dropcontact) {
-					hunterPayload.company = result.jobs[0].companyName
-					hunterPayload.siren = true
-					const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
-					console.log("hundropcontactSearchtS", dropcontactSearch)
-					this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
-					result.details.mailFromDropcontact = dropcontactSearch.email
-					result.dropcontact = Object.assign({}, dropcontactSearch)
-				}
-			} catch (err) {
-				this.utils.log(err.toString(), "error")
-				result.details.mailFromHunter = ""
-				result.details.companyWebsite = ""
 			}
 		}
 		csvResult = craftCsvObject(result)
