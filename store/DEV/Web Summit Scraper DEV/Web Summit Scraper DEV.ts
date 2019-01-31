@@ -30,6 +30,18 @@ const formatXhrContent = (hit: IUnknownObject): IUnknownObject => {
 	return res
 }
 
+const countElements = (sel: string): number => document.querySelectorAll(sel).length
+const rmElements = (sel: string, expectFirst ?: false) => {
+	let elements = Array.from(document.querySelectorAll(sel))
+	if (expectFirst) {
+		elements = elements.reverse()
+		elements.shift()
+	}
+	if (elements.length > 0) {
+		elements.forEach((el) => (el.parentNode) && (el.parentNode.removeChild(el)))
+	}
+}
+
 /**
  * @param {puppeteer.Page} page - Puppeteer page instance
  * @param {string} url - URL to open
@@ -45,14 +57,21 @@ const scrapeWebsubmit = async (page: puppeteer.Page, url: string): Promise<IUnkn
 				utils.log(timeLeft.message, "warning")
 				break
 			}
-			const research = await page.waitForResponse((xhr) => {
-				return xhr.url().indexOf("/1/indexes/*/queries") > -1 && xhr.status() === 200
-			}, { timeout: 60000 })
+			let research = null
+			try {
+				research = await page.waitForResponse((xhr) => xhr.url().indexOf("/1/indexes/*/queries") > -1 && xhr.status() === 200, { timeout: 75000 })
+			} catch (err) {
+				utils.log(err.message || err, "warning")
+				// ...
+			}
+			if (!research) {
+				break
+			}
 			const xhrJson = await research.json()
 			for (const one of xhrJson.results) {
 				if (one.hits) {
 					for (const hit of one.hits) {
-						startups.push(formatXhrContent(hit))
+						startups.push(...utils.filterRightOuter(startups, [formatXhrContent(hit)]))
 					}
 				}
 			}
@@ -61,6 +80,9 @@ const scrapeWebsubmit = async (page: puppeteer.Page, url: string): Promise<IUnkn
 			if (element) {
 				// const className = await element.getProperty("className")
 				await page.click("button.ais-InfiniteHits-loadMore")
+				if (await page.evaluate(countElements, "li.ais-InfiniteHits-item") as number >= 100) {
+					await page.evaluate(rmElements, "li.ais-InfiniteHits-item")
+				}
 			} else {
 				break
 			}
