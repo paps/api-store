@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -21,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn")
+const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const Messaging = require("./lib-Messaging")
@@ -98,11 +97,15 @@ const validateInvitations = async (invitations, sentCount) => {
 	const withdrawTab = await nick.newTab()
 	try {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
-		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 10000)
+		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 30000)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
 	} catch (err) {
+		if (err.message && err.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+			await withdrawTab.close()
+			throw "ERR_TOO_MANY_REDIRECTS"
+		}
 		utils.log(`Error while double checking invitations: ${err.message || err}`, "error")
 	}
 	await withdrawTab.close()
@@ -152,8 +155,6 @@ const getFirstName = (arg, callback) => {
  */
 const connectTo = async (selector, tab, message) => {
 	await tab.click(selector)
-	await tab.screenshot(`${Date.now()}selector.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}selector.html`)
 	const selectorFound = await tab.waitUntilVisible([".send-invite__actions > button:nth-child(1)", "input#intentAnswer1", ".pv-s-profile-actions__overflow-toggle"], 15000, "or")
 	if (selectorFound === "input#intentAnswer1") {
 		throw "LinkedIn premium account needed to add this profile"
@@ -180,8 +181,6 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
-	await tab.screenshot(`${Date.now()}beforesend.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}beforesend.html`)
 	if (message && message.length > 0) {
 		try {
 			await tab.click(".send-invite__actions > button:nth-child(1)")
@@ -213,8 +212,6 @@ const connectTo = async (selector, tab, message) => {
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
-		await tab.screenshot(`${Date.now()}buttonclicked.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}buttonclicked.html`)
 	}
 }
 
@@ -235,7 +232,6 @@ const openProfile = async (tab, url, noScraping = true, libScraper) => {
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
 	} else {
 		const scrapedProfile = await libScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
-		console.log("scrapedProfile:", scrapedProfile)
 		retData = Object.assign({}, scrapedProfile.csv)
 	}
 	return retData
@@ -358,8 +354,11 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
-	console.log("invitation:", invitation)
+	await buster.saveText(await tab.getContent(), `${Date.now()}invitation.html`)
+
+	console.log("invitation", invitation)
 	if (message && !invitation.firstName) {
+		console.log("no first name")
 		let firstName = await tab.evaluate(getFirstName)
 		if (!firstName) {
 			try {
@@ -378,6 +377,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 				//
 			}
 		}
+		console.log("firstName found", firstName)
 		invitation.firstName = firstName
 	}
 	cleanUpEmojis(invitation)
@@ -385,11 +385,6 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
-	await buster.saveText(await tab.getContent(), `${Date.now()}sel.html`)
-	console.log("message:", message)
-	return invitation
-	// await tab.wait(50000)
-	// nick.exit()
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -463,29 +458,29 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			break
 		}
 	}
-
 	return invitation
 }
 
-/**
- * @description Removing all tags stored in the invitation object
- * @param {Array<Object>} invitations - Invitations representations
- * @param {String} msg - message
- */
-const cleanUpInvitations = (invitations, msg) => {
-	if (msg) {
-		const tags = inflater.getMessageTags(msg)
-		for (const invit of invitations) {
-			for (const tag of tags) {
-				delete invit[tag]
-			}
-		}
-	}
-}
+// /**
+//  * @description Removing all tags stored in the invitation object
+//  * @param {Array<Object>} invitations - Invitations representations
+//  * @param {String} msg - message
+//  */
+// const cleanUpInvitations = (invitations, msg) => {
+// 	if (msg) {
+// 		const tags = inflater.getMessageTags(msg)
+// 		for (const invit of invitations) {
+// 			for (const tag of tags) {
+// 				delete invit[tag]
+// 			}
+// 		}
+// 	}
+// }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
 	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
+
 	if (!hunterApiKey) {
 		hunterApiKey = ""
 	}
@@ -525,7 +520,7 @@ nick.newTab().then(async (tab) => {
 		rows = profileUrls.map(el => ({ "0": el }))
 		columnName = "0"
 	}
-	
+
 	let step = 1
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	db = await utils.getDb(DB_NAME)
@@ -536,13 +531,7 @@ nick.newTab().then(async (tab) => {
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
-		// console.log("buster", buster)
-		// console.log("nick", nick)
-		// await utils.notifyByMail()
 		nick.exit()
-	} else {
-		// await utils.notifyByMail()
-		// nick.exit()	
 	}
 	let invitations = []
 	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
@@ -558,35 +547,44 @@ nick.newTab().then(async (tab) => {
 					invitationResult.timestamp = (new Date()).toISOString()
 					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
 				}
+				console.log("invitation Result: ", invitationResult)
 			} catch (error) {
 				utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
 			}
 			step++
 		}
 	}
-	console.log("invitation:", invitations)
-	db.push(invitations[0])
 	/**
 	 * Issue #117
 	 * "Successfull" invitations are stored here,
 	 * in order to check later in the script execution if they're sent
 	 */
-	if (false && invitations.length > 0) {
+	console.log("invitation:", invitations)
+	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds
-		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
-		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
-		for (const invit of invitations) {
-			let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
-			if (index < 0) {
-				invit.error = "shadow ban"
-				utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
-			} else {
-				db.push(invit)
+		try {
+			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
+			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
+			for (const invit of invitations) {
+				let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
+				if (index < 0) {
+					invit.error = "shadow ban"
+					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
+				} else {
+					db.push(invit)
+				}
+			}
+		} catch (err) {
+			if (err === "ERR_TOO_MANY_REDIRECTS") {
+				utils.log("Disconnected by LinkedIn, couldn't verify if the invites were sent.", "warning")
 			}
 		}
 	}
-	cleanUpInvitations(invitations, message)
+	console.log("db:", db)
+	// cleanUpInvitations(invitations, message)
+	console.log("db:", db)
+
 	// JSON output will only return the current scraping result
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {

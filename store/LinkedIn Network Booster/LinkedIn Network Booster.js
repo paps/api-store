@@ -458,21 +458,21 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	return invitation
 }
 
-/**
- * @description Removing all tags stored in the invitation object
- * @param {Array<Object>} invitations - Invitations representations
- * @param {String} msg - message
- */
-const cleanUpInvitations = (invitations, msg) => {
-	if (msg) {
-		const tags = inflater.getMessageTags(msg)
-		for (const invit of invitations) {
-			for (const tag of tags) {
-				delete invit[tag]
-			}
-		}
-	}
-}
+// /**
+//  * @description Removing all tags stored in the invitation object
+//  * @param {Array<Object>} invitations - Invitations representations
+//  * @param {String} msg - message
+//  */
+// const cleanUpInvitations = (invitations, msg) => {
+// 	if (msg) {
+// 		const tags = inflater.getMessageTags(msg)
+// 		for (const invit of invitations) {
+// 			for (const tag of tags) {
+// 				delete invit[tag]
+// 			}
+// 		}
+// 	}
+// }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
@@ -576,7 +576,7 @@ nick.newTab().then(async (tab) => {
 			}
 		}
 	}
-	cleanUpInvitations(invitations, message)
+	// cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {

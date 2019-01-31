@@ -8,6 +8,9 @@
 	"gradientEnd": "#DA2E82",
 	"argumentDescription": "",
 	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"csvName": "result"
+	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
@@ -19,6 +22,14 @@
 					},
 					"columnName": {
 						"type": "text"
+					},
+					"csvName": {
+						"label": "Output CSV name",
+						"placeholder": "result"
+					},
+					"numberOfLinesToProcess": {
+						"label": "Number of lines to process per launch (all of them if empty)",
+						"inputType": "number"
 					},
 					"queries": {
 						"hidden": true,
@@ -38,6 +49,12 @@
 			"columnName": {
 				"type": "string",
 				"title": "Column name (optional)"
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"numberOfLinesToProcess": {
+				"type": "number"
 			},
 			"queries": {
 				"type": "array",
