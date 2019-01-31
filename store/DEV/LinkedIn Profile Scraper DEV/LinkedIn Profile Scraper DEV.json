@@ -46,8 +46,7 @@
 				},
 				"dependencies": {
 					"hunterApiKey": [ "emailChooser" ],
-					"dropcontactApiKey": [ "emailChooser" ],
-					"phantombusterApiKey": [ "emailChooser" ]
+					"dropcontactApiKey": [ "emailChooser" ]
 				}
 			},
 			"options": {
@@ -88,13 +87,6 @@
 						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
 						"dependencies": {
 							"emailChooser": "dropcontact"
-						}
-					},
-					"phantombusterApiKey": {
-						"label": "Phantombuster email discovery API key",
-						"helper": "Leave this field if you don't want to use Phantombuster",
-						"dependencies": {
-							"emailChooser": "phantombuster"
 						}
 					},
 					"numberOfAddsPerLaunch": {
@@ -142,10 +134,6 @@
 				"maxLength": 50
 			},
 			"dropcontactApiKey": {
-				"type": "string",
-				"maxLength": 50
-			},
-			"phantombusterApiKey": {
 				"type": "string",
 				"maxLength": 50
 			},

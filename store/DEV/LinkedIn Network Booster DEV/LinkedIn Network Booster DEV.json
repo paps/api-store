@@ -20,6 +20,13 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"emailChooser": [ "disableScraping" ],
+					"dropcontactApiKey": [ "emailChooser" ],
+					"hunterApiKey": [ "emailChooser" ]
+				}
+			},
 			"options": {
 				"fields": {
 					"sessionCookie": {
@@ -44,6 +51,30 @@
 					"onlySecondCircle": {
 						"rightLabel": "<b>Only invite 2nd-degree connections</b>"
 					},
+					"emailChooser": {
+						"label": "Choose an email discovery service",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"optionLabels": [ "none", "Phantombuster", "Dropcontact.io", "Hunter.io" ],
+						"type": "select",
+						"dependencies": {
+							"disableScraping": false
+						}
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io",
+						"dependencies": {
+							"emailChooser": "hunter"
+						}
+					},
+					"dropcontactApiKey": {
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
+						"dependencies": {
+							"emailChooser": "dropcontact"
+						}
+					},
 					"message": {
 						"label": "Message <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
@@ -52,10 +83,6 @@
 							"You are limited by LinkedIn to 300 characters",
 							"Leave empty to send invites without message (not recommended)"
 						]
-					},
-					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
-						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
 					"disableScraping": {
 						"rightLabel": "<b>Disable profile scraping</b> (not recommended — speeds up the API but prevents email discovery and tags other than #firstName#)"
@@ -86,13 +113,22 @@
 			"onlySecondCircle": {
 				"type": "boolean"
 			},
-			"message": {
+			"emailChooser": {
 				"type": "string",
-				"maxLength": 300
+				"enum": [ "none", "phantombuster", "dropcontact", "hunter"],
+				"default": "none"
 			},
 			"hunterApiKey": {
 				"type": "string",
 				"maxLength": 50
+			},
+			"dropcontactApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 300
 			},
 			"disableScraping": {
 				"type": "boolean"
