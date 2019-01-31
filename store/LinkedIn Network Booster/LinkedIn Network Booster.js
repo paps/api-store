@@ -102,6 +102,10 @@ const validateInvitations = async (invitations, sentCount) => {
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
 	} catch (err) {
+		if (err.message && err.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+			await withdrawTab.close()
+			throw "ERR_TOO_MANY_REDIRECTS"
+		}
 		utils.log(`Error while double checking invitations: ${err.message || err}`, "error")
 	}
 	await withdrawTab.close()
@@ -554,15 +558,21 @@ nick.newTab().then(async (tab) => {
 	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds
-		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
-		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
-		for (const invit of invitations) {
-			let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
-			if (index < 0) {
-				invit.error = "shadow ban"
-				utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
-			} else {
-				db.push(invit)
+		try {
+			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
+			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
+			for (const invit of invitations) {
+				let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
+				if (index < 0) {
+					invit.error = "shadow ban"
+					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
+				} else {
+					db.push(invit)
+				}
+			}
+		} catch (err) {
+			if (err === "ERR_TOO_MANY_REDIRECTS") {
+				utils.log("Disconnected by LinkedIn, couldn't verify if the invites were sent.", "warning")
 			}
 		}
 	}
