@@ -88,7 +88,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 	 */
 	await linkedIn.login(tab, sessionCookie)
 	await tab.open("https://www.linkedin.com/mynetwork/invitation-manager/sent")
-	await tab.untilVisible(_selectors.withdrawCount, 15000)
+	await tab.untilVisible(_selectors.withdrawCount, 30000)
 	inviteCount = await tab.evaluate(getTotalSendInvitations, { selector: _selectors.withdrawCount })
 	const oldInviteCount = inviteCount
 	peopleToRemove = inviteCount - peopleCountToKeep
