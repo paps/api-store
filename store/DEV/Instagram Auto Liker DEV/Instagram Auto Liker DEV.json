@@ -3,6 +3,7 @@
 	"description": "Automatically like a list of Instagram Profiles and/or of Instagram Posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Liker/Instagram+Auto+Liker.png",
 	"hidden": true,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",

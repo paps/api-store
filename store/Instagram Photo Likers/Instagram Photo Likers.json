@@ -3,7 +3,7 @@
 	"description": "Get a list of everyone who liked specific Instagram pictures",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Photo+Likers/Instagram+Photo+Likers.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
