@@ -98,7 +98,7 @@ const scrapeWebsubmit = async (page: puppeteer.Page, url: string): Promise<IUnkn
 	const page = await browser.newPage()
 	const res = await scrapeWebsubmit(page, "https://websummit.com/featured-startups")
 	await browser.close()
-	await utils.saveResults(res, res, null, null, true)
+	await utils.saveResults(res, res, "result", null, true)
 	process.exit()
 })()
 .catch((err) => {

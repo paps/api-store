@@ -289,6 +289,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 				break
 			}
 		}
+		await tab.wait(Math.round(500 + Math.random() * 500)) // Tiny delay to prevent cookie invalidation
 	}
 	db.push(...result)
 	await utils.saveResults(result, db, DB_SHORT_NAME, null)
