@@ -800,12 +800,22 @@ class LinkedInScraper {
 
 		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
 			const init = new Date()
-			console.log("Getting email...")
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				this.utils.log(timeLeft.message, "warning")
 			} else {
 				try {
+					let servicesUsed
+					if (this.hunter) {
+						if (this.dropcontact) {
+							servicesUsed = "Hunter and Dropcontact"
+						} else {
+							servicesUsed = "Hunter"
+						}
+					} else {
+						servicesUsed = "Dropcontact"
+					}
+					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
 					let companyUrl = null
 					if (this.nick) {
 						const companyTab = await this.nick.newTab()

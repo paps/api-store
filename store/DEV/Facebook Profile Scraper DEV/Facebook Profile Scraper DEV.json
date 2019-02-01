@@ -20,6 +20,7 @@
 			"detailsAbout": false,
 			"lifeEvents": false
 		},
+		"profilesPerLaunch": 5,
         "csvName": "result"
     },
     "outputDescription": {
@@ -82,8 +83,8 @@
 							"lifeEvents": {
 								"rightLabel": "<b>Life Events</b>"
                             }
-                        }  
-					},	
+                        }
+					},
                     "profilesPerLaunch": {
 						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
