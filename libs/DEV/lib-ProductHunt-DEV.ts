@@ -119,4 +119,4 @@ class ProductHunt {
 
 }
 
-module.exports = ProductHunt
+export = ProductHunt
