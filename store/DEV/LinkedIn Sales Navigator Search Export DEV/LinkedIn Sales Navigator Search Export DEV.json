@@ -66,14 +66,14 @@
 						"helper": "If using a spreadsheet. All of them if empty"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"extractDefaultUrl": {
-                        "rightLabel": "<b>Extract default LinkedIn profiles URLs</b> - takes longer, also visits each profile - <b>Do not use if you have hundreds of results!</b>"
+						"rightLabel": "<b>Extract default LinkedIn profiles URLs</b> - takes longer, also visits each profile - <b>Do not use if you have hundreds of results!</b>"
 					},
 					"removeDuplicateProfiles": {
-                        "rightLabel": "<b>Remove duplicate profiles</b>"
+						"rightLabel": "<b>Remove duplicate profiles</b>"
 					}
 				}
 			}
@@ -104,18 +104,18 @@
 				"type": "number",
 				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			},
 			"extractDefaultUrl": {
 				"type": "boolean",
 				"default": "false"
-            },
+			},
 			"removeDuplicateProfiles": {
 				"type": "boolean",
 				"default": "false"
-            }
+			}
 		}
 	}
 }

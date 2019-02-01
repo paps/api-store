@@ -51,8 +51,8 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"reprocessAll": {
 						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"

@@ -28,7 +28,6 @@ const inflater = new Messaging(utils)
 const { URL } = require("url")
 
 const DEFAULT_DB = "result"
-const MESSAGE_URL = "https://www.twitter.com/messages"
 const COLUMN = "0"
 const DEFAULT_PROFILES = 10
 
@@ -43,8 +42,9 @@ const SELECTORS = {
 	closeSelector: "button.DMActivity-close",
 	messageSelector: "li.DirectMessage",
 	writeErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error",
-	debugErrorSelector: `div.DMNotice.DMResendMessage.DMNotice--error .DMResendMessage-customErrorMessage`,
-	convNameSelector: "span.DMUpdateName-name.u-textTruncate"
+	debugErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error .DMResendMessage-customErrorMessage",
+	convNameSelector: "span.DMUpdateName-name.u-textTruncate",
+	dmButton: "div.ProfileMessagingActions button.DMButton"
 }
 
 /* global $ */
@@ -89,7 +89,7 @@ const waitWhileEnabled = (arg, cb) => {
 }
 
 const getErrorMessage = (arg, cb) => {
-	el = document.querySelector(arg.sel)
+	let el = document.querySelector(arg.sel)
 	let err = ""
 	if (el) {
 		const tmp = [...el.childNodes].filter(el => el.nodeType === Node.TEXT_NODE)
@@ -115,65 +115,8 @@ const _sendMessage = (arg, cb) => {
 	cb(null, typeof res === "object" && res !== null)
 }
 
-/**
- * @async
- * @param {Object} tab - Nickjs tab instance
- * @param {Boolean} [openNewMsg]
- * @throws String on loading failures
- * @return {Promise<Boolean>}
- */
-const openMessagesPage = async (tab, loadMsgComposer = false) => {
-	const [ httpCode ] = await tab.open(MESSAGE_URL)
-
-	if (httpCode === 404) {
-		utils.log("Can't open the messages URL", "error")
-		return false
-	}
-
-	try {
-		await tab.waitUntilVisible([ SELECTORS.inboxSelector, SELECTORS.composeMessageSelector ], 15000, "and")
-		if (loadMsgComposer) {
-			await tab.click(SELECTORS.composeMessageSelector)
-			await tab.waitUntilVisible(SELECTORS.msgDestinationSelector, 15000)
-		}
-	} catch (err) {
-		utils.log(err.message || err, "warning")
-		return false
-	}
-	return true
-}
-
 
 const getConversationName = (arg, cb) => cb(null, document.querySelector(arg.sel) ? document.querySelector(arg.sel).textContent.trim() : null)
-
-/**
- * @async
- * @param {Object} tab
- * @param {String} handle - Twitter handle
- * @throws String on CSS failure
- * @return Promise<Boolean> true if a conversation was successfully open with the parameter handle
- */
-const startConversation = async (tab, handle) => {
-	// the sendKeys can sometimes silently fail instead of writing the handle, Twitter will open a conversation with @undefined
-	// To correctly open a conversation with a twitter user, let's iterate on each handle characters and wait 50ms after each input
-	const keys = handle.split("")
-	for (const key of keys) {
-		await tab.sendKeys(SELECTORS.msgDestinationSelector, key, { reset: false, keepFocus: false })
-		await tab.wait(250)
-	}
-	await tab.wait(1000)
-	await tab.click(SELECTORS.initConvSelector)
-	try {
-		await tab.waitWhileVisible(SELECTORS.initConvSelector, 30000)
-		await tab.wait(1000)
-	} catch (err) {
-		utils.log(`Can't start conversation with ${handle}: ${err.message || err}`, "error")
-		return false
-	}
-	await tab.waitUntilVisible([ SELECTORS.textEditSelector, SELECTORS.sendSelector ], 15000, "and")
-	const convName = await tab.evaluate(getConversationName, { sel: SELECTORS.convNameSelector })
-	return convName === handle
-}
 
 /**
  * @async
@@ -196,6 +139,18 @@ const sendMessage = async (tab, message) => {
 	await tab.click(SELECTORS.closeSelector)
 }
 
+
+/**
+ * @param {Nick.Tab} tab
+ * @return {Promise<boolean|string>}
+ */
+const canSendDM = async tab => {
+	try {
+		return await tab.isVisible(SELECTORS.dmButton)
+	} catch (err) {
+		return err.message || err
+	}
+}
 
 ;(async () => {
 	const tab = await nick.newTab()
@@ -256,35 +211,52 @@ const sendMessage = async (tab, message) => {
 		nick.exit()
 	}
 
-	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
+	utils.log(`Sending messages to: ${JSON.stringify(rows.map(el => el[columnName]).slice(0, 100), null, 2)}`, "done")
 	for (const one of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
-		profile.query = one[columnName]
-		profile.message = inflater.forgeMessage(message, Object.assign({}, profile, one))
+		let profile = null
 		try {
-			let isOpen = await openMessagesPage(tab, true)
-			if (!isOpen) {
-				profile.error = `Can't start a conversation with: ${one}`
-				res.push(profile)
-				utils.log(profile.error, "warning")
-				continue
+			profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
+		} catch (err) {
+			if (!profile) {
+				profile = { error: err, query: one[columnName] }
+			} else {
+				profile.error = err
 			}
-			utils.log(`Opening a conversation for ${profile.handle}`, "loading")
-			await startConversation(tab, profile.handle)
+			utils.log(profile.error, "warning")
+			res.push(profile)
+			continue
+		}
+		const canSend = await canSendDM(tab)
+		if (typeof canSend === "string" || !canSend) {
+			const err = `Can't send a DM to ${one[columnName]}: ${typeof canSend === "string" ? canSend : "" }`
+			profile.error = err
+			profile.query = one[columnName]
+			profile.timestamp = (new Date()).toISOString()
+			utils.log(profile.error, "warning")
+			res.push(profile)
+			continue
+		}
+		try {
+			profile.query = one[columnName]
+			profile.message = inflater.forgeMessage(message, Object.assign({}, profile, one))
+			await tab.click(SELECTORS.dmButton)
+			await tab.waitUntilVisible([ SELECTORS.textEditSelector, SELECTORS.sendSelector ], 15000, "and")
+			const convName = await tab.evaluate(getConversationName, { sel: SELECTORS.convNameSelector })
+			utils.log(`Conversation with ${convName} opened`, "info")
 			await sendMessage(tab, profile.message)
-			utils.log(`Message successfully sent to ${profile.handle}`, "done")
+			utils.log(`Message successfully sent to ${convName}`, "done")
 			profile.timestamp = (new Date()).toISOString()
 			res.push(profile)
 		} catch (err) {
 			profile.timestamp = (new Date()).toISOString()
 			profile.error = err.message || err
-			res.push(profile)
 			utils.log(`Error while sending message to ${one[columnName]}: ${profile.error}`, "warning")
+			res.push(profile)
 		}
 	}
 	db.push(...res)

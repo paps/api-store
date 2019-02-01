@@ -78,8 +78,8 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"onlyGetFirstResult": {
 						"rightLabel": "<b>Only get the first search result</b>"

@@ -3,6 +3,8 @@ import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 import Buster from "phantombuster"
 import * as Puppeteer from "puppeteer"
 
+const delay = (time = 1000) => new Promise((resolve) => setTimeout(resolve, time))
+
 class Slack {
 	private buster: Buster
 	private utils: StoreUtilities
@@ -355,6 +357,7 @@ class Slack {
 		}
 
 		const xhrRes: IUnknownObject = await page.evaluate(_DM, channel, message) as IUnknownObject
+		await delay(2000) // Trying to prevent chat.postMessage rate limit
 		if (xhrRes && isUnknownObject(xhrRes.data) && typeof xhrRes.ok === "boolean") {
 			if (xhrRes.ok) {
 				res = 0

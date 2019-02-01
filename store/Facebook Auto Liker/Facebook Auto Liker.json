@@ -8,7 +8,7 @@
 	"hidden": false,
 	"new": false,
 	"defaultArgument": {
-        "sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieCUser": "your_c-user_session_cookie",
 		"sessionCookieXs": "your_xs_session_cookie",
 		"spreadsheetUrl": "facebook_profile_urls",
 		"numberOfProfilesPerLaunch": 10,
@@ -28,13 +28,13 @@
 			"options": {
 				"fields": {
 					"sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
-                    },
+						"label": "Session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
@@ -70,19 +70,19 @@
 		"type": "object",
 		"properties": {
 			"sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
-            "spreadsheetUrl": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
 				"type": "string",
 				"required": true
-            },
+			},
 			"columnName": {
 				"type": "string"
 			},

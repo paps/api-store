@@ -31,17 +31,19 @@
 					"columnName": {
 						"label": "Column name where Github profiles URLs are stored in the spreadhsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
-						"placeholder": "Github"
+						"placeholder": "ProfileUrl"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (all if empty) <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"inputType": "number"
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"scrapeHireable": {
+						"rightLabel": "<b>Scrape Github profile hireable status</b>"
 					}
 				}
 			}
@@ -59,11 +61,14 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
-				"maximum": 10,
 				"default": 1
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"scrapeHireable": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [

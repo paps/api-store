@@ -218,7 +218,19 @@ const canSendDM = async tab => {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		const profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
+		let profile = null
+		try {
+			profile = await twitter.scrapeProfile(tab, isUrl(one[columnName]) && isTwitterUrl(one[columnName]) ? one[columnName] : `https://www.twitter.com/${one[columnName]}`, true)
+		} catch (err) {
+			if (!profile) {
+				profile = { error: err, query: one[columnName] }
+			} else {
+				profile.error = err
+			}
+			utils.log(profile.error, "warning")
+			res.push(profile)
+			continue
+		}
 		const canSend = await canSendDM(tab)
 		if (typeof canSend === "string" || !canSend) {
 			const err = `Can't send a DM to ${one[columnName]}: ${typeof canSend === "string" ? canSend : "" }`

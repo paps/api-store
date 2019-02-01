@@ -42,7 +42,7 @@ _(**You already have all that?**  Click straight away on **"Use this API"**)_
 1. Current job title
 1. Description of the current job
 1. Location of that job
-1. Email (if available)
+1. Mail (if available)
 1. **Discovered email** (New! [See below](#section_email_discovery))
 1. Phone number (if available)
 1. Twitter (if available)

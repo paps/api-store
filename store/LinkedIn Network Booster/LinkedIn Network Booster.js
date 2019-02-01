@@ -102,6 +102,10 @@ const validateInvitations = async (invitations, sentCount) => {
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
 	} catch (err) {
+		if (err.message && err.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+			await withdrawTab.close()
+			throw "ERR_TOO_MANY_REDIRECTS"
+		}
 		utils.log(`Error while double checking invitations: ${err.message || err}`, "error")
 	}
 	await withdrawTab.close()
@@ -377,6 +381,12 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
+	if (message && message.length > 300) {
+		utils.log(`Message to send: ${message}`, "info")
+		utils.log(`This message is over 300 characters (${message.length}) and can't be sent to LinkedIn.`, "error")
+		invitation.error = "Message over 300 characters"
+		return invitation
+	}
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -454,21 +464,21 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	return invitation
 }
 
-/**
- * @description Removing all tags stored in the invitation object
- * @param {Array<Object>} invitations - Invitations representations
- * @param {String} msg - message
- */
-const cleanUpInvitations = (invitations, msg) => {
-	if (msg) {
-		const tags = inflater.getMessageTags(msg)
-		for (const invit of invitations) {
-			for (const tag of tags) {
-				delete invit[tag]
-			}
-		}
-	}
-}
+// /**
+//  * @description Removing all tags stored in the invitation object
+//  * @param {Array<Object>} invitations - Invitations representations
+//  * @param {String} msg - message
+//  */
+// const cleanUpInvitations = (invitations, msg) => {
+// 	if (msg) {
+// 		const tags = inflater.getMessageTags(msg)
+// 		for (const invit of invitations) {
+// 			for (const tag of tags) {
+// 				delete invit[tag]
+// 			}
+// 		}
+// 	}
+// }
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
@@ -538,7 +548,11 @@ nick.newTab().then(async (tab) => {
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.timestamp = (new Date()).toISOString()
-					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
+					if (!invitationResult.error) {
+						invitations.push(invitationResult)
+					} else if (invitationResult.error !== "Message over 300 characters") {
+						db.push(invitationResult)
+					}
 				}
 			} catch (error) {
 				utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
@@ -554,19 +568,25 @@ nick.newTab().then(async (tab) => {
 	if (invitations.length > 0) {
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		await tab.wait(30000)	// Watiting 30 seconds
-		let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
-		utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
-		for (const invit of invitations) {
-			let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
-			if (index < 0) {
-				invit.error = "shadow ban"
-				utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
-			} else {
-				db.push(invit)
+		try {
+			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
+			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
+			for (const invit of invitations) {
+				let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
+				if (index < 0) {
+					invit.error = "shadow ban"
+					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
+				} else {
+					db.push(invit)
+				}
+			}
+		} catch (err) {
+			if (err === "ERR_TOO_MANY_REDIRECTS") {
+				utils.log("Disconnected by LinkedIn, couldn't verify if the invites were sent.", "warning")
 			}
 		}
 	}
-	cleanUpInvitations(invitations, message)
+	// cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
 	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {

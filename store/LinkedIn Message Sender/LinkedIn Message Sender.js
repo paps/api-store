@@ -237,7 +237,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 	const result = []
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
-	rows = rows.filter(el => el)
+	rows = rows.filter(el => el[columnName])
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
@@ -283,7 +283,13 @@ const sendMessage = async (tab, message, tags, profile) => {
 		} catch (err) {
 			utils.log(`Can't load profile: ${url} due to: ${err.message || err}`, "warning")
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
+			// Detecting LinkedIn cookie invalidation
+			if (err.message.indexOf("net::ERR_TOO_MANY_REDIRECTS") > -1) {
+				utils.log(`You're currently disconnected from LinkedIn, please update your session cookie`, "warning")
+				break
+			}
 		}
+		await tab.wait(Math.round(500 + Math.random() * 500)) // Tiny delay to prevent cookie invalidation
 	}
 	db.push(...result)
 	await utils.saveResults(result, db, DB_SHORT_NAME, null)

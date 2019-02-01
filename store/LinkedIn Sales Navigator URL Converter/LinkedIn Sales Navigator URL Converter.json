@@ -39,8 +39,8 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_repetition_setup\" target=\"_blank\">(?)</a>",
@@ -65,7 +65,7 @@
 			"columnName": {
 				"type": "string"
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			},

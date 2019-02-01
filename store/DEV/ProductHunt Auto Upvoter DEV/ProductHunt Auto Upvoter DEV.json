@@ -1,36 +1,36 @@
 {
-    "slug": "youtube-channel-scraper",
-    "description": "Collect valuable information you need from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
-    "gradientBegin": "#E42C27",
-    "gradientEnd": "#FFD80B",
-    "argumentDescription": "Extract every information from a list of Youtube Channels",
-    "hidden": true,
-    "new": true,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "sessionCookie": "your__producthunt_session_production_cookie",
-        "channelsPerLaunch": 10
-    },
-    "outputDescription": {
+	"slug": "youtube-channel-scraper",
+	"description": "Collect valuable information you need from Youtube channels",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
+	"gradientBegin": "#E42C27",
+	"gradientEnd": "#FFD80B",
+	"argumentDescription": "Extract every information from a list of Youtube Channels",
+	"hidden": true,
+	"new": true,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your__producthunt_session_production_cookie",
+		"channelsPerLaunch": 10
+	},
+	"outputDescription": {
 		"channelTitle": "",
-        "subscriberCount": "",
-        "viewCount": "",        
+		"subscriberCount": "",
+		"viewCount": "",
 		"description": "",
 		"joinedDate": "",
 		"country": ""
 	},
-    "defaultArgumentAllowed": true,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "sessionCookie": {
-                        "label": "Session cookie _producthunt_session_production  <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your _producthunt_session_production session cookie here"
-                    },
-                    "spreadsheetUrl": {
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie _producthunt_session_production  <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your _producthunt_session_production session cookie here"
+					},
+					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
@@ -45,22 +45,22 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "sessionCookie": {
-                "type": "string",
-                "required": true,
-                "minLength": 10
-            },
-            "spreadsheetUrl": {
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 10
+			},
+			"spreadsheetUrl": {
 				"type": "string"
 			},
 			"columnName": {
@@ -70,7 +70,7 @@
 				"type": "number",
 				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}
@@ -104,5 +104,5 @@
 				}
 			}
 		]
-    }
+	}
 }

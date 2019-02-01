@@ -43,6 +43,10 @@
 					"spreadsheetUrl": {
 						"required": true
 					}
+				},
+				"dependencies": {
+					"hunterApiKey": [ "emailChooser" ],
+					"dropcontactApiKey": [ "emailChooser" ]
 				}
 			},
 			"options": {
@@ -64,13 +68,26 @@
 						"placeholder": "LinkedIn Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
+					"emailChooser": {
+						"label": "Choose an email discovery service",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"optionLabels": [ "none", "Phantombuster", "Dropcontact.io", "Hunter.io" ],
+						"type": "select"
+					},
 					"hunterApiKey": {
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
-						"helper": "Leave this field empty if you don't want to use Hunter.io"
+						"helper": "Leave this field empty if you don't want to use Hunter.io",
+						"dependencies": {
+							"emailChooser": "hunter"
+						}
 					},
 					"dropcontactApiKey": {
 						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
-						"helper": "Leave this field empty if you don't want to use Dropcontact.io"
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
+						"dependencies": {
+							"emailChooser": "dropcontact"
+						}
 					},
 					"numberOfAddsPerLaunch": {
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
@@ -78,8 +95,8 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"saveImg": {
 						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
@@ -107,6 +124,10 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"emailChooser": {
+				"enum": [ "none", "phantombuster", "dropcontact", "hunter" ],
+				"default": "none"
 			},
 			"hunterApiKey": {
 				"type": "string",

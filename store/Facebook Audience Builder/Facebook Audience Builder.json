@@ -9,7 +9,7 @@
 	"new": true,
 	"defaultArgument": {
 		"sessionCookieliAt": "your_li-at_session_cookie",
-        "sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieCUser": "your_c-user_session_cookie",
 		"sessionCookieXs": "your_xs_session_cookie",
 		"sessionCookieAuthToken": "your_auth-token_session_cookie",
 		"spreadsheetUrl": "linkedin_or_facebook_profile_urls",
@@ -18,16 +18,16 @@
 	"outputDescription": {
 		"fn": "First name",
 		"ln": "Last name",
-        "uid": "Facebook Unique ID",
-        "gender": "Gender",
-        "email": "Emails found",
+		"uid": "Facebook Unique ID",
+		"gender": "Gender",
+		"email": "Emails found",
 		"country": "Country",
 		"st": "State (if US)",
-        "ct": "City",
-        "zip": "ZIP Code",
-        "dob": "Date of birth",
-        "doby": "Year of birth",
-        "age": "Age"
+		"ct": "City",
+		"zip": "ZIP Code",
+		"dob": "Date of birth",
+		"doby": "Year of birth",
+		"age": "Age"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -43,21 +43,21 @@
 			"options": {
 				"fields": {
 					"sessionCookieliAt": {
-                        "label": "LinkedIn session cookie li-at <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your LinkedIn li_at session cookie here"
-                    },
+						"label": "LinkedIn session cookie li-at <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your LinkedIn li_at session cookie here"
+					},
 					"sessionCookieCUser": {
-                        "label": "Facebook session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your Facebook c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Facebook session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs Facebook session cookie here"
-                    },
-                    "sessionCookieAuthToken": {
-                        "label": "Twitter session cookie auth_token (optional) <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your auth_token Twitter session cookie here"
-                    },
+						"label": "Facebook session cookie c_user <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your Facebook c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Facebook session cookie xs <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs Facebook session cookie here"
+					},
+					"sessionCookieAuthToken": {
+						"label": "Twitter session cookie auth_token (optional) <a href=\"/api-store/8465/facebook-auto-liker#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your auth_token Twitter session cookie here"
+					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL, LinkedIn or Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
@@ -74,8 +74,8 @@
 						"placeholder": 10
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -85,29 +85,29 @@
 		"type": "object",
 		"properties": {
 			"sessionCookieliAt": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
 			"sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
-            "sessionCookieAuthToken": {
-                "type": "string",
-                "required": false,
-                "minLength": 15
-            },
-            "spreadsheetUrl": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"sessionCookieAuthToken": {
+				"type": "string",
+				"required": false,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
 				"type": "string",
 				"required": true
-            },
+			},
 			"columnName": {
 				"type": "string"
 			},

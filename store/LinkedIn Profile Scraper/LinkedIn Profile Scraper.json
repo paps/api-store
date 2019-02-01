@@ -77,6 +77,10 @@
 						"placeholder": 10,
 						"inputType": "number"
 					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
 					"saveImg": {
 						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
 					},
@@ -116,6 +120,10 @@
 				"type": "number",
 				"minimum": 1,
 				"maximum": 25
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			},
 			"saveImg": {
 				"type": "boolean"
