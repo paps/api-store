@@ -5,8 +5,8 @@
 	"argumentDescription": "",
 	"gradientBegin": "#029E74",
 	"gradientEnd": "#516395",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"search": "#Phantombuster"
