@@ -1,12 +1,12 @@
-# Automatically send a Direct Message to a list of users in a Slack workspace.
+# Automatically send a Direct Message to all users of a Slack workspace.
 
 Slack is becoming more and more useful as a way to build communities. The fact that's it's semi-private and that people answer quickly since they often also use it within their companies is really powerful. 
 
-This Slack API lets you program a personalized message to the users of a specific list users on a Slack workspace. This is great if you want to spread the word in a personalized way about some topic that's dear to you.
+This Slack API lets you program a personalized message to the users of a specific list of users on a Slack workspace. This is great if you want to spread the word in a personalized way about some topic that's dear to you.
 
-You'll be able to send that message to all the users on your list, or just to those who are online when the API is launched. This is necessary in order to be able to handle all the answers that you'll get.
+You'll be able to message all the users of your list, or only those online when the API launches. That way you'll be able to handle all the answers you'll get.
 
-In order to build that list of recipients, we recommend using our [Slack Channel Users Extractor](https://phantombuster.com/api-store/12190/slack-channel-user-extractor) tool. It'll gather all users from a specific channel in a neat spreadsheet.
+In order to build that list of recipients, we recommend using our [Slack Channel Users Extractor](https://phantombuster.com/api-store/12190/slack-channel-user-extractor) tool. It'll neatly gather all users from a specific channel in a spreadsheet.
 
 # What will you need? ⚙️ 
 - Your **" Slack's Workspace URL"**: To find your Slack's workspace URL and cookie, you'll need to open it in your browser, not in app.
@@ -15,7 +15,7 @@ In order to build that list of recipients, we recommend using our [Slack Channel
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
+If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. Our automations run in the cloud.
 
 ## 2. Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
@@ -32,7 +32,7 @@ The Session Cookie you'll need to make this API work is called "`d`",
 Here's how you can get yours:
 
 * Using Chrome (not the Slack app), go to your workspace and open the inspector.
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
+→ Right-click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
 → <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
 or  
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
