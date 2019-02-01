@@ -1,4 +1,4 @@
-# Automatically send a Direct Message to a list of users in a Slack workspace.
+# Automatically send a Direct Message to all users of a Slack workspace.
 
 Slack is becoming more and more useful as a way to build communities. The fact that's it's semi-private and that people answer quickly since they often also use it within their companies is really powerful. 
 

@@ -1,6 +1,6 @@
 {
 	"slug": "slack-message-sender",
-	"description": "Automatically and Personnally reach all members of a Slack by Direct Message.",
+	"description": "Automatically send DMs to some or all members of a Slack Workspace.",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Slack+Message+Sender/Slack+Message+Sender.png",
 	"argumentDescription": "",
 	"gradientBegin": "#36C5F0",
