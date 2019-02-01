@@ -1,18 +1,18 @@
 {
-    "slug": "facebook-profile-scraper",
-    "description": "Collect valuable information you need from Facebook profiles",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
-    "argumentDescription": "",
-    "hidden": false,
-    "new": false,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "sessionCookieCUser": "your_c-user_session_cookie",
-        "sessionCookieXs": "your_xs_session_cookie",
-        "spreadsheetUrl": "facebook_profile_urls",
-        "pagesToScrape": {
+	"slug": "facebook-profile-scraper",
+	"description": "Collect valuable information you need from Facebook profiles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentDescription": "",
+	"hidden": false,
+	"new": false,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieXs": "your_xs_session_cookie",
+		"spreadsheetUrl": "facebook_profile_urls",
+		"pagesToScrape": {
 			"workAndEducation": false,
 			"placesLived": false,
 			"contactAndBasicInfo": false,
@@ -21,50 +21,50 @@
 			"lifeEvents": false
 		},
 		"profilesPerLaunch": 5,
-        "csvName": "result"
-    },
-    "outputDescription": {
+		"csvName": "result"
+	},
+	"outputDescription": {
 		"profileURL": "Facebook profile URL",
 		"profilePictureUrl": "Profile picture URL",
 		"name": "Full name",
-        "status": "Friend or not",
-        "uid": "Facebook ID",
-        "work": "",
-        "education": "",
-        "cities": "",
-        "contactInfo": "",
-        "familyMembers": "",
-        "lifeEvents": ""
+		"status": "Friend or not",
+		"uid": "Facebook ID",
+		"work": "",
+		"education": "",
+		"cities": "",
+		"contactInfo": "",
+		"familyMembers": "",
+		"lifeEvents": ""
 	},
-    "defaultArgumentAllowed": true,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
-                    },
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookieCUser": {
+						"label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
 					"spreadsheetUrl": {
 						"helpers": [
 							"Enter either a Facebook Profile URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
 						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
-                    },
-                    "columnName": {
-                        "label": "Column name from which to get Profile URLs",
-                        "placeholder": "Facebook Profile URLs",
-                        "helper": "By default, we'll use the first column of your spreadsheet (column A)"
-                    },
+					},
+					"columnName": {
+						"label": "Column name from which to get Profile URLs",
+						"placeholder": "Facebook Profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
 					"pagesToScrape": {
-                        "helper" : "<b>Additional pages to scrape</b>",
-                        "fields": {
+						"helper" : "<b>Additional pages to scrape</b>",
+						"fields": {
 							"workAndEducation": {
 								"rightLabel": "<b>Work and Education</b>"
 							},
@@ -82,42 +82,42 @@
 							},
 							"lifeEvents": {
 								"rightLabel": "<b>Life Events</b>"
-                            }
-                        }
+							}
+						}
 					},
-                    "profilesPerLaunch": {
+					"profilesPerLaunch": {
 						"label": "Number of profiles to process per launch - if none will try to scrape all of them",
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
-            "spreadsheetUrl": {
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookieCUser": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
 				"type": "string"
-            },
-            "columnName": {
-                "type": "string"
-            },
+			},
+			"columnName": {
+				"type": "string"
+			},
 			"pagesToScrape": {
-                "type": "object",
+				"type": "object",
 				"properties": {
 					"workAndEducation": {
 						"type": "boolean",
@@ -145,16 +145,16 @@
 					}
 				}
 			},
-            "profilesPerLaunch": {
-                "type": "number",
-                "minimum": 1
+			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}
-        },
-        "oneOf": [
+		},
+		"oneOf": [
 			{
 				"required": [
 					"spreadsheetUrl"
@@ -183,5 +183,5 @@
 				}
 			}
 		]
-    }
+	}
 }

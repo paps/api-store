@@ -8,8 +8,8 @@
 	"gradientEnd": "#5477BC",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
-        "sessionCookieCUser": "your_c-user_session_cookie",
-        "sessionCookieXs": "your_xs_session_cookie",
+		"sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieXs": "your_xs_session_cookie",
 		"spreadsheetUrl": "facebook_posts_urls",
 		"numberofProfilesperLaunch": 10,
 		"expandAllComments": false
@@ -27,14 +27,14 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-                    "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8464/facebook-post-commenters#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8464/facebook-post-commenters#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
-                    },
+					"sessionCookieCUser": {
+						"label": "Session cookie c_user <a href=\"/api-store/8464/facebook-post-commenters#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8464/facebook-post-commenters#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
@@ -56,12 +56,12 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
 					"expandAllComments": {
-                        "rightLabel": "<b>Expand all comment chains</b> (takes longer)"
-                    }
+						"rightLabel": "<b>Expand all comment chains</b> (takes longer)"
+					}
 				}
 			}
 		}
@@ -69,16 +69,16 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-            "sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
+			"sessionCookieCUser": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
 			"spreadsheetUrl": {
 				"type": "string",
 				"required": true
@@ -93,14 +93,14 @@
 				"type": "number",
 				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			},
 			"expandAllComments": {
 				"type": "boolean",
 				"default": "false"
-            }
+			}
 		}
 	}
 }

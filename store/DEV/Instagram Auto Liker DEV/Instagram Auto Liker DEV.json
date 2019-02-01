@@ -57,8 +57,8 @@
 						"sort": false
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -92,7 +92,7 @@
 				"enum": ["Like", "Unlike"],
 				"default": "Like"
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}

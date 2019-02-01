@@ -1,31 +1,31 @@
 {
-    "slug": "youtube-channel-scraper",
-    "description": "Collect valuable information you need from Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
-    "gradientBegin": "#E42C27",
-    "gradientEnd": "#FFD80B",
-    "argumentDescription": "Extract every information from a list of Youtube Channels",
-    "hidden": false,
-    "new": true,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "channelsPerLaunch": 10
-    },
-    "outputDescription": {
+	"slug": "youtube-channel-scraper",
+	"description": "Collect valuable information you need from Youtube channels",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Channel+Scraper/Youtube+Channel+Scraper.png",
+	"gradientBegin": "#E42C27",
+	"gradientEnd": "#FFD80B",
+	"argumentDescription": "Extract every information from a list of Youtube Channels",
+	"hidden": false,
+	"new": true,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"channelsPerLaunch": 10
+	},
+	"outputDescription": {
 		"channelTitle": "",
-        "subscriberCount": "",
-        "viewCount": "",
+		"subscriberCount": "",
+		"viewCount": "",
 		"description": "",
 		"joinedDate": "",
 		"country": ""
 	},
-    "defaultArgumentAllowed": true,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "spreadsheetUrl": {
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
@@ -40,17 +40,17 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "spreadsheetUrl": {
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
 				"type": "string"
 			},
 			"columnName": {
@@ -60,7 +60,7 @@
 				"type": "number",
 				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}
@@ -94,5 +94,5 @@
 				}
 			}
 		]
-    }
+	}
 }

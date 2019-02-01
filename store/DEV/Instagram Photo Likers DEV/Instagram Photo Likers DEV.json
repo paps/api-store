@@ -36,57 +36,57 @@
 						"type": "url",
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single photo URL" ],
-						"label": "Spreadsheet URL of photos to scrape <a href=\"/api-store/10253/instagram-photo-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
-					},
-					"columnName": {
-						"label": "Column name from which to get photo URLs",
-						"placeholder": "Instagram Photo Link",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
-					},
-					"numberOfLikers": {
-						"label": "Number of likers to collect per photo",
-						"inputType": "number",
-						"helper": "If empty, the API will try to scrape all of them"
-					},
-					"numberOfPhotosPerLaunch": {
-						"label": "Number of photos to scrape per launch <a href=\"/api-store/10253/instagram-photo-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
-						"inputType": "number"
-					},
-					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+							"label": "Spreadsheet URL of photos to scrape <a href=\"/api-store/10253/instagram-photo-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						},
+						"columnName": {
+							"label": "Column name from which to get photo URLs",
+							"placeholder": "Instagram Photo Link",
+							"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						},
+						"numberOfLikers": {
+							"label": "Number of likers to collect per photo",
+							"inputType": "number",
+							"helper": "If empty, the API will try to scrape all of them"
+						},
+						"numberOfPhotosPerLaunch": {
+							"label": "Number of photos to scrape per launch <a href=\"/api-store/10253/instagram-photo-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"placeholder": 10,
+							"inputType": "number"
+						},
+						"csvName": {
+							"label": "Name of resulting CSV file",
+							"placeholder": "result"
+						}
 					}
 				}
 			}
-		}
-	},
-	"argumentSchema": {
-		"type": "object",
-		"properties": {
-			"sessionCookie": {
-				"type": "string",
-				"required": true
-			},
-			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
-			},
-			"columnName": {
-				"type": "string"
-			},
-			"numberOfLikers": {
-				"type": "number",
-				"minimum": 1
-			},
-			"numberOfPhotosPerLaunch": {
-				"type": "number",
-				"minimum": 1
-			},
-            "csvName": {
-				"type": "string",
-				"required": false
+		},
+		"argumentSchema": {
+			"type": "object",
+			"properties": {
+				"sessionCookie": {
+					"type": "string",
+					"required": true
+				},
+				"spreadsheetUrl": {
+					"type": "string",
+					"required": true
+				},
+				"columnName": {
+					"type": "string"
+				},
+				"numberOfLikers": {
+					"type": "number",
+					"minimum": 1
+				},
+				"numberOfPhotosPerLaunch": {
+					"type": "number",
+					"minimum": 1
+				},
+				"csvName": {
+					"type": "string",
+					"required": false
+				}
 			}
 		}
 	}
-}

@@ -1,14 +1,14 @@
 {
-    "slug": "facebook-page-likers",
-    "description": "Extract a list of all the profiles that liked any Facebook page",
-    "image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
-    "hidden": true,
-    "new": false,
-    "gradientBegin": "#32C1F1",
-    "gradientEnd": "#5477BC",
-    "argumentHelpAnchor": "#section_argument",
+	"slug": "facebook-page-likers",
+	"description": "Extract a list of all the profiles that liked any Facebook page",
+	"image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
+	"hidden": true,
+	"new": false,
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
-        "sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieCUser": "your_c-user_session_cookie",
 		"sessionCookieXs": "your_xs_session_cookie",
 		"spreadsheetUrl": "facebook_page_urls",
 		"maxLikers": 500
@@ -28,14 +28,14 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-                    "sessionCookieCUser": {
-                        "label": "Session cookie c_user <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your c_user session cookie here"
-                    },
-                    "sessionCookieXs": {
-                        "label": "Session cookie xs <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your xs session cookie here"
-                    },
+					"sessionCookieCUser": {
+						"label": "Session cookie c_user <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8772/facebook-page-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
@@ -49,10 +49,10 @@
 						"helper": "If using a spreadsheet as input. By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					},
-				    "maxLikers": {
+					"maxLikers": {
 						"label": "Maximum number of likers to extract per page",
 						"helper": "All of them (until hitting Facebook limits) if empty"
 					}
@@ -63,26 +63,26 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-            "sessionCookieCUser": {
-                "type": "string",
-                "required": true,
-                "minLength": 6
-            },
-            "sessionCookieXs": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
+			"sessionCookieCUser": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
 			"spreadsheetUrl": {
 				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
-	   	 	},
+			},
 			"maxLikers": {
 				"type": "number",
 				"required": false

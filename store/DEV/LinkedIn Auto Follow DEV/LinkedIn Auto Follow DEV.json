@@ -1,97 +1,97 @@
 {
-    "slug": "linkedin-auto-follow",
-    "description": "Automatically follow or unfollow a list of LinkedIn profiles",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/linkedin_auto_follow.png",
-    "gradientBegin": "#4CA1AF",
-    "gradientEnd": "#28485B",
-    "argumentDescription": "",
-    "hidden": false,
-    "new": false,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "sessionCookie": "your_session_cookie",
-        "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
-        "numberOfFollowsPerLaunch": 10,
-        "disableScraping": false,
-        "unfollowProfiles": false
-    },
-    "defaultArgumentAllowed": false,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "sessionCookie": {
-                        "label": "Session cookie <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
-                        "placeholder": "Paste your session cookie here"
-                    },
-                    "spreadsheetUrl": {
-                        "label": "Spreadsheet URL of people to invite <a href=\"/api-store/6874/linkedin-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
-                        "type": "url",
-                        "helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
-                    },
-                    "columnName": {
-                        "label": "Column name from which to get profile URLs",
-                        "placeholder": "LinkedIn Profile Link",
-                        "helper": "By default, we'll use the first column of your spreadsheet (column A)"
-                    },
-                    "numberOfFollowsPerLaunch": {
-                        "label": "Number of follows per launch (10 max.) <a href=\"/api-store/6874/linkedin-auto-follow#section_repetitionsetup\" target=\"_blank\">(?)</a>",
-                        "placeholder": 10,
-                        "inputType": "number"
-                    },
-		    "csvName": {
-			    "label": "Name of the resulting CSV file",
-			    "placeholder": "result"
-		    },
-                    "hunterApiKey": {
-                        "label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/6874/linkedin-auto-follow#section_email_discovery\" target=\"_blank\">(?)</a>",
-                        "helper": "Leave this field empty if you don't want to use Hunter.io"
-                    },
-                    "disableScraping": {
-                        "rightLabel": "<b>Disable profile scraping</b> (not recommended — can speed up the API but prevents email discovery)"
-                    },
-                    "unfollowProfiles": {
-                        "rightLabel": "<b>Unfollow every profile</b> (if you need to undo what you've done)"
-                    }
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "sessionCookie": {
-                "type": "string",
-                "required": true,
-                "minLength": 15
-            },
-            "spreadsheetUrl": {
-                "type": "string",
-                "required": true
-            },
-            "columnName": {
-                "type": "string"
-            },
-            "numberOfFollowsPerLaunch": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 10,
-                "required": true
-            },
-	    "csvName": {
-		    "type": "string"
-	    },
-            "hunterApiKey": {
-                "type": "string",
-                "maxLength": 50
-            },
-            "disableScraping": {
-                "type": "boolean"
-            },
-            "unfollowProfiles": {
-                "type": "boolean"
-            }
-        }
-    }
+	"slug": "linkedin-auto-follow",
+	"description": "Automatically follow or unfollow a list of LinkedIn profiles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Auto_Follow/linkedin_auto_follow.png",
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
+	"argumentDescription": "",
+	"hidden": false,
+	"new": false,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
+		"numberOfFollowsPerLaunch": 10,
+		"disableScraping": false,
+		"unfollowProfiles": false
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a href=\"/api-store/6874/linkedin-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL of people to invite <a href=\"/api-store/6874/linkedin-auto-follow#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"type": "url",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name from which to get profile URLs",
+						"placeholder": "LinkedIn Profile Link",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfFollowsPerLaunch": {
+						"label": "Number of follows per launch (10 max.) <a href=\"/api-store/6874/linkedin-auto-follow#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"placeholder": 10,
+						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of the resulting CSV file",
+						"placeholder": "result"
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/6874/linkedin-auto-follow#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io"
+					},
+					"disableScraping": {
+						"rightLabel": "<b>Disable profile scraping</b> (not recommended — can speed up the API but prevents email discovery)"
+					},
+					"unfollowProfiles": {
+						"rightLabel": "<b>Unfollow every profile</b> (if you need to undo what you've done)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfFollowsPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"required": true
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"disableScraping": {
+				"type": "boolean"
+			},
+			"unfollowProfiles": {
+				"type": "boolean"
+			}
+		}
+	}
 }

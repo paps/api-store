@@ -58,8 +58,8 @@
 						"sort": false
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -88,7 +88,7 @@
 				"enum": ["Follow", "Unfollow", "Unfollow only if they don't follow you", "Block", "Unblock"],
 				"default": "Follow"
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
 			}

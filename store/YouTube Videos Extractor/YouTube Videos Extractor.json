@@ -1,41 +1,41 @@
 {
-    "slug": "youtube-videos-extractor",
-    "description": "Extract every videos from a list of Youtube channels",
-    "image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Videos+Extractor/Youtube+Videos+Extractor.png",
-    "gradientBegin": "#E42C27",
-    "gradientEnd": "#FFD80B",
-    "argumentDescription": "",
-    "hidden": false,
-    "new": true,
-    "argumentHelpAnchor": "#section_argument",
-    "defaultArgument": {
-        "videosPerChannel": 100,
-        "channelsPerLaunch": 10,
-        "sortBy": "Newest"
-    },
-    "outputDescription": {
+	"slug": "youtube-videos-extractor",
+	"description": "Extract every videos from a list of Youtube channels",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Youtube+Videos+Extractor/Youtube+Videos+Extractor.png",
+	"gradientBegin": "#E42C27",
+	"gradientEnd": "#FFD80B",
+	"argumentDescription": "",
+	"hidden": false,
+	"new": true,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"videosPerChannel": 100,
+		"channelsPerLaunch": 10,
+		"sortBy": "Newest"
+	},
+	"outputDescription": {
 		"channelTitle": "",
-        "subscriberCount": "",
-        "viewCount": "",
+		"subscriberCount": "",
+		"viewCount": "",
 		"description": "",
 		"joinedDate": "",
 		"country": ""
 	},
-    "defaultArgumentAllowed": true,
-    "argumentForm": {
-        "enabled": true,
-        "alpaca": {
-            "options": {
-                "fields": {
-                    "spreadsheetUrl": {
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
 						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
-                    },
-                    "videosPerChannel": {
+					},
+					"videosPerChannel": {
 						"label": "Number of videos to scrape per channel <a href=\"/api-store/11472/youtube-videos-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
-                        "inputType": "number",
-                        "helper": "All of them if empty"
+						"inputType": "number",
+						"helper": "All of them if empty"
 					},
 					"columnName": {
 						"label": "Column name from which to get channels URLs",
@@ -47,26 +47,26 @@
 						"inputType": "number"
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
-                    },
-                    "sortBy": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"sortBy": {
 						"label": "Posts order",
 						"helper": "Sort by Most popular, most recent or oldest post",
 						"removeDefaultNone": true,
 						"sort": false
 					}
-                }
-            }
-        }
-    },
-    "argumentSchema": {
-        "type": "object",
-        "properties": {
-            "spreadsheetUrl": {
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
 				"type": "string"
-            },
-            "videosPerChannel": {
+			},
+			"videosPerChannel": {
 				"type": "number",
 				"minimum": 1
 			},
@@ -77,11 +77,11 @@
 				"type": "number",
 				"minimum": 1
 			},
-            "csvName": {
+			"csvName": {
 				"type": "string",
 				"required": false
-            },
-            "sortBy": {
+			},
+			"sortBy": {
 				"enum": ["Most popular", "Newest", "Oldest"],
 				"default": "Most Helpful"
 			}
@@ -115,5 +115,5 @@
 				}
 			}
 		]
-    }
+	}
 }

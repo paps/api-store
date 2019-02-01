@@ -31,62 +31,62 @@
 						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
 						"helpers": [
 							"Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>", "If you don't enter it, the API won't extract like Count data" ]
+						},
+						"spreadsheetUrl": {
+							"type": "url",
+							"helpers": [
+								"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
+								"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7085/instagram-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+							},
+							"columnName": {
+								"label": "Column name from which to get profile URLs",
+								"placeholder": "Instagram Profile Link",
+								"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+							},
+							"numberOfLikers": {
+								"label": "Number of likers to collect per post",
+								"inputType": "number",
+								"helper": "If empty, the API will try to scrape all of them"
+							},
+							"numberOfProfilesPerLaunch": {
+								"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+								"placeholder": 10,
+								"inputType": "number"
+							},
+							"csvName": {
+								"label": "Name of resulting CSV file",
+								"placeholder": "result"
+							}
+						}
+					}
+				}
+			},
+			"argumentSchema": {
+				"type": "object",
+				"properties": {
+					"sessionCookie": {
+						"type": "string",
+						"required": true
 					},
 					"spreadsheetUrl": {
-						"type": "url",
-						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
-						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7085/instagram-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"type": "string",
+						"required": true
 					},
 					"columnName": {
-						"label": "Column name from which to get profile URLs",
-						"placeholder": "Instagram Profile Link",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						"type": "string"
 					},
 					"numberOfLikers": {
-						"label": "Number of likers to collect per post",
-						"inputType": "number",
-						"helper": "If empty, the API will try to scrape all of them"
+						"type": "number",
+						"minimum": 1
 					},
 					"numberOfProfilesPerLaunch": {
-						"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
-						"inputType": "number"
+						"type": "number",
+						"minimum": 1
 					},
 					"csvName": {
-                        "label": "Name of resulting CSV file",
-                        "placeholder": "result"
+						"type": "string",
+						"required": false
 					}
 				}
 			}
 		}
-	},
-	"argumentSchema": {
-		"type": "object",
-		"properties": {
-			"sessionCookie": {
-				"type": "string",
-				"required": true
-			},
-			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
-			},
-			"columnName": {
-				"type": "string"
-			},
-			"numberOfLikers": {
-				"type": "number",
-				"minimum": 1
-			},
-			"numberOfProfilesPerLaunch": {
-				"type": "number",
-				"minimum": 1
-			},
-            "csvName": {
-				"type": "string",
-				"required": false
-			}
-		}
-	}
-}
