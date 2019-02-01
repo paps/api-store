@@ -58,7 +58,7 @@ const DEFAULT_LAUNCH = 10
 		}
 	}
 
-	utils.log(`Scraping channels: ${JSON.stringify(queries.slice(0, 100), null, 2)}`, "done")
+	utils.log(`Scraping channels: ${JSON.stringify((queries as string[]).slice(0, 100), null, 2)}`, "done")
 	const channels = await slack.getChannelsMeta(page)
 	for (const query of queries as string[]) {
 		const _chan: string = query.startsWith("#") ? query.substring(1) : query
