@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -98,6 +99,8 @@ const validateInvitations = async (invitations, sentCount) => {
 	try {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 30000)
+		await withdrawTab.screenshot(`${Date.now()}verif.png`)
+		await buster.saveText(await withdrawTab.getContent(), `${Date.now()}verif.html`)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
@@ -154,8 +157,11 @@ const getFirstName = (arg, callback) => {
  * @throws on css failures
  */
 const connectTo = async (selector, tab, message) => {
+	console.log("connectTo", selector)
 	await tab.click(selector)
 	const selectorFound = await tab.waitUntilVisible([".send-invite__actions > button:nth-child(1)", "input#intentAnswer1", ".pv-s-profile-actions__overflow-toggle"], 15000, "or")
+	await tab.screenshot(`${Date.now()}firstselector.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}firstselector.html`)
 	if (selectorFound === "input#intentAnswer1") {
 		throw "LinkedIn premium account needed to add this profile"
 	}
@@ -181,6 +187,8 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
+	await tab.screenshot(`${Date.now()}avtmessage.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}avtmessage.html`)
 	if (message && message.length > 0) {
 		try {
 			await tab.click(".send-invite__actions > button:nth-child(1)")
@@ -197,7 +205,13 @@ const connectTo = async (selector, tab, message) => {
 			utils.log(`Error while sending message: ${err}, url:${currentUrl}`, "error")
 		}
 	}
+	await tab.screenshot(`${Date.now()}avantclick.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}avantclick.html`)
+	// nick.exit()
 	await tab.click(".send-invite__actions > button:nth-child(2)")
+	await tab.wait(5000)
+	await tab.screenshot(`${Date.now()}waitan.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}waitan.html`)
 	try {
 		// Sometimes this alert isn't shown but the user is still added
 		const selector = await tab.waitUntilVisible([
@@ -207,11 +221,16 @@ const connectTo = async (selector, tab, message) => {
 			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
 			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
 		], 30000, "or")
+		await tab.screenshot(`${Date.now()}selectorfound.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}selectorfound.html`)
+		console.log("selector:", selector)
 		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
 			utils.log("Invitation couldn't be sent.", "error")
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
+		await tab.screenshot(`${Date.now()}notverified.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}notverified.html`)
 	}
 }
 
@@ -354,8 +373,8 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
+	await tab.screenshot(`${Date.now()}invitation.png`)
 	await buster.saveText(await tab.getContent(), `${Date.now()}invitation.html`)
-
 	console.log("invitation", invitation)
 	if (message && !invitation.firstName) {
 		console.log("no first name")
@@ -385,6 +404,12 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
+	if (message && message.length > 300) {
+		utils.log(`Message to send: ${message}`, "info")
+		utils.log(`This message is over 300 characters (${message.length}) and can't be sent to LinkedIn.`, "error")
+		invitation.error = "Message over 300 characters"
+		return invitation
+	}
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -492,8 +517,10 @@ nick.newTab().then(async (tab) => {
 	if (typeof disableScraping !== "boolean") {
 		disableScraping = true
 	}
+	if (message && message.length > 285 && message.includes("#")) {
+		utils.log("Warning, your message sent may be too long for LinkedIn (300 characters max).", "warning")
+	}
 	await linkedIn.login(tab, sessionCookie)
-
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let rows = []
@@ -545,7 +572,11 @@ nick.newTab().then(async (tab) => {
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.timestamp = (new Date()).toISOString()
-					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
+					if (!invitationResult.error) {
+						invitations.push(invitationResult)
+					} else if (invitationResult.error !== "Message over 300 characters") {
+						db.push(invitationResult)
+					}
 				}
 				console.log("invitation Result: ", invitationResult)
 			} catch (error) {

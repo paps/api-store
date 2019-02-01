@@ -381,6 +381,12 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}
 	invitation.message = message
+	if (message && message.length > 300) {
+		utils.log(`Message to send: ${message}`, "info")
+		utils.log(`This message is over 300 characters (${message.length}) and can't be sent to LinkedIn.`, "error")
+		invitation.error = "Message over 300 characters"
+		return invitation
+	}
 	switch (selector) {
 		// Directly add a profile
 		case selectors[0]: {
@@ -542,7 +548,11 @@ nick.newTab().then(async (tab) => {
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.timestamp = (new Date()).toISOString()
-					invitationResult.error ? db.push(invitationResult) : invitations.push(invitationResult)
+					if (!invitationResult.error) {
+						invitations.push(invitationResult)
+					} else if (invitationResult.error !== "Message over 300 characters") {
+						db.push(invitationResult)
+					}
 				}
 			} catch (error) {
 				utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
