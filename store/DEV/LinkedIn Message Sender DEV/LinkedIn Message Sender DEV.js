@@ -283,6 +283,11 @@ const sendMessage = async (tab, message, tags, profile) => {
 		} catch (err) {
 			utils.log(`Can't load profile: ${url} due to: ${err.message || err}`, "warning")
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
+			// Detecting LinkedIn cookie invalidation
+			if (err.message.indexOf("net::ERR_TOO_MANY_REDIRECTS") > -1) {
+				utils.log(`You're currently disconnected from LinkedIn, please update your session cookie`, "warning")
+				break
+			}
 		}
 	}
 	db.push(...result)
