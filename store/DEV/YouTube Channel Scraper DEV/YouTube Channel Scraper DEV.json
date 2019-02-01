@@ -6,7 +6,7 @@
 	"gradientEnd": "#FFD80B",
 	"argumentDescription": "Extract every information from a list of Youtube Channels",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookieHSID": "your_HSID_session_cookie",

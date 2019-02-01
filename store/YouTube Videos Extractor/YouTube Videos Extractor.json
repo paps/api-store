@@ -6,7 +6,7 @@
 	"gradientEnd": "#FFD80B",
 	"argumentDescription": "",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"videosPerChannel": 100,
