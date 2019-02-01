@@ -6,7 +6,7 @@
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",

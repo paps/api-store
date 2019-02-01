@@ -6,7 +6,7 @@
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
 	"hidden": false,
-	"new": false,
+	"updated": false,
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "phbuster"
