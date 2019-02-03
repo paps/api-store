@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -18,7 +18,7 @@ const nick = new Nick({
 	heigth: 800
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
@@ -135,6 +135,7 @@ const removeLinkedinSubdomains = url => {
 	if (typeof jsonDb === "string") {
 		jsonDb = JSON.parse(jsonDb)
 	}
+	console.log("db", db)
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 

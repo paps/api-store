@@ -28,7 +28,7 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helper": "Enter either a Youtube Channel URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
-						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11456/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Youtube Channel or Spreadsheet URL of channels to scrape <a href=\"/api-store/11479/youtube-channel-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get channels URLs",
@@ -36,7 +36,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"channelsPerLaunch": {
-						"label": "Number of channels to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of channels to scrape per launch <a href=\"/api-store/11479/youtube-channel-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {

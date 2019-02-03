@@ -34,7 +34,7 @@ let db
 ;(async () => {
 	const tab = await nick.newTab()
 	const webSearch = new WebSearch(tab, buster)
-	let {spreadsheetUrl, queries, columnName, csvName} = utils.validateArguments()
+	let {spreadsheetUrl, queries, numberOfLinesToProcess, columnName, csvName} = utils.validateArguments()
 	const toReturn = []
 	let i = 1
 
@@ -56,6 +56,9 @@ let db
 
 
 	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+	if (numberOfLinesToProcess) {
+		queries = queries.slice(0, numberOfLinesToProcess)
+	}
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)

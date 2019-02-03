@@ -434,7 +434,7 @@ nick.newTab().then(async (tab) => {
 			singleGroup = true
 		} else {
 			if (groupsUrl.includes("facebook.com/") && await checkIfPage(tab, groupsUrl)) {
-				utils.log(`${groupsUrl} isn't a Group URL, it's a Facebook Page URL...`, "error")
+				utils.log(`${groupsUrl} isn't a Group URL, it's a Facebook Page URL... Please use the Facebook Page Likers API instead.`, "error")
 				nick.exit(utils.ERROR_CODES.BAD_INPUT)
 			}
 			// Link not from Facebook, trying to get CSV

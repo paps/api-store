@@ -17,7 +17,6 @@ import ProductHunt from "./lib-ProductHunt"
 const producthunt = new ProductHunt(buster, utils)
 
 const DB_NAME = "result"
-const LINES_COUNT = 10
 // }
 
 const isProductHuntUrl = (url: string): boolean => {
@@ -51,22 +50,47 @@ const alreadyVoted = () => {
 	return false
 }
 
-const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: string, query: string) => {
-	const response = await page.goto(url)
+const openProfile = async (page: puppeteer.Page, query: string, action: string) => {
+	const payload = { query, timestamp: (new Date()).toISOString() } as IUnknownObject
+	const response = await page.goto(query)
 	if (response && response.status() !== 200) {
-		throw new Error(`${url} responded with HTTP code ${response.status()}`)
+		throw new Error(`${query} responded with HTTP code ${response.status()}`)
 	}
-	await page.waitForSelector("aside button[data-test=\"vote-button\"]")
+	try {
+		await page.waitForSelector("aside button[data-test=\"vote-button\"]")
+	} catch (err) {
+		if (!query.includes("producthunt.com/posts/")) {
+			utils.log(`Error opening ${query}, it doesn't seem to be a Product Hunt post URL.`, "error")
+			payload.error = "Not a Product Hunt post URL"
+		} else {
+			if (page.$("img[alt=\"page not found\"]")) {
+				utils.log(`Error opening ${query}, this page doesn't exist.`, "error")
+				payload.error = "Page doesn't exist"
+			} else {
+				utils.log(`Page ${query} is not loading.`, "error")
+				payload.error = "Page not loading"
+			}
+		}
+		return payload
+	}
 	await page.waitFor(2000)
 	const productName = await page.evaluate(getProductName)
 	const upvoteCount = await page.evaluate(getUpvoteCount)
-	const payload = { query, timestamp: (new Date()).toISOString(), productName, upvoteCount } as IUnknownObject
+	payload.productName = productName
+	payload.upvoteCount = upvoteCount
 	if (productName && upvoteCount) {
 		utils.log(`Product ${productName} has ${upvoteCount} upvotes.`, "info")
 	}
-	if (await page.evaluate(alreadyVoted)) {
-		utils.log(`You already upvoted ${productName}!`, "warning")
-		payload.error = "Already upvoted"
+	const hasAlreadyVoted = await page.evaluate(alreadyVoted) as boolean
+	if (action === "Upvote") {
+		if (hasAlreadyVoted) {
+			utils.log(`You already upvoted ${productName}!`, "warning")
+			payload.error = "Already upvoted"
+			return payload
+		}
+	} else if (!hasAlreadyVoted) {
+		utils.log(`You didn't upvote ${productName}!`, "warning")
+		payload.error = "Didn't upvote"
 		return payload
 	}
 	await page.evaluate(() => {
@@ -78,31 +102,29 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 	await page.waitFor(1500)
 	const newUpvoteCount = await page.evaluate(getUpvoteCount)
 	if (newUpvoteCount === upvoteCount) {
-		payload.error = "Error upvoting"
+		payload.error = "Error during click"
+		utils.log("Vote didn't seem to have worked.", "warning")
+		return payload
 	}
 	payload.upvoteCount = newUpvoteCount
-	utils.log(`Successfully upvoted ${productName}.`, "done")
+	utils.log(`Successfully ${action === "Upvote" ? "upvoted" : "remove vote from"} ${productName}.`, "done")
 	return payload
 }
 
 (async () => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-	const { sessionCookie, spreadsheetUrl, numberOfProfilesPerProduct, columnName, numberOfLinesPerLaunch, csvName, profileUrls, reprocessAll } = utils.validateArguments()
+	const { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, action, csvName, profileUrls, reprocessAll } = utils.validateArguments()
 	const _sessionCookie = sessionCookie as string
 	let profileArray = profileUrls as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
-	const maxProfiles = numberOfProfilesPerProduct as number
-	let numberOfLines = numberOfLinesPerLaunch as number
+	const _numberOfLinesPerLaunch = numberOfLinesPerLaunch as number
 	const _reprocessAll = reprocessAll as boolean
+	const _action = action as string
 	if (!_csvName) {
 		_csvName = DB_NAME
-	}
-
-	if (typeof numberOfLinesPerLaunch !== "number") {
-		numberOfLines = LINES_COUNT
 	}
 	await producthunt.login(page, _sessionCookie)
 	if (inputUrl) {
@@ -115,44 +137,36 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, url: strin
 		profileArray = [ profileUrls ]
 	}
 	const result = await utils.getDb(_csvName + ".csv")
-	if (Array.isArray(profileArray)) {
-		if (!_reprocessAll) {
-			profileArray = profileArray.filter((el) => utils.checkDb(el, result, "query"))
-			if (typeof numberOfLines === "number") {
-				profileArray = profileArray.slice(0, numberOfLines)
-			}
+	profileArray = profileArray.filter((el) => el)
+	if (!_reprocessAll) {
+		profileArray = profileArray.filter((el) => utils.checkDb(el, result, "query"))
+		if (_numberOfLinesPerLaunch) {
+			profileArray = profileArray.slice(0, _numberOfLinesPerLaunch)
 		}
 	}
-
-	// }
-	if (Array.isArray(profileArray)) {
-		if (profileArray.length < 1) {
-			utils.log("Input is empty OR every profiles are already scraped", "warning")
-			process.exit()
-		}
-
-		for (const query of profileArray) {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-				break
-			}
-			utils.log(`Opening ${query}...`, "loading")
-			const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
-			let res = null
-			try {
-				res = await openProfile(page, maxProfiles, url, query)
-				result.push(res)
-			} catch (err) {
-				const error = `Error while scraping ${url}: ${err.message || err}`
-				await page.screenshot({ path: `${Date.now()}scree.jpg`, type: "jpeg", quality: 50 })
-				await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}scree.html`)
-				utils.log(error, "warning")
-				result.push({ query, error, timestamp: (new Date()).toISOString() })
-			}
-		}
-		await utils.saveResults(result, result, _csvName, null)
+	if (profileArray.length < 1) {
+		utils.log("Input is empty OR every profiles are already scraped", "warning")
+		process.exit()
 	}
+	console.log(`Posts to process: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+	for (const query of profileArray) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Processing stopped: ${timeLeft.message}`, "warning")
+			break
+		}
+		utils.log(`Opening ${query}...`, "loading")
+		let res = null
+		try {
+			res = await openProfile(page, query, _action)
+			result.push(res)
+		} catch (err) {
+			const error = `Error while opening ${query}: ${err.message || err}`
+			utils.log(error, "warning")
+			result.push({ query, error, timestamp: (new Date()).toISOString() })
+		}
+	}
+	await utils.saveResults(result, result, _csvName, null)
 
 	process.exit()
 })()

@@ -499,10 +499,11 @@ class StoreUtilities {
 	// Tells the script if it should exit or not, based on execution time left
 	async checkTimeLeft() {
 		const buster = this.buster
-
+		console.log("checking this.minTimeBeforeExit:", this.minTimeBeforeExit)
 		let timeLeft
 		try {
 			timeLeft = await buster.getTimeLeft()
+			console.log("checking timeLeft:", timeLeft)
 		} catch (e) {
 			return { timeLeft: true, message: 1000 } // call to getTimeLeft() failed, this is not a reason to abort
 		}

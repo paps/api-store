@@ -141,7 +141,10 @@ const scrapeProfile = (arg, cb) => {
 		scrapedData.introducerSalesNavigatorUrl = document.querySelector(".best-path-in-entity__spotlight a").href
 		scrapedData.introducerName = document.querySelector(".best-path-in-entity__spotlight a").textContent.trim()
 		if (document.querySelector(".best-path-in-entity__spotlight a").parentElement.nextElementSibling) {
-			scrapedData.introducerReason = document.querySelector(".best-path-in-entity__spotlight a").parentElement.nextElementSibling.textContent.trim()
+			const introducerReason = document.querySelector(".best-path-in-entity__spotlight a").parentElement.nextElementSibling.textContent.trim()
+			if (introducerReason) {
+				scrapedData.introducerReason = introducerReason
+			}
 		}
 	}
 	if (document.querySelector(".recent-activity-entity__link")) {

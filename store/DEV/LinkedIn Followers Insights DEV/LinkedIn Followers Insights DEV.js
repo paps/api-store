@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -149,15 +150,38 @@ const onHttpRequest = e => {
 				gl.search.count = 20
 			}
 		}
-		const response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
-		result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
-		result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
-		for (const follower of result) {
-			if (follower.followers === 0) {
-				follower.followers = "Not provided by LinkedIn"
+		try {
+			console.log("gl.url", gl.url)
+			console.log("gl.search", gl.search)
+			console.log("gl.headers", gl.headers)
+			let response
+			let success
+			for (let i = 0; i < 1; i++) {
+				console.log("i", i)
+				try {
+					response = await tab.evaluate(ajaxGet, {url: gl.url, search: gl.search, headers: gl.headers})
+					success = true
+					break
+				} catch (err) {
+					console.log("err", err)
+					await tab.wait(1500)
+				}
 			}
+			if (!success) {
+				throw "Couldn't load followers list"
+			}
+			result = await getAllFollowers(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
+			result.sort((a, b) => (parseInt(b.followers, 10) - parseInt(a.followers, 10)))
+			for (const follower of result) {
+				if (follower.followers === 0) {
+					follower.followers = "Not provided by LinkedIn"
+				}
+			}
+		} catch (err) {
+			console.log("err:", err)
+			await tab.screenshot(`${Date.now()}err.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
 		}
-
 	} else {
 		utils.log("No followers found from the given profile", "warning")
 	}

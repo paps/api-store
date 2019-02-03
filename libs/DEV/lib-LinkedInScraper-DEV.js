@@ -106,7 +106,11 @@ const getDetails = (arg, callback) => {
 		{ key: "linkedinProfile", attribute: "href", selector: ".ci-vanity-url .pv-contact-info__contact-link" },
 		{ key: "websites", attribute: "textContent", selector: ".ci-websites .pv-contact-info__contact-link" },
 		{ key: "twitter", attribute: "textContent", selector: ".ci-twitter .pv-contact-info__contact-link" },
-		{ key: "phone", attribute: "href", selector: ".ci-phone .pv-contact-info__contact-link" },
+		{ key: "facebook", attribute: "href", selector: ".pv-profile-section__section-info a[href*=\"www.facebook.com\"]" },
+		{ key: "im", attribute: "innerText", selector: ".pv-profile-section__section-info .ci-ims li" },
+		{ key: "birthday", attribute: "textContent", selector: ".pv-profile-section__section-info .ci-birthday span" },
+		{ key: "connectedOn", attribute: "textContent", selector: ".pv-profile-section__section-info .ci-connected span" },
+		{ key: "phone", attribute: "textContent", selector: ".pv-profile-section__section-info .ci-phone span" },
 		{ key: "mail", attribute: "textContent", selector: ".ci-email .pv-contact-info__contact-link" }
 	], document.querySelector("artdeco-modal")
 	)
@@ -213,7 +217,7 @@ const scrapeInfos = (arg, callback) => {
 		if (document.querySelector(".dist-value")) {
 			infos.general.connectionDegree = document.querySelector(".dist-value").textContent
 		}
-		
+
 		// extract the vmid from the page code
 		try {
 			const entityUrn = JSON.parse(Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("urn:li:fs_memberBadges"))[0].textContent).data.entityUrn
@@ -564,9 +568,10 @@ const craftCsvObject = infos => {
 	const hasGeneral = infos.hasOwnProperty("general")
 	const hasHunter = infos.hasOwnProperty("hunter")
 	const hasDropcontact = infos.hasOwnProperty("dropcontact")
-
-	return {
+	const returnedObject = {
 		linkedinProfile: (hasGeneral) ? (infos.general.profileUrl || null) : null,
+		mail: (hasDetails) ? (infos.details.mail || null) : null,
+		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
 		imgUrl: (hasGeneral) ? (infos.general.imgUrl || null) : null,
 		firstName: (hasGeneral) ? (infos.general.firstName || null) : null,
@@ -603,7 +608,6 @@ const craftCsvObject = infos => {
 		schoolDescription2: school2.description || null,
 		schoolDegreeSpec2: school2.degreeSpec || null,
 		schoolDateRange2: school2.dateRange || null,
-		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		mailFromHunter: (hasDetails) ? (infos.details.mailFromHunter || null) : null,
 		scoreFromHunter: (hasHunter) ? (infos.hunter.score || null) : null,
 		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
@@ -624,14 +628,23 @@ const craftCsvObject = infos => {
 		googleplusFromDropContact: (hasDropcontact) ? (infos.dropcontact.googleplus || null) : null,
 		githubFromDropContact: (hasDropcontact) ? (infos.dropcontact.github || null) : null,
 		generate_idFromDropContact: (hasDropcontact) ? (infos.dropcontact.generate_id || null) : null,
-		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		twitter: (hasDetails) ? (infos.details.twitter || null) : null,
+		connectedOn: (hasDetails) ? (infos.details.connectedOn || null) : null,
+		website: (hasDetails) ? (infos.details.website || null) : null,
+		facebookUrl: (hasDetails) ? (infos.details.facebook || null) : null,
+		birthday: (hasDetails) ? (infos.details.birthday || null) : null,
 		companyWebsite: (hasDetails) ? (infos.details.companyWebsite || null) : null,
 		skill1: (infos.skills && infos.skills[0]) ? infos.skills[0].name : null,
 		skill2: (infos.skills && infos.skills[1]) ? infos.skills[1].name : null,
 		skill3: (infos.skills && infos.skills[2]) ? infos.skills[2].name : null,
 		allSkills: (infos.allSkills) ? infos.allSkills : null
 	}
+	for (const property in returnedObject) {
+		if (!returnedObject[property]) {
+			delete returnedObject[property]
+		}
+	}
+	return returnedObject
 }
 
 /**

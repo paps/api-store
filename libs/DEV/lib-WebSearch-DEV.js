@@ -12,123 +12,123 @@ const { URL } = require("url")
  * - noResultsSelector: CSS selector used to check if we're facing a failed research
  */
 const _defaultEngines = [
-	// {
-	// 	"name": "google.com",
-	// 	"codename": "G",
-	// 	"baseUrl": "https://www.google.com/search?q=",
-	// 	"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
-	// 	"titleSelector": "a > h3",
-	// 	"linkSelector": "a",
-	// 	"descriptionSelector": "span.st",
-	// 	"noResultsSelector": "div.med ul"
-	// },
-	// {
-	// 	"name": "duckduckgo",
-	// 	"codename": "D",
-	// 	"baseUrl": "https://duckduckgo.com/?q=",
-	// 	"baseSelector": "div.results div.result.results_links_deep",
-	// 	"titleSelector": "h2 > a:first-child",
-	// 	"linkSelector": "h2 > a:first-child",
-	// 	"descriptionSelector": ".result__snippet",
-	// 	"noResultsSelector": "div.no-results"
-	// },
-	// {
-	// 	"name": "bing",
-	// 	"codename": "B",
-	// 	"baseUrl": "https://www.bing.com/search?q=",
-	// 	"baseSelector": "ol#b_results > li.b_algo",
-	// 	"titleSelector": "h2 > a",
-	// 	"linkSelector": "h2 > a",
-	// 	"descriptionSelector": "p",
-	// 	"noResultsSelector": "ol#b_results > li.b_no"
-	// },
-	// {
-	// 	"name": "ecosia",
-	// 	"codename": "E",
-	// 	"baseUrl": "https://www.ecosia.org/search?q=",
-	// 	"baseSelector": "div.result.js-result",
-	// 	"titleSelector": "a.result-title",
-	// 	"linkSelector": "a.result-url",
-	// 	"descriptionSelector": "p.result-snippet",
-	// 	"noResultsSelector": "div.empty-result"
-	// },
-	// {
-	// 	"name": "yahoo",
-	// 	"codename": "Y",
-	// 	"baseUrl": "https://search.yahoo.com/search?p=",
-	// 	"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
-	// 	"titleSelector": "h3.title",
-	// 	"linkSelector": "a.ac-algo",
-	// 	"descriptionSelector": "div.compText.aAbs",
-	// 	"noResultsSelector": "div.dd.zrp",
-	// 	"processUrl": url => {
-	// 		let pathnamePattern = "RU="
-	// 		try {
-	// 			let parsedUrl = new URL(url)
-	// 			if (parsedUrl.hostname === "r.search.yahoo.com") {
-	// 				let redirectionUrl = parsedUrl.pathname.split("/").find(el => el.startsWith(pathnamePattern))
-	// 				if (redirectionUrl) {
-	// 					redirectionUrl = decodeURIComponent(redirectionUrl.substr(pathnamePattern.length, redirectionUrl.length))
-	// 					return redirectionUrl
-	// 				} else {
-	// 					return url
-	// 				}
-	// 			} else {
-	// 				return url
-	// 			}
-	// 		} catch (err) {
-	// 			return url
-	// 		}
-	// 	},
-	// 	"consent": ".consent-container"
-	// },
-	// {
-	// 	"name": "qwant",
-	// 	"codename": "Q",
-	// 	"baseUrl": "https://www.qwant.com/?q=",
-	// 	"baseSelector": "div.result_fragment > div.result",
-	// 	"titleSelector" : "span.result--web--title",
-	// 	"linkSelector": "a.result--web--link",
-	// 	"descriptionSelector": "p",
-	// 	"noResultsSelector": "div.no_result",
-	// 	"recaptcha": "div.anti_robot"
-	// },
-	// {
-	// 	"name": "excite",
-	// 	"codename": "X",
-	// 	"baseUrl": "https://search.excite.com/search/web?q=",
-	// 	"baseSelector": "div#resultsMain div.searchResult",
-	// 	"titleSelector" : "div.resultTitlePane",
-	// 	"linkSelector": "a.resultTitle",
-	// 	"descriptionSelector": "div.resultDescription",
-	// 	"noResultsSelector": "div#csrNoResultsWarning",
-	// 	"processUrl": url => {
-	// 		try {
-	// 			const params = new URL(url).searchParams.get("encp")
-	// 			const keptParams = params.slice(params.indexOf("&ru=") + 4)
-	// 			return decodeURIComponent(keptParams.slice(0, keptParams.indexOf("&")))
-	// 		} catch (err) {
-	// 			return url
-	// 		}
-	// 	}
-	// },
 	{
-		"name": "lycos",
-		"codename": "L",
-		"baseUrl": "http://search.lycos.com/web/?q=",
-		"baseSelector": "div.col-main div.search-results",
-		"titleSelector" : "h2.result-title",
-		"linkSelector": "a.result-link",
-		"descriptionSelector": "span.result-description",
-		"noResultsSelector": "div.no-results",
+		"name": "google.com",
+		"codename": "G",
+		"baseUrl": "https://www.google.com/search?q=",
+		"baseSelector": "div.rc, div._NId > div.rc + :not(g-section-with-header), div.srg div.rc",
+		"titleSelector": "a > h3",
+		"linkSelector": "a",
+		"descriptionSelector": "span.st",
+		"noResultsSelector": "div.med ul"
+	},
+	{
+		"name": "duckduckgo",
+		"codename": "D",
+		"baseUrl": "https://duckduckgo.com/?q=",
+		"baseSelector": "div.results div.result.results_links_deep",
+		"titleSelector": "h2 > a:first-child",
+		"linkSelector": "h2 > a:first-child",
+		"descriptionSelector": ".result__snippet",
+		"noResultsSelector": "div.no-results"
+	},
+	{
+		"name": "bing",
+		"codename": "B",
+		"baseUrl": "https://www.bing.com/search?q=",
+		"baseSelector": "ol#b_results > li.b_algo",
+		"titleSelector": "h2 > a",
+		"linkSelector": "h2 > a",
+		"descriptionSelector": "p",
+		"noResultsSelector": "ol#b_results > li.b_no"
+	},
+	{
+		"name": "ecosia",
+		"codename": "E",
+		"baseUrl": "https://www.ecosia.org/search?q=",
+		"baseSelector": "div.result.js-result",
+		"titleSelector": "a.result-title",
+		"linkSelector": "a.result-url",
+		"descriptionSelector": "p.result-snippet",
+		"noResultsSelector": "div.empty-result"
+	},
+	{
+		"name": "yahoo",
+		"codename": "Y",
+		"baseUrl": "https://search.yahoo.com/search?p=",
+		"baseSelector": "ol.searchCenterMiddle > li > div.dd.algo.algo-sr",
+		"titleSelector": "h3.title",
+		"linkSelector": "a.ac-algo",
+		"descriptionSelector": "div.compText.aAbs",
+		"noResultsSelector": "div.dd.zrp",
+		"processUrl": url => {
+			let pathnamePattern = "RU="
+			try {
+				let parsedUrl = new URL(url)
+				if (parsedUrl.hostname === "r.search.yahoo.com") {
+					let redirectionUrl = parsedUrl.pathname.split("/").find(el => el.startsWith(pathnamePattern))
+					if (redirectionUrl) {
+						redirectionUrl = decodeURIComponent(redirectionUrl.substr(pathnamePattern.length, redirectionUrl.length))
+						return redirectionUrl
+					} else {
+						return url
+					}
+				} else {
+					return url
+				}
+			} catch (err) {
+				return url
+			}
+		},
+		"consent": ".consent-container"
+	},
+	{
+		"name": "qwant",
+		"codename": "Q",
+		"baseUrl": "https://www.qwant.com/?q=",
+		"baseSelector": "div.result_fragment > div.result",
+		"titleSelector" : "span.result--web--title",
+		"linkSelector": "a.result--web--link",
+		"descriptionSelector": "p",
+		"noResultsSelector": "div.no_result",
+		"recaptcha": "div.anti_robot"
+	},
+	{
+		"name": "excite",
+		"codename": "X",
+		"baseUrl": "https://search.excite.com/search/web?q=",
+		"baseSelector": "div#resultsMain div.searchResult",
+		"titleSelector" : "div.resultTitlePane",
+		"linkSelector": "a.resultTitle",
+		"descriptionSelector": "div.resultDescription",
+		"noResultsSelector": "div#csrNoResultsWarning",
 		"processUrl": url => {
 			try {
-				return new URL(url).searchParams.get("as")
+				const params = new URL(url).searchParams.get("encp")
+				const keptParams = params.slice(params.indexOf("&ru=") + 4)
+				return decodeURIComponent(keptParams.slice(0, keptParams.indexOf("&")))
 			} catch (err) {
 				return url
 			}
 		}
-	}
+	},
+	// {
+	// 	"name": "lycos",
+	// 	"codename": "L",
+	// 	"baseUrl": "http://search.lycos.com/web/?q=",
+	// 	"baseSelector": "div.col-main div.search-results",
+	// 	"titleSelector" : "h2.result-title",
+	// 	"linkSelector": "a.result-link",
+	// 	"descriptionSelector": "span.result-description",
+	// 	"noResultsSelector": "div.no-results",
+	// 	"processUrl": url => {
+	// 		try {
+	// 			return new URL(url).searchParams.get("as")
+	// 		} catch (err) {
+	// 			return url
+	// 		}
+	// 	}
+	// }
 ]
 
 /**
@@ -201,7 +201,8 @@ const _doSearch = async function(query) {
 			throw `Cannot open the page ${engine.baseUrl}${query}`
 		}
 	// }
-	
+	await this.tab.screenshot(`${Date.now()}sendingmessage.png`)
+	await this.buster.saveText(await this.tab.getContent(), `${Date.now()}sendingmessage.html`)
 
 	const selectors = [engine.baseSelector, engine.noResultsSelector]
 	if (engine.recaptcha) {
@@ -229,10 +230,13 @@ const _doSearch = async function(query) {
 	result.results = await this.tab.evaluate(_scrapeResults, { engine })
 	console.log("result", result)
 	if (engine.processUrl) {
+		console.log("process")
 		for (let i = 0, len = result.results.length; i < len; i++) {
 			result.results[i].link = engine.processUrl(result.results[i].link)
 		}
 	}
+	console.log("result", result)
+
 	return result
 }
 
@@ -279,7 +283,8 @@ class WebSearch {
 	constructor(tab, buster, verbose = false, lockEngine = null, utils = null) {
 		this.engines = _defaultEngines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)
-		this.verbose = verbose
+		// this.verbose = verbose
+		this.verbose = true
 		this.enginesDown = []
 		this.tab = tab
 		this.buster = buster
@@ -340,6 +345,7 @@ class WebSearch {
 			this.verbose && console.log(`-- Performing search "${query}" with engine ${this.engines[this.engineUsed].name} ...`)
 			try {
 				results = await _doSearch.call(this, query)
+				console.log("resultsici", results)
 				this.verbose && console.log(`-- Successful search with engine ${this.engines[this.engineUsed].codename}!`)
 				codenameList += this.engines[this.engineUsed].codename
 				break

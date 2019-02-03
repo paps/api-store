@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Facebook-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -17,9 +18,9 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
-const Facebook = require("./lib-Facebook")
+const Facebook = require("./lib-Facebook-DEV")
 const facebook = new Facebook(nick, buster, utils)
 
 // }
@@ -153,7 +154,7 @@ const scrapeCommentsAndRemove = (arg, cb) => {
 }
 
 
-// expand all comments with a delay 
+// expand all comments with a delay
 const expandComments = (arg, cb) => {
 	const expandLinks = Array.from(document.querySelectorAll("a.UFICommentLink, a.UFIPagerLink"))
 	for (let i = 0; i < expandLinks.length; i++) {
@@ -166,7 +167,7 @@ const expandComments = (arg, cb) => {
 
 // handle all loading and scraping
 const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, expandAllComments, postType, totalCount) => {
-	let commentsCount = 0	
+	let commentsCount = 0
 	let lastDate = new Date()
 	let newCommentsCount
 	let selector = ".userContentWrapper"
@@ -206,7 +207,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 				buster.progressHint(result.length / totalCount, `${result.length} posts scraped`)
 			}
 			commentsCount = await tab.evaluate(getCommentsCount, { selector })
-			if (await tab.isVisible(".UFIPagerLink")) { 
+			if (await tab.isVisible(".UFIPagerLink")) {
 				await tab.click(".UFIPagerLink")
 			} else if (await tab.isVisible("a[data-testid=\"UFI2CommentsPagerRenderer/pager_depth_0\"]")) {
 				await tab.click("a[data-testid=\"UFI2CommentsPagerRenderer/pager_depth_0\"]")
@@ -271,7 +272,7 @@ const getTotalCommentsCount = (arg, cb) => {
 	const initialResultLength = result.length
 	if (spreadsheetUrl.toLowerCase().includes("facebook.com/")) { // single facebook post
 		postsToScrape = utils.adjustUrl(spreadsheetUrl, "facebook")
-		if (postsToScrape) {	
+		if (postsToScrape) {
 			postsToScrape = [ postsToScrape ]
 		} else {
 			utils.log("The given url is not a valid facebook profile url.", "error")
@@ -286,7 +287,7 @@ const getTotalCommentsCount = (arg, cb) => {
 			numberofPostsperLaunch = postsToScrape.length
 		}
 		postsToScrape = getUrlsToScrape(postsToScrape.filter(el => checkDb(el, result)), numberofPostsperLaunch)
-	}	
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(postsToScrape, null, 4)}`)
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 
@@ -298,9 +299,9 @@ const getTotalCommentsCount = (arg, cb) => {
 			break
 		}
 		try {
-			
+
 			utils.log(`Scraping comments from ${postUrl}`, "loading")
-			
+
 			try {
 				await tab.open(postUrl)
 			} catch (err1) {
@@ -312,17 +313,21 @@ const getTotalCommentsCount = (arg, cb) => {
 				}
 			}
 			try {
-				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 30000, "or")
+				await tab.waitUntilVisible(["#fbPhotoSnowliftAuthorName", ".uiContextualLayerParent"], 10000, "or")
+				await tab.screenshot(`${Date.now()}totalcount.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}totalcount.html`)
 				let totalCount
 				try {
 					totalCount = await tab.evaluate(getTotalCommentsCount)
-					utils.log(`There's ${totalCount} comments in total.`, "info")
+					if (totalCount) {
+						utils.log(`There's ${totalCount} comments in total.`, "info")
+					}
 				} catch (err) {
 					utils.log(`Couldn't get comments count: ${err}`, "warning")
 				}
 				await tab.wait(5000) // waiting for the &theater parameter to come up
 				const currentUrl = await tab.getUrl()
-				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {					
+				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {
 					await tab.click("#photos_snowlift a")
 					await tab.wait(500)
 				}
@@ -340,7 +345,7 @@ const getTotalCommentsCount = (arg, cb) => {
 			} catch (err) {
 				utils.log(`Error accessing comment page ${err}`, "error")
 				result.push({ query: postUrl, error: "Error accessing comment page"})
-			}			
+			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${postUrl} due to: ${err.message || err}`, "warning")
 			continue

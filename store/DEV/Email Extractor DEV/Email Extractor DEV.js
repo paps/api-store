@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -17,7 +17,7 @@ const nick = new Nick({
 	timeout: 60000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result"
 const DEFAULT_WAIT_TIME = 5000
@@ -111,6 +111,7 @@ const createCsvOutput = json => {
 	}
 
 	let db = await utils.getDb(csvName + ".csv")
+	console.log("db:", db)
 	let i = 0
 
 	let scrapingRes = []

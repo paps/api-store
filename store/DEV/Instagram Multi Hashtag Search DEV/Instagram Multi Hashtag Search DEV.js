@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js, lib-WebSearch.js"
+"phantombuster flags: save-folder"
 
 const url = require("url")
 const { URL } = require("url")
@@ -150,7 +151,12 @@ const scrapeFirstPage = async (tab, query) => {
 			break
 		}
 	} while (!graphql)
-	let data = await tab.evaluate(scrapeFirstResults, { query })
+	let data
+	try {
+		data = await tab.evaluate(scrapeFirstResults, { query })
+	} catch (err) {
+		console.log("er:", err)
+	}
 	const newlyScraped = data.length
 	const postTab = await nick.newTab()
 	data = await extractFirstPosts(postTab, data, newlyScraped, query)
@@ -182,6 +188,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		try {
 			ajaxRes = await tab.evaluate(ajaxCall, { url: forgeAjaxURL(), headers: graphql.headers })
 		} catch (err) {
+			console.log("e:", err)
 			utils.log(err, "warning")
 			return false
 		}
@@ -325,6 +332,8 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 							targetUrl = firstSearch
 						} else {
 							utils.log(`No search result page found for ${term}.`, "error")
+							await tab.screenshot(`${Date.now()}waiting.png`)
+							await buster.saveText(await tab.getContent(), `${Date.now()}waiting.html`)
 							terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
 							continue
 						}

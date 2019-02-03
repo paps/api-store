@@ -673,6 +673,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 				}
 				await tab.screenshot(`${Date.now()}sR.png`)
 				await buster.saveText(await tab.getContent(), `${Date.now()}sR.html`)
+				console.log("selector= ", selector)
 				if (selector === selectors[0] || selector === selectors[2]) {
 					// fixing the "No results" bug by simply reloading the page until results show up
 					let retryCount = 0
@@ -689,6 +690,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					break
 				} else {
 					let selectorList
+					console.log("searchCat", searchCat)
 					if (searchCat === "jobs") {
 						selectorList = "ul.jobs-search-results__list > li"
 					} else {
@@ -732,6 +734,8 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					utils.log(timeLeft.message, "warning")
 					return result
 				}
+				console.log("pageCounter", pageCounter)
+				console.log("numberOfPage", numberOfPage)
 				if (pageCounter < numberOfPage && !nextButtonIsClicked) {
 					if (searchCat === "jobs") {
 						jobPageCounter++
@@ -739,6 +743,7 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					} else {
 						nextButtonIsClicked = true
 						const hasPages = await clickNextPage(tab, lastLoc)
+						console.log("hasPages:", hasPages)
 						if (hasPages === "Error loading next page!") {
 							if (await linkedIn.checkMaxRequestsReached(tab)) {
 								utils.log("Excessive Page Requests on LinkedIn warning.", "warning")
