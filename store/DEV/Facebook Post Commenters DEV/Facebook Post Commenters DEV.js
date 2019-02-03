@@ -247,9 +247,9 @@ const getTotalCommentsCount = (arg, cb) => {
 	// let totalCount = Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].textContent.split(" ")[0].replace(/[,.]/,"")
 	let totalCount
 	if (document.querySelector("a[data-comment-prelude-ref]")) {
-		totalCount = document.querySelector("a[data-comment-prelude-ref]").textContent.split(" ")[0].replace(/[,.]/,"")
+		totalCount = document.querySelector("a[data-comment-prelude-ref]").textContent.split(" ")[0].replace(",", ".")
 	} else if (document.querySelector("a[data-testid*=\"CommentsCount\"]")) {
-		totalCount = document.querySelector("a[data-testid*=\"CommentsCount\"]").textContent.split(" ")[0].replace(/[,.]/,"")
+		totalCount = document.querySelector("a[data-testid*=\"CommentsCount\"]").textContent.split(" ")[0].replace(",", ".")
 	}
 	// we're converting 56.3K to 56300
 	if (totalCount) {
