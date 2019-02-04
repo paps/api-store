@@ -6,7 +6,7 @@
 	"gradientBegin": "#C6E48B",
 	"gradientEnd": "#7BC96F",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://github.com/phantombuster/api-store"
