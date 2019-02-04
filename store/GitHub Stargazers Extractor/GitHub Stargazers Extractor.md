@@ -1,15 +1,14 @@
 # It's time to engage with developers where they hang out.
 
-Recruiters, if you're specific about the skills you're looking for, stop LinkedIn, start reaching out for to the right persons in the right place. 
+Recruiters, if you're specific about the skills you're looking for, stop LinkedIn, start reaching out to the right persons in the right place. 
 
-Github is not only a code repository, it's also a social network where developers hang out. If you're specific about the technology you're looking for, go the its Github repository and extract everyone who ever starred that project. 
+GitHub is not only a simple version control hosting service. It's also a social network where developers hang out. If you're specific about the technology you're looking for, visit its GitHub repository and extract the 1,000's latest people who starred that project. 
 
-You'll get super targeted leads interesting in that techno and if you're lucky some valuable email addresses.
+You'll get super targeted leads interested in that techno. Want to know those people better and even extract their emails? Use this API's result as an input to [GitHub Profile Scraper](https://phantombuster.com/api-store/11694/github-profile-scraper).
 
 # What will you need? ⚙️ 
 
-- **Spreadsheet URL or a Github repository URL**: The URL of the project you're interested in. That's it.
-
+- **Spreadsheet URL or a GitHub profile URL**: The URL of one GitHub profile or of a Google Spreadsheet filled with GitHub profiles.
 
 # What you need to do.
 ## 1. Create an account on Phantombuster.com 💻
@@ -29,8 +28,8 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/config.png)</center>
 
 
-## 4. Specify the project you're interested in.
-Either fill in one github projet, such as `https://github.com/phantombuster/nickjs` or fill in a Google spreadsheet with many projects.
+## 4. Specify the user(s) you're interested in.
+Either fill in one GitHub user, such as `https://github.com/torvalds` or fill in a Google spreadsheet with many profiles.
 If you chose the latter, don't forget to make it public!
 
 
@@ -38,7 +37,3 @@ If you chose the latter, don't forget to make it public!
 It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-# Limits
-
-Github will let you retrieve the latest 5000 users. 
