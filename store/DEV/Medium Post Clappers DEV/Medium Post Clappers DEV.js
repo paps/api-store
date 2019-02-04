@@ -70,7 +70,7 @@ const getClappers = async (url, tab) => {
 	await tab.waitUntilVisible("button.js-multirecommendCountButton")
 	await tab.wait(1000)
 	await tab.click("button.js-multirecommendCountButton")
-	await tab.waitUntilVisible("div.overlay-content")
+	await tab.waitUntilVisible("div.overlay-content", 15000)
 	await loadAllClappers(tab)
 	return tab.evaluate(scrapeClappers)
 }
