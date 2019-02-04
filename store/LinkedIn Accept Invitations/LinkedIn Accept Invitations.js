@@ -122,7 +122,6 @@ const sendMessage = async (tab, url, message, invite) => {
 	let inMailSelectorFound
 	await tab.open(url)
 	inMailSelectorFound = await tab.waitUntilVisible(inMailMessageSelectors, 15000, "or")
-
 	if (inMailSelectorFound === inMailMessageSelectors[0]) {
 		await tab.evaluate((arg, cb) => {
 			cb(null, document.querySelector(arg.inMailMessageSelector).value = arg.message)
@@ -141,8 +140,8 @@ const sendMessage = async (tab, url, message, invite) => {
 const waitWhileEnable = (arg, cb) => {
 	const startIdle = Date.now()
 	const idle = () => {
-		const sel = document.querySelector(arg.sel)
-		if ((!sel) || (sel.disabled === false)) {
+		const val = document.querySelector(arg.sel)
+		if ((!val) || (val.disabled === false)) {
 			if ((Date.now() - startIdle) >= 30000) {
 				return cb(`${arg.sel} is enable after 30s`)
 			}
@@ -161,7 +160,9 @@ const sendChatMessage = async (tab, message, invite) => {
 		spinners: "li-icon > .artdeco-spinner",
 		messageEditor: "div.msg-form__contenteditable",
 		sendButton: "button.msg-form__send-button[type=submit]",
-		sendError: "p.msg-s-event-listitem__error-message"
+		sendError: "p.msg-s-event-listitem__error-message",
+		discardConfirm: "button.js-msg-discard",
+		sendTrigger: "div.msg-overlay-conversation-bubble__connections-typeahead"
 	}
 	// Removing emojis for specific fields
 	for (const field of [ "firstName", "fullName" ]) {
@@ -180,12 +181,26 @@ const sendChatMessage = async (tab, message, invite) => {
 		await tab.wait(2500)
 		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
 		await tab.evaluate(waitWhileEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
+		// Wait until the combobox dispear
+		// Waiting for this selector gives enough time to send the message & not triggering discard message popup
+		// This will prevent to send remaining invitations messages on the same profile
+		await tab.waitWhileVisible(SELECTORS.sendTrigger, 30000)
 		if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.sendError}`)) {
 			utils.log("message is not sent", "warning")
 		}
 		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	} catch (err) {
 		utils.log(`Error while sending message: ${err.message || err}`, "warning")
+		// Need to close the chat conversation, even when a failure occurs
+		if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)) {
+			await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+			try {
+				await tab.waitUntilVisible(SELECTORS.discardConfirm, 30000)
+				await tab.click(SELECTORS.discardConfirm)
+			} catch (err) {
+				// ... can't do anything
+			}
+		}
 	}
 }
 
@@ -221,6 +236,7 @@ nick.newTab().then(async (tab) => {
 			const inMailTab = await nick.newTab()
 
 			for (const invite of invites) {
+				utils.log(`Sending message to ${invite.url}`, "info")
 				if (invite.messageLink) {
 					await sendMessage(inMailTab, invite.messageLink, message, invite)
 				} else if (invite.chatMessageIndex) {
