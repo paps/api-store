@@ -30,8 +30,20 @@ const facebook = new Facebook(nick, buster, utils)
 // get the Name, PageID and Likers count from a Page main page
 const scrapedPageIdNameandLikeCount = (arg, cb) => {
 	const scrapedData = {}
-
-	if (document.querySelector("#entity_sidebar a")) {
+	let pageId
+	if (document.querySelector("meta[property=\"al:android:url\"]")) {
+		try {
+			let metaPageId = document.querySelector("meta[property=\"al:android:url\"]").content
+			if (metaPageId && metaPageId.startsWith("fb://page/")) {
+				pageId = new URL(metaPageId).pathname.slice(7)
+			}
+		} catch (err) {
+			//
+		}
+	}
+	if (pageId) {
+		scrapedData.pageId = pageId
+	} else if (document.querySelector("#entity_sidebar a")) {
 		const picUrl = document.querySelector("#entity_sidebar a").href
 		const idString = new URL(picUrl).pathname.slice(1)
 		scrapedData.pageId = idString.slice(0, idString.indexOf("/"))
