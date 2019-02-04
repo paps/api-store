@@ -6,7 +6,7 @@ class DiscoverMail {
 		const options = {
 			json: true,
 			headers: {
-				"X-Access-Token": "nneQPTh3UVs6Ly6HQ8Zooi4AhZwDbi",
+				"X-Access-Token": "",
 			},
 		}
 		const res = await needle("post", "https://api.dropcontact.io/clean", params, options)
