@@ -128,7 +128,7 @@ const sendMessage = async (tab, message) => {
 	utils.log(`Sending message: ${message}`, "info")
 
 	await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.sendSelector })
-	await tab.sendKeys(SELECTORS.textEditSelector, message, { reset: true, keepFocus: true })
+	await tab.sendKeys(SELECTORS.textEditSelector, message.replace("\n", "\r\n"), { reset: true, keepFocus: true })
 	await tab.evaluate(_sendMessage, { sel: SELECTORS.textEditSelector })
 
 	const sendResult = await tab.waitUntilVisible([ SELECTORS.messageSelector, SELECTORS.writeErrorSelector ], "or" , 15000)
@@ -196,7 +196,7 @@ const canSendDM = async tab => {
 	}
 
 	if (typeof queries === "string") {
-		rows = [ { columnName: queries } ]
+		rows = [ { [columnName]: queries } ]
 	} else if (Array.isArray(queries)) {
 		rows = queries.map(el => ({ [columnName]: el }))
 	}
