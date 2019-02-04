@@ -26,7 +26,7 @@ const LinkedInScraper = require("./lib-LinkedInScraper")
 const { URL } = require("url")
 
 const MAX_SKILLS = 6
-const MAX_PROFILES = 25
+const MAX_PROFILES = 100
 
 // }
 

@@ -10,6 +10,7 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1qWQ5t-pFaibQQoltH05uH0uw_t_fArpZoYTAYh4k1Gg",
+		"numberOfAddsPerLaunch": 10,
 		"saveImg": false,
 		"takeScreenshot": false,
 		"takePartialScreenshot": false
@@ -90,8 +91,7 @@
 						}
 					},
 					"numberOfAddsPerLaunch": {
-						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
+						"label": "Number of profiles to visit per launch (100 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -139,7 +139,8 @@
 			},
 			"numberOfAddsPerLaunch": {
 				"type": "number",
-				"minimum": 1
+				"minimum": 1,
+				"maximum": 100
 			},
 			"csvName": {
 				"type": "string",
