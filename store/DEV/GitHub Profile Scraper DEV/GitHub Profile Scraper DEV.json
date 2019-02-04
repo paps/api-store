@@ -5,8 +5,8 @@
 	"argumentDescription": "",
 	"gradientBegin": "#C6E48B",
 	"gradientEnd": "#7BC96F",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://github.com/julesmaregiano"
