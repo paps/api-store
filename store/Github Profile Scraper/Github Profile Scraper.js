@@ -10,10 +10,8 @@ const buster = new Buster()
 
 const Puppeteer = require("puppeteer")
 
-const nick = { exit: (code = 0) => process.exit(code) }
-
 const StoreUtilities = require("./lib-StoreUtilities")
-const utils = new StoreUtilities(nick, buster)
+const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
 // }
@@ -135,7 +133,7 @@ const scrapeHireStatus = async username => {
 
 	if (queries.length < 1) {
 		utils.log("Input is empty OR every profiles are already scraped", "warning")
-		nick.exit()
+		process.exit()
 	}
 
 	for (const query of queries) {
@@ -164,9 +162,9 @@ const scrapeHireStatus = async username => {
 	}
 	db.push(...utils.filterRightOuter(db, profiles))
 	await utils.saveResults(profiles, db, csvName, null)
-	nick.exit()
+	process.exit()
 })()
 .catch(err => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	nick.exit(1)
+	process.exit(1)
 })
