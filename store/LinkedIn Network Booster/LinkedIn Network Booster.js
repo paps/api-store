@@ -575,12 +575,13 @@ nick.newTab().then(async (tab) => {
 	 */
 	if (invitations.length > 0) {
 		const initDate = new Date()
-		const waitDurationMs = waitDuration * 1000
 		if (!waitDuration) {
 			waitDuration = 30
+			utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		} else {
-			utils.log(`Waiting for ${waitDuration}s before double checking the invitations...`, "loading")
+			utils.log(`Waiting for ${waitDuration}s before double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "loading")
 		}
+		const waitDurationMs = waitDuration * 1000
 		do {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -589,7 +590,6 @@ nick.newTab().then(async (tab) => {
 			}
 			await tab.wait(500)
 		} while (new Date() - initDate < waitDurationMs)
-		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		try {
 			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
