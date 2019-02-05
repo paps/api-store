@@ -128,7 +128,9 @@ const sendMessage = async (tab, message) => {
 	utils.log(`Sending message: ${message}`, "info")
 
 	await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.sendSelector })
+	await tab.wait(Math.round(500 + Math.random() * 500))
 	await tab.sendKeys(SELECTORS.textEditSelector, message.replace("\n", "\r\n"), { reset: true, keepFocus: true })
+	await tab.wait(Math.round(500 + Math.random() * 500))
 	await tab.evaluate(_sendMessage, { sel: SELECTORS.textEditSelector })
 
 	const sendResult = await tab.waitUntilVisible([ SELECTORS.messageSelector, SELECTORS.writeErrorSelector ], "or" , 15000)
@@ -136,6 +138,7 @@ const sendMessage = async (tab, message) => {
 		const err = await tab.evaluate(getErrorMessage, { sel: SELECTORS.debugErrorSelector })
 		throw err
 	}
+	await tab.wait(Math.round(500 + Math.random() * 500))
 	await tab.click(SELECTORS.closeSelector)
 }
 
@@ -258,6 +261,7 @@ const canSendDM = async tab => {
 			utils.log(`Error while sending message to ${one[columnName]}: ${profile.error}`, "warning")
 			res.push(profile)
 		}
+		await tab.wait(Math.round(500 + Math.random() * 500))
 	}
 	db.push(...res)
 	await utils.saveResults(noDatabase ? [] : db, noDatabase ? [] : db, csvName, false)
