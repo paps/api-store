@@ -140,7 +140,7 @@ class Twitter {
 		}
 		const contextSelector = await tab.waitUntilVisible(selectors, "or", 15000)
 		// Intent URL: you need to click the redirection link to open the profile
-		if (contextSelector === selectors[1]) {
+		if (contextSelector === selectors[2]) {
 			await tab.click(contextSelector)
 			await tab.waitUntilVisible(selectors[0], 15000)
 		}
