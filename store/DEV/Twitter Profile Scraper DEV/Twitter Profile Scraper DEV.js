@@ -1,27 +1,19 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
+"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const Nick = require("nickjs")
-const nick = new Nick({
-	loadImages: true,
-	printPageErrors: false,
-	printResourceErrors: false,
-	printNavigation: false,
-	printAborts: false,
-	debug: false,
-	timeout: 15000
-})
+const Puppeteer = require("puppeteer")
 
 const StoreUtilities = require("./lib-StoreUtilities")
-const utils = new StoreUtilities(nick, buster)
-const Twitter = require("./lib-Twitter")
-const twitter = new Twitter(nick, buster, utils)
+const utils = new StoreUtilities(buster)
+const Twitter = require("./lib-Twitter-DEV")
+const twitter = new Twitter(buster, utils)
 const DB_SHORT_NAME = "twitter-profile-scraper"
 // }
 
@@ -42,7 +34,8 @@ const isTwitterProfile = url => {
 }
 
 ;(async () => {
-	const tab = await nick.newTab()
+	const browser = await Puppeteer.launch({ args: [ "--no-sandbox" ] })
+	const tab = await browser.newPage()
 	let { spreadsheetUrl, sessionCookie, columnName, numberProfilesPerLaunch, csvName, profileUrls, noDatabase } = utils.validateArguments()
 	const scrapingResult = []
 
@@ -74,7 +67,7 @@ const isTwitterProfile = url => {
 
 	if (profileUrls.length < 1) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-		nick.exit()
+		process.exit()
 	}
 
 	utils.log(`Profiles to scrape: ${JSON.stringify(profileUrls.slice(0, 100), null, 2)}`, "info")
@@ -97,9 +90,10 @@ const isTwitterProfile = url => {
 	}
 	db.push(...scrapingResult)
 	await utils.saveResults(scrapingResult, db, csvName, null, false)
-	nick.exit()
+	process.exit()
 })()
 .catch(err => {
 	utils.log(`Error while running: ${err.message || err}`, "error")
-	nick.exit(1)
+	console.log(err.stack || "no stack")
+	process.exit(1)
 })
