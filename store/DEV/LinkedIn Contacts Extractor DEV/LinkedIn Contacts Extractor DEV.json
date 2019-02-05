@@ -1,0 +1,65 @@
+{
+	"slug": "linkedin-contacts-extractor",
+	"description": "Extract your LinkedIn contacts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"numberOfProfiles": 100
+	},
+	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"profileUrl": "LinkedIn profile URL",
+		"name": "",
+		"firstName": "",
+		"lastName": "",
+		"title": "",
+		"connectedDate": "",
+		"profileImageUrl": ""
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "LinkedIn session cookie <a href=\"/api-store/12670/linkedin-contacts-extractor#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your session cookie here"
+					},
+					"numberOfProfiles": {
+						"label": "Number of profiles to extract",
+						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"numberOfProfiles": {
+				"type": "number",
+				"minimum": 1,
+				"required": true
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
