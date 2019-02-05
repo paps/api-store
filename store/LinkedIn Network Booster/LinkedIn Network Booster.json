@@ -14,7 +14,8 @@
 		"numberOfAddsPerLaunch": 10,
 		"onlySecondCircle": false,
 		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
-		"disableScraping": false
+		"disableScraping": false,
+		"waitDuration": 30
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -59,6 +60,11 @@
 					},
 					"disableScraping": {
 						"rightLabel": "<b>Disable profile scraping</b> (not recommended — speeds up the API but prevents email discovery and tags other than #firstName#)"
+					},
+					"waitDuration": {
+						"label": "Number of seconds to wait before checking if the invites were correctly sent (30s if empty)",
+						"placeholder": 30,
+						"inputType": "number"
 					}
 				}
 			}
@@ -96,6 +102,10 @@
 			},
 			"disableScraping": {
 				"type": "boolean"
+			},
+			"waitDuration": {
+				"type": "number",
+				"minimum": 0
 			}
 		},
 		"oneOf": [

@@ -1,9 +1,9 @@
 {
 	"slug": "linkedin-contacts-extractor",
 	"description": "Extract your LinkedIn contacts",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
-	"hidden": true,
-	"new": true,
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
+	"hidden": false,
+	"new": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",

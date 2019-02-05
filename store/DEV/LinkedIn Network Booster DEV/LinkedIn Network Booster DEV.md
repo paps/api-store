@@ -23,6 +23,7 @@ Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phan
 - **Number of adds per launch**: How many _(between **1** and **10**)_ invites to send per launch
 - **Only second circle**: Do you only want to **only** connect with people from your 2nd circle or not.
 - **Message**: The message you want to send.
+- **Wait duration**: As it may take a while for LinkedIn to process them, the API needs to wait - with a default value of 30s - before checking if the invitations were correctly sent in the Invitation Manager.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
 

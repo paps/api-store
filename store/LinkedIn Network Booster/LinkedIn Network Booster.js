@@ -482,7 +482,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping } = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping, waitDuration } = utils.validateArguments()
 
 	if (!hunterApiKey) {
 		hunterApiKey = ""
@@ -542,6 +542,11 @@ nick.newTab().then(async (tab) => {
 	let invitations = []
 	utils.log(`Urls to add: ${JSON.stringify(rows.map(el => el[columnName]), null, 2)}`, "done")
 	for (const row of rows) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		if (row[columnName]) {
 			buster.progressHint(step / rows.length, `Connecting ${row[columnName]}`)
 			row.baseUrl = row[columnName]
@@ -569,8 +574,22 @@ nick.newTab().then(async (tab) => {
 	 * in order to check later in the script execution if they're sent
 	 */
 	if (invitations.length > 0) {
+		const initDate = new Date()
+		const waitDurationMs = waitDuration * 1000
+		if (!waitDuration) {
+			waitDuration = 30
+		} else {
+			utils.log(`Waiting for ${waitDuration}s before double checking the invitations...`, "loading")
+		}
+		do {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			await tab.wait(500)
+		} while (new Date() - initDate < waitDurationMs)
 		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
-		await tab.wait(30000)	// Watiting 30 seconds
 		try {
 			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
