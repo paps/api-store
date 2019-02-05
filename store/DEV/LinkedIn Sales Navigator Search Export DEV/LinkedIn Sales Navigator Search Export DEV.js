@@ -560,7 +560,7 @@ const isLinkedInSearchURL = (url) => {
 				}
 				if (removeDuplicateProfiles) {
 					for (let i = 0; i < tempResult.length; i++) {
-						if (!result.find(el => el.vmid === tempResult[i].vmid)) {
+						if ((tempResult[i].vmid && !result.find(el => el.vmid === tempResult[i].vmid)) || (tempResult[i].companyId && !result.find(el => el.companyId === tempResult[i].companyId))) {
 							result.push(tempResult[i])
 						}
 					}
