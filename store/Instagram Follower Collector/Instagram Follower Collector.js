@@ -120,7 +120,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	let result = []
 	try {
 		await tab.click("main ul li:nth-child(2) a")
-		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > div:last-of-type > ul li:last-of-type", 7500)
+		await tab.waitUntilVisible("body > div:last-child > div > div:last-of-type > ul", 7500)
 	} catch (err) {
 		// Hitting Instagram rate limit
 		utils.log("Couldn't load followers list, Instagram rate limit probably reached.", "warning")
@@ -134,9 +134,9 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	}
 	const profilesArray = []
 	let lastDate = new Date()
-	await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > div:last-of-type > ul li:last-of-type a", 8000) // if last li element is a profile and not a spinner
+	await tab.waitUntilPresent("body > div:last-child > div > div:last-of-type > ul li:last-of-type a", 8000) // if last li element is a profile and not a spinner
 	await tab.evaluate((arg, callback) => { // scrollToBottom function
-		callback(null, document.querySelector("body > div:last-child > div > div:last-of-type > div:last-of-type > ul li:last-of-type a").scrollIntoView())
+		callback(null, document.querySelector("body > div:last-child > div > div:last-of-type > ul li:last-of-type a").scrollIntoView())
 	})
 	let restartAfterError
 	let instagramJson

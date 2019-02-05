@@ -1,17 +1,14 @@
-# Launch a LinkedIn search and export its results
+# Extract every result of a LinkedIn Search - Profiles, Companies, Content,.. - to a single file.
 
-UPDATE: Now handles more search categories: People, Jobs, Content, Companies, Groups, and even Schools!
+🆕 Updated: Now handles more search categories: People, Jobs, Content, Companies, Groups, and even Schools!
 
-To scrape your first connections, use "http://linkedin.com/mynetwork/invite-connect/connections" as input.
-Also, scrape your Network Suggestions by using "https://www.linkedin.com/mynetwork/" as input.
+**Do you want to build a qualified database of contacts** fitting your target. But launching a LinkedIn search and copy/pasting is your only option? Not anymore!
 
-You want to build a qualified database of contacts fitting your target. Launching LinkedIn search and copy pasting every results..? 
+Our updated LinkedIn Search Export tool lets you **automatically turn a LinkedIn Search into a single spreadsheet** with every result of every page.
 
-Now with our new LinkedIn Search Export tool you can retrieve search results automatically with little effort.
+LinkedIn Automation and Search Extraction are _the_ best way to very quickly create a lead file for your commercial team, recruitment purposes and much more.
 
-This API can easily be combined with our other LinkedIn APIs, most notably <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a>.
-
-# Our Solution
+## Our Solution
 
 Launch **LinkedIn Search Export** that will export in CSV the _URL profile link_ of every person appearing in the search results.
 You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch the search.
@@ -19,25 +16,26 @@ You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch th
 <center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/Linkedin+Export+Search.gif)</center>
 <center>⬆️ _This is an example of what the bot will do, all by itself & just for you_ 💖</center>
 
+## Extract all your connections in a single file
 
-# What will you need? ⚙️ 
+To scrape your first connections, use `http://linkedin.com/mynetwork/invite-connect/connections` as an input (10 profiles per page).
 
-- **Session cookie**: Your session Cookie from LinkedIn
-- **Search**: What terms to search on the LinkedIn search engine
-- **circles**: Do you want to search in your 1st, 2nd, or 3rd+ degree connections? 
-- **category**: Which category do you want to search in? (People, Jobs, Companies, Groups or Schools)
-- **Number of pages**: How many pages should the bot scrape?
-- **Only first result**: If you only want the first result of a LinkedIn search
+You can do the same with all your Network Suggestions by using `https://www.linkedin.com/mynetwork/` as an input.
 
-_(**You already have all that?**  Click straight away on **"Use this API"**)_
+## Combine API and set your Prospection process on automatic. 
+
+Combine it with our other LinkedIn APIs, <a href="/api-store/2818/linkedin-network-booster", target="_blank">LinkedIn Network Booster</a> for example, and you'll be able to connect at scale with the people you extracted.
+
+Do you want to find the email addresses of these people ? Use <a href="/api-store/3112/linkedin-profile-scraper", target="_blank">LinkedIn Profile Scraper</a> with [Hunter.io](http://www.hunter.io) or [DropContact.io](http://www.dropcontact.io).
 
 
-# Which steps to follow?
+# Easy step-by-step tutorial to extract your LinkedIn Searches
+
 ## 1. Create an account on Phantombuster.com 💻
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
+If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). We browse the web for you so you can focus on not automatable tasks.
 
 
-## 2. Use this API on your account.👌
+## 2. Click on Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
@@ -49,7 +47,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 
 ## 4. Linkedin authentication 🔑 { argument }
-Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
+Since Phantombuster will access LinkedIn for you, it needs to be logged on your LinkedIn account. For that you simply need to copy/paste your session cookie in the **session cookie** field:
 * Using Chrome, go to your LinkedIn homepage and open the inspector  
 → Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
 → <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
@@ -80,16 +78,16 @@ You can also input an URL to a Google Spreadsheet (or an URL to a CSV file) cont
 
 **More advanced search queries are also possible** using keywords allowed by LinkedIn: `OR` & `AND` (see <a href="https://www.linkedin.com/help/linkedin/answer/75814", target="_blank">Using Boolean Search</a>) and even `school:`, `company:`... (see <a href="https://www.linkedin.com/help/linkedin/answer/76015", target="_blank">Using Search Operators</a>).
 
-**Even more advanced:** You can also paste into the _search_ field or your spreadsheet a LinkedIn search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field. If you're using a spreadsheet, you can chain search urls from different categories (people, companies, etc.).
+**Even more advanced:** You can also paste into the _search_ field or your spreadsheet a LinkedIn search page URL. That is, make an advanced search yourself on LinkedIn and copy-paste the URL you're sent to into the field. If you're using a spreadsheet, you can chain search URLs from different categories (people, companies, etc.).
 You can also append in the search page URL `&page=x` _(x represents a page number)_ to let know the API where it should start to scrape data in the LinkedIn result.
 
 ## 6. Which circles 💫?
 
 If you're scraping a list of people, the three checkboxes allow you to target specific degrees of connections. If you want to scrape your connections, only enable the _1st_ checkbox. If you want to only find people that are close to you but not yet connected, enable the _2nd_ checkbox. And for the _3rd+_ checkbox, well... You get the picture.
 
-## 7. Which category ?
+## 7. Which category?
 
-If you enter specific search terms (not search URLs), you can specify which category to search in. LinkedIn Search Export now handles searches for People, Jobs, Companies, Groups and Schools.
+If you enter specific search terms (not search URLs), you can specify which category to search in. LinkedIn Search Export now handles searches for People, Jobs, Companies, Groups, and Schools.
 
 ## 8. How many pages of results?
 

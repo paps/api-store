@@ -150,7 +150,7 @@ This will launch the bot and, if you didn't already change the spreadsheet URL, 
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
 
-Every time the API is launched, it will scrape 10 profiles and then stop. (This number can be changed in the configuration, the maximum is 25 per launch.)
+Every time the API is launched, it will scrape 10 profiles and then stop. (This number can be changed in the configuration, the maximum is 100 per launch.)
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 

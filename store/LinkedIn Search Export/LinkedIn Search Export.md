@@ -18,7 +18,7 @@ You can also decide on which circles _(1st, 2nd &/or 3rd)_ you wish to launch th
 
 ## Extract all your connections in a single file
 
-To scrape your first connections, use `http://linkedin.com/mynetwork/invite-connect/connections` as an input. 
+To scrape your first connections, use `http://linkedin.com/mynetwork/invite-connect/connections` as an input (10 profiles per page).
 
 You can do the same with all your Network Suggestions by using `https://www.linkedin.com/mynetwork/` as an input.
 

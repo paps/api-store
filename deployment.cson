@@ -7,6 +7,7 @@
 		# -----------
 		'lib-api-store.js': 'libs/lib-api-store.js'
 		'lib-chrome-launcher.js': 'libs/lib-chrome-launcher.js'
+		'lib-DiscoverMail.js': 'libs/lib-DiscoverMail.js'
 		'lib-Dropcontact.js': 'libs/lib-Dropcontact.js'
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
 		'lib-Google.js': 'libs/lib-Google.js'
