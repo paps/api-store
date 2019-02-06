@@ -133,13 +133,13 @@ const scrapeCompanyInfo = (arg, callback) => {
 				result.totalEmployeeCount = totalEmployeeCount
 			}
 			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span")) {
-				result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span").textContent
+				result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span.visually-hidden").textContent
 			}
 			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span")) {
-				result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span").textContent
+				result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span.visually-hidden").textContent
 			}
 			if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span")) {
-				result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span").textContent
+				result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span.visually-hidden").textContent
 			}
 			if (document.querySelector(".org-insights-module__facts strong")) {
 				result.averageTenure = document.querySelector(".org-insights-module__facts strong").textContent
@@ -246,13 +246,13 @@ const scrapeInsights = (arg, cb) => {
 		result.totalEmployeeCount = totalEmployeeCount
 	}
 	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span")) {
-		result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span").textContent
+		result.growth6Mth = document.querySelector("td[headers=\"org-insights-module__a11y-summary-6\"]  > span > span.visually-hidden").textContent
 	}
 	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span")) {
-		result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span").textContent
+		result.growth1Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-12\"]  > span > span.visually-hidden").textContent
 	}
 	if (document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span")) {
-		result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span").textContent
+		result.growth2Yr = document.querySelector("td[headers=\"org-insights-module__a11y-summary-24\"]  > span > span.visually-hidden").textContent
 	}
 	if (document.querySelector(".org-insights-module__facts strong")) {
 		result.averageTenure = document.querySelector(".org-insights-module__facts strong").textContent
