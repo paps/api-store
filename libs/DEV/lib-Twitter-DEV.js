@@ -52,7 +52,7 @@ const waitWhileHttpErrors = async (utils, tab) => {
  * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
  * @return {boolean}
  */
-const isUsingNick = tab => tab.driver !== undefined
+const isUsingNick = tab => typeof tab.driver !== "undefined"
 
 class Twitter {
 
@@ -254,7 +254,7 @@ class Twitter {
 				}
 				res.birthday = birthdaySelector ? birthdaySelector.textContent.trim() : null
 			}
-			return cb !== undefined ? cb(null, res) : Promise.resolve(res)
+			return typeof cb !== "undefined" ? cb(null, res) : Promise.resolve(res)
 		}
 		verbose && this.utils.log(`Loading profile: ${url}...`, "loading")
 		try {
@@ -414,9 +414,13 @@ class Twitter {
 	 * @return {Promise<Number>} Loaded count
 	 */
 	async loadList(tab, count = Infinity, verbose = true) {
+		const isNick = true
 		let loadedContent = 0
 		let lastCount = 0
-		const getContentCount = (arg, cb) => cb(null, document.querySelectorAll("div.tweet.js-actionable-tweet").length)
+		const getContentCount = (arg, cb) => {
+			const val = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+			return cb !== undefined ? cb(null, val) : val
+		}
 		const waitWhileLoading = (arg, cb) => {
 			const idleStart = Date.now()
 			const idle = () => {
@@ -433,6 +437,17 @@ class Twitter {
 			}
 			idle()
 		}
+
+		const loadingIdle = previousCount => {
+			const loadedTweets = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+			if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
+				return "DONE"
+			} else if (loadedTweets <= previousCount) {
+				return false
+			}
+			return true
+		}
+
 		while (loadedContent <= count) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -443,9 +458,9 @@ class Twitter {
 				this.utils.log(`${loadedContent} content loaded`, "info")
 				lastCount = loadedContent
 			}
-			await tab.scrollToBottom()
+			isNick ? await tab.scrollToBottom() : await tab.evaluate(() => window.scrollBy(0, document.body.scrollHeight))
 			try {
-				const state = await tab.evaluate(waitWhileLoading, { prevCount: loadedContent })
+				const state = isNick ? await tab.evaluate(waitWhileLoading, { prevCount: loadedContent }) : await tab.waitFor(loadingIdle, loadedContent)
 				if (state === "DONE") {
 					break
 				}
