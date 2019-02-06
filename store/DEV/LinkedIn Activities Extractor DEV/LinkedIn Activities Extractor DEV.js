@@ -199,7 +199,11 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 	utils.log(`Loading ${onlyScrapePosts ? "posts" : "activities"} of ${convertedUrl}...`, "loading")
 	const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
 	await tab.open(activityUrl)
-	await tab.waitUntilVisible(".pv-recent-activity-detail__outlet-container", 15000)
+	await tab.waitUntilPresent(".pv-recent-activity-detail__outlet-container", 15000)
+	if (await tab.isPresent("div.no-content")) {
+		utils.log(`${profileUrl} has no activity!`, "info")
+		return [{ profileUrl, timestamp: (new Date()).toISOString(), error: "No activity" }]
+	}
 	let postCount = 0
 	let lastDate = new Date()
 	// first we load all posts until numberMaxOfPosts
@@ -275,6 +279,8 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 
 			currentResult = currentResult.concat(activityResults)
 		} catch (err) {
+			await buster.saveText(await tab.getContent(), `${Date.now()}verif.html`)
+			console.log("current:", await tab.getUrl())
 			utils.log(`Can't scrape the profile at ${profileUrl} due to: ${err.message || err}`, "error")
 		}
 	}
