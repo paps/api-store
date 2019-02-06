@@ -29,20 +29,15 @@ class Slack {
 			if (response !== null && response.status() !== 200) {
 				return `Slack responsed with ${response.status()}`
 			}
-			try {
-				await Promise.all([ page.waitForSelector("div#team_menu", { timeout: 30000 }), page.waitFor(() => {
-					const el = document.querySelector("body")
-					return el ? !el.classList.contains("loading") : false
-				}) ])
-				const name = await page.evaluate(() => {
-					const el = document.querySelector("span#team_menu_user_name")
-					return el !== null ? el.textContent : null
-				})
-				this.utils.log(`Connected as ${name}`, "done")
-			} catch (err) {
-				await page.screenshot({ path: `err-login-${Date.now()}.jpg`, type: "jpeg", quality: 50 })
-				this.utils.log(`Error: ${err.message || err}`, "warning")
-			}
+			await Promise.all([ page.waitForSelector("div#team_menu", { timeout: 30000 }), page.waitFor(() => {
+				const el = document.querySelector("body")
+				return el ? !el.classList.contains("loading") : false
+			}) ])
+			const name = await page.evaluate(() => {
+				const el = document.querySelector("span#team_menu_user_name")
+				return el !== null ? el.textContent : null
+			})
+			this.utils.log(`Connected as ${name}`, "done")
 		}
 
 		if (dCookie.trim().length < 1) {
@@ -76,7 +71,7 @@ class Slack {
 			})
 			await _login()
 		} catch (err) {
-			this.utils.log("Could not connect to Slack with this session cookie", "error")
+			this.utils.log("Could not connect to Slack with this session cookie / workspace URL", "error")
 			process.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
 	}

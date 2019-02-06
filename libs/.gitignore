@@ -1,3 +1,4 @@
 lib-api-store.js
 lib-Slack.js
 lib-ProductHunt.js
+lib-DiscoverMail.js
