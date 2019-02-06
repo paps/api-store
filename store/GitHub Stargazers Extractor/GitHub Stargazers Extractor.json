@@ -1,6 +1,6 @@
 {
 	"slug": "github-stargazers-extractor",
-	"description": "Extract Every Developers who starred a Github Repository",
+	"description": "Extract Every Developers who starred a GitHub Repository",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Github+Stargazers+Extractor/Github+Stargazers+Extractor.png",
 	"argumentDescription": "",
 	"gradientBegin": "#C6E48B",
@@ -9,9 +9,10 @@
 	"new": false,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://github.com/phantombuster/api-store"
+		"spreadsheetUrl": "https://github.com/phantombuster/api-store",
+		"numberOfLinesPerLaunch": 10
 	},
-	"defaultArgumentAllowed": false,
+	"defaultArgumentAllowed": true,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -25,28 +26,37 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Github repository URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or a GitHub repository URL <a target=\"_blank\" href=\"/api-store/11695/github-stargazers-extractor#section_4specifytheusersyoureinterestedin\">(?)</a>",
 						"type": "url",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github repository"
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a GitHub repository URL"
 					},
 					"columnName": {
-						"label": "Column name where Github repositories URLs are stored in the spreadhsheet",
+						"label": "Column name where GitHub repositories URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
-						"placeholder": "Repos"
+						"placeholder": "Repositories"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 repositories per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"label": "Number of lines to process per launch (all if empty)",
+						"inputType": "number"
+					},
+					"stargazersPerRepo": {
+						"label": "Number of stargazers to scrape per repository (all if empty)",
+						"inputType": "number"
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
 		}
+	},
+	"outputDescription": {
+		"profileUrl": "",
+		"profileImage": "",
+		"name": "",
+		"query": "",
+		"timestamp": ""
 	},
 	"argumentSchema": {
 		"type": "object",
@@ -60,7 +70,11 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
-				"maximum": 10,
+				"default": 1
+			},
+			"stargazersPerRepo": {
+				"type": "number",
+				"minimum": 1,
 				"default": 1
 			},
 			"csvName": {
