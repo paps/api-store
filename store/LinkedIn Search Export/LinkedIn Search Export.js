@@ -808,6 +808,10 @@ const isLinkedInSearchURL = (targetUrl) => {
 		} else if ((search.toLowerCase().indexOf("http://") === 0) || (search.toLowerCase().indexOf("https://") === 0)) {
 			searches = await utils.getDataFromCsv2(search)
 			searches = searches.filter(str => utils.checkDb(str, result, "query"))
+			if (searches.length === 0) {
+				utils.log("We already scraped all the profiles from this spreadsheet.", "warning")
+				nick.exit()
+			}
 			if (numberOfLinesPerLaunch) {
 				searches = searches.slice(0, numberOfLinesPerLaunch)
 			}
