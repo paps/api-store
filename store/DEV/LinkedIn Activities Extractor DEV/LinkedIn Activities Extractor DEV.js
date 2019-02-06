@@ -44,11 +44,15 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfLinesPerLaunch, maxLength)) // return the first elements
 }
 
-const getActivityUrl = url => {
+const getActivityUrl = (url, onlyScrapePosts) => {
 	if (!url.endsWith("/")) {
 		url += "/"
 	}
-	return url + "detail/recent-activity/"
+	let returnedUrl = url + "detail/recent-activity/"
+	if (onlyScrapePosts) {
+		returnedUrl += "shares/"
+	}
+	return returnedUrl
 }
 
 // return how many posts are loaded in the page
@@ -191,9 +195,9 @@ const getActityIdFromLikes = async (tab, activityResults, postCount) => {
 }
 
 // handle scraping process
-const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) => {
-	utils.log(`Processing activities of ${convertedUrl}...`, "loading")
-	const activityUrl = getActivityUrl(convertedUrl)
+const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts) => {
+	utils.log(`Loading ${onlyScrapePosts ? "posts" : "activities"} of ${convertedUrl}...`, "loading")
+	const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
 	await tab.open(activityUrl)
 	await tab.waitUntilVisible(".pv-recent-activity-detail__outlet-container", 15000)
 	let postCount = 0
@@ -234,7 +238,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberMaxOfPosts, csvName, reprocessAll } = utils.validateArguments()
+	let {sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, numberMaxOfPosts, csvName, onlyScrapePosts, reprocessAll } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let profileUrls
 	if (isLinkedUrl(spreadsheetUrl)) {
@@ -267,7 +271,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts) =>
 		try {
 			const convertedUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
 
-			const activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts)
+			const activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts)
 
 			currentResult = currentResult.concat(activityResults)
 		} catch (err) {

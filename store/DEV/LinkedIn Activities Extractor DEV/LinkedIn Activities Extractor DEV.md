@@ -13,7 +13,8 @@ Pro tip: Set it on repeat and you'll receive daily updates on these profiles!
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn Profiles' URLs in it.
 - **Number of lines per launch**: The number of profiles in your spreadsheet you want to process per launch. If left empty, the API will process everyone.
-- **Number max of posts**: The number of activities you want to scrape per profile. 
+- **Number max of posts**: The number of activities you want to scrape per profile.
+- **Only scrape posts**: If you only want this profile's posts.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 

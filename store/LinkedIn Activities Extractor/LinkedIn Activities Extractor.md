@@ -8,6 +8,7 @@ Get all posts from the activity feed of profiles you're interested in.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn profile URLs in it.
 - **Number of lines per launch**: The number of lines of your spreadsheet you want to process per group. If left empty, the API will process all lines.
 - **Number max of posts**: The number of posts you want to scrape per profile. 
+- **Only scrape posts**: If you only want this profile's posts.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 

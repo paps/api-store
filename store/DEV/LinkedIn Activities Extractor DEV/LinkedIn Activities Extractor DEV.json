@@ -13,7 +13,8 @@
 		"spreadsheetUrl": "linkedin_profile_urls",
 		"numberOfLinesPerLaunch": 10,
 		"numberMaxOfPosts": 20,
-		"csvName": "result"
+		"csvName": "result",
+		"onlyScrapePosts": true
 	},
 	"outputDescription": {
 		"postUrl": "",
@@ -54,6 +55,9 @@
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
 					},
+					"onlyScrapePosts": {
+						"rightLabel": "<b>Only scrape posts</b>"
+					},
 					"reprocessAll": {
 						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
 					}
@@ -86,6 +90,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"onlyScrapePosts": {
+				"type": "boolean"
 			},
 			"reprocessAll": {
 				"type": "boolean"
