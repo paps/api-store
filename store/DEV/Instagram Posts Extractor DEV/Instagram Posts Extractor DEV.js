@@ -17,6 +17,8 @@ const nick = new Nick({
 	timeout: 30000
 })
 
+/* eslint-disable no-unused-vars */
+
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram-DEV")

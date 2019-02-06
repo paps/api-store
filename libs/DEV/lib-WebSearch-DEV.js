@@ -192,7 +192,7 @@ const _doSearch = async function(query) {
 
 		result.engine = engine.name
 		result.codename = engine.codename
-	
+
 		/**
 		 * Error while opening the url
 		 */
@@ -280,6 +280,7 @@ class WebSearch {
 	 * @param {Boolean} [verbose] - verbose level, the default values is false meaning quiet
 	 * If you want to see all debugging messages from all steps in this lib use true for verbose parameter
 	 */
+	/* eslint-disable-next-line no-unused-vars */
 	constructor(tab, buster, verbose = false, lockEngine = null, utils = null) {
 		this.engines = _defaultEngines
 		this.engineUsed = Math.floor(Math.random() * this.engines.length)

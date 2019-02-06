@@ -419,7 +419,7 @@ class Twitter {
 		let lastCount = 0
 		const getContentCount = (arg, cb) => {
 			const val = document.querySelectorAll("div.tweet.js-actionable-tweet").length
-			return cb !== undefined ? cb(null, val) : val
+			return typeof cb !== "undefined" ? cb(null, val) : val
 		}
 		const waitWhileLoading = (arg, cb) => {
 			const idleStart = Date.now()

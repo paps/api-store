@@ -16,3 +16,4 @@ store/Product Hunt Profile Scraper/Product Hunt Profile Scraper.js
 store/Product Hunt Upvoter Extractor/Product Hunt Upvoter Extractor.js
 libs/lib-ProductHunt.js
 libs/lib-Slack.js
+libs/lib-DiscoverMail.js
