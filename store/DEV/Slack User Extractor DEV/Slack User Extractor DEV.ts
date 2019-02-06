@@ -86,6 +86,5 @@ const DEFAULT_LAUNCH = 10
 })()
 .catch((err) => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
 	process.exit(1)
 })

@@ -30,7 +30,7 @@
 						"placeholder": "#Phantombuster"
 					},
 					"columnName": {
-						"label": "Column name where researches are stored in the spreadhsheet",
+						"label": "Column name where researches are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "research"
 					},

@@ -27,19 +27,19 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Slack <b>d</b> session cookie <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Slack d session cookie cookie"
+						"label": "Slack <b>d</b> session cookie <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_4getyourslacksessioncookie\">(?)</a>",
+						"helper": "Slack d session cookie"
 					},
 					"slackWorkspaceUrl": {
-						"label": "Slack Workspace to use <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Slack Workspace to use <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_5inputyourslackworkspacesurl\">(?)</a>",
 						"inputType": "url"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a channel name <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a XXX ZZZ"
+						"label": "Spreadsheet URL or a channel name <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_6inputthechannelsyouwanttoextractusersfrom\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Slack channel name"
 					},
 					"columnName": {
-						"label": "Column name where Slack channels are stored in the spreadhsheet",
+						"label": "Column name where Slack channels are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "channels"
 					},
@@ -56,6 +56,23 @@
 				}
 			}
 		}
+	},
+	"outputDescription": {
+		"id": "",
+		"firstName": "",
+		"lastName": "",
+		"fullName": "",
+		"pictureUrl": "",
+		"displayName": "",
+		"title": "",
+		"phone": "",
+		"email": "",
+		"skype": "",
+		"timezone": "",
+		"lastUpdate": "",
+		"query": "",
+		"channel": "",
+		"workspaceUrl": ""
 	},
 	"argumentSchema": {
 		"type": "object",
