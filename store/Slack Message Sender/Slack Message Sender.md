@@ -41,13 +41,13 @@ or
 
 <center>![](https://phantombuster.imgix.net/api-store/li_at+1.png)</center>
 
-* Select “Cookies” > “https://www.twitter.com” on the left menu.
+* Select “Cookies” > “https://www.yourworkspace.slack.com” on the left menu.
 
-<center>![](https://phantombuster.imgix.net/api-store/twitter_follower_collector/auth_token_1.png)</center>
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Slack+Cookie1.png)</center>
 
 * Locate the “`d`” session cookie.
 
-<center>![](https://phantombuster.imgix.net/api-store/twitter_follower_collector/auth_token_2.png)</center/>
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Slack+Cookie2.png)</center/>
 
 * Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Argument_)
 
