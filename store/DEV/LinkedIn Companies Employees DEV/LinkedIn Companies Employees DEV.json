@@ -35,7 +35,7 @@
 						"helper": "Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single company URL"
 					},
 					"columnName": {
-						"label": "Column name where LinkedIn companies URLs are stored in the spreadhsheet",
+						"label": "Column name where LinkedIn companies URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "Companies"
 					},

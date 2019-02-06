@@ -34,7 +34,7 @@
 						"type": "url"
 					},
 					"columnName": {
-						"label": "Column name where LinkedIn groups URLs are stored in the spreadhsheet",
+						"label": "Column name where LinkedIn groups URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "groups"
 					},

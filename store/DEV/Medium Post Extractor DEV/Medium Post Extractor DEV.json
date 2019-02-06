@@ -39,7 +39,7 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
-						"label": "Column name where search terms are stored in the spreadhsheet",
+						"label": "Column name where search terms are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "Searches"
 					},

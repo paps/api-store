@@ -11,7 +11,7 @@ const buster = new Buster()
 const Puppeteer = require("puppeteer")
 
 const StoreUtilities = require("./lib-StoreUtilities")
-const utils = new StoreUtilities(nick, buster)
+const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
 const LINES_COUNT = 10
