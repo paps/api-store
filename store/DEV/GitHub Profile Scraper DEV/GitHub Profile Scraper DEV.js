@@ -36,6 +36,7 @@ const scrapeUser = () => {
 	const accountCreationYear = document.querySelector("div.profile-timeline-year-list ul li:last-of-type")
 	const pinnedRepos = document.querySelectorAll("li.pinned-repo-item")
 	const commitsCount = document.querySelector("div.js-yearly-contributions h2")
+	const websiteSelector = document.querySelector("li[itemprop=\"url\"] a")
 
 	if (nameSelector) {
 		const nickname = document.querySelector("div.vcard-names-container span.vcard-username")
@@ -51,23 +52,24 @@ const scrapeUser = () => {
 	profile.pictureUrl = profilePicture ? profilePicture.src : null
 	profile.bio = bioSelector ? bioSelector.textContent.trim() : null
 	profile.worksFor = organization ? organization.textContent.trim() : null
-	profile.orgainizations = [ ...organizations ].map(el => el.href)
+	profile.organizations = [ ...organizations ].map(el => el.href)
 	profile.location = locationSelector ? locationSelector.textContent.trim() : null
 	profile.email = emailSelector ? emailSelector.textContent.trim() : null
+	profile.website = websiteSelector ? websiteSelector.href : null
 
 	if (emailSelector && emailSelector.querySelector("a")) {
 		const isPrivate = emailSelector.querySelector("a").href
 		profile.email = isPrivate.indexOf("/login?") > -1 ? null : profile.email
 	}
 
-	profile.createdYear = accountCreationYear ? accountCreationYear.textContent.trim() : null
+	profile.createdYear = accountCreationYear ? parseInt(accountCreationYear.textContent.trim(), 10) : null
 	profile.pinnedRepos = [ ...pinnedRepos ].map(el => el.querySelector("span.d-block a").href)
 
 	const infos = [...document.querySelectorAll("nav a.UnderlineNav-item span.Counter")]
 
 	for (const el of infos) {
 		const name = [...el.parentNode.childNodes].filter(content => content.nodeType === Node.TEXT_NODE).map(el => el.textContent.trim()).filter(el => el).pop().toLowerCase()
-		const data = el.textContent.trim()
+		const data = parseInt(el.textContent.trim(), 10)
 		profile[name] = data
 	}
 
@@ -83,6 +85,7 @@ const openProfile = async (page, url) => {
 
 	await page.waitForSelector("div.vcard-names-container", { timeout: 30000 })
 	const profile = await page.evaluate(scrapeUser)
+	profile.profileUrl = page.url()
 	return profile
 }
 
@@ -137,6 +140,11 @@ const scrapeHireStatus = async username => {
 	}
 
 	for (const query of queries) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		utils.log(`Opening ${query}...`, "loading")
 		const url = utils.isUrl(query) ? query : `https://www.github.com/${query}`
 		let res = null
