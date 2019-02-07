@@ -1,0 +1,118 @@
+{
+	"slug": "meetup-attendees-extractor",
+	"description": "Extract the Product Hunt profiles of every single upvoters of a list of Product",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Upvoter+Extractor/Product+Hunt+Upvoters+Extractor(1).png",
+	"argumentDescription": "",
+	"gradientBegin": "#DD6948",
+	"gradientEnd": "#DA552F",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://www.meetup.com/fr-FR/Deep-Learning-Paris-Meetup/",
+		"numberOfLinesPerLaunch": 10
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Meetup event URL or Spreadsheet URL<a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Meetup event URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"numberOfProfilesPerProduct": {
+						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "All of them if empty",
+						"inputType": "number"
+					},
+					"columnName": {
+						"label": "Column name where Meetup event URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (All of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
+						"inputType": "number"
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					},
+					"reprocessAll": {
+						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
+					},
+					"removeAllDuplicates": {
+						"rightLabel": "<b>Remove all duplicate profiles</b> (If scraping multiple products)"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"numberOfProfilesPerProduct": {
+				"type": "number",
+				"minimum": 1
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"reprocessAll": {
+				"type": "boolean"
+			},
+			"removeAllDuplicates": {
+				"type": "boolean"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"postUrls": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"postUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
