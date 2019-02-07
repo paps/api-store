@@ -52,11 +52,11 @@ or
 _// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
 ## 5. Input your Slack workspace's URL.
-The second argument is **"`Slack Workspace to use`"**. We need it to know which Slack users you want to target.
+The second argument is **"`Slack Workspace URL`"**. We need it to know which Slack users you want to target.
 This URL should look something like `yourcompany.slack.com`.
 
 ## 6. Input the channel(s) you want to extract users from.
-Finally, the third argument field is **"`Spreadsheet URL or a channel name`"**. Use it to specify which users your interested in either one: `#team` for instance. 
+Finally, the third argument field is **"`Spreadsheet URL or channel name`"**. Use it to specify which users your interested in either one: `#team` for instance. 
 If you want to scrape all users, use the `#general` channel (names might change depending on your target Slack).
 If you wish to scrape multiple channels, write those down in a Google Spreadsheet (one per row), in the first column. Make sure to make this spreadsheet public and paste the link in this field.
 

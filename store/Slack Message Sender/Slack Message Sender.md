@@ -11,7 +11,7 @@ In order to build that list of recipients, we recommend using our [Slack Channel
 # What will you need? ⚙️ 
 - Your **" Slack's Workspace URL"**: To find your Slack's workspace URL and cookie, you'll need to open it in your browser, not in app.
 - **"D Session Cookie"**: That's your authentification `d` session cookie. Note that on each workspace your cookie will be different.
-- **"Spreadsheet URL or a Slack User ID"**: The list of recipient ('s IDs) you want to send messages to.
+- **"Spreadsheet URL or a Slack User ID"**: The list of recipient ('s IDs) you want to send messages to. You can a list of users with our Slack User Extractor API or copy users ID by hand. In browser, they look like this: https://phantombuster.slack.com/messages/`DD9FK9A56`/.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -54,11 +54,11 @@ or
 _// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
 ## 5. Input your Slack workspace's URL.
-The second argument is **"`Slack Workspace to use`"**. We need it to know which Slack users you want to target.
+The second argument is **"`Slack Workspace URL`"**. We need it to know which Slack users you want to target.
 This URL should look something like `yourcompany.slack.com`.
 
 ## 6. Input the spreadsheet URL containing your recipient's IDs.
-The **"`Spreadsheet URL or a Slack User ID`"** can take either *one* single ID -which might be alright for a prank- or a list of recipient in the form of Slack users' IDs. For the latter, write down those IDs in a Google Spreadsheet, make the spreadsheet public and paste its URL here. 
+The **"`Spreadsheet URL or Slack User ID`"** can take either *one* single ID -which might be alright for a prank- or a list of recipient in the form of Slack users' IDs. For the latter, write down those IDs in a Google Spreadsheet, make the spreadsheet public and paste its URL here. 
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
