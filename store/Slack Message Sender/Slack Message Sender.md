@@ -2,16 +2,16 @@
 
 Slack is becoming more and more useful as a way to build communities. The fact that's it's semi-private and that people answer quickly since they often also use it within their companies is really powerful. 
 
-This Slack API lets you program a personalized message to the users of a specific list of users on a Slack workspace. This is great if you want to spread the word in a personalized way about some topic that's dear to you.
+Schedule and send customized messages to a list of your Slack workspace buddies. Really useful to spread the word in a personalized way about some topic that's dear to your heart.
 
 You'll be able to message all the users of your list, or only those online when the API launches. That way you'll be able to handle all the answers you'll get.
 
 In order to build that list of recipients, we recommend using our [Slack Channel Users Extractor](https://phantombuster.com/api-store/12190/slack-channel-user-extractor) tool. It'll neatly gather all users from a specific channel in a spreadsheet.
 
 # What will you need? ⚙️ 
-- Your **" Slack's Workspace URL"**: To find your Slack's workspace URL and cookie, you'll need to open it in your browser, not in app.
-- **"D Session Cookie"**: That's your authentification `d` session cookie. Note that on each workspace your cookie will be different.
-- **"Spreadsheet URL or a Slack User ID"**: The list of recipient ('s IDs) you want to send messages to. You can a list of users with our Slack User Extractor API or copy users ID by hand. In browser, they look like this: https://phantombuster.slack.com/messages/`DD9FK9A56`/.
+- Your **"Slack's Workspace URL"**: To find your Slack's workspace URL and cookie, you'll need to open it in your browser, not in app.
+- **"d Session Cookie"**: That's your authentication `d` session cookie. Note that on each workspace your cookie will be different.
+- **"Spreadsheet URL or a Slack User ID"**: The list of recipient's IDs you want to send messages to. You can a list of users with our Slack User Extractor API or copy users ID by hand. In browser, they look like this: https://mycompany.slack.com/messages/`DD9FK9A56`/.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -54,11 +54,11 @@ or
 _// How to access your cookies with <a href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/debugger/cookies" target="_blank">Edge</a>, <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
 ## 5. Input your Slack workspace's URL.
-The second argument is **"`Slack Workspace URL`"**. We need it to know which Slack users you want to target.
+The second argument is **"`Slack Workspace URL`"**. We need it to know which Slack workspaces you want to target.
 This URL should look something like `yourcompany.slack.com`.
 
 ## 6. Input the spreadsheet URL containing your recipient's IDs.
-The **"`Spreadsheet URL or Slack User ID`"** can take either *one* single ID -which might be alright for a prank- or a list of recipient in the form of Slack users' IDs. For the latter, write down those IDs in a Google Spreadsheet, make the spreadsheet public and paste its URL here. 
+The **"`Spreadsheet URL or Slack User ID`"** can take either *one* single ID – which might be alright for a prank – or a list of recipient in the form of Slack user ID's. For the latter, write down those IDs in a Google Spreadsheet, make the spreadsheet public and paste its URL the configuration form. 
 
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
