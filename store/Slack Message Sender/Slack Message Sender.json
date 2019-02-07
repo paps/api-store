@@ -12,7 +12,7 @@
 		"sessionCookie": "d_cookie",
 		"slackWorkspaceUrl": "slack_workspace_url",
 		"spreadsheetUrl": "USLACKBOT",
-		"message": "",
+		"message": "Hey #firstName#,\n\nI sent you this message thanks to an awesome Phantombuster API: https://phantombuster.com/api-store/12420/slack-message-sender!\n\nCan't wait to know more about you!\n\nBest regards",
 		"onlyActiveUsers": true
 	},
 	"defaultArgumentAllowed": false,
@@ -29,15 +29,14 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Slack <b>d</b> session cookie <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Slack d session cookie cookie"
+						"label": "Slack <i>d</i> session cookie <a target=\"_blank\" href=\"/api-store/12420/slack-message-sender#section_4getyourslacksessioncookie\">(?)</a>"
 					},
 					"slackWorkspaceUrl": {
-						"label": "Slack Workspace to use <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Slack Workspace URL <a target=\"_blank\" href=\"/api-store/12420/slack-message-sender#section_5inputyourslackworkspacesurl\">(?)</a>",
 						"inputType": "url"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Slack User ID <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet URL or a Slack User ID <a target=\"_blank\" href=\"/api-store/12420/slack-message-sender#section_6inputthespreadsheeturlcontainingyourrecipientsids\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Slack User ID"
 					},
 					"columnName": {
@@ -46,10 +45,8 @@
 						"placeholder": "IDs"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"label": "Number of lines to process per launch (all of them if empty)",
+						"inputType": "number"
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
@@ -68,6 +65,24 @@
 				}
 			}
 		}
+	},
+	"outputDescription": {
+		"id": "",
+		"firstName": "",
+		"lastName": "",
+		"fullName": "",
+		"pictureUrl": "",
+		"displayName": "",
+		"title": "",
+		"phone": "",
+		"email": "",
+		"skype": "",
+		"timezone": "",
+		"lastUpdate": "",
+		"query": "",
+		"channel": "",
+		"workspaceUrl": "",
+		"message": ""
 	},
 	"argumentSchema": {
 		"type": "object",
@@ -89,7 +104,6 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
-				"maximum": 10,
 				"default": 1
 			},
 			"csvName": {
