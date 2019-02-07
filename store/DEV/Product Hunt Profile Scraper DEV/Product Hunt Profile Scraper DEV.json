@@ -26,8 +26,8 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Product Hunt profile URL <a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+						"label": "Product Hunt profile URL or Spreadsheet URL<a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
+						"helper": "Enter either a Product Hunt profile URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
 						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
@@ -57,9 +57,7 @@
 			},
 			"numberOfLinesPerLaunch": {
 				"type": "number",
-				"minimum": 1,
-				"maximum": 10,
-				"default": 1
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string"

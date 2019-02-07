@@ -9,14 +9,13 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, IEvalAny } from "./lib-api-store"
+import { IUnknownObject, IEvalAny } from "./lib-api-store-DEV"
 
-import StoreUtilities from "./lib-StoreUtilities"
+import StoreUtilities from "./lib-StoreUtilities-DEV"
 
 const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
-const LINES_COUNT = 10
 // }
 
 const isProductHuntUrl = (url: string): boolean => {
@@ -216,7 +215,7 @@ const openProfile = async (page: puppeteer.Page, maxProfiles: number, query: str
 			}
 		}
 		utils.log(`Got ${result.length} profiles in total.`, "done")
-		await utils.saveResults(result, result, _csvName, null)
+		await utils.saveResults(currentResult, result, _csvName, null)
 	}
 
 	process.exit()

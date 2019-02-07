@@ -26,8 +26,8 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Product Hunt profile URL <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+						"label": "Product Hunt product URL or Spreadsheet URL<a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Product Hunt product URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"numberOfProfilesPerProduct": {
 						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
@@ -35,7 +35,7 @@
 						"inputType": "number"
 					},
 					"columnName": {
-						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
+						"label": "Column name where Product Hunt product URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
