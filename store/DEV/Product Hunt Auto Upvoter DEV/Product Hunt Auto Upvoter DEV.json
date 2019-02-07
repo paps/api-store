@@ -1,12 +1,12 @@
 {
 	"slug": "product-hunt-auto-upvoter",
-	"description": "",
-	"image": "",
+	"description": "Automatically upvote a list of Product Hunt products",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Auto+Upvote/Product+Hunt+Auto+Upvote.png",
 	"argumentDescription": "",
-	"gradientBegin": "#35C2DB",
-	"gradientEnd": "#35CDBF",
+	"gradientBegin": "#DD6948",
+	"gradientEnd": "#DA552F",
 	"hidden": true,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"sessionCookie": "_producthunt_session_production_cookie",

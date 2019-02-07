@@ -1,9 +1,9 @@
 # Extract the profiles of every single person who upvoted your Product Hunt product.
 
-Basically, this tool will extract Product Hunt profile URLs out of one or a list of Product Hunt Products'.
+Basically, this tool will extract Product Hunt profile URLs out of one or a list of Product Hunt products'.
 Once you have that list, you can use a tool such as Product Hunt Profile Scraper to get more data about those upvoters.
 
-That's super useful if you want to so some marketing action like retargeting them on Twitter for example or simply thanking them after your launch.
+That's super useful if you want pursue further marketing action like retargeting them on Twitter or simply thanking them after your launch.
 
 # What will you need? ⚙️ 
 - **"Product Hunt account or Spreadsheet URL"**: Choose a sepcific Product Hunt account like `https://www.producthunt.com/posts/product-hunt-4-0` or choose an **open** spreadsheet url with a list of Product Hunt products.
