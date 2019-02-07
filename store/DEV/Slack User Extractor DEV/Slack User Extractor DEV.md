@@ -2,7 +2,7 @@
 
 Slack is becoming more and more useful as a way to build communities. It's semi-private allows members to have interesting discussions. And since most of them often also use it within their companies, they answer pretty quickly.
 
-Our Slack API lets you extract every public info out of every user of a Slack channel. If you're in a small Slack, just go for the #general channel, otherwise, pick the one that gathers best your target audience.
+Our Slack API lets you extract every public info out of every users of a Slack channel. If you're in a small Slack, just go for the #general channel, otherwise, pick the one that gathers best your target audience.
 
 And yes, it does extract email addresses... if administrators let that data public.
 
