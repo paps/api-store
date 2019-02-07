@@ -2,7 +2,7 @@
 
 Recruiters, if you're specific about the skills you're looking for, stop LinkedIn, start reaching out to the right persons in the right place. 
 
-GitHub is not only a simple version control hosting service. It's also a social network where developers hang out. If you're specific about the technology you're looking for, visit its GitHub repository and extract the 1,000's latest people who starred that project. 
+GitHub is not only a simple version control hosting service. It's also a social network where developers hang out. If you're specific about the technology you're looking for, visit its GitHub repository and extract the 1,000s latest people who starred that project. 
 
 You'll get super targeted leads interested in that techno. Want to know those people better and even extract their emails? Use this API's result as an input to [GitHub Profile Scraper](https://phantombuster.com/api-store/11694/github-profile-scraper).
 
@@ -29,7 +29,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 
 ## 4. Specify the user(s) you're interested in.
-Either fill in one GitHub user, such as `https://github.com/torvalds` or fill in a Google spreadsheet with many profiles.
+Either fill in one GitHub user, such as `https://github.com/torvalds/linux` or fill in a Google spreadsheet with many profiles.
 If you chose the latter, don't forget to make it public!
 
 
