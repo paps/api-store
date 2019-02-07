@@ -27,16 +27,16 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Slack <b>d</b> session cookie <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_4getyourslacksessioncookie\">(?)</a>",
-						"helper": "Slack d session cookie"
+						"label": "Slack <i>d</i> session cookie <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_4getyourslacksessioncookie\">(?)</a>"
 					},
 					"slackWorkspaceUrl": {
-						"label": "Slack Workspace to use <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_5inputyourslackworkspacesurl\">(?)</a>",
+						"label": "Slack Workspace URL <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_5inputyourslackworkspacesurl\">(?)</a>",
 						"inputType": "url"
 					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL or a channel name <a target=\"_blank\" href=\"/api-store/12190/slack-channel-user-extractor#section_6inputthechannelsyouwanttoextractusersfrom\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Slack channel name"
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Slack channel name",
+						"placeholder": "#general"
 					},
 					"columnName": {
 						"label": "Column name where Slack channels are stored in the spreadsheet",
@@ -44,10 +44,9 @@
 						"placeholder": "channels"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will scrape 10 channels per launch",
-						"inputType": "number",
-						"placeholder": 10
+						"label": "Number of lines to process per launch (all if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will scrape all channels per launch",
+						"inputType": "number"
 					},
 					"csvName": {
 					   "label": "Name of resulting CSV file",
@@ -94,7 +93,6 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
-				"maximum": 10,
 				"default": 1
 			},
 			"csvName": {

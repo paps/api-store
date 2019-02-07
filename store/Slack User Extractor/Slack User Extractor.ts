@@ -15,7 +15,6 @@ const utils = new StoreUtilities(buster)
 const slack = new Slack(buster, utils)
 
 const DEFAULT_DB = "result"
-const DEFAULT_LAUNCH = 10
 // }
 
 ;
@@ -23,8 +22,8 @@ const DEFAULT_LAUNCH = 10
 	const res = [] as IUnknownObject[]
 	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
-	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName } = args
-	let { numberOfLinesPerLaunch, csvName, queries } = args
+	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch } = args
+	let { csvName, queries } = args
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
@@ -32,9 +31,9 @@ const DEFAULT_LAUNCH = 10
 		csvName = DEFAULT_DB
 	}
 
-	if (!numberOfLinesPerLaunch) {
-		numberOfLinesPerLaunch = DEFAULT_LAUNCH
-	}
+	// if (!numberOfLinesPerLaunch) {
+	// 	numberOfLinesPerLaunch = DEFAULT_LAUNCH
+	// }
 
 	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
 	db = await utils.getDb(csvName + ".csv")
@@ -48,7 +47,10 @@ const DEFAULT_LAUNCH = 10
 	}
 
 	if (Array.isArray(queries)) {
-		queries = (queries.filter((el) => db.findIndex((line) => line.query === el && line.workspaceUrl === slackWorkspaceUrl) < 0).slice(0, DEFAULT_LAUNCH))
+		queries = queries.filter((el) => db.findIndex((line) => line.query === el && line.workspaceUrl === slackWorkspaceUrl) < 0)
+		if (typeof numberOfLinesPerLaunch === "number") {
+			queries = (queries as IUnknownObject[]).slice(0, numberOfLinesPerLaunch)
+		}
 		if (isUnknownObject(queries)) {
 			const len = queries.length as number
 			if (len < 1) {
@@ -61,10 +63,14 @@ const DEFAULT_LAUNCH = 10
 	utils.log(`Scraping channels: ${JSON.stringify((queries as string[]).slice(0, 100), null, 2)}`, "done")
 	const channels = await slack.getChannelsMeta(page)
 	for (const query of queries as string[]) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
 		const _chan: string = query.startsWith("#") ? query.substring(1) : query
 		const channel = channels.find((el: IUnknownObject) => el.name === _chan)
 		if (!channel) {
-			const error = `The channel ${query} doesn't exists in ${slackWorkspaceUrl}`
+			const error = `The channel ${query} doesn't exist in ${slackWorkspaceUrl}`
 			utils.log(error, "warning")
 			res.push({ query, workspaceUrl: slackWorkspaceUrl, error, timestamp: (new Date()).toISOString() })
 			continue
@@ -79,9 +85,10 @@ const DEFAULT_LAUNCH = 10
 		utils.log(`${members.length} users scraped in ${query} channel`, "done")
 		res.push(...members)
 	}
+	db.push(...res)
 	await page.close()
 	await browser.close()
-	await utils.saveResults(res, res, csvName as string)
+	await utils.saveResults(res, db, csvName as string)
 	process.exit()
 })()
 .catch((err) => {
