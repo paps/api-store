@@ -201,7 +201,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 		profileArray = [ profileUrls ]
 	}
 
-	const result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
+	let result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 	followSuccessCount = result.filter((el) => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter((el) => el.unfollowAction === "Success").length
 	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
@@ -214,6 +214,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 			process.exit()
 		}
 		console.log(`Profiles to follow: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+		const currentResult = []
 		for (const query of profileArray) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -231,7 +232,7 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 				}
 				res.query = query
 				res.timestamp = (new Date()).toISOString()
-				result.push(res)
+				currentResult.push(res)
 				if (!unfollow) {
 					utils.log(`In total ${followSuccessCount} profile${followSuccessCount > 1 ? "s" : ""} followed.`, "done")
 				} else {
@@ -240,9 +241,10 @@ const openProfile = async (page: puppeteer.Page, url: string, unfollow: boolean)
 			} catch (err) {
 				const error = `Error while opening ${url}: ${err.message || err}`
 				utils.log(error, "warning")
-				result.push({ query, error, timestamp: (new Date()).toISOString() })
+				currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
 			}
 		}
+		result = result.concat(currentResult)
 		await utils.saveResults(result, result, _csvName, null)
 	}
 	process.exit()

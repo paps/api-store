@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js, lib-ProductHunt-DEV.js"
-"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -52,7 +51,6 @@ const alreadyVoted = () => {
 }
 
 const openProfile = async (page: puppeteer.Page, query: string, action: string) => {
-	console.log("action:", action)
 	const payload = { query, timestamp: (new Date()).toISOString() } as IUnknownObject
 	const response = await page.goto(query)
 	if (response && response.status() !== 200) {
@@ -78,16 +76,12 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 	await page.waitFor(2000)
 	const productName = await page.evaluate(getProductName)
 	const upvoteCount = await page.evaluate(getUpvoteCount)
-	console.log("upvoteCount", upvoteCount)
 	payload.productName = productName
 	payload.upvoteCount = upvoteCount
 	if (productName && upvoteCount) {
 		utils.log(`Product ${productName} has ${upvoteCount} upvotes.`, "info")
 	}
 	const hasAlreadyVoted = await page.evaluate(alreadyVoted) as boolean
-	await page.screenshot({ path: `${Date.now()}hasalready.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}hasalready.html`)
-	console.log("hasAlreadyVoted", hasAlreadyVoted)
 	if (action === "Upvote") {
 		if (hasAlreadyVoted) {
 			utils.log(`You already upvoted ${productName}!`, "warning")
@@ -113,7 +107,6 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 		return payload
 	}
 	payload.upvoteCount = newUpvoteCount
-	console.log("newUpvoteCount", newUpvoteCount)
 	utils.log(`Successfully ${action === "Upvote" ? "upvoted" : "remove vote from"} ${productName}.`, "done")
 	return payload
 }
@@ -143,7 +136,7 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 	} else if (typeof profileUrls === "string") {
 		profileArray = [ profileUrls ]
 	}
-	const result = await utils.getDb(_csvName + ".csv")
+	let result = await utils.getDb(_csvName + ".csv")
 	profileArray = profileArray.filter((el) => el)
 	if (!_reprocessAll) {
 		profileArray = profileArray.filter((el) => utils.checkDb(el, result, "query"))
@@ -156,6 +149,7 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 		process.exit()
 	}
 	console.log(`Posts to process: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+	const currentResult = []
 	for (const query of profileArray) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -166,16 +160,15 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 		let res = null
 		try {
 			res = await openProfile(page, query, _action)
-			result.push(res)
+			currentResult.push(res)
 		} catch (err) {
 			const error = `Error while opening ${query}: ${err.message || err}`
-			await page.screenshot({ path: `${Date.now()}scree.jpg`, type: "jpeg", quality: 50 })
-			await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}scree.html`)
 			utils.log(error, "warning")
-			result.push({ query, error, timestamp: (new Date()).toISOString() })
+			currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
 		}
 	}
-	await utils.saveResults(result, result, _csvName, null)
+	result = result.concat(currentResult)
+	await utils.saveResults(currentResult, result, _csvName, null)
 
 	process.exit()
 })()

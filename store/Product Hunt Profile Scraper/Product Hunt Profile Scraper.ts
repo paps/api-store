@@ -145,8 +145,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 		profileArray = [ profileUrls ]
 	}
 
-	const result = await utils.getDb(csvName + ".csv")
-
+	let result = await utils.getDb(_csvName + ".csv")
 	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
 	if (numberOfLines) {
 		profileArray = profileArray.slice(0, numberOfLines)
@@ -157,6 +156,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 			process.exit()
 		}
 		console.log(`Profiles to scrape: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+		const currentResult = []
 		for (const query of profileArray) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -171,22 +171,23 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 				if (res) {
 					if (!res.error) {
 						res.profileUrl = page.url()
-						utils.log(`${query} scraped`, "done")
+						utils.log(`${query} scraped.`, "done")
 					} else {
 						utils.log(`Profile ${query} doesn't exist!`, "warning")
 					}
 					res.query = query
 					res.timestamp = (new Date()).toISOString()
-					result.push(res)
+					currentResult.push(res)
 				}
 			} catch (err) {
 				const error = `Error while scraping ${url}: ${err.message || err}`
 				utils.log(error, "warning")
-				result.push({ query, error, timestamp: (new Date()).toISOString() })
+				currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
 			}
 		}
+		result = result.concat(currentResult)
 		utils.log(`Scraped ${result.length} profiles in total.`, "done")
-		await utils.saveResults(result, result, _csvName, null)
+		await utils.saveResults(currentResult, result, _csvName, null)
 	}
 	process.exit()
 })()

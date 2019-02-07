@@ -10,10 +10,8 @@ const buster = new Buster()
 
 const Puppeteer = require("puppeteer")
 
-const nick = { exit: (code = 0) => process.exit(code) }
-
 const StoreUtilities = require("./lib-StoreUtilities")
-const utils = new StoreUtilities(nick, buster)
+const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
 const LINES_COUNT = 10
@@ -107,11 +105,18 @@ const scrapePage = () => {
 
 const isListFinished = () => document.querySelector("div.pagination > *:last-child").classList.contains("disabled")
 
-const scrape = async page => {
+/**
+ *
+ * @param {Puppeteer.Page} page
+ * @param {number} [count]
+ * @return {Promise<{ rateLimitPage: null|string, stars: object[] }>}
+ */
+const scrape = async (page, count = Infinity) => {
 	const res = { rateLimitPage: null, stars : [] }
+	let scrapedCount = 0
 	let hasNext = false
 
-	while (!hasNext) {
+	while (!hasNext && scrapedCount < count) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -125,13 +130,15 @@ const scrape = async page => {
 		}
 		const tmp = await page.evaluate(scrapePage)
 		res.stars.push(...utils.filterRightOuter(res.stars, tmp))
+		scrapedCount = res.stars.length
 		utils.log(`${res.stars.length} stargazers scraped`, "info")
 		if (!hasNext) {
 			try {
 				await page.click("div.pagination > *:last-child")
 				await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
 			} catch (err) {
-				res.rateLimitPage = await page.url()
+				res.rateLimitPage = page.url()
+				res.scrapedCount = scrapedCount
 				break
 			}
 		}
@@ -141,9 +148,10 @@ const scrape = async page => {
 
 ;(async () => {
 	ao = await buster.getAgentObject()
+	let remainingCount = null
 	/* eslint-disable no-unused-vars */
 	let wasRateLimited = false
-	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, queries, csvName } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, numberOfLinesPerLaunch, stargazersPerRepo, queries, csvName } = utils.validateArguments()
 	let db = null
 	const stargazers = []
 	const Browser = await Puppeteer.launch({ args: [ "--no-sandbox" ] })
@@ -170,31 +178,48 @@ const scrape = async page => {
 	}
 
 	db = await utils.getDb(csvName + ".csv")
-	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0).slice(0, numberOfLinesPerLaunch)
+	queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+
+	if (typeof numberOfLinesPerLaunch === "number") {
+		queries = queries.slice(0, numberOfLinesPerLaunch)
+	}
+
 	if (ao.rateLimitPage) {
 		wasRateLimited = true
+		if (typeof stargazersPerRepo === "number") {
+			remainingCount = stargazersPerRepo - ao.scrapedCount
+		} else {
+			remainingCount = Infinity
+		}
 		utils.log(`Resuming Stargazers scraping at ${ao.rateLimitPage}`, "info")
 		queries.unshift(ao.rateLimitPage)
 	}
 	if (queries.length < 1) {
 		utils.log("Input is empty OR input is already scraped", "warning")
-		nick.exit()
+		process.exit()
 	}
 
 	for (const query of queries) {
 		let url = isStargazersUrl(query) ? query : updateUrl(query, "stargazers")
+		if (!utils.isUrl(url)) {
+			const err = `${query} doesn't represent a valid GitHub repository URL`
+			utils.log(err, "warning")
+			stargazers.push({ query, error: err, timestamp: (new Date()).toISOString() })
+			continue
+		}
 		utils.log(`Opening ${query} ...`, "loading")
 		const isOpen = await openRepo(Page, url)
 		if (!isOpen) {
 			stargazers.push({ error: `No access to ${query}`, timestamp: (new Date()).toISOString(), query })
 			continue
 		}
-		const res = await scrape(Page)
+		const res = await scrape(Page, ao.rateLimitPage ? remainingCount : stargazersPerRepo)
 		res.stars.forEach(el => el.query = query)
 		utils.log(`${res.stars.length} stargazers scraped for ${query}`, "done")
+		await Page.screenshot({ path: `scraping-${Date.now()}.png`, type: "png" })
 		if (res.rateLimitPage) {
 			utils.log(`Github rate limit reached at ${res.rateLimitPage}, next launch will continue the scraping `, "warning")
-			ao = { rateLimitPage: res.rateLimitPage }
+			ao = { rateLimitPage: res.rateLimitPage, scrapedCount: res.scrapedCount }
 			stargazers.push(...res.stars)
 			break
 		} else {
@@ -210,9 +235,9 @@ const scrape = async page => {
 		// ...
 	}
 	await utils.saveResults(stargazers, db, csvName, null)
-	nick.exit()
+	process.exit()
 })()
 .catch(err => {
 	utils.log(`API execution error: ${err.message || err}`, "error")
-	nick.exit(1)
+	process.exit(1)
 })

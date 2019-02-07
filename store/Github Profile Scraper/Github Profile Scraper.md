@@ -1,10 +1,10 @@
 # Scrape every public info out of a GitHub profile.
 
-GitHub profiles are a goldmine for recruiters and CTO's who know what they're looking for.
+GitHub profiles are a goldmine for recruiters and CTOs who know what they're looking for.
 
-Extract every publicly available info (name, follower count, often email addresses, etc.) of a GitHub Profile in order to know them better. 
+Extract every publicly available info (name, follower count, often email addresses, etc.) of a GitHub Profile in order to know them better.
 
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 
 - **Spreadsheet URL or a GitHub repository URL**: The URL of the GitHub profile you're interested in. Or the URL of a list of GitHub Profiles gathered in one Google Spreadsheet.
 

@@ -9,9 +9,9 @@
 	"new": false,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://github.com/julesmaregiano"
+		"spreadsheetUrl": "https://github.com/torvalds"
 	},
-	"defaultArgumentAllowed": false,
+	"defaultArgumentAllowed": true,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -25,17 +25,16 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Github profile URL <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Github profile URL"
+						"label": "Spreadsheet URL or a GitHub profile URL <a target=\"_blank\" href=\"/api-store/12016/github-profile-scraper#section_4specifytheusersyoureinterestedin\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a GitHub profile URL / username"
 					},
 					"columnName": {
-						"label": "Column name where Github profiles URLs are stored in the spreadhsheet",
+						"label": "Column name where GitHub profiles URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "ProfileUrl"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all if empty) <a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"label": "Number of lines to process per launch (all if empty)",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -43,11 +42,32 @@
 						"placeholder": "result"
 					},
 					"scrapeHireable": {
-						"rightLabel": "<b>Scrape Github profile hireable status</b>"
+						"rightLabel": "<b>Check if user status is set to hireable</b>"
 					}
 				}
 			}
 		}
+	},
+	"outputDescription": {
+		"username": "",
+		"fullname": "",
+		"yearlyCommits": "",
+		"pictureUrl": "",
+		"bio": "",
+		"worksFor": "",
+		"location": "",
+		"email": "",
+		"createdYear": "",
+		"pinnedRepos": "",
+		"repositories": "",
+		"stars": "",
+		"followers": "",
+		"following": "",
+		"query": "",
+		"website": "",
+		"profileUrl": "",
+		"timestamp": "",
+		"hireable": "optional"
 	},
 	"argumentSchema": {
 		"type": "object",

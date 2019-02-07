@@ -6,6 +6,7 @@
 		# Global libs DEV
 		# ---------------
 		'lib-api-store-DEV.js': 'libs/DEV/lib-api-store-DEV.js'
+		'lib-Dropcontact-DEV.js': 'libs/DEV/lib-Dropcontact-DEV.js'
 		'lib-Facebook-DEV.js': 'libs/DEV/lib-Facebook-DEV.js'
 		'lib-Google-DEV.js': 'libs/DEV/lib-Google-DEV.js'
 		'lib-GitHub-DEV.js': 'libs/DEV/lib-Github-DEV.js'

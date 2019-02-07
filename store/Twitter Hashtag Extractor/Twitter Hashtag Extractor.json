@@ -37,7 +37,7 @@
 						"placeholder": "#marketing #automation"
 					},
 					"columnName": {
-						"label": "Name of the column containing those hashtags (if your input is a spreadhsheet)",
+						"label": "Name of the column containing those hashtags (if your input is a spreadsheet)",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "Hashtag"
 					},

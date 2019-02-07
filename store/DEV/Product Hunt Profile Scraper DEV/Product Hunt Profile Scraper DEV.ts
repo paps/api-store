@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js"
-"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -17,7 +16,6 @@ import StoreUtilities from "./lib-StoreUtilities-DEV"
 const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
-const LINES_COUNT = 10
 // }
 
 const isProductHuntUrl = (url: string) => {
@@ -94,7 +92,10 @@ const scrapeProfile = (): IEvalAny => {
 	}
 	const followedTopicsSelector = document.querySelector("a[href*=\"/topics\"]")
 	if (followedTopicsSelector && followedTopicsSelector.textContent) {
-		profile.followedTopicCount = parseInt(followedTopicsSelector.textContent.replace(/\D+/g, ""), 10)
+		const followedTopicCount = parseInt(followedTopicsSelector.textContent.replace(/\D+/g, ""), 10)
+		if (!isNaN(followedTopicCount)) {
+			profile.followedTopicCount = followedTopicCount
+		}
 	}
 	const collectionSelector = document.querySelector("a[href*=\"/collections\"]")
 	if (collectionSelector && collectionSelector.textContent) {
@@ -113,10 +114,12 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	if (response && response.status() !== 200) {
 		throw new Error(`${url} responded with HTTP code ${response.status()}`)
 	}
-	const profileData = await page.evaluate(scrapeProfile)
-	await page.screenshot({ path: `${Date.now()}profile.jpg`, type: "jpeg", quality: 50 })
+	if (page.url() !== "https://www.producthunt.com/") {
+		return page.evaluate(scrapeProfile)
+	} else {
+		return { error: "Profile doesn't exist" }
+	}
 
-	return profileData
 }
 
 (async () => {
@@ -127,14 +130,9 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
-
-	let numberOfLines = numberOfLinesPerLaunch as number
+	const numberOfLines = numberOfLinesPerLaunch as number
 	if (!_csvName) {
 		_csvName = DB_NAME
-	}
-
-	if (typeof numberOfLinesPerLaunch !== "number") {
-		numberOfLines = LINES_COUNT
 	}
 
 	if (inputUrl) {
@@ -147,10 +145,9 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 		profileArray = [ profileUrls ]
 	}
 
-	const result = await utils.getDb(csvName + ".csv")
-
+	let result = await utils.getDb(_csvName + ".csv")
 	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
-	if (typeof numberOfLines === "number") {
+	if (numberOfLines) {
 		profileArray = profileArray.slice(0, numberOfLines)
 	}
 	if (Array.isArray(profileArray)) {
@@ -159,6 +156,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 			process.exit()
 		}
 		console.log(`Profiles to scrape: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+		const currentResult = []
 		for (const query of profileArray) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -171,20 +169,25 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 			try {
 				res = await openProfile(page, url) as ReturnType <typeof scrapeProfile>
 				if (res) {
-					res.profileUrl = page.url()
+					if (!res.error) {
+						res.profileUrl = page.url()
+						utils.log(`${query} scraped.`, "done")
+					} else {
+						utils.log(`Profile ${query} doesn't exist!`, "warning")
+					}
 					res.query = query
 					res.timestamp = (new Date()).toISOString()
-					utils.log(`${query} scraped`, "done")
-					result.push(res)
+					currentResult.push(res)
 				}
 			} catch (err) {
 				const error = `Error while scraping ${url}: ${err.message || err}`
 				utils.log(error, "warning")
-				result.push({ query, error, timestamp: (new Date()).toISOString() })
+				currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
 			}
 		}
+		result = result.concat(currentResult)
 		utils.log(`Scraped ${result.length} profiles in total.`, "done")
-		await utils.saveResults(result, result, _csvName, null)
+		await utils.saveResults(currentResult, result, _csvName, null)
 	}
 	process.exit()
 })()
