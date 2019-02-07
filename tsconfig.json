@@ -58,6 +58,7 @@
 			"store/DEV/Product Hunt Auto Upvoter DEV",
 			"store/DEV/Product Hunt Profile Scraper DEV",
 			"store/DEV/Product Hunt Upvoter Extractor DEV",
+			"store/DEV/GitHub Profile Scraper DEV",
 		],
 
 		// "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
