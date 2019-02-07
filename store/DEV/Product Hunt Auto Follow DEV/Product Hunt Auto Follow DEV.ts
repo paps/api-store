@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store-DEV-DEV.js, lib-StoreUtilities-DEV.js, lib-ProductHunt-DEV.js"
+"phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js, lib-ProductHunt-DEV.js"
 
 const { URL } = require("url")
 

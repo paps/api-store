@@ -1,9 +1,6 @@
-# Extract the profiles of every single person who upvoted your Product Hunt product.
+# Automatically upvote a list of Product Hunt products.
 
-Basically, this tool will extract Product Hunt profiles' URLs out of one or a list of Product Hunt Products.
-Once you have that list, you can use a tool such as Product Hunt Profile Scraper to get more data about those upvoters.
-
-That's super useful if you want to so some marketing action like retargeting them on Twitter for example or simply thanking them after your launch.
+Do yo want to support multiple products at once? Use our auto upvoter to automatically browse through each page and give them all your vote.
 
 # What will you need? ⚙️ 
 - **"Product Hunt account or Spreadsheet URL"**: Choose a sepcific Product Hunt account like `https://www.producthunt.com/posts/product-hunt-4-0` or choose an **open** spreadsheet url with a list of Product Hunt products.
@@ -12,7 +9,7 @@ That's super useful if you want to so some marketing action like retargeting the
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
-
+ 
 ## 2. Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
 
@@ -23,9 +20,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-## 4. Aim a specific Product Hunt account or several at a time
-In the 1st argument field **"`Product Hunt account or Spreadsheet URL`"** you have the choice to use this API for 1 Product Hunt account at a time or several in one go.
-* One at a time: Just fill the form with a Product Hunt username, example: `https://www.producthunt.com/posts/product-hunt-4-0`
+## 4. Aim a specific Product Hunt product or several at a time
+In the 1st argument field **"`Product Hunt product or Spreadsheet URL`"** you have the choice to use this API for one single Product Hunt product or several at a time.
+
+* One at a time: Just fill the form with a Product Hunt product URL. For example: `https://www.producthunt.com/posts/product-hunt-4-0`
 
 * Several at a time: Paste the URL of a spreadsheet filled with Product Hunt products and/or Product Hunt products' URLs **on column A**
 # ⚙️️Repetition setup ⚙️ { repetition_setup }

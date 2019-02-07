@@ -1,20 +1,18 @@
 {
-	"slug": "product-hunt-auto-upvoter",
-	"description": "Automatically upvote a list of Product Hunt products",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Auto+Upvote/Product+Hunt+Auto+Upvote.png",
+	"slug": "meetup-attendees-extractor",
+	"description": "Extract the Product Hunt profiles of every single upvoters of a list of Product",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Upvoter+Extractor/Product+Hunt+Upvoters+Extractor(1).png",
 	"argumentDescription": "",
 	"gradientBegin": "#DD6948",
 	"gradientEnd": "#DA552F",
 	"hidden": true,
-	"new": false,
+	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "_producthunt_session_production_cookie",
-		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
-		"numberOfLinesPerLaunch": 10,
-		"action": "Upvote"
+		"spreadsheetUrl": "https://www.meetup.com/fr-FR/Deep-Learning-Paris-Meetup/",
+		"numberOfLinesPerLaunch": 10
 	},
-	"defaultArgumentAllowed": false,
+	"defaultArgumentAllowed": true,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
@@ -27,27 +25,23 @@
 			},
 			"options": {
 				"fields": {
-					"sessionCookie": {
-						"label": "Product Hunt session cookie <a href=\"/api-store/12132/product-hunt-auto-upvoter#section_argument\" target=\"_blank\">(?)</a>",
-						"placeholder": "Paste your '_producthunt_session_production' session cookie here"
-					},
 					"spreadsheetUrl": {
-						"label": "Product Hunt profile URL or a Spreadsheet URL<a target=\"_blank\" href=\"\">(?)</a>",
-						"helper": "Enter either a Product Hunt profile URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+						"label": "Meetup event URL or Spreadsheet URL<a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Meetup event URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"numberOfProfilesPerProduct": {
+						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "All of them if empty",
+						"inputType": "number"
 					},
 					"columnName": {
-						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
+						"label": "Column name where Meetup event URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (All of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
 						"inputType": "number"
-					},
-					"action": {
-						"label": "Vote action",
-						"removeDefaultNone": true,
-						"sort": false
 					},
 					"csvName": {
 					   "label": "Name of resulting CSV file",
@@ -55,6 +49,9 @@
 					},
 					"reprocessAll": {
 						"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
+					},
+					"removeAllDuplicates": {
+						"rightLabel": "<b>Remove all duplicate profiles</b> (If scraping multiple products)"
 					}
 				}
 			}
@@ -63,17 +60,12 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"sessionCookie": {
-				"type": "string",
-				"required": true,
-				"minLength": 15
-			},
 			"spreadsheetUrl": {
 				"type": "string"
 			},
-			"action": {
-				"enum": ["Upvote", "Remove vote"],
-				"default": "Upvote"
+			"numberOfProfilesPerProduct": {
+				"type": "number",
+				"minimum": 1
 			},
 			"columnName": {
 				"type": "string"
@@ -89,6 +81,9 @@
 			},
 			"reprocessAll": {
 				"type": "boolean"
+			},
+			"removeAllDuplicates": {
+				"type": "boolean"
 			}
 		},
 		"oneOf": [
@@ -99,7 +94,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"postUrls": {
 						"required": true,
 						"type": "array",
 						"items": {
@@ -111,7 +106,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"postUrls": {
 						"required": true,
 						"type": "string",
 						"minLength": 1
