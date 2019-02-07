@@ -1,7 +1,7 @@
 {
 	"slug": "product-hunt-auto-follow",
-	"description": "",
-	"image": "",
+	"description": "Automatically follow a list of Product Hunt makers in one click",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Auto+Follow/Product+Hunt+Auto+Follow.png",
 	"argumentDescription": "",
 	"gradientBegin": "#DD6948",
 	"gradientEnd": "#DA552F",

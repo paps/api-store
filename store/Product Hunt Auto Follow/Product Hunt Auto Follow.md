@@ -1,12 +1,11 @@
-# Retrieve every public info out of a list of Product Hunt Profiles
+# Automatically follow a list of Product Hunt members
 
-Basically, this tool will extract **every piece of public info** out of a list of Product Hunt Profiles: 
-From their names to their Twitter handles often, follower counts, upvotes counts and more.
+Following other makers on Product Hunt generates a notification letting them know you're interested in their work. Often people will follow you back or at least check your work.
 
-Super useful if you want to use that data for further marketing action or simply thanking at scale a list of people who upvoted your Product afterward.
+Product Hunt will also send them an email on launch day, increasing your chances of getting noticed on Launch day.
 
 # What will you need? ⚙️
-- **"Product Hunt account or Spreadsheet URL"**: Choose a sepcific Product Hunt account like `https://www.producthunt.com/@jack` or choose an **open** spreadsheet url with a list of Product Hunt profiles.
+- **"Product Hunt account or Spreadsheet URL"**: Choose a specific Product Hunt account like `https://www.producthunt.com/@jack` or choose an **open** spreadsheet url with a list of Product Hunt profiles.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -24,10 +23,11 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 ## 4. Aim a specific Product Hunt account or several at a time
-In the 1st argument field **"`Product Hunt account or Spreadsheet URL`"** you have the choice to use this API for 1 Product Hunt account at a time or several in one go.
+In the 1st argument field **"`Product Hunt account or Spreadsheet URL`"** you have the choice to use this API for a single Product Hunt account or several at a time.
+
 * One at a time: Just fill the form with a Product Hunt username, example: `https://www.producthunt.com/@jack`
 
-* Several at a time: Paste the URL of a spreadsheet filled with Product Hunt username and/or Product Hunt accounts URLs **on column A**
+* Several: Paste the URL of a spreadsheet filled with Product Hunt username and/or Product Hunt accounts URLs **on column A**
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 Now that your API is ready, you can launch manually the API. If you happen to have a lot of profiles to scrape, you might want to do it over multiple launches.

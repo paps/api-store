@@ -3,7 +3,7 @@
 Do yo want to support multiple products at once? Use our auto upvoter to automatically browse through each page and give them all your vote.
 
 # What will you need? ⚙️ 
-- **"Product Hunt account or Spreadsheet URL"**: Choose a sepcific Product Hunt account like `https://www.producthunt.com/posts/product-hunt-4-0` or choose an **open** spreadsheet url with a list of Product Hunt products.
+- **"Product Hunt account or Spreadsheet URL"**: Choose a specific Product Hunt account like `https://www.producthunt.com/posts/product-hunt-4-0` or choose an **open** spreadsheet url with a list of Product Hunt products.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
