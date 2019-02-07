@@ -59,6 +59,7 @@
 			"store/DEV/Product Hunt Profile Scraper DEV",
 			"store/DEV/Product Hunt Upvoter Extractor DEV",
 			"store/DEV/GitHub Profile Scraper DEV",
+			"store/DEV/GitHub Stargazers Extractor DEV",
 			"store/DEV/Instagram Posts Extractor DEV",
 			"store/DEV/Meetup Attendeees Extractor DEV",
 		],

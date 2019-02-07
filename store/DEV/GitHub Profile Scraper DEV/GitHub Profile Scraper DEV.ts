@@ -7,7 +7,7 @@ import { URL } from "url"
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities"
-import { IUnknownObject } from "lib-api-store"
+import { IUnknownObject } from "./lib-api-store"
 
 const buster: Buster = new Buster()
 const utils: StoreUtilities = new StoreUtilities(buster)
@@ -92,7 +92,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	}
 
 	await page.waitForSelector("div.vcard-names-container", { timeout: 30000 })
-	const profile: IUnknownObject = await page.evaluate(scrapeUser)
+	const profile: IUnknownObject = await page.evaluate(scrapeUser) as IUnknownObject
 	profile.profileUrl = page.url()
 	return profile
 }
@@ -128,8 +128,8 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	}
 
 	if (spreadsheetUrl) {
-		if (utils.isUrl(spreadsheetUrl)) {
-			queries = isGithubUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		if (utils.isUrl(spreadsheetUrl as string)) {
+			queries = isGithubUrl(spreadsheetUrl as string) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl  as string, columnName as string)
 		} else {
 			queries = [ spreadsheetUrl ]
 		}
@@ -140,18 +140,18 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	}
 
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	queries = queries.filter((el: IUnknownObject) => db.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	queries = (queries as string[]).filter((el: string) => db.findIndex((line: IUnknownObject) => line.query === el) < 0)
 
 	if (typeof numberOfLinesPerLaunch === "number") {
-		queries = queries.slice(0, numberOfLinesPerLaunch)
+		queries = (queries as IUnknownObject[]).slice(0, numberOfLinesPerLaunch)
 	}
 
-	if (queries.length < 1) {
+	if ((queries as string[]).length < 1) {
 		utils.log("Input is empty OR every profiles are already scraped", "warning")
 		process.exit()
 	}
 
-	for (const query of queries) {
+	for (const query of queries as string[]) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -181,7 +181,7 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, profiles))
-	await utils.saveResults(profiles, db, csvName, null)
+	await utils.saveResults(profiles, db, csvName as string, null)
 	process.exit()
 })()
 .catch((err) => {
