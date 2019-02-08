@@ -29,7 +29,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie"
+						"label": "Session cookie <a href=\"/api-store/8236/linkedin-chat-extractor#section_argument\" target=\"_blank\">(?)</a>"
 					},
 					"spreadsheetUrl": {
 						"label": "Spreadsheet URL of LinkedIn Profiles",
