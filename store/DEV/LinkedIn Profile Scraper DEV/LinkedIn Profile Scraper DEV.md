@@ -20,6 +20,7 @@ _More infos about_ <span style="color:red"> >> [LinkedIn Commercial Use Limit](h
 
 - **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn profile URLs in it.
+- **Save the profile picture/screenshot**: If you want to download the profile picture or take a screenshot of the page. Note that you won't be able to download all the files as a zip if you have more than 1000 files.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 

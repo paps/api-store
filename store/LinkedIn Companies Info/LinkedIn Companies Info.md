@@ -8,6 +8,7 @@ Gather company LinkedIn page URLs or Linkedin company IDs and fill a Google Spre
 For this API you will just need two arguments:
 - **Session Cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: Link to a Google Spreadsheet containing LinkedIn company IDs, LinkedIn company URLs or company names (can be a mix of those).
+- **Save the company logo as a jpeg**: If you want to download the company logo. Note that you won't be able to download all the files as a zip if you have more than 1000 files.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
