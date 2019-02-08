@@ -57,19 +57,8 @@ const cleanUpEmojis = bundle => {
 	}
 }
 
-// // Check if a url is already in the csv
-// const checkDb = (str, db) => {
-// 	for (const line of db) {
-// 		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-// 		if (str === line.baseUrl || str.match(regex)) {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
 const getInviteesUrls = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
+	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => {
 		if (el.querySelector("a[data-control-name=profile]")) {
 			let url = el.querySelector("a[data-control-name=profile]").href
 			if (url.endsWith("/")) {
@@ -88,8 +77,8 @@ const getInviteesUrls = (arg, cb) => {
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
 const validateInvitations = async (invitations, sentCount) => {
-	invitations.forEach(el => { 
-		if (el.profileUrl.endsWith("/")) { 
+	invitations.forEach(el => {
+		if (el.profileUrl.endsWith("/")) {
 			el.profileUrl = el.profileUrl.slice(0, -1)
 		}
 	})
@@ -110,39 +99,6 @@ const validateInvitations = async (invitations, sentCount) => {
 	}
 	await withdrawTab.close()
 	return matches
-}
-
-// Get the first name of someone from their linkedIn profile
-const getFirstName = (arg, callback) => {
-	let name = ""
-	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-	} else if (document.querySelector("div.presence-entity__image")) {
-		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-	}
-	if (!name.length) {
-		callback(null, "")
-	} else {
-		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-		let i = true
-		while (i) {
-			if (name.length > 0) {
-				name = name.split(" ")
-				name.pop()
-				name = name.join(" ")
-				if (hasAccount.indexOf(name) >= 0) {
-					i = false
-				}
-			} else {
-				i = false
-			}
-		}
-		if (name.length > 0) {
-			callback(null, name)
-		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
-		}
-	}
 }
 
 /**
@@ -356,25 +312,21 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	invitation.profileUrl = browserUrl
 
 	if (message && !invitation.firstName) {
-		let firstName = await tab.evaluate(getFirstName)
-		if (!firstName) {
-			try {
-				const name = await tab.evaluate((arg, cb) => {
-					let name = ""
-					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-					} else if (document.querySelector("div.presence-entity__image")) {
-						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-					}
-					cb(null, name)
-				})
-				const nameArray = name.split(" ")
-				firstName = nameArray.shift()
-			} catch (err) {
-				//
-			}
+		try {
+			const name = await tab.evaluate((arg, cb) => {
+				let name = ""
+				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+				} else if (document.querySelector("div.presence-entity__image")) {
+					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+				}
+				cb(null, name)
+			})
+			const nameArray = name.split(" ")
+			invitation.firstName = nameArray.shift()
+		} catch (err) {
+			//
 		}
-		invitation.firstName = firstName
 	}
 	cleanUpEmojis(invitation)
 	if (message) {

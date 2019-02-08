@@ -115,39 +115,6 @@ const validateInvitations = async (invitations, sentCount) => {
 	return matches
 }
 
-// Get the first name of someone from their linkedIn profile
-const getFirstName = (arg, callback) => {
-	let name = ""
-	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-	} else if (document.querySelector("div.presence-entity__image")) {
-		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-	}
-	if (!name.length) {
-		callback(null, "")
-	} else {
-		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-		let i = true
-		while (i) {
-			if (name.length > 0) {
-				name = name.split(" ")
-				name.pop()
-				name = name.join(" ")
-				if (hasAccount.indexOf(name) >= 0) {
-					i = false
-				}
-			} else {
-				i = false
-			}
-		}
-		if (name.length > 0) {
-			callback(null, name)
-		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
-		}
-	}
-}
-
 /**
  * @async
  * @description Send message & connection to a profile
@@ -377,27 +344,21 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	await buster.saveText(await tab.getContent(), `${Date.now()}invitation.html`)
 	console.log("invitation", invitation)
 	if (message && !invitation.firstName) {
-		console.log("no first name")
-		let firstName = await tab.evaluate(getFirstName)
-		if (!firstName) {
-			try {
-				const name = await tab.evaluate((arg, cb) => {
-					let name = ""
-					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-					} else if (document.querySelector("div.presence-entity__image")) {
-						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-					}
-					cb(null, name)
-				})
-				const nameArray = name.split(" ")
-				firstName = nameArray.shift()
-			} catch (err) {
-				//
-			}
+		try {
+			const name = await tab.evaluate((arg, cb) => {
+				let name = ""
+				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+				} else if (document.querySelector("div.presence-entity__image")) {
+					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+				}
+				cb(null, name)
+			})
+			const nameArray = name.split(" ")
+			invitation.firstName = nameArray.shift()
+		} catch (err) {
+			//
 		}
-		console.log("firstName found", firstName)
-		invitation.firstName = firstName
 	}
 	cleanUpEmojis(invitation)
 	if (message) {
