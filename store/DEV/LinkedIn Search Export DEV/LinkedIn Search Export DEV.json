@@ -77,6 +77,11 @@
 						"label": "Number of lines to process per launch (if using a spreadsheet)",
 						"inputType": "number"
 					},
+					"columnName": {
+						"label": "Column name from which to get company names <a href=\"/api-store/4372/linkedin-company-url-finder#section_5columnname\" target=\"_blank\">(?)</a>",
+						"placeholder": "Company",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -131,6 +136,9 @@
 			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"minimum": 1
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"csvName": {
 				"type": "string",

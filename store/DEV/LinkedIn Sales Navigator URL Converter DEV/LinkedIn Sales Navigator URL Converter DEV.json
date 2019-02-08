@@ -27,10 +27,10 @@
 					},
 					"spreadsheetUrl": {
 						"helpers": [
-							"Enter either a Google Spreadsheet URL <b>OR</b> a CSV URL <b>OR</b> a LinkedIn Sales Navigator Profile URL",
+							"Enter either a LinkedIn Sales Navigator Profile URL, a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Spreadsheet URL / Sales Navigator URL<a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Sales Navigator URL / Spreadsheet URL <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
