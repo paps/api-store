@@ -28,6 +28,18 @@ const isProductHuntUrl = (url: string) => {
 
 const scrapeProfile = (): IEvalAny => {
 	const profile = {} as IUnknownObject
+	const imgSelector = document.querySelector("header img")
+	let imgUrl
+	if (imgSelector) {
+		profile.name = imgSelector.getAttribute("alt")
+		const imgUrlSrc = imgSelector.getAttribute("src")
+		const imgObject = new URL(imgUrlSrc)
+		imgUrl = imgObject.hostname + imgObject.pathname
+	}
+	const descriptionSelector = document.querySelector("header p")
+	if (descriptionSelector) {
+		profile.description = descriptionSelector.textContent
+	}
 	const twitterSelector = document.querySelector("a[data-test=\"user-twitter\"]")
 	if (twitterSelector) {
 		profile.twitterUrl = twitterSelector.getAttribute("href")
@@ -35,13 +47,6 @@ const scrapeProfile = (): IEvalAny => {
 	const websiteSelector = document.querySelector("a[data-test=\"user-website\"]")
 	if (websiteSelector) {
 		profile.websiteUrl = websiteSelector.getAttribute("href")
-	}
-	const imgSelector = document.querySelector("header img")
-	if (imgSelector) {
-		const imgUrl = imgSelector.getAttribute("src")
-		const imgObject = new URL(imgUrl)
-		profile.imgUrl = imgObject.hostname + imgObject.pathname
-		profile.name = imgSelector.getAttribute("alt")
 	}
 	const userIDSelector = document.querySelector("header h1")
 	if (userIDSelector) {
@@ -66,10 +71,6 @@ const scrapeProfile = (): IEvalAny => {
 			el.parentElement.removeChild(el)
 		}
 	})
-	const descriptionSelector = document.querySelector("header p")
-	if (descriptionSelector) {
-		profile.description = descriptionSelector.textContent
-	}
 	const upvoteSelector = document.querySelector("ol > li > a")
 	if (upvoteSelector && upvoteSelector.textContent) {
 		profile.upvoteCount = parseInt(upvoteSelector.textContent.replace(/\D+/g, ""), 10)
@@ -104,6 +105,9 @@ const scrapeProfile = (): IEvalAny => {
 	const followedCcollectionSelector = document.querySelector("a[href*=\"/followed_collections\"]")
 	if (followedCcollectionSelector && followedCcollectionSelector.textContent) {
 		profile.followedCollectionCount = parseInt(followedCcollectionSelector.textContent.replace(/\D+/g, ""), 10)
+	}
+	if (imgUrl) {
+		profile.imgUrl = imgUrl
 	}
 	return profile
 }

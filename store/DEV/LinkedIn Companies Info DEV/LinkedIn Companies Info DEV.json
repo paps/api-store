@@ -45,11 +45,8 @@
 					},
 					"spreadsheetUrl": {
 						"type": "url",
-						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
-							"We'll use the first column of your file (column A)"
-						],
-						"label": "Spreadsheet URL of companies to scrape <a href=\"/api-store/3296/linkedin-companies-info#section_spreadsheet\" target=\"_blank\">(?)</a>"
+						"helper": "Enter either a LinkedIn Company URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)",
+						"label": "Company URL or Spreadsheet URL of companies to scrape <a href=\"/api-store/3296/linkedin-companies-info#section_spreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name where LinkedIn companies URLs are stored in the spreadsheet",
