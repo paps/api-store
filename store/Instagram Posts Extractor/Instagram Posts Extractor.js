@@ -24,7 +24,6 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
-let gotAllPosts
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -103,26 +102,30 @@ const getPosts = async (tab, profileUrl, query) => {
 }
 
 const extractPostData = (post, profileUrl, query) => {
-	const postData = { timestamp: (new Date()).toISOString(), query, profileUrl }
+	const postData = {}
 	postData.postUrl = `https://www.instagram.com/p/${post.shortcode}/`
-	postData.commentCount = post.edge_media_to_comment.count
 	if (post.edge_media_to_caption.edges[0]) {
 		postData.description = post.edge_media_to_caption.edges[0].node.text
 	}
+	postData.commentCount = post.edge_media_to_comment.count
 	if (post.edge_liked_by) {
 		postData.likeCount = post.edge_liked_by.count
 	} else if (post.edge_media_preview_like) {
 		postData.likeCount = post.edge_media_preview_like.count
 	}
-
-	postData.id = post.id
 	if (post.location) {
-		postData.locationId = post.location.id
 		postData.location = post.location.name
+		postData.locationId = post.location.id
+	}
+	postData.pubDate = new Date(post.taken_at_timestamp * 1000).toISOString()
+	if (post.accessibility_caption) {
+		postData.caption = post.accessibility_caption
 	}
 	postData.imgUrl = post.display_url
-	postData.pubDate = new Date(post.taken_at_timestamp * 1000).toISOString()
-	postData.caption = post.accessibility_caption
+	postData.id = post.id
+	postData.profileUrl = profileUrl
+	postData.timestamp = (new Date()).toISOString()
+	postData.query = query
 	return postData
 }
 
@@ -199,7 +202,6 @@ const getFirstPosts = async (profileUrl, query) => {
 	let pageCount = 0
 	let tempResult = []
 	for (const query of profileUrls) {
-		gotAllPosts = false
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")

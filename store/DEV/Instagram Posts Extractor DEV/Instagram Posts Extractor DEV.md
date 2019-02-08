@@ -1,10 +1,6 @@
-# Extract info from Instagram profiles
+# Extract posts from Instagram profiles
 
-You have a list of Instagram profiles and need to quickly extract information from them? Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific Instagram profiles you're targeting in a CSV file.
-
-# Our Solution
-
-Launch an automated agent that will connect as yourself on Instagram. It will then browse and collect data from the designated profiles.
+Get all posts from Instagram profiles! Get data from their posts, like their comment and like counts, description, location...
 
 
 # What will you need? ⚙️ 
@@ -69,17 +65,14 @@ You can specify the name of the column that contains the profile links. Simply e
 You can also enter a single Instagram profile URL directly in the field.
 
 
-
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-This will launch the bot and, if you didn't already change the spreadsheet URL, will collect the information of the Phantombuster team.
-
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to scrape per launch, or leave that field blank to scrape every profile from your list.
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to extract posts from per launch, or leave that field blank to scrape every profile from your list.
 
 
 To do so, simply hit the “Settings” button to define when your API is launched:
@@ -91,5 +84,3 @@ Then, select a frequency:
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
-
-For example, 100 profiles scraped per launch, 8 launches per day: you'll have a total of 800 profiles per day. We recommend not exceeding these values with this API as it takes some time to scrape this many profiles.

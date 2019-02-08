@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-posts-extractor",
-	"description": "Extract all posts from an Instagram profile",
+	"description": "Extract all posts from Instagram profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": true,
 	"new": true,
