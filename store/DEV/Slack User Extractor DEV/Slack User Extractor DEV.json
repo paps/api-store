@@ -48,9 +48,13 @@
 						"helper": "If using a spreadsheet. By default the API will scrape all channels per launch",
 						"inputType": "number"
 					},
+					"maxUsersPerChan": {
+						"label": "Number of users to scrape per channel (all if empty)",
+						"inputType": "number"
+					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -71,7 +75,8 @@
 		"lastUpdate": "",
 		"query": "",
 		"channel": "",
-		"workspaceUrl": ""
+		"workspaceUrl": "",
+		"admin": ""
 	},
 	"argumentSchema": {
 		"type": "object",
@@ -94,6 +99,10 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 1
+			},
+			"maxUsersPerChan": {
+				"type": "number",
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string"

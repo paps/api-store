@@ -3,8 +3,6 @@ import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
 import Buster from "phantombuster"
 import * as Puppeteer from "puppeteer"
 
-const delay = (time = 1000) => new Promise((resolve) => setTimeout(resolve, time))
-
 class Slack {
 	private buster: Buster
 	private utils: StoreUtilities
@@ -101,7 +99,16 @@ class Slack {
 		return channels
 	}
 
-	public async getChannelsUser(page: Puppeteer.Page, channelId: string, verbose?: boolean): Promise<IUnknownObject[]> {
+	public async getChannelsUser(page: Puppeteer.Page, channelId: string, verbose?: boolean, maxUsers?: number): Promise<IUnknownObject[]> {
+		const userIds = []
+		let _cursor = null
+		let interrupted = false
+		let continueXhr = true
+		let count = 0
+
+		if (!maxUsers) {
+			maxUsers = Infinity
+		}
 		const members: IUnknownObject[] = []
 
 		const getUsersId = (endpoint: string, channel: string, cursor?: string|null) => {
@@ -114,40 +121,6 @@ class Slack {
 			return TS.interop.api.call(endpoint, bundle)
 		}
 
-		const getUserProfile = (endpoint: string, id: string) => {
-			const TS: IEvalAny = (window as IEvalAny).TS
-			return TS.interop.api.call(endpoint, { user: id })
-		}
-
-		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
-			const profile = user.profile as IUnknownObject
-			const fullName = profile.real_name as string
-
-			if (fullName) {
-				const tmp = fullName.split(" ")
-				res.fullName = fullName
-				res.firstName = tmp.shift() as string
-				res.lastName = tmp.join(" ")
-			}
-
-			res.id = user && user.id ? user.id as string : ""
-			res.displayName = profile && profile.display_name ? profile.display_name as string : ""
-			res.title = profile && profile.title ? profile.title as string : ""
-			res.phone = profile && profile.phone ? profile.phone as string : ""
-			res.skype = profile && profile.skype ? profile.skype as string : ""
-			res.email = profile && profile.email ? profile.email as string : ""
-			res.pictureUrl = profile && profile.image_original ? profile.image_original as string : ""
-			res.timezone = user && user.tz ? user.tz as string : ""
-			res.lastUpdate = user && user.updated ? (new Date(user.updated as number * 1000)).toISOString() : ""
-			return res
-		}
-
-		const userIds = []
-		let _cursor = null
-		let interrupted = false
-		let continueXhr = true
-		let count = 0
 		while (continueXhr) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -188,17 +161,21 @@ class Slack {
 					this.utils.log(timeLeft.message, "warning")
 					break
 				}
-				const member = await page.evaluate(getUserProfile, "users.info", user)
-				if (isUnknownObject(member) && isUnknownObject(member.data) && isUnknownObject(member.data.user)) {
-					members.push(formatUserInformation(member.data.user))
+				if (members.length >= maxUsers) {
+					break
+				}
+				const member = await this.scrapeProfile(page, user, true)
+				if (member) {
+					members.push(member)
 					count++
 					if (verbose && (count && count % 10 === 0)) {
 						this.utils.log(`${members.length} users scraped`, "loading")
 					}
 				}
+				await page.waitFor(2000) // Preventing Slack rate limit
 			}
 		}
-		return members
+		return members.length > maxUsers ? members.slice(0, maxUsers) : members
 	}
 
 	public async scrapeProfile(page: Puppeteer.Page, userId: string, verbose?: boolean): Promise<IUnknownObject|null> {
@@ -210,7 +187,7 @@ class Slack {
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "" }
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "", admin: false }
 			const profile = user.profile as IUnknownObject
 			const fullName = profile.real_name as string
 
@@ -230,6 +207,7 @@ class Slack {
 			res.pictureUrl = profile && profile.image_original ? profile.image_original as string : ""
 			res.timezone = user && user.tz ? user.tz as string : ""
 			res.lastUpdate = user && user.updated ? (new Date(user.updated as number * 1000)).toISOString() : ""
+			res.admin = user && user.is_admin ? user.is_admin as boolean : false
 			return res
 		}
 
@@ -246,7 +224,6 @@ class Slack {
 		if (verbose) {
 			this.utils.log(`${userId} profile scraped`, "done")
 		}
-		await page.waitFor(2000)
 		return _user
 	}
 

@@ -22,7 +22,7 @@ const DEFAULT_DB = "result"
 	const res = [] as IUnknownObject[]
 	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
-	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch } = args
+	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, maxUsersPerChan } = args
 	let { csvName, queries } = args
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
@@ -30,10 +30,6 @@ const DEFAULT_DB = "result"
 	if (!csvName) {
 		csvName = DEFAULT_DB
 	}
-
-	// if (!numberOfLinesPerLaunch) {
-	// 	numberOfLinesPerLaunch = DEFAULT_LAUNCH
-	// }
 
 	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
 	db = await utils.getDb(csvName + ".csv")
@@ -76,7 +72,7 @@ const DEFAULT_DB = "result"
 			continue
 		}
 		utils.log(`Scraping ${query} channel`, "loading")
-		const members = await slack.getChannelsUser(page, channel.id as string, true)
+		const members = await slack.getChannelsUser(page, channel.id as string, true, maxUsersPerChan as number)
 		members.forEach((el: IUnknownObject) => {
 			el.query = query
 			el.channel = query
