@@ -9,6 +9,8 @@ store/DEV/Slack Message Sender DEV/Slack Message Sender DEV.js
 store/Slack Message Sender/Slack Message Sender.js
 store/DEV/Slack User Extractor DEV/Slack User Extractor DEV.js
 store/Slack User Extractor/Slack User Extractor.js
+store/DEV/GitHub Stargazers Extractor DEV/GitHub Stargazers Extractor DEV.js
+store/DEV/Meetup Attendees Extractor DEV/Meetup Attendees Extractor DEV.js
 libs/DEV/lib-ProductHunt-DEV.js
 libs/DEV/lib-Slack-DEV.js
 store/Product Hunt Auto Follow/Product Hunt Auto Follow.js
