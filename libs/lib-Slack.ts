@@ -187,15 +187,26 @@ class Slack {
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {
-			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "", admin: false }
+			const res = { id: "", firstName: "", lastName: "", fullName: "", pictureUrl: "", displayName: "", title: "", phone: "", email: "", skype: "", timezone: "", lastUpdate: "", admin: false, extraFields: [] }
 			const profile = user.profile as IUnknownObject
 			const fullName = profile.real_name as string
+			const fields = profile.fields as IUnknownObject
 
 			if (fullName) {
 				const tmp = fullName.split(" ")
 				res.fullName = fullName
 				res.firstName = tmp.shift() as string
 				res.lastName = tmp.join(" ")
+			}
+
+			if (fields) {
+				const extraFields = Object.keys(fields)
+				extraFields.forEach((f) => {
+					if (fields[f]) {
+						const tmp = (fields[f] as IUnknownObject).value as string
+						(res.extraFields as string[]).push(tmp)
+					}
+				})
 			}
 
 			res.id = user && user.id ? user.id as string : ""
