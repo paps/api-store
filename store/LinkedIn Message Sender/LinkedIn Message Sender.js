@@ -281,7 +281,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 			payload.profileUrl = row[columnName]
 			result.push(payload)
 		} catch (err) {
-			utils.log(`Can't load profile: ${url} due to: ${err.message || err}`, "warning")
+			utils.log(`${err.message || err}`, "warning")
 			const _errMessage = err.message || err
 			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
 			// Detecting LinkedIn cookie invalidation
