@@ -111,9 +111,37 @@ const getCompaniesInfos = (arg, callback) => {
 	const tab = await nick.newTab()
 	let { url, limit, csvName } = utils.validateArguments()
 	const clickSelector = "div.more:last-of-type"
+	const selectors = [ SELECTORS.RESULT_DIV_MARKETS, SELECTORS.RESULT_DIV_COMPANIES, "form.challenge-form" ]
 
 	await tab.open(url)
-	await tab.waitUntilVisible([ SELECTORS.RESULT_DIV_MARKETS, SELECTORS.RESULT_DIV_COMPANIES ], "or")
+	const sel = await tab.waitUntilVisible(selectors, "or", 15000)
+	try {
+		if (sel === selectors[2]) {
+			utils.log(`Got a reCAPTCHA while opening ${url}`, "info")
+			const token = await tab.evaluate((arg, cb) => {
+				const el = document.querySelector(arg.sel)
+				return cb(null, el ? el.dataset.sitekey : null)
+			}, { sel: `${sel} script`})
+			utils.log("Solving reCAPTCHA...", "loading")
+			const solved = await buster.solveNoCaptcha(await tab.getUrl(), token)
+			await tab.evaluate((arg, cb) => {
+				document.querySelector("textarea.g-recaptcha-response").value = arg.val
+				document.querySelector(arg.formSel).submit()
+				cb(null)
+			}, { val: solved, formSel: sel })
+			await tab.waitUntilVisible(selectors.slice(0, 2), "or", 15000)
+			utils.log("Resuming scraping", "done")
+		}
+	} catch (err) {
+		const _redirected = "https://angel.co/"
+		if (await tab.getUrl() === _redirected) {
+			await tab.open(url)
+			await tab.waitUntilVisible(selectors.slice(0, 2), "or")
+		} else {
+			utils.log("Can't bypass reCAPTCHA", "warning")
+			nick.exit(1)
+		}
+	}
 	let length = await tab.evaluate(getListLength, { selectors: SELECTORS })
 	while (length < limit) {
 		utils.log(`Loaded ${length} companies.`, "info")

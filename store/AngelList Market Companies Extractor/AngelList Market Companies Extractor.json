@@ -33,7 +33,8 @@
 						"type": "url"
 					},
 					"limit": {
-						"helper": "You can only scrape 400 companies per page because AngelList won't allow to load more companies."
+						"helper": "You can only scrape 400 companies per page because AngelList won't allow to load more companies.",
+						"inputType": "number"
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
