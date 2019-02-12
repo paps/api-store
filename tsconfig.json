@@ -52,6 +52,7 @@
 			"store/Slack Message Sender",
 			"store/Slack User Extractor",
 			"store/Github Profile Scraper",
+			"store/GitHub Stargazers Extractor",
 			"store/DEV/Web Summit Scraper DEV",
 			"store/DEV/Slack User Extractor DEV",
 			"store/DEV/Slack Message Sender DEV",
