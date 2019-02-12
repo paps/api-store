@@ -134,7 +134,7 @@ const getCompaniesInfos = (arg, callback) => {
 		}
 	} catch (err) {
 		const _redirected = "https://angel.co/"
-		if (await tab.getUrl() === _redirected) {
+		if (await tab.getUrl().indexOf(_redirected) > -1) {
 			await tab.open(url)
 			await tab.waitUntilVisible(selectors.slice(0, 2), "or")
 		} else {
