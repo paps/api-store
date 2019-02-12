@@ -52,7 +52,7 @@ const waitWhileHttpErrors = async (utils, tab) => {
  * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
  * @return {boolean}
  */
-const isUsingNick = tab => typeof tab.driver !== "undefined"
+const isUsingNick = tab => !!tab.driver
 
 class Twitter {
 
@@ -138,6 +138,10 @@ class Twitter {
 			const url = "https://twitter.com"
 			const initialSelector = ".DashboardProfileCard"
 			if (isNick) {
+				if (!this.nick) {
+					this.utils.log("You can't use the library without providing a NickJS object", "error")
+					process.exit(1)
+				}
 				await this.nick.setCookie(_cookie)
 				await tab.open(url)
 				await tab.waitUntilVisible(initialSelector)
@@ -148,9 +152,8 @@ class Twitter {
 			}
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
 		} catch (error) {
-			console.log(error.message || error)
 			const imgPath = `Tok${Date.now()}.png`
-			const opts = isNick ? imgPath : { path: imgPath, type: "png" }
+			const opts = isNick ? imgPath : { path: imgPath, type: "png", fullPage: true }
 			await tab.screenshot(opts)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
 			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
@@ -414,7 +417,7 @@ class Twitter {
 	 * @return {Promise<Number>} Loaded count
 	 */
 	async loadList(tab, count = Infinity, verbose = true) {
-		const isNick = true
+		const isNick = isUsingNick(tab)
 		let loadedContent = 0
 		let lastCount = 0
 		const getContentCount = (arg, cb) => {

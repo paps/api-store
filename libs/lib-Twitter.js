@@ -48,23 +48,47 @@ const waitWhileHttpErrors = async (utils, tab) => {
 	utils.log(`Resuming the API scraping process (Rate limit duration ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
 
+/**
+ * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
+ * @return {boolean}
+ */
+const isUsingNick = tab => !!tab.driver
+
 class Twitter {
+
+	/**
+	 * @constructs Twitter
+	 * NOTE: when using puppeteer buster & utils are only required
+	 * @param {Nick} [nick]
+	 * @param {Buster} buster
+	 * @param {StoreUtilities} utils
+	 */
 	constructor(nick, buster, utils) {
-		this.nick = nick
-		this.buster = buster
-		this.utils = utils
+		if (arguments.length < 3) {
+			this.buster = arguments[0] // buster
+			this.utils = arguments[1] // utils
+		} else {
+			this.nick = nick
+			this.buster = buster
+			this.utils = utils
+		}
 	}
 
 	/**
 	 * @async
 	 * @description
-	 * @param {Object} tab - Nickjs Tab instance (with a twitter page opened)
-	 * @return {Promise<Boolean>} true if logged otherwise false
+	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
+	 * @return {Promise<boolean>} true if logged otherwise false
 	 */
 	async isLogged(tab, printErrors = false) {
+		const selectors = ["ul > li.me.dropdown.session.js-session > a.settings", "div#session h2.current-user"]
 		try {
 			// The selector represents the top right dropdown button used, it has a with an href /settings which require to logged on
-			await tab.waitUntilVisible(["ul > li.me.dropdown.session.js-session > a.settings", "div#session h2.current-user"], "or", 15000)
+			if (isUsingNick(tab)) {
+				await tab.waitUntilVisible(selectors, "or", 15000)
+			} else {
+				await Promise.race(selectors.map(sel => tab.waitForSelector(sel, { timeout: 15000 })))
+			}
 			return true
 		} catch (err) {
 			printErrors && this.utils.log(err.message || err, "warning")
@@ -75,20 +99,25 @@ class Twitter {
 	/**
 	 * @async
 	 * @description Method used to be log as a valid Twitter user
-	 * @param {Object} tab - Nickjs Tab instance
+	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} cookie - Twitter auth_token cookie
 	 * @throws if there were an error during the login process
 	 */
 	async login(tab, cookie) {
-		const _scrapeTwitterUsername = (arg, cb) => cb(null, document.querySelector(".DashboardProfileCard-name a").textContent.trim())
+		const isNick = isUsingNick(tab)
+		const _scrapeTwitterUsername = (arg, cb) => {
+			const sel = document.querySelector(".DashboardProfileCard-name a")
+			const val = sel ? sel.textContent.trim() : null
+			return cb ? cb(null, val) : val
+		}
 
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Twitter session cookie. Did you specify one?", "error")
-			this.nick.exit(this.utils.ERROR_CODES.TWITTER_INVALID_COOKIE)
+			process.exit(this.utils.ERROR_CODES.TWITTER_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Twitter session cookie into the API Configuration.", "error")
-			this.nick.exit(this.utils.ERROR_CODES.TWITTER_DEFAULT_COOKIE)
+			process.exit(this.utils.ERROR_CODES.TWITTER_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -100,25 +129,34 @@ class Twitter {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
+				process.exit(this.utils.ERROR_CODES.GO_NOT_ACCESSIBLE)
 			}
 		}
 		this.utils.log("Connecting to Twitter...", "loading")
 		try {
-			await this.nick.setCookie({
-				name: "auth_token",
-				value: cookie,
-				domain: ".twitter.com",
-				httpOnly: true,
-				secure: true
-			})
-			await tab.open("https://twitter.com")
-			await tab.waitUntilVisible(".DashboardProfileCard")
+			const _cookie = { name: "auth_token", value: cookie, domain: ".twitter.com", httpOnly: true, secure: true }
+			const url = "https://twitter.com"
+			const initialSelector = ".DashboardProfileCard"
+			if (isNick) {
+				if (!this.nick) {
+					this.utils.log("You can't use the library without providing a NickJS object", "error")
+					process.exit(1)
+				}
+				await this.nick.setCookie(_cookie)
+				await tab.open(url)
+				await tab.waitUntilVisible(initialSelector)
+			} else {
+				await tab.setCookie(_cookie)
+				await tab.goto(url)
+				await tab.waitForSelector(initialSelector, { visible: true })
+			}
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
 		} catch (error) {
-			await tab.screenshot(`Tok${Date.now()}.png`)
+			const imgPath = `Tok${Date.now()}.png`
+			const opts = isNick ? imgPath : { path: imgPath, type: "png", fullPage: true }
+			await tab.screenshot(opts)
 			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
-			this.nick.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
+			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
 
@@ -128,28 +166,42 @@ class Twitter {
 	 * Handled URLs:
 	 * https://twitter.com/(@)user
 	 * https://twitter.com/intent/user?(user_id,screen_name)=(@)xxx
-	 * @param {Object} tab - NickJS tab
+	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} url - URL to open
 	 * @throws on CSS exception / 404 HTTP code
 	 */
 	async openProfile(tab, url) {
+		const isNick = isUsingNick(tab)
+		const loadingErr = `Can't open URL: ${url}`
 		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context" ]
-		const [httpCode] = await tab.open(url)
-		if (httpCode === 404) {
-			throw `Can't open URL: ${url}`
+		let contextSelector = ""
+
+		if (isNick) {
+			const [ httpCode ] = await tab.open(url)
+			if (httpCode === 404) {
+				throw loadingErr
+			}
+		} else {
+			const response = await tab.goto(url)
+			if (response.status() === 404) {
+				throw loadingErr
+			}
 		}
-		const contextSelector = await tab.waitUntilVisible(selectors, "or", 15000)
+		contextSelector = isNick ? await tab.waitUntilVisible(selectors, "or", 15000) : await Promise.race(selectors.map(sel => tab.waitForSelector(sel, { timeout: 15000 })))
+		if (typeof contextSelector !== "string" && !isNick) {
+			contextSelector = "." + await (await contextSelector.getProperty("className")).jsonValue()
+		}
 		// Intent URL: you need to click the redirection link to open the profile
-		if (contextSelector === selectors[2]) {
-			await tab.click(contextSelector)
-			await tab.waitUntilVisible(selectors[0], 15000)
+		if (contextSelector.indexOf(".alternate-context") > -1) {
+			await tab.click(selectors[2])
+			isNick ? await tab.waitUntilVisible(selectors[0], 15000) : await tab.waitForSelector(selectors[0], { timeout: 15000 })
 		}
 	}
 
 	/**
 	 * @async
 	 * @description Scrape a given Twitter profile
-	 * @param {Object} tab - NickJS tab
+	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} url - Twitter profile URL to open
 	 * @param {Boolean} [verbose] - show/hide logs (default: hide)
 	 * @throws scraping failures / 404 HTTP code
@@ -205,14 +257,14 @@ class Twitter {
 				}
 				res.birthday = birthdaySelector ? birthdaySelector.textContent.trim() : null
 			}
-			cb(null, res)
+			return typeof cb !== "undefined" ? cb(null, res) : Promise.resolve(res)
 		}
 		verbose && this.utils.log(`Loading profile: ${url}...`, "loading")
 		try {
 			await this.openProfile(tab, url)
 		} catch (err) {
 			let loadingErr = `Error while loading ${url}: `
-			const _url = await tab.getUrl()
+			const _url = isUsingNick(tab) ? await tab.getUrl() : tab.url()
 			loadingErr += _url.indexOf("suspended") > -1 ? "account suspended" : `${err.message || err}`
 			this.utils.log(loadingErr, "warning")
 			throw loadingErr
@@ -225,7 +277,7 @@ class Twitter {
 	 * @async
 	 * @description Method used to collects followers from a given page: allowed pages: /followers /following
 	 * @throws if an uncatchable error occurs
-	 * @param {Object} tab - Nickjs Tab instance
+	 * @param {Nick.Tab} tab - Nickjs Tab instance
 	 * @param {String} url - URL to open
 	 * @param {Number} [limit] - Max of followers to collect from the page (if not present: collect all followers)
 	 * @return {Promise<Array<Any>>} Array containing Followers
@@ -259,7 +311,7 @@ class Twitter {
 						await waitWhileHttpErrors(this.utils, tab)
 					} else {
 					this.utils.log("Twitter rate limit reached, you should try again later.", "warning")
-					this.nick.exit(this.utils.ERROR_CODES.TWITTER_RATE_LIMIT)
+					process.exit(this.utils.ERROR_CODES.TWITTER_RATE_LIMIT)
 					}
 				} else {
 					this.utils.log(`Loaded ${await tab.evaluate(_getFollowersNb)} accounts.`, "done")
@@ -287,7 +339,7 @@ class Twitter {
 	 * @async
 	 * @description Method used to check if an email account exists on Twitter, and gives some part of the email
 	 * @throws if an uncatchable error occurs
-	 * @param {Object} tab - Nickjs Tab instance
+	 * @param {Nick.Tab} tab - Nickjs Tab instance
 	 * @param {String} input - username/mail/phone number to check
 	 * @return {String} partialEmail
 	 */
@@ -359,15 +411,19 @@ class Twitter {
 
 	/**
 	 * @description Method used to load Tweets from a Twitter page
-	 * @param {Object} tab - Nickjs tab with an Twitter listing page loaded
+	 * @param {Nick.Tab} tab - Nickjs tab with an Twitter listing page loaded
 	 * @param {Number} [count] - Amount of items to load (default all)
 	 * @param {Boolean} [verbose] - printing logs (default yes)
 	 * @return {Promise<Number>} Loaded count
 	 */
 	async loadList(tab, count = Infinity, verbose = true) {
+		const isNick = isUsingNick(tab)
 		let loadedContent = 0
 		let lastCount = 0
-		const getContentCount = (arg, cb) => cb(null, document.querySelectorAll("div.tweet.js-actionable-tweet").length)
+		const getContentCount = (arg, cb) => {
+			const val = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+			return typeof cb !== "undefined" ? cb(null, val) : val
+		}
 		const waitWhileLoading = (arg, cb) => {
 			const idleStart = Date.now()
 			const idle = () => {
@@ -384,6 +440,17 @@ class Twitter {
 			}
 			idle()
 		}
+
+		const loadingIdle = previousCount => {
+			const loadedTweets = document.querySelectorAll("div.tweet.js-actionable-tweet").length
+			if (!document.querySelector(".timeline-end").classList.contains("has-more-items")) {
+				return "DONE"
+			} else if (loadedTweets <= previousCount) {
+				return false
+			}
+			return true
+		}
+
 		while (loadedContent <= count) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -394,9 +461,9 @@ class Twitter {
 				this.utils.log(`${loadedContent} content loaded`, "info")
 				lastCount = loadedContent
 			}
-			await tab.scrollToBottom()
+			isNick ? await tab.scrollToBottom() : await tab.evaluate(() => window.scrollBy(0, document.body.scrollHeight))
 			try {
-				const state = await tab.evaluate(waitWhileLoading, { prevCount: loadedContent })
+				const state = isNick ? await tab.evaluate(waitWhileLoading, { prevCount: loadedContent }) : await tab.waitFor(loadingIdle, loadedContent)
 				if (state === "DONE") {
 					break
 				}
