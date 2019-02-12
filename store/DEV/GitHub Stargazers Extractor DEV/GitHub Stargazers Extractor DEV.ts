@@ -75,11 +75,6 @@ const scrapePage = (): Promise<IUnknownObject[]> => {
 		res.name = user && user.textContent ? user.textContent.trim() : null
 		res.profileImage = userImg ? userImg.src : null
 		res.timestamp = (new Date()).toISOString()
-		if (res.profileImage) {
-			const url = new URL(res.profileImage as string)
-			url.searchParams.forEach((value, key, params) => params.delete(key))
-			res.profileImage = url.toString()
-		}
 		return res
 	})
 	return Promise.resolve(stars)
