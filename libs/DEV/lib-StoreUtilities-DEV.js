@@ -232,7 +232,7 @@ class StoreUtilities {
 			this.output += `${type}:>${message}\n`
 			if (type === "error" || (type === "warning" && !this.testRunObject.keepGoingOnWarning)) {
 				console.log(`Test failed, got error of type ${type}: ${message}`)
-				this.nick.exit(1)
+				process.exit(1)
 			}
 		}
 		const typeTab = {
@@ -295,6 +295,13 @@ class StoreUtilities {
 
 		try {
 			csvURL = new URL(url)
+			let urlPath = csvURL.pathname.split("/")
+			let viewIndex = urlPath.findIndex(el => el === "htmlview")
+			if (viewIndex > -1) {
+				urlPath.splice(viewIndex)
+				urlPath = urlPath.join("/")
+				csvURL.pathname = urlPath
+			}
 		} catch (err) {
 			throw `${url} is not a valid URL.`
 		}
@@ -303,6 +310,15 @@ class StoreUtilities {
 			content = await _handleGoogle(csvURL)
 		} else {
 			content = await _handleDefault(csvURL)
+		}
+		const pattern = "<!doctype html>"
+		const doctypeCheck = content.substring(0, pattern.length).toLowerCase()
+		if (doctypeCheck === pattern) {
+			throw `${url} doesn't represent a CSV file`
+		}
+
+		if (!content) {
+			throw "Input spreadsheet is empty!"
 		}
 		parsedContent = Papa.parse(content)
 		/* Most of the time the 2 errors below are relevant to make the parsed content as an invalid CSV (https://www.papaparse.com/docs#errors) */
@@ -377,6 +393,13 @@ class StoreUtilities {
 		 */
 		try {
 			urlObj = new URL(url)
+			let urlPath = urlObj.pathname.split("/")
+			let viewIndex = urlPath.findIndex(el => el === "htmlview")
+			if (viewIndex > -1) {
+				urlPath.splice(viewIndex)
+				urlPath = urlPath.join("/")
+				urlObj.pathname = urlPath
+			}
 		} catch (err) {
 			throw `${url} is not a valid URL.`
 		}
@@ -460,7 +483,8 @@ class StoreUtilities {
 		const match = url.match(urlRegex)
 		if (match) {
 			if (match[3] === "docs.google.com") {
-				if (match[8] === "edit") {
+				// Remove /edit or /htmlview from the string
+				if (match[8] === "edit" || match[8] === "htmlview") {
 					url = `https://docs.google.com/${match[6]}export?format=csv`
 				} else {
 					url = `https://docs.google.com/spreadsheets/d/${match[8].replace(/\/$/, "")}/export?format=csv`
@@ -669,7 +693,7 @@ class StoreUtilities {
 		if (minLength) {
 			if (result.length < minLength) {
 				console.log(`Test failed: Result has ${result.length} entries but minimum allowed to pass is ${minLength}.`)
-				this.nick.exit(1)
+				process.exit(1)
 			}
 		}
 		if (desiredOutput) {
@@ -678,11 +702,11 @@ class StoreUtilities {
 				const pos = this.output.indexOf(word)
 				if (pos === -1) {
 					console.log(`Test failed: Could not find ${word} in the output.`)
-					this.nick.exit(1)
+					process.exit(1)
 				}
 				if (!this.testRunObject.disableOutputOrderCheck && (pos < last)) {
 					console.log(`Test failed: Could not find ${word} in the right order.`)
-					this.nick.exit(1)
+					process.exit(1)
 				} else {
 					last = pos
 				}
@@ -724,7 +748,7 @@ class StoreUtilities {
 			this._testResult(result)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
-		this.nick.exit()
+		process.exit()
 	}
 
 	// Old way of checking arguments
