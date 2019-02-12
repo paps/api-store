@@ -91,7 +91,7 @@ const jsonToCsv = json => {
 	const tab = await nick.newTab()
 	let {uid, sid, articles, spreadsheetUrl, csvName} = utils.validateArguments()
 	if (spreadsheetUrl) {
-		articles = await utils.getDataFromCsv(spreadsheetUrl)
+		articles = await utils.getDataFromCsv2(spreadsheetUrl)
 	}
 	await medium.login(tab, uid, sid)
 	let result = []

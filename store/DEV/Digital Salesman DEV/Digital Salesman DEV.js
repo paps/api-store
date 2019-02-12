@@ -22,7 +22,6 @@ const prepareIntercomMessage = message => {
 	sdk("showNewMessage", message)
 }
 
-const getSettings = () => window.intercomSettings
 const setEmail = email => window.intercomSettings.email = email
 
 // Main function to launch all the others in the good order and handle some errors
