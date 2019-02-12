@@ -32,11 +32,6 @@ const setEmail = email => window.intercomSettings.email = email
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const tab = await browser.newPage()
 
-
-	if (!email) {
-		email = ""
-	}
-
 	if (!csvName) {
 		csvName = DB_NAME
 	}
@@ -106,6 +101,9 @@ const setEmail = email => window.intercomSettings.email = email
 			utils.log(error, "warning")
 		}
 	}
+	await tab.waitFor(2000)
+	await tab.close()
+	await browser.close()
 	db.push(...utils.filterRightOuter(db, res))
 	utils.saveResults(res, db, csvName, null, false)
 	process.exit()

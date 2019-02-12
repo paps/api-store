@@ -1,19 +1,26 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const Puppeteer = require("puppeteer")
+const Nick = require("nickjs")
+const nick = new Nick({
+	loadImages: true,
+	printPageErrors: false,
+	printResourceErrors: false,
+	printNavigation: false,
+	printAborts: false,
+	debug: false
+})
 
 const StoreUtilities = require("./lib-StoreUtilities")
-const utils = new StoreUtilities(buster)
-const Twitter = require("./lib-Twitter-DEV")
-const twitter = new Twitter(buster, utils)
+const utils = new StoreUtilities(nick, buster)
+const Twitter = require("./lib-Twitter")
+const twitter = new Twitter(nick, buster, utils)
 const DB_SHORT_NAME = "twitter-profile-scraper"
 // }
 
@@ -34,8 +41,7 @@ const isTwitterProfile = url => {
 }
 
 ;(async () => {
-	const browser = await Puppeteer.launch({ args: [ "--no-sandbox" ] })
-	const tab = await browser.newPage()
+	const tab = await nick.newTab()
 	let { spreadsheetUrl, sessionCookie, columnName, numberProfilesPerLaunch, csvName, profileUrls, noDatabase } = utils.validateArguments()
 	const scrapingResult = []
 
@@ -67,7 +73,7 @@ const isTwitterProfile = url => {
 
 	if (profileUrls.length < 1) {
 		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
-		process.exit()
+		nick.exit()
 	}
 
 	utils.log(`Profiles to scrape: ${JSON.stringify(profileUrls.slice(0, 100), null, 2)}`, "info")
@@ -90,10 +96,9 @@ const isTwitterProfile = url => {
 	}
 	db.push(...scrapingResult)
 	await utils.saveResults(scrapingResult, db, csvName, null, false)
-	process.exit()
+	nick.exit()
 })()
 .catch(err => {
 	utils.log(`Error while running: ${err.message || err}`, "error")
-	console.log(err.stack || "no stack")
-	process.exit(1)
+	nick.exit(1)
 })
