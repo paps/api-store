@@ -57,13 +57,13 @@ const getActivityUrl = (url, onlyScrapePosts) => {
 
 // return how many posts are loaded in the page
 const getPostCount = (arg, cb) => {
-	const postCount = document.querySelector(".pv-recent-activity-detail__feed-container").querySelectorAll(".feed-shared-update-v2").length
+	const postCount = document.querySelector(arg.selector).querySelectorAll(".feed-shared-update-v2").length
 	cb(null, postCount)
 }
 
 // click on Comments button to expand them, or Like button to trigger api event
 const clickCommentOrLike = (arg, cb) => {
-	const results = document.querySelector(".pv-recent-activity-detail__feed-container").querySelectorAll(".feed-shared-update-v2")
+	const results = document.querySelector(arg.selector).querySelectorAll(".feed-shared-update-v2")
 	if (results[arg.postNumber].querySelector(`button.feed-shared-social-counts__num-${arg.type}`)) {
 		cb(null, results[arg.postNumber].querySelector(`button.feed-shared-social-counts__num-${arg.type}`).click())
 	} else {
@@ -78,18 +78,18 @@ const clickDismiss = (arg, cb) => {
 
 // check comments are already visible (articleId available) or if you should click on Comments button to access them
 const checkIfCommentsAreVisible = (arg, cb) => {
-	const results = document.querySelector(".pv-recent-activity-detail__feed-container").querySelectorAll(".feed-shared-update-v2")
-	cb(null, results[arg.postNumber].querySelector(".feed-shared-update-v2__comments-container").innerText)
+	const results = document.querySelector(arg.selector).querySelectorAll(".feed-shared-update-v2")
+	cb(null, results[arg.postNumber].querySelector(".feed-shared-update-v2__comments-container") ? results[arg.postNumber].querySelector(".feed-shared-update-v2__comments-container").innerText : null)
 }
 
 // click on all Comments button where comments aren't already visible
-const loadComments = async (tab, postCount) => {
+const loadComments = async (tab, postCount, selector) => {
 	utils.log("Loading posts URLs...", "loading")
 	for (let postNumber = 0 ; postNumber < postCount ; postNumber++) {
-		const comments = await tab.evaluate(checkIfCommentsAreVisible, { postNumber })
+		const comments = await tab.evaluate(checkIfCommentsAreVisible, { selector, postNumber })
 		if (!comments) {
-			const click = await tab.evaluate(clickCommentOrLike, { postNumber, type: "comments" })
-			if (click) { // if there's comment to click on
+			const click = await tab.evaluate(clickCommentOrLike, { selector, postNumber, type: "comments" })
+			if (click) { // if there's comment to clickclick on
 				await tab.wait(1000)
 			}
 		}
@@ -104,7 +104,7 @@ const loadComments = async (tab, postCount) => {
 
 // main scraping function
 const scrapeActivities = (arg, cb) => {
-	const results = document.querySelector(".pv-recent-activity-detail__feed-container").querySelectorAll(".feed-shared-update-v2")
+	const results = document.querySelector(arg.selector).querySelectorAll(".feed-shared-update-v2")
 	const activityResults = []
 	for (const result of results) {
 		const scrapedData = { profileUrl: arg.profileUrl }
@@ -159,7 +159,7 @@ const scrapeActivities = (arg, cb) => {
 }
 
 // click on Like button for all posts we didn't get a post URL, to trigger voyager/api/feed/likes event
-const getActityIdFromLikes = async (tab, activityResults, postCount) => {
+const getActityIdFromLikes = async (tab, activityResults, postCount, selector) => {
 	let articleId
 	const interceptLinkedInApiCalls = e => {
 		if (e.response.url.includes("voyager/api/feed/likes") && e.response.status === 200) {
@@ -172,8 +172,11 @@ const getActityIdFromLikes = async (tab, activityResults, postCount) => {
 	for (let postNumber = 0 ; postNumber < postCount ; postNumber++) {
 		try {
 			if (!activityResults[postNumber].postUrl) {
-				await tab.evaluate(clickCommentOrLike, { postNumber, type: "likes" })
-				await tab.wait(2000)
+				await tab.evaluate(clickCommentOrLike, { selector, postNumber, type: "likes" })
+				const initDate = new Date()
+				do {
+					await tab.wait(100)
+				} while (!articleId && new Date() - initDate < 10000)
 				if (articleId) {
 					activityResults[postNumber].postUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
 					articleId = null
@@ -197,6 +200,8 @@ const getActityIdFromLikes = async (tab, activityResults, postCount) => {
 // handle scraping process
 const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts) => {
 	utils.log(`Loading ${onlyScrapePosts ? "posts" : "activities"} of ${convertedUrl}...`, "loading")
+	const selector = ".pv-recent-activity-detail__feed-container"
+
 	const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
 	await tab.open(activityUrl)
 	await tab.waitUntilPresent(".pv-recent-activity-detail__outlet-container", 15000)
@@ -208,7 +213,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 	let lastDate = new Date()
 	// first we load all posts until numberMaxOfPosts
 	do {
-		const newPostCount = await tab.evaluate(getPostCount)
+		const newPostCount = await tab.evaluate(getPostCount, { selector })
 		if (newPostCount > postCount) {
 			postCount = newPostCount
 			lastDate = new Date()
@@ -231,12 +236,65 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 	}
 	utils.log(`${postCount} post loaded.`, "done")
 	// we click on Comments button to access posts' activityId
-	await loadComments(tab, postCount)
+	await loadComments(tab, postCount, selector)
 	// scraping action
-	let activityResults = await tab.evaluate(scrapeActivities, { profileUrl })
+
+	let activityResults = await tab.evaluate(scrapeActivities, { selector, profileUrl })
 	// for posts we didn't get postUrl through activityId, we use the Like button that trigger an API event
-	activityResults = await getActityIdFromLikes(tab, activityResults, postCount)
+	activityResults = await getActityIdFromLikes(tab, activityResults, postCount, selector)
 	activityResults = activityResults.slice(0, postCount)
+	return activityResults
+}
+
+// handle scraping process for Companies
+const getCompanyActivities = async (tab, companyUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts) => {
+	utils.log(`Loading ${onlyScrapePosts ? "posts" : "activities"} of Company ${convertedUrl}...`, "loading")
+	const selector = ".org-organization-page__container #organization-feed"
+
+	// const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
+	await tab.open(companyUrl)
+	await tab.waitUntilPresent(selector, 15000)
+	if (await tab.isPresent("div.no-content")) {
+		utils.log(`${companyUrl} has no activity!`, "info")
+		return [{ companyUrl, timestamp: (new Date()).toISOString(), error: "No activity" }]
+	}
+	let postCount = 0
+	let lastDate = new Date()
+	// first we load all posts until numberMaxOfPosts
+	do {
+		const newPostCount = await tab.evaluate(getPostCount, { selector })
+		if (newPostCount > postCount) {
+			postCount = newPostCount
+			lastDate = new Date()
+			buster.progressHint((postCount) / numberMaxOfPosts, `${postCount} posts loaded`)
+		}
+		if (new Date() - lastDate > 10000) {
+			utils.log("Scrolling took too long!", "warning")
+			break
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
+		await tab.wait(2000)
+		await tab.scrollToBottom()
+	} while (postCount < numberMaxOfPosts)
+	if (postCount > numberMaxOfPosts) {
+		postCount = numberMaxOfPosts
+	}
+	utils.log(`${postCount} post loaded.`, "done")
+	// we click on Comments button to access posts' activityId
+	await loadComments(tab, postCount, selector)
+	// scraping action
+
+	let activityResults = await tab.evaluate(scrapeActivities, { selector, companyUrl })
+
+	// for posts we didn't get postUrl through activityId, we use the Like button that trigger an API event
+	activityResults = await getActityIdFromLikes(tab, activityResults, postCount, selector)
+
+	activityResults = activityResults.slice(0, postCount)
+
 	return activityResults
 }
 
@@ -274,8 +332,12 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 		}
 		try {
 			const convertedUrl = await linkedInScraper.salesNavigatorUrlCleaner(profileUrl)
-
-			const activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts)
+			let activityResults
+			if (profileUrl && profileUrl.includes("linkedin.com/company/")) {
+				activityResults = await getCompanyActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts)
+			} else {
+				activityResults = await getActivities(tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts)
+			}
 
 			currentResult = currentResult.concat(activityResults)
 		} catch (err) {
