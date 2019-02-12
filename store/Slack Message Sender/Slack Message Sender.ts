@@ -111,6 +111,13 @@ const COLUMN = "0"
 				utils.log(err, "warning")
 				continue // Don't push in DB, the ID will be tested in a next launch
 			}
+
+			if (sent === -4) {
+				err += ": rate limit reached, relaunch the API later"
+				utils.log(err, "warning")
+				break
+			}
+
 			db.push({ query: query[columnName as string], error: err, timestamp: (new Date()).toISOString() })
 		}
 	}

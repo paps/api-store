@@ -346,7 +346,7 @@ class Slack {
 			if (xhrRes.ok) {
 				res = 0
 			} else {
-				res = -2
+				res = xhrRes.data.error && xhrRes.data.error === "rate_limited" ? -4 : -2
 			}
 		}
 		return res
