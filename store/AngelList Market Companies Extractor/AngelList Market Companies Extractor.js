@@ -134,9 +134,14 @@ const getCompaniesInfos = (arg, callback) => {
 		}
 	} catch (err) {
 		const _redirected = "https://angel.co/"
-		if (await tab.getUrl().indexOf(_redirected) > -1) {
+		if ((await tab.getUrl()).indexOf(_redirected) > -1) {
 			await tab.open(url)
-			await tab.waitUntilVisible(selectors.slice(0, 2), "or")
+			try {
+				await tab.waitUntilVisible(selectors.slice(0, 2), "or")
+			} catch (err) {
+				utils.log("Can't bypass reCAPTCHA even after the first solve", "warning")
+				nick.exit(1)
+			}
 		} else {
 			utils.log("Can't bypass reCAPTCHA", "warning")
 			nick.exit(1)
