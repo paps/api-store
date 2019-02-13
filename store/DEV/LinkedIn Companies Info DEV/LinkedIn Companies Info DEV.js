@@ -149,7 +149,7 @@ const scrapeCompanyInfo = (arg, callback) => {
 	} catch (err) {
 		//
 	}
-	
+
 
 	if (document.querySelector("div.org-location-card")) {
 		const addresses = Array.from(document.querySelectorAll("div.org-location-card"))
@@ -450,7 +450,13 @@ const isLinkedUrl = target => {
 					}
 				}
 			} catch (error) {
-				utils.log(`Could not get ${company} data because ${error}`, "warning")
+				const _msg = error.message || error
+				if (typeof _msg === "string" && _msg.indexOf("net::ERR_TOO_MANY_REDIRECTS") > -1) {
+					utils.log(`LinkedIn invalidates your session cookie while scraping ${company}, please update your session cookie for the launch`, "warning")
+					break
+				} else {
+					utils.log(`Could not get ${company} data because ${error}`, "warning")
+				}
 			}
 		}
 	}
