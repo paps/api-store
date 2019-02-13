@@ -5,12 +5,12 @@ Sincerely — Your sweet prospect
 # Warm up your Facebook prospects before talking to them
 If you want to warm up a prospect on Facebook, you'll have to like their posts. Start with a list of Facebook users and be ready to like their last posts. How many? It depends on how much love you want to spread!
 
-# What will you need? ⚙️ 
+# What will you need? ⚙️
 
 - **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook profiles URLs in it, OR the direct link of a Facebook profile.
-- **Number of likes to send per profile**: The number of likes the API will send, starting by the most recent posts that are still unliked. 
-- **Number of posts to load per profile**: The number of posts the API will load before trying to like the ones that are still unliked. 
+- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook profiles URLs in it, the direct link of a Facebook profile, OR the direct link of a Facebook post.
+- **Number of likes to send per profile**: The number of likes the API will send, starting by the most recent posts that are still unliked.
+- **Number of posts to load per profile**: The number of posts the API will load before trying to like the ones that are still unliked.
 - **Number of profiles to process**: The number of profiles you want to process per launch. If left empty, the API will process every profile from your list.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
@@ -36,10 +36,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Facebook authentication 🔑 { argument }
 Because the script will manipulate Facebook for you, it needs to be logged on your Facebook account. For that you just need to copy paste two session cookies in the script argument:
-* Using Chrome, go to your Facebook homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your Facebook homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab
@@ -101,4 +101,4 @@ Please be aware that this API will manipulate your own account on your behalf.
 
 Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
 
-In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you. 
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you.

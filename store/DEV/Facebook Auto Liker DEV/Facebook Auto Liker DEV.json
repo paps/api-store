@@ -36,8 +36,8 @@
 						"placeholder": "Paste your xs session cookie here"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Facebook profile URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
-						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a Facebook profile"
+						"label": "Facebook profile/post URL or a Spreadsheet URL <a target=\"_blank\" href=\"/api-store/8465/facebook-auto-liker#section_5addagooglespreadsheet\">(?)</a>",
+						"helper": "Enter either a Facebook profile URL, a post URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
 						"label": "Column name from to get Facebook profile URLs",
