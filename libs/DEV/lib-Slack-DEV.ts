@@ -183,7 +183,13 @@ class Slack {
 
 		const getUserProfile = (endpoint: string, id: string) => {
 			const TS: IEvalAny = (window as IEvalAny).TS
-			return TS.interop.api.call(endpoint, { user: id })
+			let xhr: IUnknownObject
+			try {
+				xhr = TS.interop.api.call(endpoint, { user: id })
+			} catch (err) {
+				xhr = err
+			}
+			return xhr
 		}
 
 		const formatUserInformation = (user: IUnknownObject): IUnknownObject => {

@@ -15,15 +15,29 @@ const utils = new StoreUtilities(buster)
 const slack = new Slack(buster, utils)
 
 const DEFAULT_DB = "result"
+
+declare interface IApiParams {
+	sessionCookie: string,
+	slackWorkspaceUrl: string,
+	spreadsheetUrl: string,
+	columnName?: string,
+	numberOfLinesPerLaunch?: number,
+	maxUsersPerChan?: number
+}
+
+declare interface IMutableApiParams {
+	csvName: string,
+	queries: string|string[]
+}
+
 // }
 
-;
 (async () => {
 	const res = [] as IUnknownObject[]
 	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
-	const  { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, maxUsersPerChan } = args
-	let { csvName, queries } = args
+	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, maxUsersPerChan } = args as IApiParams
+	let { csvName, queries } = args as IMutableApiParams
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
@@ -31,11 +45,11 @@ const DEFAULT_DB = "result"
 		csvName = DEFAULT_DB
 	}
 
-	await slack.login(page, slackWorkspaceUrl as string, sessionCookie as string)
+	await slack.login(page, slackWorkspaceUrl, sessionCookie)
 	db = await utils.getDb(csvName + ".csv")
 
 	if (typeof spreadsheetUrl === "string") {
-		queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName as string) : [ spreadsheetUrl ]
+		queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
 	}
 
 	if (typeof queries === "string") {
@@ -45,10 +59,10 @@ const DEFAULT_DB = "result"
 	if (Array.isArray(queries)) {
 		queries = queries.filter((el) => db.findIndex((line) => line.query === el && line.workspaceUrl === slackWorkspaceUrl) < 0)
 		if (typeof numberOfLinesPerLaunch === "number") {
-			queries = (queries as IUnknownObject[]).slice(0, numberOfLinesPerLaunch)
+			queries = queries.slice(0, numberOfLinesPerLaunch)
 		}
 		if (isUnknownObject(queries)) {
-			const len = queries.length as number
+			const len = queries.length
 			if (len < 1) {
 				utils.log("Input is empty OR every channels in the specified workspace are scraped", "warning")
 				process.exit()
@@ -72,7 +86,7 @@ const DEFAULT_DB = "result"
 			continue
 		}
 		utils.log(`Scraping ${query} channel`, "loading")
-		const members = await slack.getChannelsUser(page, channel.id as string, true, maxUsersPerChan as number)
+		const members = await slack.getChannelsUser(page, channel.id as string, true, maxUsersPerChan)
 		members.forEach((el: IUnknownObject) => {
 			el.query = query
 			el.channel = query
@@ -84,7 +98,7 @@ const DEFAULT_DB = "result"
 	db.push(...res)
 	await page.close()
 	await browser.close()
-	await utils.saveResults(res, db, csvName as string)
+	await utils.saveResults(res, db, csvName)
 	process.exit()
 })()
 .catch((err) => {
