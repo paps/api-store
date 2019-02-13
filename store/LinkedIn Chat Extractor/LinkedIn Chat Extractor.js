@@ -192,6 +192,9 @@ const getMessagesByProfile = async (tab, messagesPerExtract, chronOrder = false,
 			if (await tab.isVisible(SELECTORS.addRequestNote)) {
 				throw "Request network is pending OR you're not connected with the user, can't scrape messages"
 			}
+			if (!await tab.isPresent(SELECTORS.messages)) {
+				throw "No messages found"
+			}
 			throw `Can't open conversation due to: ${err.message || err}`
 		}
 	}

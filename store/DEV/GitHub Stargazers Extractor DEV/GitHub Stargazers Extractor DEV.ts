@@ -15,6 +15,24 @@ const utils = new StoreUtilities(buster)
 
 const DB_NAME = "result"
 let ao: IUnknownObject
+
+declare interface IRateLimt {
+	rateLimitPage?: string,
+	scrapedCount?: number
+}
+
+declare interface IApiParams {
+	spreadsheetUrl: string,
+	columnName: string,
+	stargazersPerRepo?: number,
+	numberOfLinesPerLaunch?: number
+}
+
+declare interface IMutableApiParams {
+	csvName?: string,
+	queries?: string|string[]
+}
+
 // }
 
 const isGithubURL = (url: string): boolean => {
@@ -122,14 +140,14 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 }
 
 (async () => {
-	ao = await buster.getAgentObject() as IUnknownObject
+	ao = await buster.getAgentObject() as IRateLimt
 	let remainingCount = -1
 	/* tslint:disable:no-unused-variable */
 	let wasRateLimited = false
 	/* tslint:enable:no-unused-variable */
 	const args: IUnknownObject = utils.validateArguments() as IUnknownObject
-	const { spreadsheetUrl, columnName, stargazersPerRepo, numberOfLinesPerLaunch } = args
-	let { queries, csvName } = args
+	const { spreadsheetUrl, columnName, stargazersPerRepo, numberOfLinesPerLaunch } = args as IApiParams
+	let { queries, csvName } = args as IMutableApiParams
 	let db: IUnknownObject[]
 	const stargazers = []
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
@@ -140,8 +158,8 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 	}
 
 	if (spreadsheetUrl) {
-		if (utils.isUrl(spreadsheetUrl as string)) {
-			queries = isGithubURL(spreadsheetUrl as string) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl as string, columnName as string)
+		if (utils.isUrl(spreadsheetUrl)) {
+			queries = isGithubURL(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 
@@ -158,8 +176,8 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 
 	if (ao.rateLimitPage) {
 		wasRateLimited = true
-		if (typeof stargazersPerRepo === "number" && ao.scrapedCount) {
-			remainingCount = stargazersPerRepo - (ao.scrapedCount as number)
+		if (typeof stargazersPerRepo === "number" && typeof ao.scrapedCount === "number") {
+			remainingCount = stargazersPerRepo - ao.scrapedCount
 		} else {
 			remainingCount = Infinity
 		}
@@ -207,7 +225,7 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 	} catch (err) {
 		// ...
 	}
-	await utils.saveResults(stargazers, db, csvName as string, null)
+	await utils.saveResults(stargazers, db, csvName, null)
 	process.exit()
 })()
 .catch((err) => {

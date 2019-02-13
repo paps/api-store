@@ -12,6 +12,20 @@ import { IUnknownObject } from "./lib-api-store"
 const buster: Buster = new Buster()
 const utils: StoreUtilities = new StoreUtilities(buster)
 const DB_NAME: string = "result"
+
+declare interface IApiParams {
+	spreadsheetUrl: string,
+	columnName?: string,
+	numberOfLinesPerLaunch?: number,
+	noDatabase?: boolean,
+	scrapeHireable: boolean
+}
+
+declare interface IMutableApiParams {
+	csvName?: string,
+	queries?: string|string[]
+}
+
 // }
 
 const isGithubUrl = (url: string): boolean => {
@@ -117,8 +131,8 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	const page = await browser.newPage()
 
 	const args = utils.validateArguments()
-	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, noDatabase, scrapeHireable } = args
-	let { queries, csvName } = args
+	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, noDatabase, scrapeHireable } = args as IApiParams
+	let { queries, csvName } = args as IMutableApiParams
 
 	const profiles = []
 	let db: IUnknownObject[] = []
@@ -128,8 +142,8 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	}
 
 	if (spreadsheetUrl) {
-		if (utils.isUrl(spreadsheetUrl as string)) {
-			queries = isGithubUrl(spreadsheetUrl as string) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl  as string, columnName as string)
+		if (utils.isUrl(spreadsheetUrl)) {
+			queries = isGithubUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		} else {
 			queries = [ spreadsheetUrl ]
 		}
@@ -142,8 +156,8 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	queries = (queries as string[]).filter((el: string) => db.findIndex((line: IUnknownObject) => line.query === el) < 0)
 
-	if (typeof numberOfLinesPerLaunch === "number") {
-		queries = (queries as IUnknownObject[]).slice(0, numberOfLinesPerLaunch)
+	if (typeof numberOfLinesPerLaunch === "number" && Array.isArray(queries)) {
+		queries = (queries).slice(0, numberOfLinesPerLaunch)
 	}
 
 	if ((queries as string[]).length < 1) {
@@ -181,7 +195,7 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 		}
 	}
 	db.push(...utils.filterRightOuter(db, profiles))
-	await utils.saveResults(profiles, db, csvName as string, null)
+	await utils.saveResults(profiles, db, csvName, null)
 	process.exit()
 })()
 .catch((err) => {
