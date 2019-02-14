@@ -178,13 +178,16 @@ class LinkedIn {
 				return e.toString()
 			}
 			if (sel === "#nav-tools-user") {
-				const name = await tab.evaluate((arg, callback) => {
-					callback(null, document.querySelector("#nav-tools-user img").alt)
-				})
-				if ((typeof(name) === "string") && (name.length > 0)) {
-					this.utils.log(`Connected successfully as ${name}`, "done")
-					return null
+				let name
+				try {
+					name = await tab.evaluate((arg, callback) => {
+						callback(null, document.querySelector("#nav-tools-user img").alt)
+					})
+				} catch (err) {
+					//
 				}
+				this.utils.log(`Connected successfully ${name ? `as ${name}` : ""}`, "done")
+				return null
 			}
 			return "cookie not working"
 		}

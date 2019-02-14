@@ -140,7 +140,7 @@ class LinkedIn {
 	}
 
 	// url is optional (will open LinkedIn feed by default)
-	async recruiterLogin(tab, sessionCookieliAt, url) {
+	async recruiterLogin(tab, sessionCookieliAt) {
 		if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.trim().length <= 0)) {
 			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
@@ -168,8 +168,17 @@ class LinkedIn {
 
 		// small function that detects if we're logged in
 		// return a string in case of error, null in case of success
-		const _login = async () => {
-			const [httpCode] = await tab.open(url || "https://www.linkedin.com/cap/")
+		const _recruiterLogin = async () => {
+			console.log("httpCode:")
+			let httpCode
+			try {
+				[httpCode] = await tab.open("https://www.linkedin.com/cap/")
+			} catch (err) {
+				console.log("m:", err)
+				await this.buster.saveText(await tab.getContent(), "login-err1.html")
+				await this.buster.save(await tab.screenshot("login-err1.jpg"))
+			}
+
 			if (httpCode && httpCode !== 200) {
 				return `linkedin responded with http ${httpCode}`
 			}
@@ -179,24 +188,28 @@ class LinkedIn {
 			} catch (e) {
 				return e.toString()
 			}
-			if (sel === "form#login") {
-				console.log("Entering password...")
-				await tab.sendKeys("#session_key-login", "")	
-				await tab.wait(500)
-				await tab.sendKeys("#session_password-login", "")
-				await tab.wait(500)
-				await tab.click("#btn-primary")
-				await tab.wait(3000)
-				sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
-			}
+			// console.log("sel:", sel)
+			// if (sel === "form#login") {
+			// 	console.log("Entering password...")
+			// 	await tab.sendKeys("#session_key-login", "")
+			// 	await tab.wait(500)
+			// 	await tab.sendKeys("#session_password-login", "")
+			// 	await tab.wait(500)
+			// 	await tab.click("#btn-primary")
+			// 	await tab.wait(3000)
+			// 	sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
+			// }
 			if (sel === "#nav-tools-user") {
-				const name = await tab.evaluate((arg, callback) => {
-					callback(null, document.querySelector("#nav-tools-user img").alt)
-				})
-				if ((typeof(name) === "string") && (name.length > 0)) {
-					this.utils.log(`Connected successfully as ${name}`, "done")
-					return null
+				let name
+				try {
+					name = await tab.evaluate((arg, callback) => {
+						callback(null, document.querySelector("#nav-tools-user img").alt)
+					})
+				} catch (err) {
+					//
 				}
+				this.utils.log(`Connected successfully ${name ? `as ${name}` : ""}`, "done")
+				return null
 			}
 			return "cookie not working"
 		}
@@ -207,7 +220,7 @@ class LinkedIn {
 				value: this.originalSessionCookieliAt,
 				domain: "www.linkedin.com"
 			})
-			const loginResult = await _login()
+			const loginResult = await _recruiterLogin()
 			if (loginResult !== null) {
 				throw loginResult
 			}
