@@ -615,7 +615,6 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 	let searchCat = isSearchURL
 	if (isSearchURL === 0) {
 		searchCat = category.toLowerCase()
-		query += ` - ${category}`
 	}
 	if (searchCat === "content") {
 		const result = await getContentPosts(tab, searchUrl, numberOfPage, query, onlyGetFirstResult)
