@@ -93,7 +93,7 @@ class Medium {
 			count = await tab.evaluate(scraper)
 			if (closePopup) {
 				await tab.click(popupCloser)
-				isNick ? await tab.waitWhileVisible(popupLoader) : await tab,waitForSelector(popupLoader, { visible: false })
+				isNick ? await tab.waitWhileVisible(popupLoader) : await tab.waitForSelector(popupLoader, { visible: false })
 			}
 		} catch (err) {
 			verbose && this.utils.log(`scraping failure: ${err.message || err}`, "warning")
