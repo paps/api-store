@@ -61,6 +61,10 @@
 						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
 						"inputType": "number",
 						"placeholder": 10
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -103,6 +107,10 @@
 				"minimum": 1,
 				"maximum": 10,
 				"default": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
 			}
 		}
 	}

@@ -213,7 +213,8 @@ const isUrl = target => url.parse(target).hostname !== null
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch, postLimit} = utils.validateArguments()
+	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch, postLimit, csvName} = utils.validateArguments()
+	if (!csvName) { csvName = "result" }
 
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
@@ -237,8 +238,9 @@ const isUrl = target => url.parse(target).hostname !== null
 
 	if (!postLimit) { postLimit = 10 }
 
-	let result = []
+	let result = await utils.getDb(csvName + ".csv")
 	queries = queries.filter(str => str) // removing empty lines
+	queries = queries.filter(str => utils.checkDb(str, result, "profileUrl"))
 
 	queries = getProfilesToLike(queries, numberOfProfilesPerLaunch)
 	console.log(`URLs to process: ${JSON.stringify(queries, null, 4)}`)
@@ -264,7 +266,7 @@ const isUrl = target => url.parse(target).hostname !== null
 			utils.log(`Cannot like ${query} due to: ${err.message || err}`, "error")
 		}
 	}
-	await utils.saveResults(result, result)
+	await utils.saveResults(result, result, csvName)
 	nick.exit()
 
 })()
