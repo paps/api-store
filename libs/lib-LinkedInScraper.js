@@ -190,7 +190,7 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "imgUrl", style: "backgroundImage", selector: ".presence-entity__image" },
 			{ key: "imgUrl", attribute: "src", selector: ".profile-photo-edit__preview" },
 			{ key: "fullName", attribute: "textContent", selector: ".pv-top-card-section__name" },
-			{ key: "fullName", attribute: "aria-label", selector: "div.presence-entity__image" },
+			{ key: "fullName", attribute: "aria-label", selector: "#profile-wrapper div.presence-entity__image" },
 			{ key: "hasAccount", attribute: "textContent", selector: ".pv-member-badge .visually-hidden" },
 			{ key: "headline", attribute: "textContent", selector: ".pv-top-card-section__headline" },
 			{ key: "company", attribute: "textContent", selector: ".pv-top-card-section__company"},
@@ -216,7 +216,7 @@ const scrapeInfos = (arg, callback) => {
 		if (document.querySelector(".dist-value")) {
 			infos.general.connectionDegree = document.querySelector(".dist-value").textContent
 		}
-		
+
 		// extract the vmid from the page code
 		try {
 			const entityUrn = JSON.parse(Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("urn:li:fs_memberBadges"))[0].textContent).data.entityUrn

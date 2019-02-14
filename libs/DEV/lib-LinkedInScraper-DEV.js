@@ -1,5 +1,5 @@
 // Phantombuster configuration {
-"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact.js"
+"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact-DEV.js"
 // }
 const { URL } = require ("url")
 
@@ -191,7 +191,7 @@ const scrapeInfos = (arg, callback) => {
 			{ key: "imgUrl", style: "backgroundImage", selector: ".presence-entity__image" },
 			{ key: "imgUrl", attribute: "src", selector: ".profile-photo-edit__preview" },
 			{ key: "fullName", attribute: "textContent", selector: ".pv-top-card-section__name" },
-			{ key: "fullName", attribute: "aria-label", selector: "div.presence-entity__image" },
+			{ key: "fullName", attribute: "aria-label", selector: "#profile-wrapper div.presence-entity__image" },
 			{ key: "hasAccount", attribute: "textContent", selector: ".pv-member-badge .visually-hidden" },
 			{ key: "headline", attribute: "textContent", selector: ".pv-top-card-section__headline" },
 			{ key: "company", attribute: "textContent", selector: ".pv-top-card-section__company"},
@@ -759,7 +759,7 @@ class LinkedInScraper {
 		}
 		if ((typeof(dropcontactApiKey) === "string") && (dropcontactApiKey.trim().length > 0)) {
 			require("coffee-script/register")
-			this.dropcontact = new (require("./lib-Dropcontact"))(dropcontactApiKey.trim())
+			this.dropcontact = new (require("./lib-Dropcontact-DEV"))(dropcontactApiKey.trim())
 		}
 	}
 
@@ -812,7 +812,7 @@ class LinkedInScraper {
 		}
 
 		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
-			const init = new Date()
+			let init
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				this.utils.log(timeLeft.message, "warning")
@@ -828,7 +828,6 @@ class LinkedInScraper {
 					} else {
 						servicesUsed = "Dropcontact"
 					}
-					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
 					let companyUrl = null
 					if (this.nick) {
 						const companyTab = await this.nick.newTab()
@@ -836,6 +835,7 @@ class LinkedInScraper {
 						await companyTab.close()
 						result.details.companyWebsite = companyUrl || ""
 					}
+					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
 					const hunterPayload = {}
 					if (result.general.firstName && result.general.lastName) {
 						hunterPayload.first_name = result.general.firstName
@@ -858,10 +858,10 @@ class LinkedInScraper {
 					if (this.dropcontact) {
 						hunterPayload.company = result.jobs[0].companyName
 						hunterPayload.siren = true
+						init = new Date()
 						const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
 						console.log("hundropcontactSearchtS", dropcontactSearch)
 						this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
-						console.log("Elapsed:", new Date() - init, " ms.")
 						result.details.mailFromDropcontact = dropcontactSearch.email
 						result.dropcontact = Object.assign({}, dropcontactSearch)
 					}
@@ -870,6 +870,8 @@ class LinkedInScraper {
 					result.details.mailFromHunter = ""
 					result.details.companyWebsite = ""
 				}
+				console.log("Elapsed:", new Date() - init, " ms.")
+
 			}
 		}
 		csvResult = craftCsvObject(result)
