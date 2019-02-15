@@ -50,8 +50,8 @@ const scrapeCompanyInfo = (arg, callback) => {
 		if (document.querySelector(".org-top-card-primary-content img")) {
 			result.logo = document.querySelector(".org-top-card-primary-content img").src
 		}
-		if (document.querySelector(".org-grid__core-rail section p")) {
-			result.description = document.querySelector(".org-grid__core-rail section p").textContent.trim()
+		if (document.querySelector(".org-grid__core-rail--no-margin-left > section > p")) {
+			result.description = document.querySelector(".org-grid__core-rail--no-margin-left > section > p").textContent.trim()
 		}
 		if (document.querySelector(".org-top-card-primary-content__follower-count")) {
 			result.followerCount = document.querySelector(".org-top-card-primary-content__follower-count").textContent.trim().replace(/\D/g, "")
@@ -328,6 +328,8 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
 		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
+		await tab.screenshot(`${Date.now()}compi.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}compi.html`)
 		try {
 			if (await tab.isVisible(".org-page-navigation__item")) {
 				const insights = await getInsights(tab, link, result)
@@ -439,6 +441,8 @@ const isLinkedUrl = target => {
 					}
 				}
 				const newResult = await getCompanyInfo(tab, link, company, saveImg)
+				await tab.screenshot(`${Date.now()}newres.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}newres.html`)
 				newResult.timestamp = (new Date()).toISOString()
 				if (newResult === "invalid") {
 					utils.log("Cookie session invalidated, exiting...", "error")

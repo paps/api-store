@@ -49,8 +49,8 @@ const scrapeCompanyInfo = (arg, callback) => {
 		if (document.querySelector(".org-top-card-primary-content img")) {
 			result.logo = document.querySelector(".org-top-card-primary-content img").src
 		}
-		if (document.querySelector(".org-grid__core-rail section p")) {
-			result.description = document.querySelector(".org-grid__core-rail section p").textContent.trim()
+		if (document.querySelector(".org-grid__core-rail--no-margin-left > section > p")) {
+			result.description = document.querySelector(".org-grid__core-rail--no-margin-left > section > p").textContent.trim()
 		}
 		if (document.querySelector(".org-top-card-primary-content__follower-count")) {
 			result.followerCount = document.querySelector(".org-top-card-primary-content__follower-count").textContent.trim().replace(/\D/g, "")
