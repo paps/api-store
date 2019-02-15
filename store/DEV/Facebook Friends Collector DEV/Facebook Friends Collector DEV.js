@@ -25,6 +25,7 @@ const facebook = new Facebook(nick, buster, utils)
 let blocked
 
 //  format the data for the csv file
+// eslint-disable-next-line no-unused-vars
 const craftCsvObject = data => {
 	const csvResult = {
 		profileUrl: data.profileUrl,

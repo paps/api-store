@@ -12,6 +12,14 @@
 		"spreadsheetUrl": "https://docs.google.com/d/(...)"
 	},
 	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"username": "GitHub username",
+		"profileUrl": "GitHub user profile URL",
+		"contributionsRank": "",
+		"commitsCount": "",
+		"additionsCount": "",
+		"deletionsCount": ""
+	},
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {

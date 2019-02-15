@@ -122,6 +122,7 @@ const scrapeUsers = (): IUnknownObject[] => {
 				adds = adds.replace(/[^\d]+/g, "")
 				additions = parseInt(adds, 10)
 			}
+			user.additionsCount = additions
 		}
 
 		if (deletionSel) {
@@ -131,6 +132,7 @@ const scrapeUsers = (): IUnknownObject[] => {
 				dels = dels.replace(/[^\d]+/g, "")
 				deletions = parseInt(dels, 10)
 			}
+			user.deletionsCount = deletions
 		}
 
 		return user
@@ -213,7 +215,7 @@ const scrapeContributors = async (page: puppeteer.Page): Promise<IUnknownObject[
 	db = db.concat(utils.filterRightOuter(db, res))
 	await page.close()
 	await browser.close()
-	await utils.saveResults(noDatabase ? [] : res, noDatabase ? [] : db, csvName)
+	await utils.saveResults(res, db, csvName)
 	process.exit()
 })()
 .catch((err) => {
