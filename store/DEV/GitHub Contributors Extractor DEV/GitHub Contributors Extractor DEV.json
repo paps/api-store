@@ -1,0 +1,95 @@
+{
+	"slug": "github-contributors-extractor",
+	"description": "Extract the top 100 contributors of a GitHub repository",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35CDBF",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"spreadsheetUrl": "https://docs.google.com/d/(...)"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a GitHub repository URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a GitHub repository URL"
+					},
+					"columnName": {
+						"label": "Column name where GitHub repositories URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "__urls__"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
