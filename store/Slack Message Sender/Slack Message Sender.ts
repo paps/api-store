@@ -18,6 +18,7 @@ const inflater = new Messaging(utils)
 
 const DB_NAME = "result"
 const COLUMN = "0"
+const LINES = 10
 
 declare interface IApiParams {
 	sessionCookie: string,
@@ -77,9 +78,7 @@ declare interface IMutableApiParams {
 	}
 
 	rows = rows.filter((el) => db.findIndex((line) => el[columnName] === line.query) < 0).filter((el) => el[columnName])
-	if (typeof numberOfLinesPerLaunch === "number") {
-		rows = rows.slice(0, numberOfLinesPerLaunch)
-	}
+	rows = rows.slice(0, typeof numberOfLinesPerLaunch === "number" ? numberOfLinesPerLaunch : LINES)
 	if (rows.length < 1) {
 		utils.log("Input is empty OR every messages were send to every Slack user IDs", "warning")
 		process.exit()
