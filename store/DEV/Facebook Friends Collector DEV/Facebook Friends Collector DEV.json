@@ -1,0 +1,129 @@
+{
+	"slug": "facebook-friends-collector",
+	"description": "Extract lists of friends from Facebook profiles",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook_Profile_Scraper/Facebook+Profile+Scraper_nobg.png",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentDescription": "",
+	"hidden": false,
+	"new": false,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookieCUser": "your_c-user_session_cookie",
+		"sessionCookieXs": "your_xs_session_cookie",
+		"spreadsheetUrl": "facebook_profile_urls",
+		"profilesPerLaunch": 5,
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"profileURL": "Facebook profile URL",
+		"profilePictureUrl": "Profile picture URL",
+		"name": "Full name",
+		"status": "Friend or not",
+		"uid": "Facebook ID"
+	},
+	"defaultArgumentAllowed": true,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookieCUser": {
+						"label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your c_user session cookie here"
+					},
+					"sessionCookieXs": {
+						"label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your xs session cookie here"
+					},
+					"spreadsheetUrl": {
+						"helpers": [
+							"Enter either a Facebook Profile URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						],
+						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"columnName": {
+						"label": "Column name from which to get Profile URLs <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"placeholder": "Facebook Profile URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"maxFriends": {
+						"label": "Number of friends to collect per profile - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					},
+					"profilesPerLaunch": {
+						"label": "Number of profiles to process per launch - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookieCUser": {
+				"type": "string",
+				"required": true,
+				"minLength": 6
+			},
+			"sessionCookieXs": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"maxFriends": {
+				"type": "number",
+				"minimum": 1
+			},
+			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"profileUrls": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
