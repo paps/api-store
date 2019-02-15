@@ -20,6 +20,7 @@ store/Product Hunt Auto Upvoter/Product Hunt Auto Upvoter.js
 store/Product Hunt Profile Scraper/Product Hunt Profile Scraper.js
 store/Product Hunt Upvoter Extractor/Product Hunt Upvoter Extractor.js
 store/DEV/GitHub Contributors Extractor DEV/GitHub Contributors Extractor DEV.js
+store/GitHub Contributors Extractor/GitHub Contributors Extractor.js
 libs/lib-ProductHunt.js
 libs/lib-Slack.js
 libs/lib-DiscoverMail.js
