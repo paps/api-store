@@ -11,8 +11,7 @@
 	"new": false,
 	"defaultArgument": {
 		"urls": [ "https://phantombuster.com" ],
-		"timeToWait": 5000,
-		"pagesPerLaunch": 2
+		"timeToWait": 5000
 	},
 	"argumentForm": {
 		"enabled": true,
@@ -33,7 +32,7 @@
 					"pagesPerLaunch": {
 						"label": "Number of URLs to scrape per launch <a href=\"/api-store/6528/email-extractor#section_argument\" target=\"_blank\">(?)</a>",
 						"inputType": "number",
-						"helper": "If the field is empty, the API will process 2 URLs from your CSV"
+						"helper": "If the field is empty, the API will process all URLs from your CSV"
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",

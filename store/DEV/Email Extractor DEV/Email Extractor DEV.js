@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -17,11 +17,10 @@ const nick = new Nick({
 	timeout: 60000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result"
 const DEFAULT_WAIT_TIME = 5000
-const DEFAULT_PAGES_PER_LAUNCH = 2
 // }
 
 /**
@@ -34,7 +33,9 @@ const inflateArguments = async urls => {
 	const ret = []
 	for (const url of urls) {
 		try {
-			const tmp = await utils.getDataFromCsv2(url, null, false) // Set lib calls quiet
+			let tmp = await utils.getDataFromCsv2(url, null, false) // Set lib calls quiet
+			tmp = tmp.filter(el => el)
+			tmp = Array.from(new Set(tmp))
 			utils.log(`Getting data from ${url}...`, "loading")
 			utils.log(`Got ${tmp.length} lines from csv`, "done")
 			ret.push(...tmp)
@@ -111,7 +112,6 @@ const createCsvOutput = json => {
 	}
 
 	let db = await utils.getDb(csvName + ".csv")
-	console.log("db:", db)
 	let i = 0
 
 	let scrapingRes = []
@@ -136,11 +136,10 @@ const createCsvOutput = json => {
 
 	urls = await inflateArguments(urls)
 
-	if (!pagesPerLaunch) {
-		pagesPerLaunch = DEFAULT_PAGES_PER_LAUNCH
+	urls = urls.filter(el => db.findIndex(line => line.url === el) < 0)
+	if (typeof pagesPerLaunch === "number") {
+		urls = urls.slice(0, pagesPerLaunch)
 	}
-
-	urls = urls.filter(el => db.findIndex(line => line.url === el) < 0).slice(0, pagesPerLaunch)
 	if (urls.length < 1) {
 		utils.log("Input is empty OR all inputs are already scraped", "warning")
 		nick.exit()
