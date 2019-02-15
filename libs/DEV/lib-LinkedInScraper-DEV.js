@@ -1,5 +1,5 @@
 // Phantombuster configuration {
-"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact-DEV.js"
+"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact-DEV.js, lib-DiscoverMail.js"
 // }
 const { URL } = require ("url")
 
@@ -748,11 +748,16 @@ class LinkedInScraper {
 	 * @param {Object} [buster] -- buster instance}
 		 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
 	 */
-	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null) {
+	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null, emailChooser = null) {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
 		this.buster = buster
+		if (emailChooser === "phantombuster") {
+			require("coffee-script/register")
+			this.phantombusterMail = new (require("./lib-DiscoverMail"))(this.buster.apiKey)
+		}
+		this.emailChooser = emailChooser
 		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
@@ -811,7 +816,7 @@ class LinkedInScraper {
 			}
 		}
 
-		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
+		if ((this.hunter || this.dropcontact || this.phantombusterMail) && result.jobs.length > 0) {
 			let init
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -820,13 +825,13 @@ class LinkedInScraper {
 				try {
 					let servicesUsed
 					if (this.hunter) {
-						if (this.dropcontact) {
-							servicesUsed = "Hunter and Dropcontact"
-						} else {
-							servicesUsed = "Hunter"
-						}
-					} else {
+						servicesUsed = "Hunter"
+					}
+					if (this.hunter) {
 						servicesUsed = "Dropcontact"
+					}
+					if (this.phantombusterMail) {
+						servicesUsed = "Phantombuser via Dropcontact"
 					}
 					let companyUrl = null
 					if (this.nick) {
@@ -836,34 +841,45 @@ class LinkedInScraper {
 						result.details.companyWebsite = companyUrl || ""
 					}
 					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
-					const hunterPayload = {}
+					const mailPayload = {}
 					if (result.general.firstName && result.general.lastName) {
-						hunterPayload.first_name = result.general.firstName
-						hunterPayload.last_name = result.general.lastName
+						mailPayload.first_name = result.general.firstName
+						mailPayload.last_name = result.general.lastName
 					} else {
-						hunterPayload.full_name = result.general.fullName
+						mailPayload.full_name = result.general.fullName
 					}
 					if (!companyUrl) {
-						hunterPayload.company = result.jobs[0].companyName
+						mailPayload.company = result.jobs[0].companyName
 					} else {
-						hunterPayload.domain = companyUrl
+						mailPayload.domain = companyUrl
 					}
-					//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
+					//this.utils.log(`Sending ${JSON.stringify(mailPayload)} to Hunter`, "info")
 					if (this.hunter) {
-						const hunterSearch = await this.hunter.find(hunterPayload)
+						const hunterSearch = await this.hunter.find(mailPayload)
 						this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
 						result.details.mailFromHunter = hunterSearch.email
 						result.hunter = Object.assign({}, hunterSearch)
 					}
 					if (this.dropcontact) {
-						hunterPayload.company = result.jobs[0].companyName
-						hunterPayload.siren = true
+						mailPayload.company = result.jobs[0].companyName
+						mailPayload.siren = true
 						init = new Date()
-						const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
+						const dropcontactSearch = await this.dropcontact.clean(mailPayload)
 						console.log("hundropcontactSearchtS", dropcontactSearch)
 						this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
 						result.details.mailFromDropcontact = dropcontactSearch.email
 						result.dropcontact = Object.assign({}, dropcontactSearch)
+					}
+					if (this.phantombusterMail) {
+						mailPayload.company = result.jobs[0].companyName
+						mailPayload.siren = true
+						init = new Date()
+						const dropcontactSearch = await this.phantombusterMail.find(mailPayload)
+						const foundData = dropcontactSearch.data
+						console.log("dropcontactSearch", dropcontactSearch)
+						this.utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
+						result.details.mailFromDropcontact = foundData.email
+						result.dropcontact = Object.assign({}, foundData)
 					}
 				} catch (err) {
 					this.utils.log(err.toString(), "error")
