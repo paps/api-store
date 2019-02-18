@@ -43,17 +43,17 @@ const scrapeCompanyInfo = (arg, callback) => {
 	result.link = arg.link
 	result.query = arg.query
 	if (document.querySelector(".org-page-navigation")) { // new layout
-		if (document.querySelector(".org-top-card-primary-content__title")) {
-			result.name = document.querySelector(".org-top-card-primary-content__title").textContent.trim()
+		if (document.querySelector(".org-top-card-summary__title")) {
+			result.name = document.querySelector(".org-top-card-summary__title").title
 		}
-		if (document.querySelector(".org-top-card-primary-content img")) {
-			result.logo = document.querySelector(".org-top-card-primary-content img").src
+		if (document.querySelector(".org-top-card-primary-content__logo")) {
+			result.logo = document.querySelector(".org-top-card-primary-content__logo").src
 		}
 		if (document.querySelector(".org-grid__core-rail--no-margin-left > section > p")) {
 			result.description = document.querySelector(".org-grid__core-rail--no-margin-left > section > p").textContent.trim()
 		}
-		if (document.querySelector(".org-top-card-primary-content__follower-count")) {
-			result.followerCount = document.querySelector(".org-top-card-primary-content__follower-count").textContent.trim().replace(/\D/g, "")
+		if (document.querySelector(".org-top-card-summary__follower-count")) {
+			result.followerCount = parseInt(document.querySelector(".org-top-card-summary__follower-count").textContent.trim().replace(/\D/g, ""), 10)
 		}
 		if (document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]")) {
 			result.website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
