@@ -1,17 +1,17 @@
 const needle = require("needle")
 
 class DiscoverMail {
+	private apiKey: string
 
 	constructor(apiKey: string) {
-		// @ts-ignore
 		this.apiKey = apiKey
 	}
+
 	public async find(params: object) {
 		const options = {
 			json: true,
 			headers:  {
 				"Content-Type": "application/json",
-				// @ts-ignore
 				"X-Phantombuster-Key-1": this.apiKey,
 			},
 		}
