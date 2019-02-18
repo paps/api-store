@@ -326,6 +326,9 @@ const isUrl = target => url.parse(target).hostname !== null
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 		}
 		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
+		if (rateLimited) {
+			break
+		}
 	}
 	if (rateLimited) {
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")

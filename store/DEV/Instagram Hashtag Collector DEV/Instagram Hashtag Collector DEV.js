@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -299,8 +300,23 @@ const isUrl = target => url.parse(target).hostname !== null
 			isLocation = false
 		} else {
 			inputType = "locations"
-			targetUrl = await instagram.searchLocation(tab, hashtag)
 			isLocation = true
+			try {
+				console.log("searching targeturl")
+				targetUrl = await instagram.searchLocation(tab, hashtag)
+				console.log("targetUrl", targetUrl)
+			} catch (err) {
+				console.log("ha", err)
+				await tab.screenshot(`${Date.now()}checkUpcomingBirthdays.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}checkUpcomingBirthdays.html`)
+				if (await tab.isVisible("nav input")) {
+					console.log("is visible")
+				}
+				if (await tab.isPresent("nav input")) {
+					console.log("is present")
+				}
+				continue
+			}
 		}
 		if (!targetUrl) {
 			utils.log(`No search result page found for ${hashtag}`, "error")
@@ -326,6 +342,9 @@ const isUrl = target => url.parse(target).hostname !== null
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 		}
 		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
+		if (rateLimited) {
+			break
+		}
 	}
 	if (rateLimited) {
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")

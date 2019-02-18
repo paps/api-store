@@ -533,7 +533,7 @@ class StoreUtilities {
 		if (timeLeft === -1) {
 			return { timeLeft: false, message: "Script aborted by user." }
 		} else if (timeLeft <= this.minTimeBeforeExit) {
-			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left.` }
+			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left. You can check your execution time at https://phantombuster.com/usage` }
 		} else {
 			return { timeLeft: true, message: timeLeft }
 		}

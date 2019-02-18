@@ -523,11 +523,9 @@ class StoreUtilities {
 	// Tells the script if it should exit or not, based on execution time left
 	async checkTimeLeft() {
 		const buster = this.buster
-		console.log("checking this.minTimeBeforeExit:", this.minTimeBeforeExit)
 		let timeLeft
 		try {
 			timeLeft = await buster.getTimeLeft()
-			console.log("checking timeLeft:", timeLeft)
 		} catch (e) {
 			return { timeLeft: true, message: 1000 } // call to getTimeLeft() failed, this is not a reason to abort
 		}
@@ -545,7 +543,7 @@ class StoreUtilities {
 		if (timeLeft === -1) {
 			return { timeLeft: false, message: "Script aborted by user." }
 		} else if (timeLeft <= this.minTimeBeforeExit) {
-			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left.` }
+			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left. You can check your execution time at https://phantombuster.com/usage` }
 		} else {
 			return { timeLeft: true, message: timeLeft }
 		}

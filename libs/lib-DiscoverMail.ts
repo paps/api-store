@@ -22,6 +22,8 @@ class DiscoverMail {
 			} else {
 				throw new Error("Could not parse response from Dropcontact")
 			}
+		} else if (res.statusCode === 400) {
+			throw new Error("You have no remaining emails!")
 		} else {
 			throw new Error(`Dropcontact returned HTTP ${res.statusCode}`)
 		}

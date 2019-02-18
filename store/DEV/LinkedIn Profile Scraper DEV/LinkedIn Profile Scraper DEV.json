@@ -73,21 +73,22 @@
 						"label": "Choose an email discovery service",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
-						"optionLabels": [ "none", "Phantombuster", "Dropcontact.io", "Hunter.io" ],
+						"sort": false,
+						"optionLabels": [ "None", "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
 						"type": "select"
 					},
 					"hunterApiKey": {
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io",
 						"dependencies": {
-							"emailChooser": "hunter"
+							"emailChooser": [ "hunter", "hunter and dropcontact" ]
 						}
 					},
 					"dropcontactApiKey": {
 						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
 						"dependencies": {
-							"emailChooser": "dropcontact"
+							"emailChooser": [ "dropcontact", "hunter and dropcontact" ]
 						}
 					},
 					"numberOfAddsPerLaunch": {
@@ -126,7 +127,7 @@
 				"type": "string"
 			},
 			"emailChooser": {
-				"enum": [ "none", "phantombuster", "dropcontact", "hunter" ],
+				"enum": [ "none", "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
 				"default": "none"
 			},
 			"hunterApiKey": {
