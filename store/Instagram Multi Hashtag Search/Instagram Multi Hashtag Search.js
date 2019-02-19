@@ -27,7 +27,7 @@ const WebSearch = require("./lib-WebSearch")
 
 let graphql = null
 let hashWasFound = false
-
+let rateLimited = false
 /* global $ */
 // }
 
@@ -179,10 +179,17 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 		}
 		buster.progressHint(i / maxPosts, term)
 		let ajaxRes
+		const ajaxUrl = forgeAjaxURL()
 		try {
-			ajaxRes = await tab.evaluate(ajaxCall, { url: forgeAjaxURL(), headers: graphql.headers })
+			ajaxRes = await tab.evaluate(ajaxCall, { url: ajaxUrl, headers: graphql.headers })
 		} catch (err) {
-			utils.log(err, "warning")
+			await tab.open(ajaxUrl)
+			let instagramJsonCode = await tab.getContent()
+			instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
+			if (instagramJsonCode && instagramJsonCode.status === "fail") {
+				utils.log(`Error getting hashtags : ${instagramJsonCode.message}`, "warning")
+				rateLimited = true
+			}
 			return false
 		}
 		const cursor = term.startsWith("#") ? ajaxRes.data.hashtag.edge_hashtag_to_media.page_info : ajaxRes.data.location.edge_location_to_media.page_info
@@ -379,6 +386,10 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 				}
 			}
 			terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
+			if (rateLimited) {
+				utils.log("Rate limited by Instagram, exiting...", "warning")
+				break
+			}
 		} while (sortArray.length >= 2)
 		utils.log(`${scrapedData.length} posts scraped.`, "done")
 	}
