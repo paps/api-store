@@ -224,6 +224,9 @@ const sendMessage = async (tab, message, tags, profile) => {
 			} else {
 				profile = await linkedInScraper.scrapeProfile(tab, url)
 				row = Object.assign({}, profile.csv, row)
+				if (!row.firstName && profile.csv && profile.csv.firstName) { // if there's a empty tag firstName, we use the found firstName instead to not overwrite it
+					row.firstName = profile.csv.firstName
+				}
 			}
 			// Can't send a message to yourself ...
 			if (await tab.isVisible(SELECTORS.editProfile)) {

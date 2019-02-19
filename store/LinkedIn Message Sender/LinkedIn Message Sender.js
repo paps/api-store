@@ -29,7 +29,6 @@ const DB_SHORT_NAME = "linkedin-chat-send-message"
 const DB_NAME = DB_SHORT_NAME + ".csv"
 
 const PROFILES_PER_LAUNCH = 10
-let screenCT
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
@@ -136,9 +135,6 @@ const sendMessage = async (tab, message, tags, profile) => {
 			utils.log(`Couldn't get first name: ${err}`, "warning")
 		}
 	}
-	if (!firstName && screenCT) {
-		await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
-	}
 	tags = Object.assign({}, { firstName }, tags) // Custom tags are mandatory
 	message = inflater.forgeMessage(message, tags)
 	const payload = { profileUrl: await tab.getUrl(), message, timestamp: (new Date()).toISOString() }
@@ -212,9 +208,6 @@ const sendMessage = async (tab, message, tags, profile) => {
 	rows = rows.slice(0, profilesPerLaunch)
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
-	if (sessionCookie.endsWith("d6wpQQVf23ZqEP7ucnuh6orVzFCutvU")) {
-		screenCT = true
-	}
 	for (let row of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
