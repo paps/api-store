@@ -44,43 +44,6 @@ const SELECTORS = {
 // }
 
 /**
- * @description Browser context function used to scrape the firstname of the current LinkedIn profile
- * @param {Object} arg - No argument required
- * @param {Callback} callback - Switch back to script context
- */
-const getFirstName = (arg, callback) => {
-	let name = ""
-	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-	} else if (document.querySelector("div.presence-entity__image")) {
-		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-	}
-	if (!name.length) {
-		callback(null, "")
-	} else {
-		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-		let i = true
-		while (i) {
-			if (name.length > 0) {
-				name = name.split(" ")
-				name.pop()
-				name = name.join(" ")
-				if (hasAccount.indexOf(name) >= 0) {
-					i = false
-				}
-			} else {
-				i = false
-			}
-		}
-		if (name.length > 0) {
-			callback(null, name)
-		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
-		}
-	}
-}
-
-/**
  * @description Browser context function used to wait until the send button message is disabled
  * disabled DOM preoperty means that there is no text to send on the chat widget
  * @param {{ sel: String }} arg - Chat widget "send button" CSS selector
@@ -156,23 +119,20 @@ const sendMessage = async (tab, message, tags, profile) => {
 	if (profile && profile.csv && profile.csv.firstName) {
 		firstName = profile.csv.firstName
 	} else {
-		firstName = await tab.evaluate(getFirstName)
-		if (!firstName) {
-			try {
-				const name = await tab.evaluate((arg, cb) => {
-					let name = ""
-					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-					} else if (document.querySelector("div.presence-entity__image")) {
-						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-					}
-					cb(null, name)
-				})
-				const nameArray = name.split(" ")
-				firstName = nameArray.shift()
-			} catch (err) {
-				//
-			}
+		try {
+			const name = await tab.evaluate((arg, cb) => {
+				let name = ""
+				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+				} else if (document.querySelector("div.presence-entity__image")) {
+					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+				}
+				cb(null, name)
+			})
+			const nameArray = name.split(" ")
+			firstName = nameArray.shift()
+		} catch (err) {
+			utils.log(`Couldn't get first name: ${err}`, "warning")
 		}
 	}
 	tags = Object.assign({}, { firstName }, tags) // Custom tags are mandatory

@@ -354,10 +354,13 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 	}
 }
 
-const isLinkedUrl = target => {
+const isLinkedUrl = url => {
+	if (url && url.startsWith("www.")) {
+		url = `https://${url}`
+	}
 	try {
-		let urlRepresentation = new URL(target)
-		return urlRepresentation.hostname.indexOf("linkedin.com") > -1
+		let urlObject = new URL(url)
+		return urlObject.hostname.indexOf("linkedin.com") > -1
 	} catch (err) {
 		return false
 	}

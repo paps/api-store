@@ -361,10 +361,13 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 	}
 }
 
-const isLinkedUrl = target => {
+const isLinkedUrl = url => {
+	if (url && url.startsWith("www.")) {
+		url = `https://${url}`
+	}
 	try {
-		let urlRepresentation = new URL(target)
-		return urlRepresentation.hostname.indexOf("linkedin.com") > -1
+		let urlObject = new URL(url)
+		return urlObject.hostname.indexOf("linkedin.com") > -1
 	} catch (err) {
 		return false
 	}
@@ -401,6 +404,7 @@ const isLinkedUrl = target => {
 	for (const company of companies) {
 		if (company.length > 0) {
 			fullUrl = isLinkedUrl(company)
+			console.log("fullUrl", fullUrl)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				utils.log(`Stopped getting companies data: ${timeLeft.message}`, "warning")

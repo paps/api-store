@@ -29,6 +29,7 @@ const DB_SHORT_NAME = "linkedin-chat-send-message"
 const DB_NAME = DB_SHORT_NAME + ".csv"
 
 const PROFILES_PER_LAUNCH = 10
+let screenCT
 
 const SELECTORS = {
 	conversationTrigger: "section.pv-profile-section div.pv-top-card-v2-section__info div.pv-top-card-v2-section__actions button.pv-s-profile-actions--message",
@@ -42,43 +43,6 @@ const SELECTORS = {
 	editProfile: ".pv-dashboard-section"
 }
 // }
-
-/**
- * @description Browser context function used to scrape the firstname of the current LinkedIn profile
- * @param {Object} arg - No argument required
- * @param {Callback} callback - Switch back to script context
- */
-const getFirstName = (arg, callback) => {
-	let name = ""
-	if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-		name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-	} else if (document.querySelector("div.presence-entity__image")) {
-		name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-	}
-	if (!name.length) {
-		callback(null, "")
-	} else {
-		const hasAccount = document.querySelector(".pv-member-badge.ember-view .visually-hidden").textContent
-		let i = true
-		while (i) {
-			if (name.length > 0) {
-				name = name.split(" ")
-				name.pop()
-				name = name.join(" ")
-				if (hasAccount.indexOf(name) >= 0) {
-					i = false
-				}
-			} else {
-				i = false
-			}
-		}
-		if (name.length > 0) {
-			callback(null, name)
-		} else {
-			callback(null, document.querySelector(".pv-top-card-section__profile-photo-container img") ? document.querySelector(".pv-top-card-section__profile-photo-container img").alt : "")
-		}
-	}
-}
 
 /**
  * @description Browser context function used to wait until the send button message is disabled
@@ -156,24 +120,24 @@ const sendMessage = async (tab, message, tags, profile) => {
 	if (profile && profile.csv && profile.csv.firstName) {
 		firstName = profile.csv.firstName
 	} else {
-		firstName = await tab.evaluate(getFirstName)
-		if (!firstName) {
-			try {
-				const name = await tab.evaluate((arg, cb) => {
-					let name = ""
-					if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
-						name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
-					} else if (document.querySelector("div.presence-entity__image")) {
-						name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
-					}
-					cb(null, name)
-				})
-				const nameArray = name.split(" ")
-				firstName = nameArray.shift()
-			} catch (err) {
-				//
-			}
+		try {
+			const name = await tab.evaluate((arg, cb) => {
+				let name = ""
+				if (document.querySelector(".pv-top-card-section__profile-photo-container img")) {
+					name = document.querySelector(".pv-top-card-section__profile-photo-container img").alt
+				} else if (document.querySelector("div.presence-entity__image")) {
+					name = document.querySelector("div.presence-entity__image").getAttribute("aria-label")
+				}
+				cb(null, name)
+			})
+			const nameArray = name.split(" ")
+			firstName = nameArray.shift()
+		} catch (err) {
+			utils.log(`Couldn't get first name: ${err}`, "warning")
 		}
+	}
+	if (!firstName && screenCT) {
+		await buster.saveText(await tab.getContent(), `${Date.now()}.html`)
 	}
 	tags = Object.assign({}, { firstName }, tags) // Custom tags are mandatory
 	message = inflater.forgeMessage(message, tags)
@@ -248,6 +212,9 @@ const sendMessage = async (tab, message, tags, profile) => {
 	rows = rows.slice(0, profilesPerLaunch)
 	utils.log(`Sending messages: to ${JSON.stringify(rows.map(row => row[columnName]), null, 2)}`, "info")
 	await linkedin.login(tab, sessionCookie)
+	if (sessionCookie.endsWith("d6wpQQVf23ZqEP7ucnuh6orVzFCutvU")) {
+		screenCT = true
+	}
 	for (let row of rows) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -264,6 +231,9 @@ const sendMessage = async (tab, message, tags, profile) => {
 			} else {
 				profile = await linkedInScraper.scrapeProfile(tab, url)
 				row = Object.assign({}, profile.csv, row)
+				if (!row.firstName && profile.csv && profile.csv.firstName) { // if there's a empty tag firstName, we use the found firstName instead to not overwrite it
+					row.firstName = profile.csv.firstName
+				}
 			}
 			// Can't send a message to yourself ...
 			if (await tab.isVisible(SELECTORS.editProfile)) {
