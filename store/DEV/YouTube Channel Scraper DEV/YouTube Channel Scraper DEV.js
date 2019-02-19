@@ -19,6 +19,25 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
+
+/**
+ * @description Tiny function used to check if a given string represents a Facebook URL
+ * @param { String } urm
+ * @return { Boolean } true if target represents an Facebook URL otherwise false
+ */
+const isYouTubeUrl = (url) => {
+	try {
+		const { URL } = require("url")
+		let urlObject = new URL(url.toLowerCase())
+		if (urlObject.hostname.includes("youtube.com")) {
+			return true
+		}
+	} catch (err) {
+		//
+	}
+	return false
+	}
+
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
@@ -102,7 +121,7 @@ nick.newTab().then(async (tab) => {
 	if (!csvName) { csvName = "result" }
 	let singleProfile
 	if (spreadsheetUrl) {
-		if (spreadsheetUrl.toLowerCase().includes("youtube.com/")) { // single instagram url
+		if (isYouTubeUrl(spreadsheetUrl)) { // single YouTube url
 			channelUrls = [spreadsheetUrl]
 			singleProfile = true
 		} else { // CSV
@@ -121,13 +140,17 @@ nick.newTab().then(async (tab) => {
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
-	
+
 	for (const channelUrl of channelUrls) {
-		result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
+		if (isYouTubeUrl(channelUrl)) {
+			result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
+		}
+		} else {
+			utils.log(`${channelUrl} isn't a YouTube Channel URL, skipping entry...`, "warning")
 		}
 	}
 	await utils.saveResults(result, result, csvName)

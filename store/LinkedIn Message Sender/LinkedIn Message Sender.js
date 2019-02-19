@@ -256,7 +256,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 		}
 		buster.progressHint((step++) / rows.length, `Sending message to ${row[columnName]}`)
 		utils.log(`Loading ${row[columnName]}...`, "loading")
-		const url = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+		const url = linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
 		let profile = null
 		try {
 			if (disableScraping) {
@@ -268,7 +268,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 			// Can't send a message to yourself ...
 			if (await tab.isVisible(SELECTORS.editProfile)) {
 				utils.log("Trying to send a message to yourself...", "warning")
-				result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
+				result.push({ profileUrl: row[columnName], timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
 				continue
 			}
 			utils.log(`${row[columnName]} loaded`, "done")
@@ -283,7 +283,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 		} catch (err) {
 			utils.log(`${err.message || err}`, "warning")
 			const _errMessage = err.message || err
-			result.push({ profileUrl: url, timestamp: (new Date()).toISOString(), error: err.message || err })
+			result.push({ profileUrl: row[columnName], timestamp: (new Date()).toISOString(), error: err.message || err })
 			// Detecting LinkedIn cookie invalidation
 			if (typeof _errMessage === "string" && _errMessage.indexOf("net::ERR_TOO_MANY_REDIRECTS") > -1) {
 				utils.log("You're currently disconnected from LinkedIn, please update your session cookie", "warning")

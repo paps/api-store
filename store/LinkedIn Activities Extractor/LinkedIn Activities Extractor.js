@@ -84,7 +84,7 @@ const checkIfCommentsAreVisible = (arg, cb) => {
 
 // click on all Comments button where comments aren't already visible
 const loadComments = async (tab, postCount, selector) => {
-	utils.log("Loading posts URLs...", "loading")
+	utils.log("Loading posts URLs through comments...", "loading")
 	for (let postNumber = 0 ; postNumber < postCount ; postNumber++) {
 		const comments = await tab.evaluate(checkIfCommentsAreVisible, { selector, postNumber })
 		if (!comments) {
@@ -160,6 +160,7 @@ const scrapeActivities = (arg, cb) => {
 
 // click on Like button for all posts we didn't get a post URL, to trigger voyager/api/feed/likes event
 const getActityIdFromLikes = async (tab, activityResults, postCount, selector) => {
+	utils.log("Loading posts URLs through likes...", "loading")
 	let articleId
 	const interceptLinkedInApiCalls = e => {
 		if (e.response.url.includes("voyager/api/feed/likes") && e.response.status === 200) {
@@ -316,7 +317,7 @@ const getCompanyActivities = async (tab, companyUrl, convertedUrl, numberMaxOfPo
 
 	let result = await utils.getDb(csvName + ".csv")
 	if (!reprocessAll) {
-		profileUrls = getUrlsToScrape(profileUrls.filter(el => utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
+		profileUrls = getUrlsToScrape(profileUrls.filter(el => el && utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
 	}
 	console.log(`Profiles to process: ${JSON.stringify(profileUrls, null, 4)}`)
 

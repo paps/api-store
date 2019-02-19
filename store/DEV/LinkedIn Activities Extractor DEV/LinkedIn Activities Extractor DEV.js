@@ -84,12 +84,12 @@ const checkIfCommentsAreVisible = (arg, cb) => {
 
 // click on all Comments button where comments aren't already visible
 const loadComments = async (tab, postCount, selector) => {
-	utils.log("Loading posts URLs...", "loading")
+	utils.log("Loading posts URLs through comments...", "loading")
 	for (let postNumber = 0 ; postNumber < postCount ; postNumber++) {
 		const comments = await tab.evaluate(checkIfCommentsAreVisible, { selector, postNumber })
 		if (!comments) {
 			const click = await tab.evaluate(clickCommentOrLike, { selector, postNumber, type: "comments" })
-			if (click) { // if there's comment to clickclick on
+			if (click) { // if there's comment to click on
 				await tab.wait(1000)
 			}
 		}
@@ -160,6 +160,7 @@ const scrapeActivities = (arg, cb) => {
 
 // click on Like button for all posts we didn't get a post URL, to trigger voyager/api/feed/likes event
 const getActityIdFromLikes = async (tab, activityResults, postCount, selector) => {
+	utils.log("Loading posts URLs through likes...", "loading")
 	let articleId
 	const interceptLinkedInApiCalls = e => {
 		if (e.response.url.includes("voyager/api/feed/likes") && e.response.status === 200) {
@@ -178,6 +179,7 @@ const getActityIdFromLikes = async (tab, activityResults, postCount, selector) =
 					await tab.wait(100)
 				} while (!articleId && new Date() - initDate < 10000)
 				if (articleId) {
+					console.log("found articleID + ", postNumber + ":", articleId)
 					activityResults[postNumber].postUrl = `https://www.linkedin.com/feed/update/urn:li:activity:${articleId}`
 					articleId = null
 					await tab.evaluate(clickDismiss)
@@ -238,7 +240,6 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 	// we click on Comments button to access posts' activityId
 	await loadComments(tab, postCount, selector)
 	// scraping action
-
 	let activityResults = await tab.evaluate(scrapeActivities, { selector, profileUrl })
 	// for posts we didn't get postUrl through activityId, we use the Like button that trigger an API event
 	activityResults = await getActityIdFromLikes(tab, activityResults, postCount, selector)
@@ -316,7 +317,7 @@ const getCompanyActivities = async (tab, companyUrl, convertedUrl, numberMaxOfPo
 
 	let result = await utils.getDb(csvName + ".csv")
 	if (!reprocessAll) {
-		profileUrls = getUrlsToScrape(profileUrls.filter(el => utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
+		profileUrls = getUrlsToScrape(profileUrls.filter(el => el && utils.checkDb(el, result, "profileUrl")), numberOfLinesPerLaunch)
 	}
 	console.log(`Profiles to process: ${JSON.stringify(profileUrls, null, 4)}`)
 
