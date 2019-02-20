@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -22,7 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const { URL } = require("url")
 
 const MAX_SKILLS = 6
@@ -115,7 +115,7 @@ const removeLinkedinSubdomains = url => {
 			urls = [spreadsheetUrl]
 		} else {
 			if (spreadsheetUrl.includes("linkedin.com/sales/search/") || spreadsheetUrl.includes("linkedin.com/search/results/")) {
-				utils.log("Input is a Search URL and not a Spreadsheet or Profile URL.", "error")
+				utils.log("Input is a Search URL and not a Spreadsheet or Profile URL. Please use our Search Export API to extract results from that URL.", "error")
 				nick.exit(utils.ERROR_CODES.BAD_INPUT)
 			}
 			urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)

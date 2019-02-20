@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -19,11 +18,11 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let db
@@ -58,19 +57,8 @@ const cleanUpEmojis = bundle => {
 	}
 }
 
-// // Check if a url is already in the csv
-// const checkDb = (str, db) => {
-// 	for (const line of db) {
-// 		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-// 		if (str === line.baseUrl || str.match(regex)) {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
 const getInviteesUrls = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => { 
+	cb(null, Array.from(document.querySelectorAll(".invitation-card")).map(el => {
 		if (el.querySelector("a[data-control-name=profile]")) {
 			let url = el.querySelector("a[data-control-name=profile]").href
 			if (url.endsWith("/")) {
@@ -89,8 +77,8 @@ const getInviteesUrls = (arg, cb) => {
  * @return {Promise<Array<Object>>} All invitations successfully sent
  */
 const validateInvitations = async (invitations, sentCount) => {
-	invitations.forEach(el => { 
-		if (el.profileUrl.endsWith("/")) { 
+	invitations.forEach(el => {
+		if (el.profileUrl.endsWith("/")) {
 			el.profileUrl = el.profileUrl.slice(0, -1)
 		}
 	})
@@ -99,8 +87,6 @@ const validateInvitations = async (invitations, sentCount) => {
 	try {
 		await withdrawTab.open(INVITATIONS_MANAGER_URL)
 		await withdrawTab.waitUntilVisible(".mn-list-toolbar", 30000)
-		await withdrawTab.screenshot(`${Date.now()}verif.png`)
-		await buster.saveText(await withdrawTab.getContent(), `${Date.now()}verif.html`)
 		let urls = await withdrawTab.evaluate(getInviteesUrls)
 		urls = urls.slice(0, sentCount)
 		matches = invitations.filter(invitation => urls.includes(invitation.profileUrl))
@@ -124,11 +110,8 @@ const validateInvitations = async (invitations, sentCount) => {
  * @throws on css failures
  */
 const connectTo = async (selector, tab, message) => {
-	console.log("connectTo", selector)
 	await tab.click(selector)
 	const selectorFound = await tab.waitUntilVisible([".send-invite__actions > button:nth-child(1)", "input#intentAnswer1", ".pv-s-profile-actions__overflow-toggle"], 15000, "or")
-	await tab.screenshot(`${Date.now()}firstselector.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}firstselector.html`)
 	if (selectorFound === "input#intentAnswer1") {
 		throw "LinkedIn premium account needed to add this profile"
 	}
@@ -154,8 +137,6 @@ const connectTo = async (selector, tab, message) => {
 	if (await tab.isVisible("input#email")) {
 		throw "Email needed."
 	}
-	await tab.screenshot(`${Date.now()}avtmessage.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}avtmessage.html`)
 	if (message && message.length > 0) {
 		try {
 			await tab.click(".send-invite__actions > button:nth-child(1)")
@@ -172,13 +153,7 @@ const connectTo = async (selector, tab, message) => {
 			utils.log(`Error while sending message: ${err}, url:${currentUrl}`, "error")
 		}
 	}
-	await tab.screenshot(`${Date.now()}avantclick.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}avantclick.html`)
-	// nick.exit()
 	await tab.click(".send-invite__actions > button:nth-child(2)")
-	await tab.wait(5000)
-	await tab.screenshot(`${Date.now()}waitan.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}waitan.html`)
 	try {
 		// Sometimes this alert isn't shown but the user is still added
 		const selector = await tab.waitUntilVisible([
@@ -188,16 +163,12 @@ const connectTo = async (selector, tab, message) => {
 			"button.connect.primary, button.pv-s-profile-actions--connect li-icon[type=\"success-pebble-icon\"]", // CSS selector used if the new UI is loaded
 			"div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error" // CSS selector used if the invitation couldn't be sent
 		], 30000, "or")
-		await tab.screenshot(`${Date.now()}selectorfound.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}selectorfound.html`)
-		console.log("selector:", selector)
 		if (selector === "div.mn-heathrow-toast__confirmation-text > .mn-heathrow-toast__icon--error") {
 			utils.log("Invitation couldn't be sent.", "error")
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
-		await tab.screenshot(`${Date.now()}notverified.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}notverified.html`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}CouldNotVerify.html`)
 	}
 }
 
@@ -340,9 +311,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	// }
 	invitation.profileId = linkedIn.getUsername(browserUrl)
 	invitation.profileUrl = browserUrl
-	await tab.screenshot(`${Date.now()}invitation.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}invitation.html`)
-	console.log("invitation", invitation)
+
 	if (message && !invitation.firstName) {
 		try {
 			const name = await tab.evaluate((arg, cb) => {
@@ -444,6 +413,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			break
 		}
 	}
+
 	return invitation
 }
 
@@ -470,6 +440,7 @@ nick.newTab().then(async (tab) => {
 	if (!hunterApiKey) {
 		hunterApiKey = ""
 	}
+
 	if (typeof numberOfAddsPerLaunch !== "number") {
 		numberOfAddsPerLaunch = 10
 	}
@@ -481,10 +452,12 @@ nick.newTab().then(async (tab) => {
 		utils.log("Warning, your message sent may be too long for LinkedIn (300 characters max).", "warning")
 	}
 	await linkedIn.login(tab, sessionCookie)
+
 	hunterApiKey = hunterApiKey.trim()
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let rows = []
 	let columns = []
+	const result = []
 	if (spreadsheetUrl) {
 		spreadsheetUrl = spreadsheetUrl.trim()
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -540,10 +513,9 @@ nick.newTab().then(async (tab) => {
 					if (!invitationResult.error) {
 						invitations.push(invitationResult)
 					} else if (invitationResult.error !== "Message over 300 characters") {
-						db.push(invitationResult)
+						result.push(invitationResult)
 					}
 				}
-				console.log("invitation Result: ", invitationResult)
 			} catch (error) {
 				utils.log(`Error while adding ${row[columnName]}: ${error.message || error}`, "error")
 			}
@@ -555,7 +527,6 @@ nick.newTab().then(async (tab) => {
 	 * "Successfull" invitations are stored here,
 	 * in order to check later in the script execution if they're sent
 	 */
-	console.log("invitation:", invitations)
 	if (invitations.length > 0) {
 		const initDate = new Date()
 		if (!waitDuration) {
@@ -573,7 +544,6 @@ nick.newTab().then(async (tab) => {
 			}
 			await tab.wait(500)
 		} while (new Date() - initDate < waitDurationMs)
-		utils.log(`Double checking ${invitations.length} invitation${invitations.length === 1 ? "" : "s"}...`, "info")
 		try {
 			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
@@ -583,7 +553,7 @@ nick.newTab().then(async (tab) => {
 					invit.error = "shadow ban"
 					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
 				} else {
-					db.push(invit)
+					result.push(invit)
 				}
 			}
 		} catch (err) {
@@ -592,12 +562,10 @@ nick.newTab().then(async (tab) => {
 			}
 		}
 	}
-	console.log("db:", db)
 	// cleanUpInvitations(invitations, message)
-	console.log("db:", db)
-
 	// JSON output will only return the current scraping result
-	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null)
+	db.push(...result)
+	await utils.saveResults(result, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {
 		utils.log(`${db.length} profiles have been processed.`, "done")
 	}

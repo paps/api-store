@@ -168,6 +168,7 @@ const connectTo = async (selector, tab, message) => {
 		}
 	} catch (error) {
 		utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
+		await buster.saveText(await tab.getContent(), `${Date.now()}CouldNotVerify.html`)
 	}
 }
 
@@ -456,6 +457,7 @@ nick.newTab().then(async (tab) => {
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
 	let rows = []
 	let columns = []
+	const result = []
 	if (spreadsheetUrl) {
 		spreadsheetUrl = spreadsheetUrl.trim()
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -511,7 +513,7 @@ nick.newTab().then(async (tab) => {
 					if (!invitationResult.error) {
 						invitations.push(invitationResult)
 					} else if (invitationResult.error !== "Message over 300 characters") {
-						db.push(invitationResult)
+						result.push(invitationResult)
 					}
 				}
 			} catch (error) {
@@ -551,7 +553,7 @@ nick.newTab().then(async (tab) => {
 					invit.error = "shadow ban"
 					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
 				} else {
-					db.push(invit)
+					result.push(invit)
 				}
 			}
 		} catch (err) {
@@ -562,7 +564,8 @@ nick.newTab().then(async (tab) => {
 	}
 	// cleanUpInvitations(invitations, message)
 	// JSON output will only return the current scraping result
-	await utils.saveResults(db, db, DB_NAME.split(".").shift(), null)
+	db.push(...result)
+	await utils.saveResults(result, db, DB_NAME.split(".").shift(), null)
 	if (db.length) {
 		utils.log(`${db.length} profiles have been processed.`, "done")
 	}

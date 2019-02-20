@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,7 +19,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 
@@ -132,18 +131,13 @@ const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
 		utils.log("You don't have access to this profile's friends list.", "info")
 		return [{profileUrl, error: "Friends list not accessible", timestamp :(new Date()).toISOString()}]
 	}
-	console.log("isVisble:", await tab.isVisible("#pagelet_timeline_medley_friends"))
-	await tab.screenshot(`${Date.now()}isvi.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}isvi.html`)
 	try {
 		await tab.click("#fbTimelineHeadline ul > li > a[data-tab-key=\"friends\"]")
 		await tab.waitUntilVisible("#pagelet_timeline_medley_friends div[id*=\"collection_wrapper\"]")
 	} catch (err) {
-		console.log("err:", err)
+		//
 	}
 
-	await tab.screenshot(`${Date.now()}res.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}res.html`)
 	let lastDate = new Date()
 	let friendCount = 0
 	do {
@@ -165,8 +159,6 @@ const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
 		}
 		await tab.wait(200)
 	} while (!maxFriends || friendCount < maxFriends)
-
-	console.log("friendCount", friendCount)
 	result = await tab.evaluate(scrapeProfiles, { profileUrl })
 	return result
 }

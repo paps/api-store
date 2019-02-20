@@ -149,7 +149,8 @@ nick.newTab().then(async (tab) => {
 				utils.log("Empty line...", "warning")
 		    }
 		} catch (error) {
-				utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url} because of an error: ${error}`, "warning")
+                utils.log(`Could not ${unfollowProfiles ? "un" : ""}follow ${url} because of an error: ${error}`, "warning")
+                db.push({ baseUrl: url, timestamp:(new Date()).toISOString(), error })
 		}
 	}
 	await utils.saveResults(db, db, csvName, null, false)
