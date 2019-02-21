@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
-const Facebook = require("./lib-Facebook-DEV")
+const Facebook = require("./lib-Facebook")
 const facebook = new Facebook(nick, buster, utils)
 let blocked
 
@@ -94,7 +94,7 @@ const scrapeProfiles = (arg, cb) => {
 			scrapedProfile.imgUrl
 		}
 		scrapedProfile.timestamp = (new Date()).toISOString()
-		scrapedProfile.query = arg.profileUrl
+		scrapedProfile.query = arg.query
 		scrapedData.push(scrapedProfile)
 	}
 
@@ -102,17 +102,15 @@ const scrapeProfiles = (arg, cb) => {
 }
 
 // load profile page and handle tabs switching
-const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
-	await tab.open(forgeUrl(profileUrl, ""))
+const loadFacebookProfile = async (tab, query, maxFriends) => {
+	await tab.open(forgeUrl(query, ""))
 	let selector
 	try {
 		selector = await tab.waitUntilVisible(["#fbProfileCover", "#content > div.uiBoxWhite"], 10000, "or") // fb profile or Block window
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
-			utils.log(`${profileUrl} page is not available.`, "error")
-			await tab.screenshot(`${Date.now()}page is not available.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}page is not available.html`)
-			return { profileUrl, error: "The profile page isn't available"}
+			utils.log(`${query} page is not available.`, "error")
+			return [{ query, error: "The profile page isn't available"}]
 		}
 	}
 	if (selector === "#content > div.uiBoxWhite") {
@@ -122,33 +120,31 @@ const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
 			return null
 		} else { // profile has blocked us
 			utils.log("Profile page isn't visible!", "warning")
-			return { profileUrl, error: "The profile page isn't visible" }
+			return [{ query, error: "The profile page isn't visible", timestamp: (new Date()).toISOString() }]
 		}
 
 	}
 	let result = []
 
-	if (await tab.isVisible("div[id*=\"collection_wrapper\"] span.addFriendText")) {
-		utils.log("You don't have access to this profile's friends list.", "info")
-		return [{profileUrl, error: "Friends list not accessible", timestamp :(new Date()).toISOString()}]
-	}
-	console.log("isVisble:", await tab.isVisible("#pagelet_timeline_medley_friends"))
-	await tab.screenshot(`${Date.now()}isvi.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}isvi.html`)
+	// if (await tab.isVisible("div[id*=\"collection_wrapper\"] span.addFriendText")) {
+	// 	await tab.screenshot(`${Date.now()}notaccess.png`)
+	// 	await buster.saveText(await tab.getContent(), `${Date.now()}notaccess.html`)
+	// 	utils.log("You don't have access to this profile's friends list.", "info")
+	// 	return [{query, error: "Friends list not accessible", timestamp :(new Date()).toISOString()}]
+	// }
 	try {
 		await tab.click("#fbTimelineHeadline ul > li > a[data-tab-key=\"friends\"]")
 		await tab.waitUntilVisible("#pagelet_timeline_medley_friends div[id*=\"collection_wrapper\"]")
 	} catch (err) {
-		console.log("err:", err)
+		utils.log("Error accessible friends page!", "error")
+		return [{query, timestamp: (new Date()).toISOString(), error: "Error accessible friends page"}]
 	}
-
-	await tab.screenshot(`${Date.now()}res.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}res.html`)
 	let lastDate = new Date()
 	let friendCount = 0
+	let breaking
 	do {
 		if (new Date() - lastDate > 30000) {
-			utils.log("Took too long...", "warning")
+			breaking = true
 			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
@@ -165,9 +161,15 @@ const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
 		}
 		await tab.wait(200)
 	} while (!maxFriends || friendCount < maxFriends)
-
-	console.log("friendCount", friendCount)
-	result = await tab.evaluate(scrapeProfiles, { profileUrl })
+	if (breaking && friendCount) {
+		utils.log("Took too long to load the rest of the profiles...", "info")
+	}
+	if (friendCount) {
+		result = await tab.evaluate(scrapeProfiles, { query })
+	} else {
+		utils.log("No friends to show.", "warning")
+		result = [{query, timestamp: (new Date()).toISOString(), error: "No friends to show"}]
+	}
 	return result
 }
 
@@ -176,12 +178,11 @@ const loadFacebookProfile = async (tab, profileUrl, maxFriends) => {
 nick.newTab().then(async (tab) => {
 	let { sessionCookieCUser, sessionCookieXs, profileUrls, spreadsheetUrl, columnName, maxFriends, profilesPerLaunch, csvName } = utils.validateArguments()
 	let profilesToScrape = profileUrls
-	if (!csvName) { csvName = "result" }
-	let db = await utils.getDb(csvName + ".csv")
-	let jsonDb = await utils.getDb(csvName + ".json", false)
-	if (typeof jsonDb === "string") {
-		jsonDb = JSON.parse(jsonDb)
+	if (!csvName) {
+		csvName = "result"
 	}
+	const db = await utils.getDb(csvName + ".csv")
+	console.log("db", db)
 	let result = []
 	let singleProfile
 	if (spreadsheetUrl) {
@@ -196,9 +197,10 @@ nick.newTab().then(async (tab) => {
 		singleProfile = true
 	}
 	if (!singleProfile) {
+		console.log("profilesToScrape", profilesToScrape)
 		profilesToScrape = profilesToScrape.map(facebook.cleanProfileUrl)
 		.filter(str => str) // removing empty lines
-	    .filter(str => utils.checkDb(str, db, "query")) // checking if already processed
+		.filter(str => utils.checkDb(str, db, "query")) // checking if already processed
 		.slice(0, profilesPerLaunch) // only processing profilesPerLaunch line
 	}
 	if (profilesToScrape.length < 1) {
@@ -218,7 +220,7 @@ nick.newTab().then(async (tab) => {
 		profileCount++
 		buster.progressHint(profileCount / profilesToScrape.length, `Scraping profile ${profileCount} out of ${profilesToScrape.length}`)
 		if (facebook.isFacebookUrl(profileUrl)) { // Facebook Profile URL
-			utils.log(`Scraping profile of ${profileUrl}...`, "loading")
+			utils.log(`Processing profile of ${profileUrl}...`, "loading")
 			try {
 				const tempResult = await loadFacebookProfile(tab, profileUrl, maxFriends)
 				if (tempResult.length) {
@@ -238,7 +240,8 @@ nick.newTab().then(async (tab) => {
 			await tab.wait(3000 + 2000 * Math.random())
 		}
 	}
-	await utils.saveResults(result, result, csvName)
+	db.push(...result)
+	await utils.saveResults(result, db, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

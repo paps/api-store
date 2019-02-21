@@ -1,12 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-WebSearch-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch-DEV")
+const WebSearch = require("./lib-WebSearch")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -24,7 +24,7 @@ const nick = new Nick({
 	height: (700 + Math.round(Math.random() * 200)), // 700 <=> 900
 })
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 
 /* global psl */
@@ -169,7 +169,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	 * We need to lowercase all inputs to check if there were already scraped,
 	 * since getDomainName return the query in lowercase
 	 */
-	companies = companies.filter(el => db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
+	companies = companies.filter(el => el && db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
 							.slice(0, numberOfLinesPerLaunch)
 	if (companies.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
@@ -183,7 +183,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	const tab = await nick.newTab()
 	const result = []
 	const webSearch = new WebSearch(tab, buster, null, null, utils)
-
+	console.log("companies:", companies)
 	let i = 0
 	for (const query of companies) {
 		if (!query || query.trim().length < 1) {
