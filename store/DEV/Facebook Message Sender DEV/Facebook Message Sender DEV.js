@@ -48,7 +48,7 @@ const getNameFromChat = (arg, cb) => {
 	}
 }
 
-const openChatPage = async (tab, profileUrl) => {
+const openChatPage = async (tab, profileUrl, message) => {
 	let chatUrl
 	const urlObject = new URL(profileUrl)
 	if (profileUrl.includes("profile.php?id=")) {
@@ -64,7 +64,7 @@ const openChatPage = async (tab, profileUrl) => {
 	const currentUrl = await tab.getUrl()
 	if (currentUrl === "https://www.facebook.com/messages") { // if we were redirected, the profile doesn't exist
 		utils.log(`Profile ${profileUrl} doesn't exist!`, "error")
-			return { profileUrl, error: "This profile doesn't exist"}
+			return { profileUrl, error: "This profile doesn't exist", message}
 	}
 	await tab.wait(5000)
 	try {
@@ -180,7 +180,7 @@ nick.newTab().then(async (tab) => {
 			if (facebook.isFacebookUrl(profileUrl)) { // Facebook Profile URL
 				utils.log(`Processing profile of ${profileUrl}...`, "loading")
 				try {
-					const tempResult = await openChatPage(tab, profileUrl)
+					const tempResult = await openChatPage(tab, profileUrl, message)
 					tempResult.timestamp = (new Date()).toISOString()
 					if (tempResult.name && message) {
 						try {

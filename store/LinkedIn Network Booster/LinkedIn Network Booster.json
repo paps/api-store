@@ -10,7 +10,7 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"numberOfAddsPerLaunch": 10,
 		"onlySecondCircle": false,
 		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",

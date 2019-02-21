@@ -591,11 +591,13 @@ const craftCsvObject = infos => {
 		jobTitle: job.jobTitle || null,
 		jobDescription: job.description || null,
 		location: job.location || null,
+		jobDateRange: job.dateRange || null,
 		company2: job2.companyName || null,
 		companyUrl2: job2.companyUrl || null,
 		jobTitle2: job2.jobTitle || null,
 		jobDescription2: job2.description || null,
 		location2: job2.location || null,
+		jobDateRange2: job2.dateRange || null,
 		school: school.schoolName || null,
 		schoolUrl: school.schoolUrl || null,
 		schoolDegree: school.degree || null,
@@ -668,11 +670,13 @@ const defaultCsvResult = {
 	jobTitle:  null,
 	jobDescription: null,
 	location: null,
+	jobDateRange: null,
 	company2: null,
 	companyUrl2: null,
 	jobTitle2: null,
 	jobDescription2: null,
 	location2: null,
+	jobDateRange2: null,
 	school: null,
 	schoolUrl: null,
 	schoolDegree: null,
@@ -746,7 +750,8 @@ class LinkedInScraper {
 	 * @param {String} [hunterApiKey] -- Hunter API key}
 	 * @param {Object} [nick] -- Nickjs instance}
 	 * @param {Object} [buster] -- buster instance}
-		 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
+	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
+	 * @param {String} [emailChooser] -- Email discovery service used}
 	 */
 	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null, emailChooser = null) {
 		this.utils = utils
@@ -827,7 +832,7 @@ class LinkedInScraper {
 					if (this.hunter) {
 						servicesUsed = "Hunter"
 					}
-					if (this.hunter) {
+					if (this.dropcontact) {
 						servicesUsed = "Dropcontact"
 					}
 					if (this.phantombusterMail) {
@@ -853,7 +858,6 @@ class LinkedInScraper {
 					} else {
 						mailPayload.domain = companyUrl
 					}
-					//this.utils.log(`Sending ${JSON.stringify(mailPayload)} to Hunter`, "info")
 					if (this.hunter) {
 						const hunterSearch = await this.hunter.find(mailPayload)
 						this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
@@ -961,8 +965,15 @@ class LinkedInScraper {
 
 	// converts a Sales Navigator profile to a classic LinkedIn profile while getting its slug (opening the page)
 	async salesNavigatorUrlConverter(url) {
-		const newUrl = this.salesNavigatorUrlCleaner(url, true)
-		if (newUrl !== url) {
+		let newUrl
+		let salesProfile
+		if (url && url.includes("/sales/profile/")) {
+			salesProfile = true
+			newUrl = url
+		} else {
+			newUrl = this.salesNavigatorUrlCleaner(url, true)
+		}
+		if (salesProfile || newUrl !== url) {
 			const tab = await this.nick.newTab()
 			try {
 				await tab.open(newUrl)
@@ -975,7 +986,16 @@ class LinkedInScraper {
 							await tab.close()
 							return newUrl
 						}
-						this.utils.log(`Converting ${url} to ${location}`, "info")
+						if (location === "https://www.linkedin.com/feed/") {
+							this.utils.log(`Can't convert ${url}: Redirected to home page`, "warning")
+							await tab.close()
+							return newUrl
+						}
+						if (salesProfile && location.startsWith("https://www.linkedin.com/sales/people/")) {
+							location = await this.salesNavigatorUrlConverter(location)
+						} else {
+							this.utils.log(`Converting ${url} to ${location}`, "info")
+						}
 						await tab.close()
 						return location
 					} else {

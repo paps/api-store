@@ -1,5 +1,5 @@
 // Phantombuster configuration {
-"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact.js"
+"phantombuster dependencies: lib-Hunter.js, lib-Dropcontact.js, lib-DiscoverMail.js"
 // }
 const { URL } = require ("url")
 
@@ -587,11 +587,13 @@ const craftCsvObject = infos => {
 		jobTitle: job.jobTitle || null,
 		jobDescription: job.description || null,
 		location: job.location || null,
+		jobDateRange: job.dateRange || null,
 		company2: job2.companyName || null,
 		companyUrl2: job2.companyUrl || null,
 		jobTitle2: job2.jobTitle || null,
 		jobDescription2: job2.description || null,
 		location2: job2.location || null,
+		jobDateRange2: job2.dateRange || null,
 		school: school.schoolName || null,
 		schoolUrl: school.schoolUrl || null,
 		schoolDegree: school.degree || null,
@@ -664,11 +666,13 @@ const defaultCsvResult = {
 	jobTitle:  null,
 	jobDescription: null,
 	location: null,
+	jobDateRange: null,
 	company2: null,
 	companyUrl2: null,
 	jobTitle2: null,
 	jobDescription2: null,
 	location2: null,
+	jobDateRange2: null,
 	school: null,
 	schoolUrl: null,
 	schoolDegree: null,
@@ -743,12 +747,18 @@ class LinkedInScraper {
 	 * @param {Object} [nick] -- Nickjs instance}
 	 * @param {Object} [buster] -- buster instance}
  	 * @param {String} [dropcontactApiKey] -- Dropcontact API key}
+	 * @param {String} [emailChooser] -- Email discovery service used}
 	 */
-	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null) {
+	constructor(utils, hunterApiKey = null, nick = null, buster = null, dropcontactApiKey = null, emailChooser = null) {
 		this.utils = utils
 		this.hunter = null
 		this.nick = nick
 		this.buster = buster
+		if (emailChooser === "phantombuster") {
+			require("coffee-script/register")
+			this.phantombusterMail = new (require("./lib-DiscoverMail"))(this.buster.apiKey)
+		}
+		this.emailChooser = emailChooser
 		if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 			require("coffee-script/register")
 			this.hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
@@ -808,7 +818,7 @@ class LinkedInScraper {
 			}
 		}
 
-		if ((this.hunter || this.dropcontact) && result.jobs.length > 0) {
+		if ((this.hunter || this.dropcontact || this.phantombusterMail) && result.jobs.length > 0) {
 			const timeLeft = await this.utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				this.utils.log(timeLeft.message, "warning")
@@ -816,13 +826,16 @@ class LinkedInScraper {
 				try {
 					let servicesUsed
 					if (this.hunter) {
-						if (this.dropcontact) {
-							servicesUsed = "Hunter and Dropcontact"
-						} else {
-							servicesUsed = "Hunter"
-						}
-					} else {
+						servicesUsed = "Hunter"
+					}
+					if (this.dropcontact) {
 						servicesUsed = "Dropcontact"
+					}
+					if (this.hunter && this.dropcontact) {
+						"Hunter and Dropcontact"
+					}
+					if (this.phantombusterMail) {
+						servicesUsed = "Phantombuser via Dropcontact"
 					}
 					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
 					let companyUrl = null
@@ -832,32 +845,40 @@ class LinkedInScraper {
 						await companyTab.close()
 						result.details.companyWebsite = companyUrl || ""
 					}
-					const hunterPayload = {}
+					const mailPayload = {}
 					if (result.general.firstName && result.general.lastName) {
-						hunterPayload.first_name = result.general.firstName
-						hunterPayload.last_name = result.general.lastName
+						mailPayload.first_name = result.general.firstName
+						mailPayload.last_name = result.general.lastName
 					} else {
-						hunterPayload.full_name = result.general.fullName
+						mailPayload.full_name = result.general.fullName
 					}
 					if (!companyUrl) {
-						hunterPayload.company = result.jobs[0].companyName
+						mailPayload.company = result.jobs[0].companyName
 					} else {
-						hunterPayload.domain = companyUrl
+						mailPayload.domain = companyUrl
 					}
-					//this.utils.log(`Sending ${JSON.stringify(hunterPayload)} to Hunter`, "info")
 					if (this.hunter) {
-						const hunterSearch = await this.hunter.find(hunterPayload)
+						const hunterSearch = await this.hunter.find(mailPayload)
 						this.utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${result.general.fullName} working at ${companyUrl || result.jobs[0].companyName}`, "info")
 						result.details.mailFromHunter = hunterSearch.email
 						result.hunter = Object.assign({}, hunterSearch)
 					}
 					if (this.dropcontact) {
-						hunterPayload.company = result.jobs[0].companyName
-						hunterPayload.siren = true
-						const dropcontactSearch = await this.dropcontact.clean(hunterPayload)
+						mailPayload.company = result.jobs[0].companyName
+						mailPayload.siren = true
+						const dropcontactSearch = await this.dropcontact.clean(mailPayload)
 						this.utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
 						result.details.mailFromDropcontact = dropcontactSearch.email
 						result.dropcontact = Object.assign({}, dropcontactSearch)
+					}
+					if (this.phantombusterMail) {
+						mailPayload.company = result.jobs[0].companyName
+						mailPayload.siren = true
+						const dropcontactSearch = await this.phantombusterMail.find(mailPayload)
+						const foundData = dropcontactSearch.data
+						this.utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
+						result.details.mailFromDropcontact = foundData.email
+						result.dropcontact = Object.assign({}, foundData)
 					}
 				} catch (err) {
 					this.utils.log(err.toString(), "error")
@@ -937,8 +958,15 @@ class LinkedInScraper {
 
 	// converts a Sales Navigator profile to a classic LinkedIn profile while getting its slug (opening the page)
 	async salesNavigatorUrlConverter(url) {
-		const newUrl = this.salesNavigatorUrlCleaner(url, true)
-		if (newUrl !== url) {
+		let newUrl
+		let salesProfile
+		if (url && url.includes("/sales/profile/")) {
+			salesProfile = true
+			newUrl = url
+		} else {
+			newUrl = this.salesNavigatorUrlCleaner(url, true)
+		}
+		if (salesProfile || newUrl !== url) {
 			const tab = await this.nick.newTab()
 			try {
 				await tab.open(newUrl)
@@ -951,7 +979,16 @@ class LinkedInScraper {
 							await tab.close()
 							return newUrl
 						}
-						this.utils.log(`Converting ${url} to ${location}`, "info")
+						if (location === "https://www.linkedin.com/feed/") {
+							this.utils.log(`Can't convert ${url}: Redirected to home page`, "warning")
+							await tab.close()
+							return newUrl
+						}
+						if (salesProfile && location.startsWith("https://www.linkedin.com/sales/people/")) {
+							location = await this.salesNavigatorUrlConverter(location)
+						} else {
+							this.utils.log(`Converting ${url} to ${location}`, "info")
+						}
 						await tab.close()
 						return location
 					} else {
