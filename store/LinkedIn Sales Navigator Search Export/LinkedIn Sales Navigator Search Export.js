@@ -173,6 +173,9 @@ const scrapeResultsLeads = (arg, callback) => {
 				if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
 					newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
 				}
+				if (result.querySelector(".result-lockup__icon")) {
+					newData.profileImageUrl = result.querySelector(".result-lockup__icon").src
+				}
 			}
 			profilesScraped++
 			data.push(newData)
