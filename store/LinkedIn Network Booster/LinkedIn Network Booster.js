@@ -449,7 +449,7 @@ nick.newTab().then(async (tab) => {
 		disableScraping = true
 	}
 	if (message && message.length > 285 && message.includes("#")) {
-		utils.log("Warning, your message sent may be too long for LinkedIn (300 characters max).", "warning")
+		utils.log("Warning, your message may be too long for LinkedIn (300 characters max).", "warning")
 	}
 	await linkedIn.login(tab, sessionCookie)
 

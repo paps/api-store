@@ -31,7 +31,10 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 	const results = document.querySelectorAll(".mn-connections > ul > li")
 	const scrapedData = []
 	for (let i = 0 ; i < results.length - arg.limiter ; i++) {
-		const scrapedObject = { query: arg.query, timestamp: (new Date()).toISOString() }
+		const scrapedObject = {}
+		if (results[i].querySelector("a")) {
+			scrapedObject.profileUrl = results[i].querySelector("a").href
+		}
 		if (results[i].querySelector(".mn-connection-card__name")) {
 			scrapedObject.name = results[i].querySelector(".mn-connection-card__name").innerText
 			let nameArray = scrapedObject.name.split(" ")
@@ -42,8 +45,14 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 				scrapedObject.lastName = lastName
 			}
 		}
-		if (results[i].querySelector("a")) {
-			scrapedObject.profileUrl = results[i].querySelector("a").href
+		if (results[i].querySelector(".mn-connection-card__occupation")) {
+			scrapedObject.title = results[i].querySelector(".mn-connection-card__occupation").innerText
+		}
+		if (results[i].querySelector("time.time-ago")) {
+			let connectedDate = results[i].querySelector("time.time-ago").innerText
+			connectedDate = connectedDate.split(" ")
+			connectedDate.shift()
+			scrapedObject.connectedDate = connectedDate.join(" ")
 		}
 		if (results[i].querySelector(".presence-entity__image")) {
 			const backgroundStyle = results[i].querySelector(".presence-entity__image")
@@ -54,18 +63,7 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 				scrapedObject.profileImageUrl = backgroundImageUrl
 			}
 		}
-		if (results[i].querySelector(".mn-discovery-person-card__name")) {
-			scrapedObject.name = results[i].querySelector(".mn-discovery-person-card__name").innerText
-		}
-		if (results[i].querySelector(".mn-connection-card__occupation")) {
-			scrapedObject.title = results[i].querySelector(".mn-connection-card__occupation").innerText
-		}
-		if (results[i].querySelector("time.time-ago")) {
-			let connectedDate = results[i].querySelector("time.time-ago").innerText
-			connectedDate = connectedDate.split(" ")
-			connectedDate.shift()
-			scrapedObject.connectedDate = connectedDate.join(" ")
-		}
+		scrapedObject.timestamp = (new Date()).toISOString()
 		scrapedData.push(scrapedObject)
 		results[i].parentElement.removeChild(results[i])
 	}
@@ -73,7 +71,7 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 }
 
 // handle loading and scraping of Connections profiles
-const loadConnectionsAndScrape = async (tab, numberOfProfiles, query) => {
+const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 	utils.log("Loading Connections profiles...", "loading")
 	let totalCount
 	try {
@@ -98,7 +96,7 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles, query) => {
 		}
 		const newConnectionsCount = await tab.evaluate(getConnectionsCount)
 		if (newConnectionsCount > connectionsCount) {
-			const tempResult = await tab.evaluate(scrapeConnectionsProfilesAndRemove, { query, limiter: 30 })
+			const tempResult = await tab.evaluate(scrapeConnectionsProfilesAndRemove, { limiter: 30 })
 			result = result.concat(tempResult)
 			scrapeCount = result.length
 			if (scrapeCount) {
@@ -119,23 +117,24 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles, query) => {
 		}
 		await tab.wait(1000)
 	} while (scrapeCount < numberOfProfiles)
-	result = result.concat(await tab.evaluate(scrapeConnectionsProfilesAndRemove, { query, limiter: 0 })) // scraping the last ones when out of the loop then slicing
+	result = result.concat(await tab.evaluate(scrapeConnectionsProfilesAndRemove, { limiter: 0 })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfProfiles)
-	if (result.length) { // if we scraped posts without more loading
-		utils.log(`Scraped ${Math.min(result.length, numberOfProfiles)} profiles.`, "done")
+	const resultLength = result.length
+	if (resultLength) { // if we scraped posts without more loading
+		utils.log(`Scraped ${resultLength} profile${resultLength > 1 ? "s" : ""}.`, "done")
 	} else {
-		utils.log("No results found!", "warning")
+		utils.log("No profiles found!", "warning")
 	}
 	return result
 }
 
 // handle scraping of Connections profiles
-const getConnections = async (tab, numberOfProfiles, query, ) => {
+const getConnections = async (tab, numberOfProfiles) => {
 	let result = []
 	try {
 		await tab.open("https://www.linkedin.com/mynetwork/invite-connect/connections/")
 		await tab.waitUntilVisible(".mn-connections__actions-container")
-		result = await loadConnectionsAndScrape(tab, numberOfProfiles, query)
+		result = await loadConnectionsAndScrape(tab, numberOfProfiles)
 	} catch (err) {
 		utils.log(`Error getting Connections:${err}`, "error")
 	}
@@ -149,10 +148,10 @@ const getConnections = async (tab, numberOfProfiles, query, ) => {
 	let { sessionCookie, numberOfProfiles, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
-
+	let tempResult
 	await linkedIn.login(tab, sessionCookie)
 	try {
-		const tempResult = await getConnections(tab, numberOfProfiles)
+		tempResult = await getConnections(tab, numberOfProfiles)
 		if (tempResult && tempResult.length) {
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
@@ -163,7 +162,7 @@ const getConnections = async (tab, numberOfProfiles, query, ) => {
 	} catch (err) {
 		utils.log(`Error : ${err}`, "error")
 	}
-	await utils.saveResults(result, result, csvName)
+	await utils.saveResults(tempResult, result, csvName)
 	await linkedIn.updateCookie()
 	nick.exit(0)
 })()

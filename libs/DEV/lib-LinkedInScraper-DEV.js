@@ -570,6 +570,8 @@ const craftCsvObject = infos => {
 	const hasDropcontact = infos.hasOwnProperty("dropcontact")
 	const returnedObject = {
 		linkedinProfile: (hasGeneral) ? (infos.general.profileUrl || null) : null,
+		mailFromDropcontact: (hasDetails) ? (infos.details.mailFromDropcontact || null) : null,
+		mailQualificationFromDropContact: (hasDropcontact) ? (infos.dropcontact["email qualification"] || null) : null,
 		mail: (hasDetails) ? (infos.details.mail || null) : null,
 		phoneNumber: (hasDetails) ? (infos.details.phone || null) : null,
 		description: (hasGeneral) ? (infos.general.description || null) : null,
@@ -615,8 +617,6 @@ const craftCsvObject = infos => {
 		positionFromHunter: (hasHunter) ? (infos.hunter.position || null) : null,
 		twitterFromHunter: (hasHunter) ? (infos.hunter.twitter || null) : null,
 		phoneNumberFromHunter: (hasHunter) ? (infos.hunter.phone_number || null) : null,
-		mailFromDropcontact: (hasDetails) ? (infos.details.mailFromDropcontact || null) : null,
-		mailQualificationFromDropContact: (hasDropcontact) ? (infos.dropcontact["email qualification"] || null) : null,
 		naf5CodeFromDropContact: (hasDropcontact) ? (infos.dropcontact.naf5_code || null) : null,
 		naf5DesFromDropContact: (hasDropcontact) ? (infos.dropcontact.naf5_des || null) : null,
 		nbEmployeesFromDropContact: (hasDropcontact) ? (infos.dropcontact.nb_employees || null) : null,
