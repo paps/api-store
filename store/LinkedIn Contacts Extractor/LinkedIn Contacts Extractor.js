@@ -129,11 +129,24 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 }
 
 // handle scraping of Connections profiles
-const getConnections = async (tab, numberOfProfiles) => {
+const getConnections = async (tab, numberOfProfiles, sortBy) => {
 	let result = []
 	try {
 		await tab.open("https://www.linkedin.com/mynetwork/invite-connect/connections/")
 		await tab.waitUntilVisible(".mn-connections__actions-container")
+		if (sortBy !== "Recently added") {
+			try {
+				await tab.click("button[data-control-name=\"sort_by\"]")
+				await tab.waitUntilVisible("li.mn-connections__sort-options")
+				if (sortBy === "First name") {
+					await tab.click("div[data-control-name=\"sort_by_first_name\"]")
+				} else {
+					await tab.click("div[data-control-name=\"sort_by_last_name\"]")
+				}
+			} catch (err) {
+				utils.log(`Error changing profile order: ${err}`)
+			}
+		}
 		result = await loadConnectionsAndScrape(tab, numberOfProfiles)
 	} catch (err) {
 		utils.log(`Error getting Connections:${err}`, "error")
@@ -145,13 +158,13 @@ const getConnections = async (tab, numberOfProfiles) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, numberOfProfiles, csvName } = utils.validateArguments()
+	let { sessionCookie, numberOfProfiles, sortBy, csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let tempResult
 	await linkedIn.login(tab, sessionCookie)
 	try {
-		tempResult = await getConnections(tab, numberOfProfiles)
+		tempResult = await getConnections(tab, numberOfProfiles, sortBy)
 		if (tempResult && tempResult.length) {
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {

@@ -10,7 +10,8 @@
 	"argumentDescription": "",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"numberOfProfiles": 100
+		"numberOfProfiles": 100,
+		"sortBy": "Recently added"
 	},
 	"defaultArgumentAllowed": false,
 	"outputDescription": {
@@ -35,6 +36,11 @@
 						"label": "Number of profiles to extract",
 						"inputType": "number"
 					},
+					"sortBy": {
+						"label": "Sort by",
+						"removeDefaultNone": true,
+						"sort": false
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -55,6 +61,10 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
+			},
+			"sortBy": {
+				"enum": ["Recently added", "First name", "Last name"],
+				"default": "Recently added"
 			},
 			"csvName": {
 				"type": "string",
