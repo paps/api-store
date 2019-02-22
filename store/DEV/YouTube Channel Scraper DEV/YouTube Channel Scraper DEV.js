@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -49,7 +50,7 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 }
 
 const scrapeChannelData = (arg, cb) => {
-	const scrapedData = { query: arg.channelUrl, timestamp: (new Date()).toISOString() }
+	const scrapedData = {}
 	if (document.querySelector("#channel-title")) {
 		scrapedData.channelTitle = document.querySelector("#channel-title").textContent
 	}
@@ -100,14 +101,27 @@ const scrapeChannelData = (arg, cb) => {
 			}
 		}
 	})
+	scrapedData.query = arg.channelUrl
+	scrapedData.timestamp = (new Date()).toISOString()
 	cb(null, scrapedData)
+}
+
+const clickAboutTab = (arg, cb) => {
+	try {
+		const aboutTab = Array.from(document.querySelectorAll("#tabsContent > paper-tab")).filter(el => el.textContent.trim() === "About")[0]
+		cb(null, aboutTab.click())
+	} catch (err) {
+		cb(null, null)
+	}
 }
 
 const loadAndScrapeChannel = async (tab, channelUrl) => {
 	await tab.open(channelUrl)
 	utils.log(`Opening ${channelUrl}`, "loading")
-	await tab.waitUntilVisible("#tabsContent")
-	await tab.click("#tabsContent > paper-tab:nth-child(12)")
+	await tab.waitUntilVisible("#tabsContent", 10000)
+	await tab.wait(3000)
+	// await tab.click("#tabsContent > paper-tab:nth-child(12)")
+	await tab.evaluate(clickAboutTab)
 	await tab.waitUntilVisible("#right-column")
 	const scrapedData = await tab.evaluate(scrapeChannelData, { channelUrl })
 	utils.log(`Scraped channel of ${scrapedData.channelTitle}.`, "done")
@@ -140,20 +154,27 @@ nick.newTab().then(async (tab) => {
 		channelUrls = getUrlsToScrape(channelUrls.filter(el => utils.checkDb(el, result, "query")), channelsPerLaunch)
 	}
 	console.log(`URLs to scrape: ${JSON.stringify(channelUrls.slice(0, 500), null, 4)}`)
-
+	let tempResult = []
 	for (const channelUrl of channelUrls) {
 		if (isYouTubeUrl(channelUrl)) {
-			result = result.concat(await loadAndScrapeChannel(tab, channelUrl))
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			break
-		}
+			try {
+				tempResult.push(await loadAndScrapeChannel(tab, channelUrl))
+			} catch (err) {
+				utils.log("Couldn't access this channel About page.", "error")
+				tempResult.push({ timestamp: (new Date()).toISOString(), query: channelUrl, error: "Couln't access About page" })
+			}
+			result = result.concat(tempResult)
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
 		} else {
 			utils.log(`${channelUrl} isn't a YouTube Channel URL, skipping entry...`, "warning")
 		}
 	}
-	await utils.saveResults(result, result, csvName)
+	result.push(...tempResult)
+	await utils.saveResults(tempResult, result, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)
 })

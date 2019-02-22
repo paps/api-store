@@ -48,8 +48,8 @@ const scrapeResults = (arg, callback) => {
 	let profilesScraped = 0
 	for (const result of results) {
 		if (result.querySelector(".name-link.profile-link")) {
-			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
 			const profileUrl = result.querySelector(".name-link.profile-link").href
+			let newData = { profileUrl }
 			const urlObject = new URL(profileUrl)
 			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 			if (vmid) {
@@ -90,7 +90,10 @@ const scrapeResults = (arg, callback) => {
 			newData.title = result.querySelector(".info-value").textContent.trim()
 			if (result.querySelector(".info-value:nth-child(2)")) { newData.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
 			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
-			if (arg.query) { newData.query = arg.query }
+			if (arg.query) {
+				newData.query = arg.query
+			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			data.push(newData)
 		}
@@ -107,10 +110,7 @@ const scrapeResultsLeads = (arg, callback) => {
 		if (result.querySelector(".result-lockup__name")) {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
 			const urlObject = new URL(profileUrl)
-			let newData = { timestamp: (new Date()).toISOString() }
-			if (arg.query) {
-				newData.query = arg.query
-			}
+			let newData = {}
 			if (profileUrl && profileUrl.startsWith("https://www.linkedin.com/sales/company/")) { // company results
 				newData.companyUrl = urlObject.hostname + urlObject.pathname
 				newData.companyId = urlObject.pathname.slice(15)
@@ -173,7 +173,14 @@ const scrapeResultsLeads = (arg, callback) => {
 				if (result.querySelector(".result-lockup__highlight-keyword + dd")) {
 					newData.duration = result.querySelector(".result-lockup__highlight-keyword + dd").innerText
 				}
+				if (result.querySelector(".result-lockup__icon")) {
+					newData.profileImageUrl = result.querySelector(".result-lockup__icon").src
+				}
 			}
+			if (arg.query) {
+				newData.query = arg.query
+			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			data.push(newData)
 		}
@@ -189,7 +196,7 @@ const scrapeLists = (arg, cb) => {
 	for (const result of results) {
 		if (result.querySelector("a")) {
 			const profileUrl = result.querySelector("a").href
-			const newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			const newData = { profileUrl }
 			const urlObject = new URL(profileUrl)
 			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 			if (vmid) {
@@ -220,6 +227,7 @@ const scrapeLists = (arg, cb) => {
 			if (arg.query) {
 				newData.query = arg.query
 			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			scrapedData.push(newData)
 		}
@@ -375,11 +383,18 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let maxResults = Math.min(1000, numberOfProfiles)
 	let numberPerPage
 	await tab.open(searchUrl)
+	console.log("searchUrl = ", searchUrl)
 	try {
-		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 30000, "or")
+		await tab.wait(5000)
+		await tab.screenshot(`${Date.now()}ava.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}ava.html`)
+		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 20000, "or")
+		await tab.screenshot(`${Date.now()}select.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}select.html`)
+		console.log("se:", selector)
 		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
 			await tab.click("article.contract-chooser ul > li > button")
-			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 30000, "or")
+			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 20000, "or")
 		} else if (selector === ".generic-error > p.error-message") {
 			throw "LinkedIn is experiencing technical difficulties."
 		}
@@ -402,9 +417,13 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	} catch (err) {
 		await tab.wait(10000)
 		console.log("url:",await tab.getUrl())
-		if (await tab.getUrl() === "https://www.linkedin.com/feed/") {
+		const currentUrl = await tab.getUrl()
+		if (currentUrl === "https://www.linkedin.com/feed/") {
 			utils.log("It seems you don't have a Sales Navigator Account...", "error")
 			notSalesNav = true
+			return []
+		} else if (currentUrl.startsWith("https://www.linkedin.com/sales/contract-chooser?")) {
+			utils.log("LinkedIn is experiencing technical difficulties loading that page..", "warning")
 			return []
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")

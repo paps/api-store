@@ -49,7 +49,7 @@ const scrapeResults = (arg, callback) => {
 	for (const result of results) {
 		if (result.querySelector(".name-link.profile-link")) {
 			const profileUrl = result.querySelector(".name-link.profile-link").href
-			let newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			let newData = { profileUrl }
 			const urlObject = new URL(profileUrl)
 			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 			if (vmid) {
@@ -72,7 +72,7 @@ const scrapeResults = (arg, callback) => {
 			if (result.querySelector(".sublink-item a").textContent.indexOf("Shared") > -1) { newData.sharedConnections = result.querySelector(".sublink-item a").textContent.slice(20).slice(0,-1) }
 			if (result.querySelector(".premium-icon")) { newData.premium = "Premium" }
 			if (result.querySelector(".openlink-badge")) { newData.openProfile = "Open Profile" }
-			if (result.querySelector(".company-name")) { 
+			if (result.querySelector(".company-name")) {
 				newData.companyName = result.querySelector(".company-name").title
 				if (result.querySelector(".company-name").href) {
 					const salesCompanyUrl = new URL(result.querySelector(".company-name").href)
@@ -90,7 +90,10 @@ const scrapeResults = (arg, callback) => {
 			newData.title = result.querySelector(".info-value").textContent.trim()
 			if (result.querySelector(".info-value:nth-child(2)")) { newData.duration = result.querySelector(".info-value:nth-child(2)").textContent.trim() }
 			if (result.querySelector(".info-value:nth-child(3)")) { newData.location = result.querySelector(".info-value:nth-child(3)").textContent.trim() }
-			if (arg.query) { newData.query = arg.query }
+			if (arg.query) {
+				newData.query = arg.query
+			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			data.push(newData)
 		}
@@ -107,10 +110,7 @@ const scrapeResultsLeads = (arg, callback) => {
 		if (result.querySelector(".result-lockup__name")) {
 			const profileUrl = result.querySelector(".result-lockup__name a").href
 			const urlObject = new URL(profileUrl)
-			let newData = { timestamp: (new Date()).toISOString() }
-			if (arg.query) {
-				newData.query = arg.query
-			}
+			let newData = {}
 			if (profileUrl && profileUrl.startsWith("https://www.linkedin.com/sales/company/")) { // company results
 				newData.companyUrl = urlObject.hostname + urlObject.pathname
 				newData.companyId = urlObject.pathname.slice(15)
@@ -177,6 +177,10 @@ const scrapeResultsLeads = (arg, callback) => {
 					newData.profileImageUrl = result.querySelector(".result-lockup__icon").src
 				}
 			}
+			if (arg.query) {
+				newData.query = arg.query
+			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			data.push(newData)
 		}
@@ -192,7 +196,7 @@ const scrapeLists = (arg, cb) => {
 	for (const result of results) {
 		if (result.querySelector("a")) {
 			const profileUrl = result.querySelector("a").href
-			const newData = { profileUrl, timestamp: (new Date()).toISOString() }
+			const newData = { profileUrl }
 			const urlObject = new URL(profileUrl)
 			const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 			if (vmid) {
@@ -223,6 +227,7 @@ const scrapeLists = (arg, cb) => {
 			if (arg.query) {
 				newData.query = arg.query
 			}
+			newData.timestamp = (new Date()).toISOString()
 			profilesScraped++
 			scrapedData.push(newData)
 		}
@@ -398,9 +403,14 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		if (resultsCount.includes("M")) { multiplicator = 1000000 }
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
-		if (await tab.getUrl() === "https://www.linkedin.com/feed/") {
+		await tab.wait(10000)
+		const currentUrl = await tab.getUrl()
+		if (currentUrl === "https://www.linkedin.com/feed/") {
 			utils.log("It seems you don't have a Sales Navigator Account...", "error")
 			notSalesNav = true
+			return []
+		} else if (currentUrl.startsWith("https://www.linkedin.com/sales/contract-chooser?")) {
+			utils.log("LinkedIn is experiencing technical difficulties loading that page..", "warning")
 			return []
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")
