@@ -134,18 +134,17 @@ const extractDataFromJson = (json) => {
 }
 
 // get the like count and username of poster
-const getLikeCountAndUsername = (arg, cb) => {
-	let likeCount = 0
-	let username
-	if (document.querySelector("header h2 a")) {
-		username = document.querySelector("header h2 a").textContent
-	}
-	try {
-		likeCount = parseInt(document.querySelector("article header ~ div section > div span").textContent.replace(/\D+/g, ""), 10)
-	} catch (err) {
-		//
-	}
-	cb(null, { likeCount, username }) 
+const getLikeCountAndUsername = async (postUrl) => {
+	const jsonTab = await nick.newTab()
+	const jsonUrl = `${postUrl}?__a=1`
+	await jsonTab.open(jsonUrl)
+	let instagramJsonCode = await jsonTab.getContent()
+	const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
+	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+	const postData = instagramJsonCode.graphql.shortcode_media
+	const username = postData.owner.username
+	const likeCount = postData.edge_media_preview_like.count
+	return [ likeCount, username ]
 }
 
 // check if we're scraping a video (non-clickable Like Count)
@@ -196,13 +195,10 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		utils.log("Couldn't access post, profile may be private.", "warning")
 		return ({ photoUrl, error: "Couldn't access post"})
 	}
-	let likeCountAndUsername
 	let username
 	let likeCount
 	try {
-		likeCountAndUsername = await tab.evaluate(getLikeCountAndUsername)
-		likeCount = likeCountAndUsername.likeCount
-		username = likeCountAndUsername.username
+		[ likeCount, username ] = await getLikeCountAndUsername(photoUrl)
 		if (likeCount === 0) {
 			utils.log("No likers found for this post.", "warning")
 			return ({ photoUrl, error: "No likers found"})
