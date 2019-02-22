@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,9 +19,9 @@ const nick = new Nick({
 
 /* eslint-disable no-unused-vars */
 
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
 // }
@@ -48,7 +48,6 @@ const checkRateLimit = (arg, cb) => {
 const interceptInstagramApiCalls = e => {
 	if (!graphqlUrl && e.response.url.includes("graphql/query/?query_hash") && e.response.url.includes("first") && !e.response.url.includes("include_suggested_users") && e.response.status === 200) {
 		graphqlUrl = e.response.url
-		console.log("graphqlUrl", graphqlUrl)
 	}
 }
 
@@ -82,11 +81,9 @@ const getPosts = async (tab, profileUrl, query) => {
 		let instagramJsonCode = await tab.getContent()
 		const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 		instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
-		// console.log("instagramJsonCode", instagramJsonCode.data.user.edge_owner_to_timeline_media.edges)
 		const endCursor = instagramJsonCode.data.user.edge_owner_to_timeline_media.page_info.end_cursor
 
 		const posts = instagramJsonCode.data.user.edge_owner_to_timeline_media.edges
-		// console.log("P:", posts)
 		for (const post of posts) {
 			const scrapedData = extractPostData(post.node, profileUrl, query)
 			results.push(scrapedData)
@@ -151,7 +148,6 @@ const getFirstPosts = async (profileUrl, query) => {
 	const firstResults = []
 	for (const post of firstPosts) {
 		const scrapedData = extractPostData(post.node, profileUrl, query)
-		// console.log("p:", post)
 		firstResults.push(scrapedData)
 	}
 	return { firstResults, fullName, postCount, cantAccess }
@@ -215,12 +211,12 @@ const getFirstPosts = async (profileUrl, query) => {
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${query}, broken link or page has been removed.`, "warning")
-				result.push({ query, error: "Broken link or page has been removed" })
+				tempResult.push({ query, timestamp: (new Date()).toISOString(), error: "Broken link or page has been removed" })
 				continue
 			}
 			const profileUrl = await tab.getUrl()
 			const firstPosts = await getFirstPosts(profileUrl, query)
-			tempResult = firstPosts.firstResults
+			tempResult = tempResult.concat(firstPosts.firstResults)
 			if (!firstPosts.cantAccess){
 				if (tempResult.length !== firstPosts.postCount) {
 					tempResult = tempResult.concat(await getPosts(tab, profileUrl, query))
@@ -228,6 +224,7 @@ const getFirstPosts = async (profileUrl, query) => {
 				utils.log(`Got ${tempResult.length} posts from ${firstPosts.fullName}.`, "done")
 			} else {
 				utils.log(`Can't access ${firstPosts.fullName}'s posts!`, "done")
+				tempResult.push({query, timestamp: (new Date()).toISOString(), error: "Can't access posts"})
 			}
 		} catch (err) {
 			try {
