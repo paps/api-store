@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Twitter.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -20,11 +20,11 @@ const nick = new Nick({
 	debug: false,
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
-
+let initDate
 /* global $ */
 
 // }
@@ -67,11 +67,13 @@ const checkDb = (str, db) => {
 // Removes any duplicate profile
 const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
+	console.log("arr.length", arr.length)
 	for (let i = 0; i < arr.length ; i++) {
 		if (!resultArray.find(el => el.screenName === arr[i].screenName && el.query === arr[i].query)) {
 			resultArray.push(arr[i])
 		}
 	}
+	console.log("resultArray.length", resultArray.length)
 	return resultArray
 }
 
@@ -196,9 +198,18 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 				let res
 				let displayResult = 0
 				do {
-					const timeLeft = await utils.checkTimeLeft()
+					let timeLeft
+					if (profileCount > 45000) {
+						timeLeft = await utils.checkTimeLeft(2)
+					} else {
+						timeLeft = await utils.checkTimeLeft()
+					}
 					if (!timeLeft.timeLeft) {
 						utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+						interrupted = true
+						break
+					} else if (timeLeft.timeValue < 90 && profileCount > 45000) {
+						utils.log("Scraping stopped: Less than 90 seconds left. You can check your execution time at https://phantombuster.com/usage", "warning")
 						interrupted = true
 						break
 					}
@@ -218,9 +229,9 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 					result = result.concat(res)
 					profileCount += res.length
 					displayResult++
-					if (displayResult % 25 === 24) { utils.log(`Got ${profileCount} followers.`, "info") }
+					if (displayResult % 25 === 24) { utils.log(`Got ${profileCount} followers. Elapsed ${new Date() - initDate}`, "info") }
 					buster.progressHint(profileCount / numberMaxOfFollowers, `Charging followers... ${profileCount}/${numberMaxOfFollowers}`)
-					if (followersPerAccount && profileCount >= followersPerAccount) { 
+					if (followersPerAccount && profileCount >= followersPerAccount) {
 						if (fullScrape) {
 							interrupted = true
 						}
@@ -338,6 +349,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let urlCount = 0
+	initDate = new Date()
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (alreadyScraped && agentObject && url === lastSavedQuery) {
@@ -351,7 +363,9 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		utils.log(`Getting followers for ${url}`, "loading")
 
 		let followers = await getTwitterFollowing(tab, url, followersPerAccount, resuming)
-		followers = removeDuplicatesSelf(followers)
+		console.log("elapsed: ", new Date() - initDate)
+		// followers = removeDuplicatesSelf(followers)
+		console.log("elapsed2: ", new Date() - initDate)
 		if (followers.length) {
 			const followersLength = followers.length
 			for (let i = 0; i < followersLength; i++) {
@@ -360,6 +374,8 @@ const extractProfiles = (htmlContent, profileUrl) => {
 				}
 			}
 		}
+
+		console.log("elapsed3: ", new Date() - initDate)
 		if (interrupted) { break }
 	}
 
@@ -367,7 +383,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		utils.log(`Got ${result.length} followers in total.`, "done")
 		await utils.saveResults(result, result, csvName)
 		if (agentObject) {
-			if (interrupted && twitterUrl) { 
+			if (interrupted && twitterUrl) {
 				agentObject.nextUrl = twitterUrl
 				agentObject.timestamp = new Date()
 			} else {

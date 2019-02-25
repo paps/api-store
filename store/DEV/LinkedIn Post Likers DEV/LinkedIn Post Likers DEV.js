@@ -37,7 +37,7 @@ const scrollLikes = (arg, callback) => {
 
 // Loop to load all the likes
 const loadAllLikes = async (tab, listSelector) => {
-	let likes = await tab.evaluate(getLikesNumber)
+	let likeCount = await tab.evaluate(getLikesNumber)
 	while (true) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -46,11 +46,13 @@ const loadAllLikes = async (tab, listSelector) => {
 		}
 		try {
 			await tab.evaluate(scrollLikes, { listSelector })
-			await tab.waitUntilVisible(`li.actor-item:nth-child(${likes + 1})`)
-			likes = await tab.evaluate(getLikesNumber)
-			utils.log(`Loaded ${likes} likes.`, "info")
+			await tab.waitUntilVisible(`li.actor-item:nth-child(${likeCount + 1})`)
+			likeCount = await tab.evaluate(getLikesNumber)
 		} catch (error) {
-			return (likes)
+			if (likeCount) {
+				utils.log(`Loaded ${likeCount} likes.`, "info")
+			}
+			return (likeCount)
 		}
 	}
 }
@@ -78,10 +80,12 @@ const getLikes = async (tab, urls) => {
 
 	for (const url of urls) {
 		try {
+			utils.log(`Processing ${url}...`, "loading")
 			await tab.open(url)
 		} catch (error) {
 			utils.log("Could not open publication URL please check the validity of the URL", "error")
-			nick.exit(1)
+			results.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: "Could not open URL" })
+			continue
 		}
 		try {
 			/**
@@ -145,7 +149,7 @@ const getLikes = async (tab, urls) => {
 	await linkedIn.login(tab, sessionCookie)
 	const results = await getLikes(tab, postUrl)
 	db.push(...utils.filterRightOuter(db, results))
-	utils.log(`Got ${results.length} likers.`, "done")
+	utils.log(`Got ${results.length} likers in total.`, "done")
 	await linkedIn.updateCookie()
 	await utils.saveResult(db, csvName)
 })()
