@@ -2,7 +2,7 @@
 	"slug": "angellist-market-companies-extractor",
 	"description": "Pick a market and get all companies info",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/angellist_companies_info/angel_list_companies_info.png",
-	"hidden": true,
+	"hidden": false,
 	"new": false,
 	"gradientBegin": "#859398",
 	"gradientEnd": "#283048",
@@ -29,7 +29,7 @@
 			"options": {
 				"fields": {
 					"url": {
-						"helper": "This API will consume you Captcha counter.",
+						"helper": "This API will use up your Captcha counter.",
 						"label": "AngelList URL (<a target=\"_blank\" href=\"/api-store/3678/angellist-market-companies-extractor#section_4findyourangellistmarket\">?</a>)",
 						"type": "url"
 					},
