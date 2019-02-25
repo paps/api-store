@@ -323,7 +323,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 			const urlObject = new URL(photoUrl)
 			if (!urlObject.pathname.startsWith("/p/")) {
 				utils.log(`${photoUrl} isn't a valid photo URL.`, "warning")
-				result.push({ photoUrl, error: "Not a photo URL" })
+				result.push({ photoUrl, error: "Not a photo URL", timestamp: (new Date()).toISOString() })
 				continue
 			}
 			const tempResult = await loadAndScrapeLikers(tab, photoUrl, numberOfLikers, resuming)
@@ -350,7 +350,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 	const finalLikersCount = result.filter(el => !el.error).length
 	utils.log(`Got ${finalLikersCount} likers in total.`, "done")
 	if (result.length !== initialResultLength) {
-		if (interrupted) { 
+		if (interrupted) {
 			await buster.setAgentObject({ nextUrl, lastQuery })
 		} else {
 			await buster.setAgentObject({})

@@ -365,7 +365,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 			const urlObject = new URL(postUrl)
 			if (!urlObject.pathname.startsWith("/p/")) {
 				utils.log(`${postUrl} isn't a valid post URL.`, "warning")
-				result.push({ postUrl, error: "Not a post URL" })
+				result.push({ postUrl, error: "Not a post URL", timestamp: (new Date()).toISOString() })
 				continue
 			}
 			const tempResult = await loadAndScrapeLikers(tab, postUrl, numberOfLikers, resuming)

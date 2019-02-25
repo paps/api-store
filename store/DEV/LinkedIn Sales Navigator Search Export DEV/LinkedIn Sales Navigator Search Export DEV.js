@@ -578,9 +578,18 @@ const isLinkedInSearchURL = (url) => {
 					tempResult = await extractDefaultUrls(tempResult)
 				}
 				if (removeDuplicateProfiles) {
+					let somethingAdded = false
 					for (let i = 0; i < tempResult.length; i++) {
 						if ((tempResult[i].vmid && !result.find(el => el.vmid === tempResult[i].vmid)) || (tempResult[i].companyId && !result.find(el => el.companyId === tempResult[i].companyId))) {
 							result.push(tempResult[i])
+							somethingAdded = true
+						}
+					}
+					if (!somethingAdded) {
+						if (tempResult[0] && tempResult[0].error === "No result found") {
+							result = result.concat(tempResult)
+						} else {
+							result.push({ query: search, timestamp: (new Date()).toISOString(), error: "No new profile added" })
 						}
 					}
 				} else {
