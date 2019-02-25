@@ -198,6 +198,13 @@ const sendMessage = async (tab, message, tags, profile) => {
 	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.profileUrl) < 0)
 	rows = rows.filter(el => el[columnName])
+	const filteredRows = []
+	for (let i = 0; i < rows.length; i++) { // removing duplicates input to only send message once
+		if (!filteredRows.find(el => el[columnName] === rows[i][columnName])) {
+			filteredRows.push(rows[i])
+		}
+	}
+	rows = filteredRows
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty OR everyone is processed", "done")
 		nick.exit(0)
@@ -233,6 +240,9 @@ const sendMessage = async (tab, message, tags, profile) => {
 				utils.log("Trying to send a message to yourself...", "warning")
 				result.push({ profileUrl: row[columnName], timestamp: (new Date()).toISOString(), fatalError: "Trying to send a message to yourself ..." })
 				continue
+			}
+			if (await tab.getUrl() === "https://www.linkedin.com/in/unavailable/") {
+				throw new Error("Profile not available!")
 			}
 			utils.log(`${row[columnName]} loaded`, "done")
 			utils.log(`Sending message to: ${row[columnName]}`, "info")
