@@ -27,6 +27,7 @@
 		"enabled": true,
 		"alpaca": {
 			"options": {
+				"helper": "This API will consume you Captcha counter.",
 				"fields": {
 					"url": {
 						"label": "AngelList URL (<a target=\"_blank\" href=\"/api-store/3678/angellist-market-companies-extractor#section_4findyourangellistmarket\">?</a>)",
