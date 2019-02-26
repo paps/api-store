@@ -1,7 +1,11 @@
-# Extract posts from Instagram profiles
+# Extract every posts from a list of Instagram accounts
 
-Get all posts from Instagram profiles! Get data from their posts, like their comment and like counts, description, location...
+When you're doing marketing, it is key to know your niche. And also your competition. 
+Study your competition and use their good ideas, while leaving aside what you don't like that much.
 
+This Instagram automation will visit a list of profiles for you and extract every single post they ever posted. This includes the image/video, but also the stats (likes, etc.), hashtags, engagements, locations, and more.
+
+Keep informed, get new ideas, filter out the stuff that didn't work and keep the good and discover the channels your competitors are focused on.
 
 # What will you need? ⚙️ 
 
@@ -15,7 +19,6 @@ _(**You already have all that?**  Click straight away on **"Use this API"**)_
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
-
 ## 2. Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
 
@@ -26,9 +29,9 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-
 ## 4. Instagram authentication 🔑 { argument }
 Because the script will manipulate Instagram for you, it needs to be logged on your Instagram account. For that you just need to copy paste your session cookie in the script argument:
+
 * Using Chrome, go to your Instagram homepage and open the inspector
 → Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
 → <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
