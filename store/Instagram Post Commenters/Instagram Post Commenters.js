@@ -54,22 +54,10 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
-// Checks if a url is already in the csv
-const checkDb = (str, db) => {
-	for (const line of db) {
-		if (str === line.postUrl && (line.postUrl !== agentObject.lastQuery)) {
-			return false
-		}
-	}
-	return true
-}
-
-
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1) {
 		if (e.response.status === 200) {
 			graphqlUrl = e.response.url
-			console.log("graphUrl", graphqlUrl)
 		} else if (e.response.status === 429) {
 			rateLimited = true
 			utils.log("Still rate limited by Instagram.", "warning")
@@ -95,22 +83,20 @@ const forgeNewUrl = (url, endCursor) => {
 }
 
 
-const getpostUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
+const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
 		utils.log("Input spreadsheet is empty OR we already scraped from all the posts of this spreadsheet.", "warning")
 		nick.exit()
 	}
-	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
+	return data.slice(0, Math.min(numberOfPostsPerLaunch, maxLength)) // return the first elements
 }
 
 const extractDataFromJson = (json, query) => {
 	const commentData = json.shortcode_media.edge_media_to_comment
 	let endCursor = commentData.page_info.end_cursor
-	// console.log("endCursor", endCursor)
 	const comments = commentData.edges
-	// console.log("likers: ", likers)
 	const results = []
 	for (const comment of comments) {
 		const scrapedData = {}
@@ -118,7 +104,7 @@ const extractDataFromJson = (json, query) => {
 		scrapedData.username = data.owner.username
 		scrapedData.comment = data.text
 		scrapedData.likeCount = data.edge_liked_by.count
-		scrapedData.postDate = new Date(data.created_at * 1000).toISOString()
+		scrapedData.commentDate = new Date(data.created_at * 1000).toISOString()
 		scrapedData.profileUrl = `https://www.instagram.com/${scrapedData.username}`
 		scrapedData.postID = data.id
 		scrapedData.ownerId = data.owner.id
@@ -127,7 +113,6 @@ const extractDataFromJson = (json, query) => {
 		scrapedData.query = query
 		results.push(scrapedData)
 	}
-	// console.log("results, ", results)
 	return [results, endCursor]
 }
 
@@ -143,7 +128,6 @@ const getCommentCountAndUsername = async (postUrl) => {
 	const username = postData.owner.username
 	const totalCommentCount = postData.edge_media_to_comment.count
 	const [ results ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
-	console.log("firstResults", results)
 	return [ totalCommentCount, username, results ]
 }
 
@@ -164,7 +148,6 @@ const tryOpeningVideo = async (tab, postUrl, username) => {
 	await tab.waitUntilVisible("section article")
 	const postSelector = `a[href="${postPath}"`
 	if (await tab.isVisible(postSelector)) {
-		console.log("clicking on post")
 		await tab.click(postSelector)
 		await tab.waitUntilVisible("a[href=\"javascript:;\"]")
 		await clickCommentButton(tab)
@@ -174,6 +157,9 @@ const tryOpeningVideo = async (tab, postUrl, username) => {
 const clickCommentButton = async (tab) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+	if (!await tab.isVisible("article ul > li > button")) {
+		return true
+	}
 	await tab.click("article ul > li > button")
 	const initDate = new Date()
 	do {
@@ -182,44 +168,41 @@ const clickCommentButton = async (tab) => {
 		}
 		await tab.wait(100)
 	} while (new Date() - initDate < 10000)
-	console.log("got a graphql")
 	await tab.screenshot(`${Date.now()}sU2.png`)
 	await buster.saveText(await tab.getContent(), `${Date.now()}sU2s.html`)
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+	return false
 }
 
-const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) => {
+const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => {
 	try {
-		await tab.open(postUrl)
+		await tab.open(query)
 		await tab.waitUntilVisible("article section")
 	} catch (err) {
 		utils.log("Couldn't access post, profile may be private.", "warning")
-		return ({ postUrl, error: "Couldn't access post"})
+		await tab.screenshot(`${Date.now()}privatet.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}privatets.html`)
+		return ({ query, error: "Couldn't access post", timestamp: (new Date()).toISOString() })
 	}
 	let username
 	let totalCommentCount
 	let results = []
 	try {
-		try {
-			[ totalCommentCount, username, results ] = await getCommentCountAndUsername(postUrl)
-		} catch (err) {
-			console.log("err:", err)
-		}
-		if (totalCommentCount === 0) {
-			utils.log("No comments found for this post.", "warning")
-			return ({ postUrl, error: "No comments found"})
-		}
-		utils.log(`${totalCommentCount} comments found for this post ${username ? "by " + username : ""}.`, "info")
+		[ totalCommentCount, username, results ] = await getCommentCountAndUsername(query)
 	} catch (err) {
-		console.log("err", err)
+		return ({ query, error: "Couln't access first comments", timestamp: (new Date()).toISOString() })
 	}
-	await tab.screenshot(`${Date.now()}sU1.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
+	if (totalCommentCount === 0) {
+		utils.log("No comments found for this post.", "warning")
+		return ({ query, error: "No comments found", timestamp: (new Date()).toISOString() })
+	}
+	utils.log(`${totalCommentCount} comments found for this post ${username ? "by " + username : ""}.`, "info")
 	let commentCount = 0
+	let noButton
 	if (!resuming) {
 		graphqlUrl = null
-		await clickCommentButton(tab)
+		noButton = await clickCommentButton(tab)
 	} else {
 		graphqlUrl = agentObject.nextUrl
 		commentCount = alreadyScraped
@@ -227,35 +210,32 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 	if (rateLimited) {
 		return []
 	}
-	// const scrapedData = await instagram.scrapePost(tab)
-	// if (!hasCookie) {
-	// 	delete scrapedData.likes
-	// }
-
 
 	if (!graphqlUrl) {
 		if (await tab.evaluate(checkIfVideo)) {
-			await tryOpeningVideo(tab, postUrl, username)
+			await tryOpeningVideo(tab, query, username)
 		}
 		if (!graphqlUrl) {
+			if (noButton) {
+				return results
+			}
 			utils.log("Can't access comments list.", "warning")
-			return ({ postUrl, error: "Can't access comments list"})
+			return ({ query, error: "Can't access comments list", timestamp: (new Date()).toISOString() })
 		}
 	}
 	let url = forgeNewUrl(graphqlUrl)
-	console.log("urlaeza", url)
-	lastQuery = postUrl
+	lastQuery = query
 	let displayLog = 0
 	do {
 		nextUrl = url
 		try {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
-			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData.data, postUrl)
+			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData.data, query)
 			results = results.concat(tempResult)
 			commentCount = results.length
 			if (!endCursor) {
-				utils.log(`All comments of ${postUrl} have been scraped.`, "done")
+				utils.log(`All comments of ${query} have been scraped.`, "done")
 				break
 			}
 			if (++displayLog % 2 === 0) {
@@ -264,32 +244,24 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 			buster.progressHint((commentCount + alreadyScraped) / totalCommentCount, `${commentCount + alreadyScraped} comments scraped`)
 			url = forgeNewUrl(url, endCursor)
 		} catch (err) {
-			console.log("errr", err)
 			await tab.open(url)
 			let instagramJsonCode = await tab.getContent()
 			const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 			instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
-			console.log("instagramJsonCode", instagramJsonCode)
 			if (instagramJsonCode.message === "execution failure") {
-				console.log("execution failure")
-				console.log("date: ", (new Date()).toISOString())
 				rateLimited = true
 				break
 			}
 			if (instagramJsonCode.message === "rate limited") {
-				console.log("rate limited")
-				console.log("date: ", (new Date()).toISOString())
 				rateLimited = true
 				break
 			}
-			const [ tempResult, endCursor ] = extractDataFromJson(instagramJsonCode.data, postUrl)
+			const [ tempResult, endCursor ] = extractDataFromJson(instagramJsonCode.data, query)
 			results = results.concat(tempResult)
 			commentCount = results.length
 			if (!endCursor) {
-				console.log("plus de endcursor")
 				break
 			}
-			console.log("results.length", results.length)
 			url = forgeNewUrl(url, endCursor)
 		}
 
@@ -300,13 +272,12 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 			break
 		}
 	} while (!numberOfComments || commentCount < numberOfComments)
-	console.log("results.length", results.length)
 	return results
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfComments, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfComments, numberOfPostsPerLaunch , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let postUrls
 	const tab = await nick.newTab()
@@ -315,12 +286,10 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 
 	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
-	console.log("initialResultLength", initialResultLength)
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
 			alreadyScraped = result.filter(el => el.postUrl === agentObject.lastQuery).length
-			console.log("alreadyScraped", alreadyScraped)
 		} catch (err) {
 			utils.log("Could not access agent Object.", "warning")
 		}
@@ -330,23 +299,22 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 	} else { // CSV
 		postUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		postUrls = postUrls.filter(str => str) // removing empty lines
-		if (!numberOfProfilesPerLaunch) {
-			numberOfProfilesPerLaunch = postUrls.length
+		if (!numberOfPostsPerLaunch) {
+			numberOfPostsPerLaunch = postUrls.length
 		}
-		console.log("postUrls:", postUrls)
-		postUrls = getpostUrlsToScrape(postUrls.filter(el => checkDb(el, result)), numberOfProfilesPerLaunch)
+		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "query")), numberOfPostsPerLaunch)
 	}
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
 
 
-	for (let postUrl of postUrls) {
+	for (let query of postUrls) {
 		let resuming = false
-		if (agentObject && postUrl === agentObject.lastQuery) {
-			utils.log(`Resuming scraping comments of ${postUrl}...`, "info")
+		if (agentObject && query === agentObject.lastQuery) {
+			utils.log(`Resuming scraping comments of ${query}...`, "info")
 			resuming = true
 		} else {
-			utils.log(`Scraping comments of ${postUrl}`, "loading")
+			utils.log(`Scraping comments of ${query}`, "loading")
 		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -354,21 +322,23 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 			break
 		}
 		try {
-			const urlObject = new URL(postUrl)
+			const urlObject = new URL(query)
 			if (!urlObject.pathname.startsWith("/p/")) {
-				utils.log(`${postUrl} isn't a valid post URL.`, "warning")
-				result.push({ postUrl, error: "Not a post URL" })
+				utils.log(`${query} isn't a valid post URL.`, "warning")
+				result.push({ query, error: "Not a post URL", timestamp: (new Date()).toISOString() })
 				continue
 			}
-			const tempResult = await loadAndScrapeComments(tab, postUrl, numberOfComments, resuming)
+			const tempResult = await loadAndScrapeComments(tab, query, numberOfComments, resuming)
 			const oldResultLength = result.length
-			for (let i = 0; i < tempResult.length ; i++) { // using postId as a unique comment identifier
-				if (!result.find(el => el.postID === tempResult[i].postID)) {
-					result.push(tempResult[i])
-				}
-			}
 			if (!tempResult.error) {
-				utils.log(`Got ${result.length - oldResultLength} comments for ${postUrl}`, "done")
+				for (let i = 0; i < tempResult.length ; i++) { // using postId as a unique comment identifier
+					if (!result.find(el => el.postID === tempResult[i].postID)) {
+						result.push(tempResult[i])
+					}
+				}
+				utils.log(`Got ${result.length - oldResultLength} comments for ${query}`, "done")
+			} else {
+				result.push(tempResult)
 			}
 			if (rateLimited) {
 				if (tempResult.length) {
@@ -379,9 +349,8 @@ const loadAndScrapeComments = async (tab, postUrl, numberOfComments, resuming) =
 				break
 			}
 		} catch (err) {
-			utils.log(`Can't scrape post at ${postUrl} due to: ${err.message || err}`, "warning")
-			await tab.screenshot(`${Date.now()}Can't scrape post.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}Can't scrape post.html`)
+			utils.log(`Can't scrape post at ${query} due to: ${err.message || err}`, "warning")
+			result.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
 		alreadyScraped = 0
 	}
