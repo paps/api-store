@@ -1,27 +1,26 @@
 {
-	"slug": "instagram-photo-commenters",
-	"description": "Get a list of everyone who commented specific Instagram pictures",
+	"slug": "instagram-post-commenters",
+	"description": "Get a list of everyone who commented specific Instagram posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Photo+Likers/Instagram+Photo+Likers.png",
-	"hidden": true,
-	"new": true,
+	"hidden": false,
+	"new": false,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_photos_urls"
+		"spreadsheetUrl": "instagram_posts_urls",
+		"numberOfPostsPerLaunch": 10
 	},
 	"outputDescription": {
-		"photoUrl": "Instagram photo URL",
-		"instagramID": "Instagram unique ID",
-		"profileUrl": "Instagram profile URL",
-		"profilePictureUrl": "",
-		"username": "Instagram username",
-		"fullName": "",
-		"isPrivate": "If the profile is private",
-		"isVerified": "If the profile is verified",
-		"followedByViewer": "If you follow this profile",
-		"requestedByViewer": "If you sent a follow request to this viewer"
+		"username": "Commenter Instagram username",
+		"comment": "",
+		"likeCount": "Comment like count",
+		"commentDate": "Date of the comment",
+		"postID": "Instagram ID of comment",
+		"profileUrl": "Commenter Instagram profile URL",
+		"ownerId": "Commenter Instagram ID",
+		"profilePictureUrl": "Commenter profile picture URL"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -30,29 +29,29 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/10253/instagram-photo-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/13788/instagram-post-commenters#section_argument\" target=\"_blank\">(?)</a>",
 						"helper": "Paste here your <i>sessionid</i> cookie value"
 					},
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single photo URL" ],
-							"label": "Spreadsheet URL of photos to scrape <a href=\"/api-store/10253/instagram-photo-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single post URL" ],
+							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/13788/instagram-post-commenters#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 						},
 						"columnName": {
-							"label": "Column name from which to get photo URLs",
-							"placeholder": "Instagram Photo Link",
+							"label": "Column name from which to get post URLs",
+							"placeholder": "Instagram Post Link",
 							"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 						},
 						"numberOfComments": {
-							"label": "Number of comments to collect per photo",
+							"label": "Number of comments to collect per post",
 							"inputType": "number",
 							"helper": "If empty, the API will try to scrape all of them"
 						},
-						"numberOfPhotosPerLaunch": {
-							"label": "Number of photos to scrape per launch <a href=\"/api-store/10253/instagram-photo-likers#section_repetition_setup\" target=\"_blank\">(?)</a>",
-							"placeholder": 10,
-							"inputType": "number"
+						"numberOfPostsPerLaunch": {
+							"label": "Number of posts to process per launch <a href=\"/api-store/13788/instagram-post-commenters#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"inputType": "number",
+							"helper": "All of them if empty"
 						},
 						"csvName": {
 							"label": "Name of resulting CSV file",
@@ -80,7 +79,7 @@
 					"type": "number",
 					"minimum": 1
 				},
-				"numberOfPhotosPerLaunch": {
+				"numberOfPostsPerLaunch": {
 					"type": "number",
 					"minimum": 1
 				},

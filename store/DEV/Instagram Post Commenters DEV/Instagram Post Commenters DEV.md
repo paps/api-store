@@ -8,7 +8,7 @@ Our tool will scroll down for you those pictures and get each comments's informa
 
 - **Session cookie**: Your session cookie from Instagram.
 - **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in it.
-- **Number of likers per post**: The number of likers you want to collect per post. If left empty, the API will scrape all likers.
+- **Number of comments per post**: The number of comments you want to collect per post. If left empty, the API will scrape all comments.
 - **Number of posts per launch**: The number of posts to process per API launch.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
