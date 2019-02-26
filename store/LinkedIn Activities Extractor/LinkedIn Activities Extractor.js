@@ -133,6 +133,13 @@ const scrapeActivities = (arg, cb) => {
 		} else {
 			scrapedData.commentCount = 0
 		}
+		if (result.querySelector("a.feed-shared-actor__meta-link > span:last-of-type > div > span")) {
+			let postDate = result.querySelector("a.feed-shared-actor__meta-link > span:last-of-type > div > span").textContent
+			if (postDate) {
+				postDate = postDate.split("•")
+				scrapedData.postDate = postDate[0].trim()
+			}
+		}
 		const articleArray = Array.from(result.querySelectorAll("article")).filter(el => el.getAttribute("data-id"))
 		if (articleArray[0]) {
 			let articleId = articleArray[0].getAttribute("data-id")

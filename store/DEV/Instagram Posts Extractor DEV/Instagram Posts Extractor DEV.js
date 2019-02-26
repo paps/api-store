@@ -24,6 +24,7 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
+let rateLimited = true
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -56,7 +57,7 @@ const forgeNewUrl = (endCursor) => {
 	return newUrl
 }
 
-const getPosts = async (tab, profileUrl, query) => {
+const getPosts = async (tab, profileUrl, query, numberOfPostsPerProfile) => {
 	const initDate = new Date()
 	do {
 		const timeLeft = await utils.checkTimeLeft()
@@ -71,7 +72,8 @@ const getPosts = async (tab, profileUrl, query) => {
 		await tab.scrollToBottom()
 	} while (!graphqlUrl)
 	if (!graphqlUrl) {
-		utils.log("Got all posts or Instagram took too long to load them.", "done")
+		// utils.log("Instagram took too long to load them.", "done")
+		rateLimited = true
 		return []
 	}
 	let newUrl = graphqlUrl
@@ -81,6 +83,9 @@ const getPosts = async (tab, profileUrl, query) => {
 		let instagramJsonCode = await tab.getContent()
 		const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 		instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+		if (!instagramJsonCode.data) {
+			console.log("empty instagramJsonCode:", instagramJsonCode)
+		}
 		const endCursor = instagramJsonCode.data.user.edge_owner_to_timeline_media.page_info.end_cursor
 
 		const posts = instagramJsonCode.data.user.edge_owner_to_timeline_media.edges
@@ -88,9 +93,17 @@ const getPosts = async (tab, profileUrl, query) => {
 			const scrapedData = extractPostData(post.node, profileUrl, query)
 			results.push(scrapedData)
 		}
-		utils.log(`Scraped ${results.length} posts.`, "done")
+		utils.log(`Loaded ${results.length} posts.`, "done")
+		if (numberOfPostsPerProfile && results.length > numberOfPostsPerProfile) {
+			break
+		}
 		if (!endCursor) {
 			utils.log("Got all posts!", "done")
+			break
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 		newUrl = forgeNewUrl(endCursor)
@@ -155,7 +168,7 @@ const getFirstPosts = async (profileUrl, query) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, numberOfProfilesPerLaunch , csvName } = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, numberOfPostsPerProfile, numberOfProfilesPerLaunch, csvName } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
@@ -198,6 +211,8 @@ const getFirstPosts = async (profileUrl, query) => {
 	let pageCount = 0
 	let tempResult = []
 	for (const query of profileUrls) {
+		graphqlUrl = null
+		let profileResult = []
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -206,25 +221,33 @@ const getFirstPosts = async (profileUrl, query) => {
 		try {
 			utils.log(`Scraping page ${query}`, "loading")
 			pageCount++
-			buster.progressHint(pageCount / profileUrls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} scraped`)
+			buster.progressHint(pageCount / profileUrls.length, `${pageCount} profile${pageCount > 1 ? "s" : ""} processed`)
 			await tab.open(query)
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${query}, broken link or page has been removed.`, "warning")
-				tempResult.push({ query, timestamp: (new Date()).toISOString(), error: "Broken link or page has been removed" })
+				profileResult.push({ query, timestamp: (new Date()).toISOString(), error: "Broken link or page has been removed" })
 				continue
 			}
 			const profileUrl = await tab.getUrl()
 			const firstPosts = await getFirstPosts(profileUrl, query)
-			tempResult = tempResult.concat(firstPosts.firstResults)
-			if (!firstPosts.cantAccess){
-				if (tempResult.length !== firstPosts.postCount) {
-					tempResult = tempResult.concat(await getPosts(tab, profileUrl, query))
+			if (firstPosts.postCount) {
+				profileResult = profileResult.concat(firstPosts.firstResults)
+				if (!firstPosts.cantAccess){
+					if (profileResult.length !== firstPosts.postCount && (!numberOfPostsPerProfile || profileResult.length < numberOfPostsPerProfile)) {
+						profileResult = profileResult.concat(await getPosts(tab, profileUrl, query, numberOfPostsPerProfile))
+					}
+					if (numberOfPostsPerProfile) {
+						profileResult = profileResult.slice(0, numberOfPostsPerProfile)
+					}
+					utils.log(`Got ${profileResult.length} posts from ${firstPosts.fullName}.`, "done")
+				} else {
+					utils.log(`Can't access ${firstPosts.fullName}'s posts!`, "done")
+					profileResult.push({query, timestamp: (new Date()).toISOString(), error: "Can't access posts"})
 				}
-				utils.log(`Got ${tempResult.length} posts from ${firstPosts.fullName}.`, "done")
 			} else {
-				utils.log(`Can't access ${firstPosts.fullName}'s posts!`, "done")
-				tempResult.push({query, timestamp: (new Date()).toISOString(), error: "Can't access posts"})
+				utils.log(`${firstPosts.fullName} has no post.`, "done")
+				profileResult.push({query, timestamp: (new Date()).toISOString(), error: "No post"})
 			}
 		} catch (err) {
 			try {
@@ -238,6 +261,11 @@ const getFirstPosts = async (profileUrl, query) => {
 			}
 			utils.log(`Can't scrape the profile at ${query} due to: ${err.message || err}`, "warning")
 			continue
+		}
+		tempResult = tempResult.concat(profileResult)
+		if (rateLimited) {
+			utils.log("Instagram rate limit reached, you should try again in 15min.", "info")
+			break
 		}
 		await tab.wait(2500 + Math.random() * 2000)
 	}

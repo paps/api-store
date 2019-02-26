@@ -94,6 +94,7 @@ const loadComments = async (tab, postCount, selector) => {
 			}
 		}
 		buster.progressHint((postNumber + 1) / postCount, `${postNumber + 1} posts processed`)
+		console.log("postNumber:", postNumber)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -132,6 +133,13 @@ const scrapeActivities = (arg, cb) => {
 			scrapedData.commentCount = parseInt(commentCount, 10)
 		} else {
 			scrapedData.commentCount = 0
+		}
+		if (result.querySelector("a.feed-shared-actor__meta-link > span:last-of-type > div > span")) {
+			let postDate = result.querySelector("a.feed-shared-actor__meta-link > span:last-of-type > div > span").textContent
+			if (postDate) {
+				postDate = postDate.split("•")
+				scrapedData.postDate = postDate[0].trim()
+			}
 		}
 		const articleArray = Array.from(result.querySelectorAll("article")).filter(el => el.getAttribute("data-id"))
 		if (articleArray[0]) {
@@ -189,6 +197,7 @@ const getActityIdFromLikes = async (tab, activityResults, postCount, selector) =
 			//
 		}
 		buster.progressHint((postNumber + 1) / postCount, `${postNumber + 1} posts processed`)
+		console.log("postNumber:", postNumber)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -220,6 +229,7 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 			postCount = newPostCount
 			lastDate = new Date()
 			buster.progressHint((postCount) / numberMaxOfPosts, `${postCount} posts loaded`)
+			console.log("postNumber:", postCount)
 		}
 		if (new Date() - lastDate > 10000) {
 			utils.log("Scrolling took too long!", "warning")
@@ -268,6 +278,7 @@ const getCompanyActivities = async (tab, companyUrl, convertedUrl, numberMaxOfPo
 			postCount = newPostCount
 			lastDate = new Date()
 			buster.progressHint((postCount) / numberMaxOfPosts, `${postCount} posts loaded`)
+			console.log("postNumber:", postCount)
 		}
 		if (new Date() - lastDate > 10000) {
 			utils.log("Scrolling took too long!", "warning")

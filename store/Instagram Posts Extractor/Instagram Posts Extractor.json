@@ -13,20 +13,14 @@
 		"numberOfProfilesPerLaunch": 10
 	},
 	"outputDescription": {
-		"profileUrl": "Instagram profile URL",
-		"imageUrl": "Profile picture URL",
-		"profileName ": "Instagram username",
-		"instagramID": "Instagram unique ID",
-		"fullName": "Full name of the person",
-		"postsCount": "How many publications they made",
-		"followersCount": "How many followers they have",
-		"followingCount": "How many accounts they follow",
-		"bio": "",
-		"website": "",
-		"verified": "If Instagram has confirmed it's an authentic account",
-		"inCommon": "If some of your Instagram friends follow that account",
-		"private": "If the account is private",
-		"status": "If you follow or have blocked that account"
+		"postUrl": "",
+		"commentCount": "",
+		"likeCount ": "",
+		"pubDate": "Post date",
+		"caption": "Instagram caption of that post",
+		"imgUrl": "URL of the post's picture",
+		"id": "Instagram ID of the post",
+		"profileUrl": ""
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -50,6 +44,10 @@
 						"label": "Column name from which to get profile URLs",
 						"placeholder": "Instagram Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfPostsPerProfile": {
+						"label": "Number of posts to extract per profile (all of them if empty)",
+						"inputType": "number"
 					},
 					"numberOfProfilesPerLaunch": {
 						"label": "Number of profiles to scrape per launch <a href=\"/api-store/12766/instagram-posts-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
@@ -77,6 +75,10 @@
 			},
 			"columnName": {
 				"type": "string"
+			},
+			"numberOfPostsPerProfile": {
+				"type": "number",
+				"minimum": 1
 			},
 			"numberOfProfilesPerLaunch": {
 				"type": "number",
