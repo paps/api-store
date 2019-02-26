@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-DEV.js, lib-LinkedInScraper-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 "phantombuster flags: save-folder"
 
 const { parse, URL } = require("url")
@@ -17,12 +17,13 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const LinkedIn = require("./lib-LinkedIn-DEV")
+const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
+const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 let notSalesNav
 // }
@@ -286,6 +287,7 @@ const extractDefaultUrls = async results => {
 	return results
 }
 
+
 const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 	let pageCount
 	let result = []
@@ -321,8 +323,8 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 			return []
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")
-			await tab.screenshot(`${Date.now()}errorcount.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}errorcount.html`)
+			await tab.screenshot(`${Date.now()}nocount.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}nocount.html`)
 		}
 	}
 	for (let i = 1; i <= pageCount; i++) {
@@ -350,17 +352,14 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 				try {
 					const clickDone = await tab.evaluate(clickNextPageLists)
 					if (!clickDone) {
-						console.log("ih")
-
 						utils.log("No more profiles found on this page.", "warning")
 						break
 					}
 				} catch (err) {
-					utils.log("Error click on Next button.", "error")
+					utils.log("Error clicking on Next button.", "error")
 					break
 				}
 			} else {
-				console.log("eh")
 				utils.log("No more profiles found on this page.", "warning")
 				break
 			}
@@ -374,7 +373,6 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 }
 
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
-
 	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
 	let pageCount
 	let result = []
@@ -383,18 +381,11 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let maxResults = Math.min(1000, numberOfProfiles)
 	let numberPerPage
 	await tab.open(searchUrl)
-	console.log("searchUrl = ", searchUrl)
 	try {
-		await tab.wait(5000)
-		await tab.screenshot(`${Date.now()}ava.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}ava.html`)
-		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 20000, "or")
-		await tab.screenshot(`${Date.now()}select.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}select.html`)
-		console.log("se:", selector)
+		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 30000, "or")
 		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
 			await tab.click("article.contract-chooser ul > li > button")
-			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 20000, "or")
+			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 30000, "or")
 		} else if (selector === ".generic-error > p.error-message") {
 			throw "LinkedIn is experiencing technical difficulties."
 		}
@@ -416,7 +407,6 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
 		await tab.wait(10000)
-		console.log("url:",await tab.getUrl())
 		const currentUrl = await tab.getUrl()
 		if (currentUrl === "https://www.linkedin.com/feed/") {
 			utils.log("It seems you don't have a Sales Navigator Account...", "error")
@@ -425,10 +415,11 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		} else if (currentUrl.startsWith("https://www.linkedin.com/sales/contract-chooser?")) {
 			utils.log("LinkedIn is experiencing technical difficulties loading that page..", "warning")
 			return []
+		} else if (currentUrl === "https://www.linkedin.com/sales/home") {
+			utils.log("Search is not working, got redirected to LinkedIn Home Page.", "warning")
+			return [{ query, timestamp: (new Date()).toISOString(), error: "Redirected to home page" }]
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")
-			await tab.screenshot(`${Date.now()}errgetrc.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}errgetrc.html`)
 		}
 	}
 	for (let i = 1; i <= pageCount; i++) {
@@ -445,36 +436,29 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 45000, "or")
 			await tab.scrollToBottom()
 			await tab.wait(1500)
+			await tab.screenshot(`${Date.now()}page${i}.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}page${i}.html`)
 			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				utils.log(timeLeft.message, "warning")
 				break
 			}
-			await tab.screenshot(`${Date.now()}waiting${i}.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}waiting${i}.html`)
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
-					const tempResult = await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage})
-					console.log("tempura", tempResult)
-					result = result.concat(tempResult)
+					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
 				} catch (err) {
-					console.log("err:", err)
+					//
 				}
 			} else {
-				const tempResult = await tab.evaluate(scrapeResults, {query, numberOnThisPage})
-				console.log("temprL", tempResult.length)
-				result = result.concat(tempResult)
+				result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
 			}
-			console.log("result.length", result.length)
-			console.log("profilesFoundCount", profilesFoundCount)
 			if (result.length > profilesFoundCount) {
 				profilesFoundCount = result.length
 				buster.progressHint(profilesFoundCount / maxResults, `${profilesFoundCount} profiles loaded`)
 				try {
 					const clickDone = await tab.evaluate(clickNextPage)
 					if (!clickDone) {
-						console.log("ah ?")
 						utils.log("No more profiles found on this page.", "warning")
 						break
 					}
@@ -483,19 +467,16 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 					break
 				}
 			} else {
-				console.log("oh ?")
-
 				utils.log("No more profiles found on this page.", "warning")
 				break
 			}
 		} catch (err) {
 			utils.log(`Error scraping this page: ${err}`, "error")
-			await tab.screenshot(`${Date.now()}error.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}error.html`)
 		}
 	}
 	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
-	utils.log("All pages with result scrapped.", "done")
+	console.log("profilesFoundCount", profilesFoundCount)
+	utils.log(`All pages with result scrapped. Got ${result.length} profiles.`, "done")
 	return result
 }
 
@@ -524,8 +505,6 @@ const isLinkedInSearchURL = (url) => {
 	const tab = await nick.newTab()
 	let { sessionCookie, searches, numberOfProfiles, columnName, csvName, numberOfLinesPerLaunch, extractDefaultUrl, removeDuplicateProfiles } = utils.validateArguments()
 	await linkedIn.login(tab, sessionCookie)
-	await tab.screenshot(`${Date.now()}login.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}login.html`)
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let isLinkedInSearchSalesURL = isLinkedInSearchURL(searches)
@@ -540,7 +519,6 @@ const isLinkedInSearchURL = (url) => {
 			searches = searches.filter(str => str) // removing empty lines
 			const lastUrl = searches[searches.length - 1]
 			searches = searches.filter(str => utils.checkDb(str, result, "query")).slice(0, numberOfLinesPerLaunch)
-
 			if (searches.length < 1) { searches = [lastUrl] } // if every search's already been done, we're executing the last one
 		} catch (err) {
 			if (searches.startsWith("http")) {
@@ -574,6 +552,7 @@ const isLinkedInSearchURL = (url) => {
 				if (notSalesNav) {
 					break
 				}
+				console.log("tempResult.length", tempResult.length)
 				if (extractDefaultUrl) {
 					tempResult = await extractDefaultUrls(tempResult)
 				}

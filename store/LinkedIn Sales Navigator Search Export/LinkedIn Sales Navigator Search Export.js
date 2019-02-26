@@ -412,6 +412,9 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		} else if (currentUrl.startsWith("https://www.linkedin.com/sales/contract-chooser?")) {
 			utils.log("LinkedIn is experiencing technical difficulties loading that page..", "warning")
 			return []
+		} else if (currentUrl === "https://www.linkedin.com/sales/home") {
+			utils.log("Search is not working, got redirected to LinkedIn Home Page.", "warning")
+			return [{ query, timestamp: (new Date()).toISOString(), error: "Redirected to home page" }]
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")
 		}
@@ -467,7 +470,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		}
 	}
 	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
-	utils.log("All pages with result scrapped.", "done")
+	utils.log(`All pages with result scrapped. Got ${result.length} profiles.`, "done")
 	return result
 }
 

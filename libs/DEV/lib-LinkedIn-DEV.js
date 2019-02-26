@@ -106,7 +106,7 @@ class LinkedIn {
 					//
 				}
 			}
-			
+
 			// the newer cookie from the agent object failed (or wasn't here)
 			// so we try a second time with the cookie from argument
 			await this.nick.setCookie({
@@ -129,12 +129,17 @@ class LinkedIn {
 				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
 			}
-			this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
-			if (this.originalSessionCookie.length < 110) {
-				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
+			if (this.nick._options.httpProxy && error.message && error.message.startsWith("timeout: load event did not fire after")) {
+				this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
+				this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
+			} else {
+				this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			}
-			await this.buster.saveText(await tab.getContent(), "login-err.html")
-			await this.buster.save(await tab.screenshot("login-err.jpg"))
+			if (this.originalSessionCookie.length < 110) {
+				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")
+			}
+			// await this.buster.saveText(await tab.getContent(), "login-err.html")
+			// await this.buster.save(await tab.screenshot("login-err.jpg"))
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
