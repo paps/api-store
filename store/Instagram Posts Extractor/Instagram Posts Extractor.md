@@ -1,11 +1,12 @@
 # Extract every posts from a list of Instagram accounts
 
-When you're doing marketing, it is key to know your niche. And also your competition. 
+When you're doing marketing, it's _key_ to know your niche. **And your competition.**
+
 Study your competition and use their good ideas, while leaving aside what you don't like that much.
 
-This Instagram automation will visit a list of profiles for you and extract every single post they ever posted. This includes the image/video, but also the stats (likes, etc.), hashtags, engagements, locations, and more.
+This Instagram automation will visit a list of profiles for you and extract every single post they ever posted. This includes the image/video, but also the stats (likes, etc.), hashtags, engagements, locations and more.
 
-Keep informed, get new ideas, filter out the stuff that didn't work and keep the good and discover the channels your competitors are focused on.
+**Keep informed**, **get new ideas**, filter out the stuff that didn't work, **keep the good and discover the channels your competitors are focused on**.
 
 # What will you need? ⚙️ 
 

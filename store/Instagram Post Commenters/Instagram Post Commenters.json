@@ -1,9 +1,9 @@
 {
 	"slug": "instagram-post-commenters",
-	"description": "Extract every informations related to comments of a list of Instagram posts",
+	"description": "Extract every information on comments related to a list of Instagram posts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Post+Commenters/Instagram+Posts+Commenters.png",
 	"hidden": false,
-	"new": false,
+	"new": true,
 	"gradientBegin": "#FCCF6B",
 	"gradientEnd": "#DA2E82",
 	"argumentHelpAnchor": "#section_argument",

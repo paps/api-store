@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-posts-extractor",
-	"description": "Extract all pictures and contents from a list of Instagram accounts",
+	"description": "Extract all pictures and content from a list of Instagram accounts",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Posts+Extractor/Instagram+Posts+Extractor.png",
 	"hidden": false,
 	"new": true,
