@@ -1,8 +1,10 @@
-# Extract comments from Instagram posts
+# Extract every comments out of a list of Instagram posts
 
-You noticed one or multiple Instagram pictures and felt that people commenting those are your niche audience? Great!
+Whoever is closest to his or her audience wins. In order to deliver the best content, product or service to your audience, you have to know what they think, like, not like, and so much more.
 
-Our tool will scroll down for you those pictures and get each comments's information. Once it's done, you'll receive a list of all their profiles neatly arranged in one spreadsheet.
+Too many brands _assume_ what their audience likes. This API is here to validate, or better, invalidate, your assumptions and have scientifc evidence intelligence over reactions to your content.
+
+Our tool will extract from a list of Instagram every single comments' and all available information. What will you do with it? Spreadsheet statistics? Language analysis to find new keywords? Something else? 
 
 # What will you need? ⚙️
 
