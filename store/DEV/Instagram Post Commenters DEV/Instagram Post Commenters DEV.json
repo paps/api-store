@@ -1,7 +1,7 @@
 {
 	"slug": "instagram-post-commenters",
-	"description": "Get a list of everyone who commented specific Instagram posts",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Photo+Likers/Instagram+Photo+Likers.png",
+	"description": "Extract every informations related to comments of a list of Instagram posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Post+Commenters/Instagram+Posts+Commenters.png",
 	"hidden": false,
 	"new": false,
 	"gradientBegin": "#FCCF6B",
