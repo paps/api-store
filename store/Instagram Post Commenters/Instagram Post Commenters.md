@@ -1,10 +1,10 @@
 # Extract every comments out of a list of Instagram posts
 
-Whoever is closest to his or her audience wins. In order to deliver the best content, product or service to your audience, you have to know what they think, like, not like, and so much more.
+**Whoever is closest to his or her audience wins**. In order to deliver the best content, product or service to your audience, you have to know what they think, like, not like, and so much more.
 
-Too many brands _assume_ what their audience likes. This API is here to validate, or better, invalidate, your assumptions and have scientifc evidence intelligence over reactions to your content.
+Too many brands _assume_ what their audience likes. This API is here to validate, or better, invalidate, your assumptions and have **scientific intelligence over reactions to your content**.
 
-Our tool will extract from a list of Instagram every single comments' and all available information. What will you do with it? Spreadsheet statistics? Language analysis to find new keywords? Something else? 
+Our tool will extract from a list of Instagram every single comments' and all available information. What will you do with it: Spreadsheet statistics? Language analysis to find new keywords? Something else? 
 
 # What will you need? ⚙️
 
@@ -60,7 +60,7 @@ _// How to access your cookies with <a href="https://developer.mozilla.org/en-US
 Below your session cookie you’ll find _Spreadsheet URL_.
 
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
-<center>![](https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrrpr_spreadsheet.png)</center>
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Posts+in+Spreadsheet.png)</center>
 
 Your spreadsheet should contain a list of Instagram Posts URLs (**one link per row**).
 You can specify the name of the column that contains the post links. Simply enter the column name in the next text field.
