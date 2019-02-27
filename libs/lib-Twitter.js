@@ -155,7 +155,11 @@ class Twitter {
 			const imgPath = `Tok${Date.now()}.png`
 			const opts = isNick ? imgPath : { path: imgPath, type: "png", fullPage: true }
 			await tab.screenshot(opts)
-			this.utils.log("Could not connect to Twitter with this sessionCookie.", "error")
+			if (this.nick._options.httpProxy) {
+				this.utils.log("Can't connect to Twitter with a proxy, please remove it.", "error")
+			} else {
+				this.utils.log("Could not connect to Twitter with this session cookie.", "error")
+			}
 			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
