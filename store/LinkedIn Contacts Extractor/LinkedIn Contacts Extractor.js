@@ -163,19 +163,27 @@ const getConnections = async (tab, numberOfProfiles, sortBy) => {
 	let result = await utils.getDb(csvName + ".csv")
 	let tempResult
 	await linkedIn.login(tab, sessionCookie)
+	const newResult = []
 	try {
 		tempResult = await getConnections(tab, numberOfProfiles, sortBy)
 		if (tempResult && tempResult.length) {
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
 					result.push(tempResult[i])
+					newResult.push(tempResult[i])
 				}
 			}
 		}
 	} catch (err) {
 		utils.log(`Error : ${err}`, "error")
 	}
-	await utils.saveResults(tempResult, result, csvName)
+	const newProfiles = newResult.length
+	if (newProfiles) {
+		utils.log(`${newProfiles} new profile${newProfiles > 1 ? "s" : ""} found.`, "done")
+	} else {
+		utils.log("No new profile found", "done")
+	}
+	await utils.saveResults(newResult, result, csvName)
 	await linkedIn.updateCookie()
 	nick.exit(0)
 })()

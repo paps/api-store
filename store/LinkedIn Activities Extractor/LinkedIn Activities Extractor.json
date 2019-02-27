@@ -20,7 +20,8 @@
 		"postUrl": "",
 		"postContent": "",
 		"likeCount": "",
-		"commentCount": ""
+		"commentCount": "",
+		"postDate": ""
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

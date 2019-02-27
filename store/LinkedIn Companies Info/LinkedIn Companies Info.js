@@ -23,6 +23,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
+let disconnected
 // }
 
 const scrapeCompanyLink = (arg, callback) => {
@@ -350,7 +351,14 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 		result.companyUrl = currentUrl
 		return result
 	} catch (err) {
-		return { link, query, invalidResults: "Couldn't access company profile" }
+		const currentUrl = await tab.getUrl()
+		if (currentUrl === "chrome-error://chromewebdata/") {
+			disconnected = true
+			return {}
+		} else {
+			utils.log(`Error accessing company page: ${err} with current page:${currentUrl}`)
+			return { link, query, invalidResults: "Couldn't access company profile" }
+		}
 	}
 }
 
@@ -437,6 +445,10 @@ const isLinkedUrl = url => {
 					}
 				}
 				const newResult = await getCompanyInfo(tab, link, company, saveImg)
+				if (disconnected) {
+					utils.log("Disconnected by LinkedIn, please try again later...", "warning")
+					break
+				}
 				newResult.timestamp = (new Date()).toISOString()
 				if (newResult === "invalid") {
 					utils.log("Cookie session invalidated, exiting...", "error")

@@ -72,20 +72,41 @@ const scrapeConnectionsProfilesAndRemove = (arg, cb) => {
 }
 
 // handle loading and scraping of Connections profiles
-const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
-	utils.log("Loading Connections profiles...", "loading")
-	let totalCount
-	try {
-		totalCount = await tab.evaluate((arg, cb) => {
-			cb(null, document.querySelector(".mn-connections__header h1").textContent.replace(/\D+/g,""))
-		})
-		if (totalCount) {
-			utils.log(`Total Connections Count is ${totalCount}.`, "info")
+const loadConnectionsAndScrape = async (tab, numberOfProfiles, letter) => {
+	if (letter) {
+		try {
+			await tab.waitUntilVisible("div.mn-connections__search-container input")
+			await tab.wait(5000)
+			await tab.sendKeys("div.mn-connections__search-container input", letter, { reset: true })
+			const initDate = new Date()
+			while (!await tab.isVisible("li-icon.blue.loader")) {
+				console.log("waiting the loader")
+				await tab.wait(10)
+				if (new Date() - initDate > 2000) {
+					break
+				}
+			}
+			while (await tab.isVisible("li-icon.blue.loader")) {
+				console.log("waiting to load")
+				await tab.wait(10)
+				if (new Date() - initDate > 4000) {
+					break
+				}
+			}
+		} catch (err) {
+			console.log("err:", err)
 		}
-	} catch (err) {
-		//
 	}
+
+	await tab.screenshot(`${Date.now()}letter${letter}.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}letter${letter}.html`)
 	let result = []
+	if (letter) {
+		if (await tab.isVisible("div.mn-connections__empty-search")) {
+			utils.log(`Couldn't find any connection with letter ${letter}`, "info")
+			return result
+		}
+	}
 	let scrapeCount = 0
 	let connectionsCount = 0
 	let lastDate = new Date()
@@ -98,6 +119,8 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 		const newConnectionsCount = await tab.evaluate(getConnectionsCount)
 		if (newConnectionsCount > connectionsCount) {
 			const tempResult = await tab.evaluate(scrapeConnectionsProfilesAndRemove, { limiter: 30 })
+			// await tab.screenshot(`${Date.now()}letter${letter}.png`)
+			// await buster.saveText(await tab.getContent(), `${Date.now()}letter${letter}.html`)
 			result = result.concat(tempResult)
 			scrapeCount = result.length
 			if (scrapeCount) {
@@ -130,7 +153,7 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 }
 
 // handle scraping of Connections profiles
-const getConnections = async (tab, numberOfProfiles, sortBy) => {
+const getConnections = async (tab, numberOfProfiles, sortBy, advancedLoading) => {
 	let result = []
 	try {
 		await tab.open("https://www.linkedin.com/mynetwork/invite-connect/connections/")
@@ -148,7 +171,39 @@ const getConnections = async (tab, numberOfProfiles, sortBy) => {
 				utils.log(`Error changing profile order: ${err}`)
 			}
 		}
-		result = await loadConnectionsAndScrape(tab, numberOfProfiles)
+		utils.log("Loading Connections profiles...", "loading")
+		let totalCount
+		try {
+			totalCount = await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector(".mn-connections__header h1").textContent.replace(/\D+/g,""))
+			})
+			if (totalCount) {
+				utils.log(`Total Connections Count is ${totalCount}.`, "info")
+			}
+		} catch (err) {
+			//
+		}
+		if (advancedLoading) {
+			const letterArray = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "t", "u", "v", "w", "x", "y", "z"]
+			// const letterArray = ["a", "b"]
+			for (const letter of letterArray) {
+				console.log("Letter:", letter)
+				const tempResult = await loadConnectionsAndScrape(tab, numberOfProfiles, letter)
+				for (let i = 0; i < tempResult.length; i++) {
+					if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
+						result.push(tempResult[i])
+					}
+				}
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(timeLeft.message, "warning")
+					break
+				}
+				await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
+			}
+		} else {
+			result = await loadConnectionsAndScrape(tab, numberOfProfiles)
+		}
 	} catch (err) {
 		utils.log(`Error getting Connections:${err}`, "error")
 	}
@@ -159,24 +214,32 @@ const getConnections = async (tab, numberOfProfiles, sortBy) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, numberOfProfiles, sortBy, csvName } = utils.validateArguments()
+	let { sessionCookie, numberOfProfiles, sortBy, csvName, advancedLoading } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let result = await utils.getDb(csvName + ".csv")
 	let tempResult
 	await linkedIn.login(tab, sessionCookie)
+	const newResult = []
 	try {
-		tempResult = await getConnections(tab, numberOfProfiles, sortBy)
+		tempResult = await getConnections(tab, numberOfProfiles, sortBy, advancedLoading)
 		if (tempResult && tempResult.length) {
 			for (let i = 0; i < tempResult.length; i++) {
 				if (!result.find(el => el.profileUrl === tempResult[i].profileUrl)) {
 					result.push(tempResult[i])
+					newResult.push(tempResult[i])
 				}
 			}
 		}
 	} catch (err) {
 		utils.log(`Error : ${err}`, "error")
 	}
-	await utils.saveResults(tempResult, result, csvName)
+	const newProfiles = newResult.length
+	if (newProfiles) {
+		utils.log(`${newProfiles} new profile${newProfiles > 1 ? "s" : ""} found.`, "done")
+	} else {
+		utils.log("No new profile found", "done")
+	}
+	await utils.saveResults(newResult, result, csvName)
 	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
