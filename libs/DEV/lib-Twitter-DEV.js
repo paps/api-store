@@ -236,7 +236,7 @@ class Twitter {
 				const screenNameSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-nameLink")
 				const handleSelector = descriptionSelector.querySelector("a.ProfileHeaderCard-screennameLink")
 				const bioSelector = descriptionSelector.querySelector("p.ProfileHeaderCard-bio")
-				const locationSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-location span.ProfileHeaderCard-locationText a[data-place-id]")
+				const locationSelector = descriptionSelector.querySelector(".ProfileHeaderCard-location .ProfileHeaderCard-locationText")
 				const websiteSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-url span.ProfileHeaderCard-urlText a:first-of-type")
 				const joinDateSelector = descriptionSelector.querySelector("div.ProfileHeaderCard-joinDate span.js-tooltip")
 				const birthdaySelector = descriptionSelector.querySelector("div.ProfileHeaderCard-birthdate span.ProfileHeaderCard-birthdateText")

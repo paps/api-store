@@ -135,8 +135,11 @@ class LinkedIn {
 			} else {
 				this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			}
-			if (this.originalSessionCookie.length < 110) {
-				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")
+			// if (this.originalSessionCookie.length < 110) {
+			// 	this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")
+			// }
+			if (this.originalSessionCookie.length !== 152) {
+				this.utils.log(`The LinkedIn li_at session cookie has usually 152 characters, yours has ${this.originalSessionCookie.length} characters, make sure you correctly copy-pasted the cookie.`, "error")
 			}
 			// await this.buster.saveText(await tab.getContent(), "login-err.html")
 			// await this.buster.save(await tab.screenshot("login-err.jpg"))
