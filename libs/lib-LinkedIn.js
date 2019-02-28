@@ -133,7 +133,7 @@ class LinkedIn {
 				this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
 				this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
 			} else {
-				this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
+				this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
 			}
 			if (this.originalSessionCookie.length < 110) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")

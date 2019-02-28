@@ -172,10 +172,13 @@ const scrapeResultsAll = (arg, callback) => {
 				scrapedData.name = result.querySelector(".search-result__title").innerText
 			}
 			if (arg.searchCat === "companies") {
+				scrapedData.companyUrl = url
 				scrapedData.companyId = new URL(url).pathname.replace(/[^\d]/g, "")
 				// .ghost-company class it means that the profile doesnt't contain a logo
 				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-company") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 					scrapedData.logoUrl = result.querySelector("figure.search-result__image > img").src
+				} else if (result.querySelector(".search-result__image img")) {
+					scrapedData.logoUrl = result.querySelector(".search-result__image img").src
 				}
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
 					scrapedData.description = result.querySelector("p.subline-level-1").textContent.trim()

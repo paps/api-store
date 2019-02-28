@@ -85,12 +85,31 @@ const scrapeLikers = (arg, cb) => {
 			limit = results.length
 		}
 		for (let i = 0; i < limit ; i++) {
-			const scrapedData = { query: arg.pageUrl, timestamp: (new Date()).toISOString() }
-			if (results[i].querySelector("div")) {
-				scrapedData.facebookId = JSON.parse(results[i].getAttribute("data-bt")).id.toString()
-			}
+			const scrapedData = {}
 			if (results[i].querySelector("a")) {
 				scrapedData.profileUrl = results[i].querySelector("a").href
+			}
+			if (results[i].querySelector("[data-testid=\"browse-result-content\"] a")) {
+				scrapedData.name = results[i].querySelector("[data-testid=\"browse-result-content\"] a").textContent
+				const nameArray = scrapedData.name.split(" ")
+				const firstName = nameArray.shift()
+				let lastName = nameArray.join(" ")
+				let nickname
+				scrapedData.firstName = firstName
+				if (lastName) {
+					scrapedData.lastName = lastName
+					if (lastName.includes("(") && lastName.includes(")")) {
+						nickname = lastName.substring(lastName.lastIndexOf("(") + 1, lastName.lastIndexOf(")"))
+						lastName = lastName.slice(0, lastName.lastIndexOf("(")).trim()
+					}
+					scrapedData.lastName = lastName
+					if (nickname) {
+						scrapedData.nickname = nickname
+					}
+				}
+			}
+			if (results[i].querySelector("div")) {
+				scrapedData.facebookId = JSON.parse(results[i].getAttribute("data-bt")).id.toString()
 			}
 			if (results[i].querySelector("img")) {
 				scrapedData.imageUrl = results[i].querySelector("img").src
@@ -99,12 +118,11 @@ const scrapeLikers = (arg, cb) => {
 			if (friendButton && friendButton.classList.contains("FriendRequestFriends")) {
 				scrapedData.isFriend = "Friend"
 			}
-			if (results[i].querySelector("div[data-testid=\"browse-result-content\"] > div > div:last-of-type")) {
-				scrapedData.name = results[i].querySelector("div[data-testid=\"browse-result-content\"] > div > div:last-of-type").textContent
-			}
 			if (results[i].querySelector("div[data-testid=\"browse-result-content\"] > div:nth-child(2) > div")) {
 				scrapedData.highlights = results[i].querySelector("div[data-testid=\"browse-result-content\"] > div:nth-child(2) > div").textContent
 			}
+			scrapedData.query = arg.pageUrl
+			scrapedData.timestamp = (new Date()).toISOString()
 			scrapedResults.push(scrapedData)
 			results[i].parentElement.removeChild(results[i])
 		}
@@ -137,7 +155,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 	} else if (maxLikers) {
 		likerToScrape = maxLikers
 	}
-	
+
 	let likerCount = 0
 	let lastDate = new Date()
 	let totalScraped = 0
@@ -177,15 +195,11 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 	} while (!await tab.isPresent("#browse_end_of_results_footer") && new Date() - lastDate < 40000)
 	const tookTooLong = (new Date() - lastDate) >= 40000
 	const footer = await tab.isPresent("#browse_end_of_results_footer")
+	await buster.saveText(await tab.getContent(), `${Date.now()}scrape.html`)
 	result = result.concat(await tab.evaluate(scrapeLikers, { pageUrl, all:true }))
 	utils.log(`${result.length} likers have been scraped. ${footer ? "Got all profiles that could have been loaded." : ""} ${tookTooLong ? "Facebook took too long to load the rest of them." : ""}`, "done")
 	result.forEach(el => {
 		el.profileUrl = facebook.cleanProfileUrl(el.profileUrl)
-		const extractedNames = facebook.getFirstAndLastName(el.name)
-		el.firstName = extractedNames.firstName
-		if (extractedNames.lastName) {
-		el.lastName = extractedNames.lastName
-	}
 	})
 	return result
 }
@@ -194,13 +208,13 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 ;(async () => {
 	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, csvName, maxLikers } = utils.validateArguments()
 	const tab = await nick.newTab()
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)	
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	if (!csvName) { csvName = "result" }
 	let singleProfile
 	if (spreadsheetUrl) {
 		if (spreadsheetUrl.toLowerCase().includes("facebook.com/")) { // single facebook post
 			pageUrls = utils.adjustUrl(spreadsheetUrl, "facebook")
-			if (pageUrls) {	
+			if (pageUrls) {
 				pageUrls = [ pageUrls ]
 				singleProfile = true
 			} else {
@@ -209,7 +223,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 			}
 		} else { // CSV
 			pageUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-		}	
+		}
 	} else if (typeof pageUrls === "string") {
 		pageUrls = [pageUrls]
 		singleProfile = true
@@ -226,7 +240,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 			nick.exit()
 		}
 	}
-	
+
 	console.log(`URLs to scrape: ${JSON.stringify(pageUrls, null, 4)}`)
 
 
