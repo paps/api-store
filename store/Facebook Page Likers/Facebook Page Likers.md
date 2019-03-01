@@ -1,5 +1,5 @@
 # Get highly qualified active Facebook members
-Whether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers, up to around 5k profiles per page.
+Whether you have found a page or have your own page that is creating engagement within the community you're targeting, this tool will help you scrape info about the likers, around 500 to 5k profiles per page.
 
 # What will you need? ⚙️ 
 

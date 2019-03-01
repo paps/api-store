@@ -195,7 +195,6 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 	} while (!await tab.isPresent("#browse_end_of_results_footer") && new Date() - lastDate < 40000)
 	const tookTooLong = (new Date() - lastDate) >= 40000
 	const footer = await tab.isPresent("#browse_end_of_results_footer")
-	await buster.saveText(await tab.getContent(), `${Date.now()}scrape.html`)
 	result = result.concat(await tab.evaluate(scrapeLikers, { pageUrl, all:true }))
 	utils.log(`${result.length} likers have been scraped. ${footer ? "Got all profiles that could have been loaded." : ""} ${tookTooLong ? "Facebook took too long to load the rest of them." : ""}`, "done")
 	result.forEach(el => {
@@ -206,7 +205,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, csvName, maxLikers } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, csvName, maxLikers, numberOfLinesPerLaunch } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	if (!csvName) { csvName = "result" }
@@ -235,6 +234,9 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 			pageUrls[i] = utils.adjustUrl(pageUrls[i], "facebook")
 		}
 		pageUrls = pageUrls.filter(el => utils.checkDb(el, result, "query"))
+		if (numberOfLinesPerLaunch) {
+			pageUrls = pageUrls.slice(0, numberOfLinesPerLaunch)
+		}
 		if (pageUrls.length === 0) {
 			utils.log("We already processed all the lines from this spreadsheet.", "warning")
 			nick.exit()
@@ -242,7 +244,6 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 	}
 
 	console.log(`URLs to scrape: ${JSON.stringify(pageUrls, null, 4)}`)
-
 
 	let currentResult = []
 

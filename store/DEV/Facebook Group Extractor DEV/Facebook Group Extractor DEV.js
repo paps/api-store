@@ -302,14 +302,13 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 		await buster.saveText(await tab.getContent(), `${Date.now()}firstResults.html`)
 		if (firstResults) {
 			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
-		} else {
-			if (await facebook.checkLock(tab)) {
-				utils.log("Facebook is asking for an account verification.", "warning")
-				lockedByFacebook = true
-			} else {
-				utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
-			}
+		} else if (await facebook.checkLock(tab)) {
+			utils.log("Facebook is asking for an account verification.", "warning")
+			lockedByFacebook = true
 			return []
+		} else {
+			utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			return [{ groupUrl, error: "Closed group", timestamp: (new Date()).toISOString() }]
 		}
 	} catch (err) {
 		utils.log(`Could not connect to ${groupUrl}`, "error")
@@ -351,9 +350,9 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 				}
 				let cursorUrl
 				[ , cursorUrl ] = extractProfiles(await getJsonResponse(tab, interceptedUrl), groupUrl, firstResults.groupName)
-				ajaxUrl = forgeNewUrl(cursorUrl, result.length, membersToScrape)			
+				ajaxUrl = forgeNewUrl(cursorUrl, result.length, membersToScrape)
 			} catch (err) {
-				// 
+				//
 			}
 		} catch (err) {
 			//
@@ -395,12 +394,12 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 		utils.log(`Got ${totalProfileCount} members.`, "info")
 		buster.progressHint(scrapeCount / membersToScrape, `Loading members... ${scrapeCount}/${membersToScrape}`)
 		if (!keepScraping && !error) { utils.log(`All members of ${groupUrl} scraped.`, "done") }
-		if (scrapeCount >= membersToScrape) { 
-			stillMoreToScrape = true 
+		if (scrapeCount >= membersToScrape) {
+			stillMoreToScrape = true
 			break
 		}
 	} while (keepScraping)
-	if (error) { 
+	if (error) {
 		utils.log("Connecting error, interruption...", "warning")
 		stillMoreToScrape = true
 	}
@@ -420,8 +419,8 @@ const checkIfPage = async (tab, url) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, groupsArray, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName } = utils.validateArguments()
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)	
+	let { sessionCookieCUser, sessionCookieXs, groupsArray, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	if (!csvName) { csvName = "result" }
 	if (!numberMaxOfMembers) { numberMaxOfMembers = false }
 	try {
@@ -435,7 +434,7 @@ nick.newTab().then(async (tab) => {
 		if (isAFacebookGroupUrl) { // Facebook Group URL
 			groupsArray = [ cleanGroupUrl(utils.adjustUrl(groupsUrl, "facebook")) ] // cleaning a single group entry
 			singleGroup = true
-		} else { 
+		} else {
 			if (groupsUrl.includes("facebook.com/") && await checkIfPage(tab, groupsUrl)) {
 				utils.log(`${groupsUrl} isn't a Group URL, it's a Facebook Page URL... Please use the Facebook Page Likers API instead.`, "error")
 				nick.exit()
@@ -466,6 +465,9 @@ nick.newTab().then(async (tab) => {
 		}
 		const lastUrl = groupsArray[groupsArray.length - 1]
 		groupsArray = groupsArray.filter(str => utils.checkDb(str, result, "groupUrl"))
+		if (numberOfLinesPerLaunch) {
+			groupsArray = groupsArray.slice(0, numberOfLinesPerLaunch)
+		}
 		if (groupsArray.length < 1) { groupsArray = [lastUrl] } // if every group's already been scraped, we're scraping the last one
 	}
 	utils.log(`Groups to scrape: ${JSON.stringify(groupsArray, null, 2)}`, "done")
@@ -488,6 +490,7 @@ nick.newTab().then(async (tab) => {
 		} else {
 			const isPaged = await checkIfPage(tab, url)
 			utils.log(`${url} doesn't constitute a Facebook Group URL${isPaged ? ", it's a Page URL" : ""}... skipping entry`, "warning")
+			result.push({ groupUrl: url, error: "Not a Group URL", timestamp: (new Date()).toISOString() })
 		}
 		if (lockedByFacebook) {
 			break

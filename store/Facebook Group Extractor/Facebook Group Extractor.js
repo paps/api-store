@@ -103,14 +103,14 @@ const firstScrape = (arg, callback) => {
 	if (document.querySelector("#seo_h1_tag a")) {
 		groupName = document.querySelector("#seo_h1_tag a").textContent
 	}
-	
+
 	let membersCount
 	if (document.querySelector("#groupsMemberBrowser div div div span")) {
 		membersCount = document.querySelector("#groupsMemberBrowser div div div span").textContent
 		membersCount = parseInt(membersCount.replace(/[^\d]/g, ""), 10)
 	}
 	const data = {groupName, membersCount}
-	
+
 	callback(null, data)
 }
 
@@ -155,10 +155,9 @@ const scrapeFirstMembers = (arg, callback) => {
 				newData.additionalData = result.querySelector(".uiProfileBlockContent > div > div:last-of-type > div:last-of-type").textContent
 			}
 			newData.timestamp = (new Date()).toISOString()
-	
 			data.push(newData)
 		}
-	} 
+	}
 	callback(null, data)
 }
 
@@ -207,7 +206,7 @@ const extractProfiles = (htmlContent, groupUrl, groupName) => {
 		const memberSince = chr(".timestamp").attr("title")
 		if (memberSince) {
 			data.memberSince = memberSince
-		} else { 
+		} else {
 			let splitByATag = profile.split("<a")
 			splitByATag = "<a" + splitByATag[splitByATag.length - 1]
 			splitByATag = cheerio.load(splitByATag)
@@ -261,7 +260,7 @@ const forgeNewUrl = (cursorUrl, scrapeCount, membersToScrape) => {
 const changeCursorLimit = (url, scrapeCount, membersToScrape) => {
 	const urlObject = new URL(url)
 	let numberToScrape = 500
-	if (scrapeCount + 500 > membersToScrape) { 
+	if (scrapeCount + 500 > membersToScrape) {
 		numberToScrape = membersToScrape - scrapeCount
 	}
 	urlObject.searchParams.set("limit", numberToScrape)
@@ -279,7 +278,7 @@ const scrapeMembers = async (tab, groupUrl, groupName, ajaxUrl, membersToScrape,
 		} catch (err) {
 			stillMoreToScrape = true
 			return [ [], ajaxUrl, false, true ]
-		}		
+		}
 	}
 	let cursorUrl
 	let result
@@ -299,14 +298,13 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 		firstResults = await getFirstResult(tab, groupUrl)
 		if (firstResults) {
 			utils.log(`Group ${firstResults.groupName} contains about ${firstResults.membersCount} members.`, "loading")
-		} else {
-			if (await facebook.checkLock(tab)) {
-				utils.log("Facebook is asking for an account verification.", "warning")
-				lockedByFacebook = true
-			} else {
-				utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
-			}
+		} else if (await facebook.checkLock(tab)) {
+			utils.log("Facebook is asking for an account verification.", "warning")
+			lockedByFacebook = true
 			return []
+		} else {
+			utils.log(`Could not get data from ${groupUrl}, it may be a closed group you're not part of.`, "error")
+			return [{ groupUrl, error: "Closed group", timestamp: (new Date()).toISOString() }]
 		}
 	} catch (err) {
 		utils.log(`Could not connect to ${groupUrl}`, "error")
@@ -348,9 +346,9 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 				}
 				let cursorUrl
 				[ , cursorUrl ] = extractProfiles(await getJsonResponse(tab, interceptedUrl), groupUrl, firstResults.groupName)
-				ajaxUrl = forgeNewUrl(cursorUrl, result.length, membersToScrape)			
+				ajaxUrl = forgeNewUrl(cursorUrl, result.length, membersToScrape)
 			} catch (err) {
-				// 
+				//
 			}
 		} catch (err) {
 			//
@@ -392,12 +390,12 @@ const getFacebookMembers = async (tab, groupUrl, membersPerAccount, membersPerLa
 		utils.log(`Got ${totalProfileCount} members.`, "info")
 		buster.progressHint(scrapeCount / membersToScrape, `Loading members... ${scrapeCount}/${membersToScrape}`)
 		if (!keepScraping && !error) { utils.log(`All members of ${groupUrl} scraped.`, "done") }
-		if (scrapeCount >= membersToScrape) { 
-			stillMoreToScrape = true 
+		if (scrapeCount >= membersToScrape) {
+			stillMoreToScrape = true
 			break
 		}
 	} while (keepScraping)
-	if (error) { 
+	if (error) {
 		utils.log("Connecting error, interruption...", "warning")
 		stillMoreToScrape = true
 	}
@@ -417,8 +415,8 @@ const checkIfPage = async (tab, url) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, groupsArray, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName } = utils.validateArguments()
-	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)	
+	let { sessionCookieCUser, sessionCookieXs, groupsArray, groupsUrl, columnName, numberMaxOfMembers, membersPerLaunch, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
+	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	if (!csvName) { csvName = "result" }
 	if (!numberMaxOfMembers) { numberMaxOfMembers = false }
 	try {
@@ -463,6 +461,9 @@ nick.newTab().then(async (tab) => {
 		}
 		const lastUrl = groupsArray[groupsArray.length - 1]
 		groupsArray = groupsArray.filter(str => utils.checkDb(str, result, "groupUrl"))
+		if (numberOfLinesPerLaunch) {
+			groupsArray = groupsArray.slice(0, numberOfLinesPerLaunch)
+		}
 		if (groupsArray.length < 1) { groupsArray = [lastUrl] } // if every group's already been scraped, we're scraping the last one
 	}
 	utils.log(`Groups to scrape: ${JSON.stringify(groupsArray, null, 2)}`, "done")
@@ -485,6 +486,7 @@ nick.newTab().then(async (tab) => {
 		} else {
 			const isPaged = await checkIfPage(tab, url)
 			utils.log(`${url} doesn't constitute a Facebook Group URL${isPaged ? ", it's a Page URL" : ""}... skipping entry`, "warning")
+			result.push({ groupUrl: url, error: "Not a Group URL", timestamp: (new Date()).toISOString() })
 		}
 		if (lockedByFacebook) {
 			break

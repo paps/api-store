@@ -2,7 +2,7 @@
 	"slug": "facebook-page-likers",
 	"description": "Extract a list of all the profiles that liked any Facebook page",
 	"image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
-	"hidden": true,
+	"hidden": false,
 	"new": false,
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
@@ -55,6 +55,10 @@
 					"maxLikers": {
 						"label": "Maximum number of likers to extract per page",
 						"helper": "All of them (until hitting Facebook limits) if empty"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch",
+						"helper": "All of them if empty"
 					}
 				}
 			}
@@ -84,6 +88,10 @@
 				"required": false
 			},
 			"maxLikers": {
+				"type": "number",
+				"required": false
+			},
+			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"required": false
 			}

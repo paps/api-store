@@ -55,6 +55,10 @@
 					"maxLikers": {
 						"label": "Maximum number of likers to extract per page",
 						"helper": "All of them (until hitting Facebook limits) if empty"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch",
+						"helper": "All of them if empty"
 					}
 				}
 			}
@@ -84,6 +88,10 @@
 				"required": false
 			},
 			"maxLikers": {
+				"type": "number",
+				"required": false
+			},
+			"numberOfLinesPerLaunch": {
 				"type": "number",
 				"required": false
 			}

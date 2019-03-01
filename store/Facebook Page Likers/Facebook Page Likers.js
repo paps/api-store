@@ -205,7 +205,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, csvName, maxLikers } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, pageUrls, spreadsheetUrl, columnName, csvName, maxLikers, numberOfLinesPerLaunch } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await facebook.login(tab, sessionCookieCUser, sessionCookieXs)
 	if (!csvName) { csvName = "result" }
@@ -234,6 +234,9 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 			pageUrls[i] = utils.adjustUrl(pageUrls[i], "facebook")
 		}
 		pageUrls = pageUrls.filter(el => utils.checkDb(el, result, "query"))
+		if (numberOfLinesPerLaunch) {
+			pageUrls = pageUrls.slice(0, numberOfLinesPerLaunch)
+		}
 		if (pageUrls.length === 0) {
 			utils.log("We already processed all the lines from this spreadsheet.", "warning")
 			nick.exit()
