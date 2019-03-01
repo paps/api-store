@@ -46,7 +46,7 @@ const isContributorsUrl = (url: string): boolean => {
 	}
 }
 
-const appendUrlPathname = (url: string, pathname: string) => {
+const appendUrlPathname = (url: string, pathname: string): string => {
 	try {
 		const tmp = new URL(url)
 		tmp.pathname += tmp.pathname.endsWith("/") ? pathname : `/${pathname}`
@@ -178,7 +178,7 @@ const scrapeContributors = async (page: puppeteer.Page): Promise<IUnknownObject[
 	if (Array.isArray(queries)) {
 		// Make repositories uniquescrape
 		queries = Array.from(new Set(queries)).filter((el) => el)
-		queries = queries.filter((el) => db.findIndex((line) => line.query === el) < 1)
+		queries = queries.filter((el) => db.findIndex((line) => line.query === el) < 0)
 		if (typeof numberOfLinesPerLaunch === "number") {
 			queries = queries.slice(0, numberOfLinesPerLaunch)
 		}
