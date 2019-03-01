@@ -6,6 +6,8 @@
 
 When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn profiles you're targeting in a CSV file.
 
+**Looking for email addresses ?** Our subscriptions include a premium access to DropContact!
+
 # Our Solution
 
 Launch an automated agent that will connect on LinkedIn as you. It will then browse and collect all the info from the designated profiles.
@@ -127,15 +129,11 @@ You can also enter a CSV file URL, it will work the same :)
 
 ## 6. Email discovery (optional) { email_discovery }
 
-**Thanks to our friends at [Hunter](https://hunter.io) and [Dropcontact](https://www.dropcontact.io/email)  (email discovery services), this API can guess the email of each profile it visits.**
+🆕 Phantombuster integrates [Dropcontact](https://www.dropcontact.io/email) one, if not, _the_  best email discovery service of 2019. 
 
-To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up) or Dropcontact [here](https://www.dropcontact.io/email). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+When activated, DropContact will enrich LinkedIn data in order to find each user's email address. DropContact will tremendously increase your email addresses results.
 
-<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
-
-Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
-
-Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
+If you wish to find even more email, feel free to add extra email discovery services. So war we accept [Hunter.io](https://hunter.io) in addition to DropContact.
 
 **Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your scraping to **40 profiles per day**.
 
