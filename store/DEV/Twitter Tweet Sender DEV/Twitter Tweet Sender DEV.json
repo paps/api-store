@@ -1,0 +1,109 @@
+{
+	"slug": "twitter-tweet-sender",
+	"description": "Send a list of tweets",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(2).png",
+	"argumentDescription": "",
+	"gradientBegin": "#E1F5C4",
+	"gradientEnd": "#2DAAE2",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"numberTweetsPerLaunch": 10
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_5getyourtwittersessioncookie\">?</a>)"
+					},
+					"spreadsheetUrl": {
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+						],
+						"label": "Spreadsheet URL of tweets to send"
+					},
+					"columnName": {
+						"label": "Tweets column name",
+						"placeholder": "Tweets",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfTweetsPerLaunch": {
+						"label": "Number of tweets to send per launch<a target=\"_blank\" href=\"api-store/9375/twitter-profile-scraper#section_repetition_setup\">(?)</a>",
+						"inputType": "number",
+						"helper": "Leaving this field empty will make the API process all tweets provided"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"title": "Session Cookie",
+				"minLength": 10,
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfTweetsPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"tweets": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"tweets": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}

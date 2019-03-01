@@ -99,6 +99,11 @@ const getEmployees = async (tab, id, query, numberOfPage) => {
 				break
 			}
 			utils.log(`Got employees for page ${i}`, "done")
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Stopped getting companies employees: ${timeLeft.message}`, "warning")
+				break
+			}
 			await tab.wait(1500 + 1000 * Math.random())
 		}
 	}
@@ -200,7 +205,6 @@ const getIdFromUrl = async (url, tab) => {
 			companies = [ spreadsheetUrl ]
 		} else {
 			companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-			
 		}
 	}
 	if (companies.length > 1) {

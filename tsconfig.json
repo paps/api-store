@@ -47,10 +47,12 @@
 			"libs",
 			"store/Product Hunt Auto Follow",
 			"store/Product Hunt Auto Upvoter",
+			"store/Product Hunt Products Extractor",
 			"store/Product Hunt Profile Scraper",
 			"store/Product Hunt Upvoter Extractor",
 			"store/Slack Message Sender",
 			"store/Slack User Extractor",
+			"store/Twitter Tweet Sender",
 			"store/Github Profile Scraper",
 			"store/GitHub Stargazers Extractor",
 			"store/DEV/Web Summit Scraper DEV",
@@ -67,6 +69,7 @@
 			"store/DEV/Instagram Post Commenters DEV",
 			"store/DEV/Meetup Attendees Extractor DEV",
 			"store/DEV/GitHub Contributors Extractor DEV",
+			"store/DEV/Twitter Tweet Sender DEV",
 			"store/GitHub Contributors Extractor"
 		],
 

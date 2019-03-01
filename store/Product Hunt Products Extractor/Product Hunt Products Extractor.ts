@@ -212,8 +212,8 @@ const extractTwitter = async (page: puppeteer.Page, profileUrl: string) => {
 	const month = correctTime(1 + pTDate.getMonth())
 	const year = pTDate.getFullYear()
 	const date = year + "-" + month + "-" + day
-	const csvName = date + ".csv"
-	await utils.saveResults(products, products, csvName)
+	await utils.saveResults(products, products, date)
+	await utils.saveResults(products, products)
 	process.exit()
 })()
 .catch((err) => {
