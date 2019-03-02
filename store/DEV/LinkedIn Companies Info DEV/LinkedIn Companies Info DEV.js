@@ -57,7 +57,17 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.followerCount = parseInt(document.querySelector(".org-top-card-summary__follower-count").textContent.trim().replace(/\D/g, ""), 10)
 		}
 		if (document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]")) {
-			result.website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
+			let website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
+			if (website) {
+				let domain = website.replace("www.", "").replace("http://", "")
+				result.website = website
+				if (domain) {
+					if (domain.endsWith("/")) {
+						domain = domain.slice(0, -1)
+					}
+					result.domain = domain
+				}
+			}
 		}
 		try {
 			const detailsTitle = document.querySelectorAll(".org-page-details__definition-term")
@@ -327,6 +337,7 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			await tab.waitWhileVisible("div.org-screen-loader", 30000) // wait at most 30 seconds to let the page loading the content
 		}
 		let result = await tab.evaluate(scrapeCompanyInfo, { link, query })
+		console.log("result", result)
 		try {
 			if (await tab.isVisible(".org-page-navigation__item")) {
 				const insights = await getInsights(tab, link, result)

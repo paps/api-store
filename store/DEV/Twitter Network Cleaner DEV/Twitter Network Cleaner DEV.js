@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 4"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Twitter = require("./lib-Twitter")
+const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
 // }
 

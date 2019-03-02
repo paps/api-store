@@ -33,7 +33,7 @@
 						"placeholder": "Paste your session cookie here"
 					},
 					"numberOfProfiles": {
-						"label": "Number of profiles to extract",
+						"label": "Number of profiles to extract (all of them as possible if empty)",
 						"inputType": "number"
 					},
 					"sortBy": {
@@ -59,8 +59,7 @@
 			},
 			"numberOfProfiles": {
 				"type": "number",
-				"minimum": 1,
-				"required": true
+				"minimum": 1
 			},
 			"sortBy": {
 				"enum": ["Recently added", "First name", "Last name"],

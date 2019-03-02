@@ -182,11 +182,6 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	let result = []
 	let totalScraped = 0
 	do {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-			break
-		}
 		newCommentsCount = await tab.evaluate(getCommentsCount, { selector })
 		if (newCommentsCount > commentsCount) {
 			if (expandAllComments) {
@@ -199,6 +194,11 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 				result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, firstComment:true }))
 			} catch (err) {
 				//
+			}
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+				break
 			}
 			if (totalCount) {
 				if (numberOfCommentsPerPost && numberOfCommentsPerPost < totalCount) {
@@ -221,7 +221,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 		if (result.length === totalCount - 1) {
 			break
 		}
-		await tab.wait(500)
+		await tab.wait(400)
 	} while ((!numberOfCommentsPerPost || result.length + 1 < numberOfCommentsPerPost) && new Date() - lastDate < 15000)
 	if (new Date() - lastDate > 15000) {
 		utils.log("No new comments can be loaded, exiting...", "info")

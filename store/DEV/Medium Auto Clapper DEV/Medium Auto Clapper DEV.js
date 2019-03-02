@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Medium.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -82,7 +83,8 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 	await tab.waitUntilVisible(clapSel)
 
 	const initialClapCount = await medium.getClapsCount(tab)
-
+	await tab.screenshot(`${Date.now()}initial.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}initial.html`)
 	if (action === "clap") {
 		const dummy = new Array(clapCount).fill(null)
 		for (let one of dummy) {
@@ -96,7 +98,8 @@ const clappingPost = async (tab, url, clapCount, action = "clap") => {
 		await tab.waitUntilVisible(clapCountSel)
 		delta = initialClapCount - await medium.getClapsCount(tab)
 	}
-
+	await tab.screenshot(`${Date.now()}after.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}after.html`)
 	utils.log(`${delta} claps ${action === "clap" ? "made" : "undo" }`, "done")
 	return { initialClapCount, delta }
 }

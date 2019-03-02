@@ -204,7 +204,6 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
-			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			allCollected = false
 			break
 		}
@@ -327,6 +326,11 @@ const isUrl = target => url.parse(target).hostname !== null
 		}
 		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
 		if (rateLimited) {
+			break
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
 	}

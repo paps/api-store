@@ -28,10 +28,7 @@ const twitter = new Twitter(buster, utils);
 		_csvName = "result"
 	}
 	const _sessionCookie = sessionCookie as string
-	console.log("_csvName:", _csvName)
-
 	const results = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
-	console.log("results:", results)
 	if (spreadsheetUrl) {
 		tweetsArray = await utils.getDataFromCsv2(spreadsheetUrl, _columnName)
 	}
@@ -54,7 +51,6 @@ const twitter = new Twitter(buster, utils);
 		try {
 			await page.goto(tweetUrl)
 			await page.waitForSelector("form[action=\"/intent/tweet\"]")
-			await page.screenshot({ path: `${Date.now()}err-login-.jpg`, type: "jpeg", quality: 50 })
 			await page.click(("fieldset > input.submit"))
 			results.push({ tweet, timestamp: (new Date()).toISOString() })
 			await page.waitFor(5000)

@@ -57,7 +57,17 @@ const scrapeCompanyInfo = (arg, callback) => {
 			result.followerCount = parseInt(document.querySelector(".org-top-card-summary__follower-count").textContent.trim().replace(/\D/g, ""), 10)
 		}
 		if (document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]")) {
-			result.website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
+			let website = document.querySelector("[data-control-name=\"page_details_module_website_external_link\"]").href
+			if (website) {
+				let domain = website.replace("www.", "").replace("http://", "")
+				result.website = website
+				if (domain) {
+					if (domain.endsWith("/")) {
+						domain = domain.slice(0, -1)
+					}
+					result.domain = domain
+				}
+			}
 		}
 		try {
 			const detailsTitle = document.querySelectorAll(".org-page-details__definition-term")

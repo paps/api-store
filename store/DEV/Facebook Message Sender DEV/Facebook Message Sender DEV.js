@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js, lib-Messaging.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -49,15 +48,16 @@ const getNameFromChat = (arg, cb) => {
 }
 
 const openChatPage = async (tab, profileUrl, message) => {
-	let chatUrl
 	const urlObject = new URL(profileUrl)
+	let slug
 	if (profileUrl.includes("profile.php?id=")) {
-		const id = urlObject.searchParams.get("id")
-		chatUrl = `https://www.facebook.com/messages/t/${id}`
+		slug = urlObject.searchParams.get("id")
+	} else if (urlObject.pathname.startsWith("/pg/")) {
+		slug = urlObject.pathname.substr(3)
 	} else {
-		const slug = urlObject.pathname
-		chatUrl = `https://www.facebook.com/messages/t${slug}`
+		slug = urlObject.pathname
 	}
+	const chatUrl = `https://www.facebook.com/messages/t${slug}`
 	await tab.open(chatUrl)
 	await tab.waitUntilVisible("#content")
 

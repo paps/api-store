@@ -33,7 +33,7 @@
 						"placeholder": "Paste your session cookie here"
 					},
 					"numberOfProfiles": {
-						"label": "Number of profiles to extract",
+						"label": "Number of profiles to extract (all of them as possible if empty)",
 						"inputType": "number"
 					},
 					"sortBy": {
@@ -44,6 +44,10 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"advancedLoading": {
+						"rightLabel": "<b>Advanced Extracting</b>",
+						"helper": "Use Alphabetical Loading to extract more profiles but takes longer"
 					}
 				}
 			}
@@ -59,8 +63,7 @@
 			},
 			"numberOfProfiles": {
 				"type": "number",
-				"minimum": 1,
-				"required": true
+				"minimum": 1
 			},
 			"sortBy": {
 				"enum": ["Recently added", "First name", "Last name"],
@@ -69,6 +72,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"advancedLoading": {
+				"type": "boolean"
 			}
 		}
 	}

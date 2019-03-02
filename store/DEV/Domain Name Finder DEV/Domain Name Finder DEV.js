@@ -1,12 +1,12 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-WebSearch-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 
-const WebSearch = require("./lib-WebSearch")
+const WebSearch = require("./lib-WebSearch-DEV")
 const userAgent = WebSearch.getRandomUa()
 
 const Nick = require("nickjs")
@@ -130,6 +130,7 @@ const craftDomains = (argv, cb) => {
  */
 const getDomainName = async (webSearch, tab, query, blacklist) => {
 	let names = await webSearch.search(query)
+	console.log("names:", names)
 	if (names.error === "No more search engines available") {
 		return { error: names.error }
 	}

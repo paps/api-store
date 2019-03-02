@@ -453,6 +453,10 @@ class Facebook {
 							errorMessage += " Your ProxyMesh username seems to be missing."
 						}
 					}
+					const charMatch = this.nick._options.httpProxy.match(/@/g)
+					if (charMatch && charMatch.length > 1) {
+						errorMessage += " Also do not use special characters such as '@' in your username/password."
+					}
 				}
 				this.utils.log(errorMessage, "error")
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_TIMEOUT)

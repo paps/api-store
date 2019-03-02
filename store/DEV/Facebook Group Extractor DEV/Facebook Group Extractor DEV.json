@@ -61,6 +61,10 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch",
+						"helper": "All of them if empty"
 					}
 				}
 			}
@@ -95,6 +99,10 @@
 			},
 			"csvName": {
 				"type": "string",
+				"required": false
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
 				"required": false
 			}
 		},

@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -115,6 +116,8 @@ const getCompaniesInfos = (arg, callback) => {
 
 	await tab.open(url)
 	const sel = await tab.waitUntilVisible(selectors, "or", 15000)
+	await tab.screenshot(`${Date.now()}cap.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}cap.html`)
 	try {
 		if (sel === selectors[2]) {
 			utils.log(`Got a reCAPTCHA while opening ${url}`, "info")
@@ -133,17 +136,23 @@ const getCompaniesInfos = (arg, callback) => {
 			utils.log("Resuming scraping", "done")
 		}
 	} catch (err) {
+		console.log("err1: ", err)
 		const _redirected = "https://angel.co/"
 		if ((await tab.getUrl()).indexOf(_redirected) > -1) {
 			await tab.open(url)
 			try {
 				await tab.waitUntilVisible(selectors.slice(0, 2), "or")
 			} catch (err) {
+				console.log("err2:", err)
+				await tab.screenshot(`${Date.now()}err2.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}err2.html`)
 				utils.log("Can't bypass reCAPTCHA even after the first solve", "warning")
 				nick.exit(1)
 			}
 		} else {
 			utils.log("Can't bypass reCAPTCHA", "warning")
+			await tab.screenshot(`${Date.now()}byp.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}byp.html`)
 			nick.exit(1)
 		}
 	}
@@ -160,6 +169,11 @@ const getCompaniesInfos = (arg, callback) => {
 
 		await tab.waitWhilePresent("img.loading_image")
 		length = await tab.evaluate(getListLength, { selectors: SELECTORS })
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 	}
 	utils.log(`Loaded ${length} companies.`, "done")
 	let result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })

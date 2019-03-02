@@ -193,7 +193,7 @@ const scrapeCommenters = (arg, cb) => {
 		one.comment = commentSelector ? commentSelector.textContent.trim() : null
 		return one
 	}
-	const commenters = Array.from(document.querySelectorAll("div.feed-shared-comments-list article.feed-shared-comments-list__comment-item")).map(comment => {
+	const commenters = Array.from(document.querySelectorAll(".comments-comments-list article.comments-comment-item ")).map(comment => {
 		const res = []
 		res.push(_scrape(comment))
 		if (comment.querySelector("div.feed-shared-comment-item__nested-items")) {
@@ -247,7 +247,6 @@ const scrapeCommenters = (arg, cb) => {
 			db.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: `No commenters found in at ${url}` })
 			continue
 		}
-
 		if (!gl.search || !gl.search.updateId) {
 			// This situation happens when there are less than 10 commenters in the post
 			if (triggered) {

@@ -313,6 +313,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		if (!isUrl(twitterUrls[i])) {
 			if (twitterUrls[i].startsWith("@")) { twitterUrls[i] = twitterUrls[i].substr(1)	}
 			twitterUrls[i] = `https://twitter.com/${twitterUrls[i]}`.trim()
+			console.log("onmod", twitterUrls[i] + "m")
 		}
 	}
 
@@ -327,6 +328,12 @@ const extractProfiles = (htmlContent, profileUrl) => {
 	let urlCount = 0
 	for (const url of twitterUrls) {
 		let resuming = false
+		console.log("alreadyScraped", alreadyScraped)
+		console.log("agentObject", agentObject)
+		console.log("lastSavedQuery", lastSavedQuery + "m")
+		console.log("lastSavedQuery", url + "n")
+		console.log("url = last", url === lastSavedQuery)
+		console.log("url = last", url !== lastSavedQuery)
 		if (alreadyScraped && agentObject && url === lastSavedQuery) {
 			// if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
 			// 	utils.log("Still rate limited, try later.", "info")

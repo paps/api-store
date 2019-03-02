@@ -449,7 +449,7 @@ class Instagram {
 			scrapedData.businessEmail = data.business_email
 		}
 		if (data.business_phone_number) {
-			scrapedData.PhoneNumber = data.phone_number
+			scrapedData.PhoneNumber = data.business_phone_number
 		}
 		if (data.business_address_json) {
 			const businessAddress = JSON.parse(data.business_address_json)

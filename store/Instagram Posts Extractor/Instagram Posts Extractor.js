@@ -24,6 +24,7 @@ const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
+let rateLimited
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -71,7 +72,8 @@ const getPosts = async (tab, profileUrl, query, numberOfPostsPerProfile) => {
 		await tab.scrollToBottom()
 	} while (!graphqlUrl)
 	if (!graphqlUrl) {
-		utils.log("Got all posts or Instagram took too long to load them.", "done")
+		utils.log("Rate limited by Instagram, you should try again in 15min.", "info")
+		rateLimited = true
 		return []
 	}
 	let newUrl = graphqlUrl
@@ -81,6 +83,11 @@ const getPosts = async (tab, profileUrl, query, numberOfPostsPerProfile) => {
 		let instagramJsonCode = await tab.getContent()
 		const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 		instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+		if (!instagramJsonCode.data && instagramJsonCode.message === "rate limited") {
+			rateLimited = true
+			utils.log("Instagram rate limit reached, you should try again in 15min.", "info")
+			break
+		}
 		const endCursor = instagramJsonCode.data.user.edge_owner_to_timeline_media.page_info.end_cursor
 
 		const posts = instagramJsonCode.data.user.edge_owner_to_timeline_media.edges
@@ -235,7 +242,9 @@ const getFirstPosts = async (profileUrl, query) => {
 					if (numberOfPostsPerProfile) {
 						profileResult = profileResult.slice(0, numberOfPostsPerProfile)
 					}
-					utils.log(`Got ${profileResult.length} posts from ${firstPosts.fullName}.`, "done")
+					if (!rateLimited) {
+						utils.log(`Got ${profileResult.length} posts from ${firstPosts.fullName}.`, "done")
+					}
 				} else {
 					utils.log(`Can't access ${firstPosts.fullName}'s posts!`, "done")
 					profileResult.push({query, timestamp: (new Date()).toISOString(), error: "Can't access posts"})
@@ -256,6 +265,9 @@ const getFirstPosts = async (profileUrl, query) => {
 			}
 			utils.log(`Can't scrape the profile at ${query} due to: ${err.message || err}`, "warning")
 			continue
+		}
+		if (rateLimited) {
+			break
 		}
 		tempResult = tempResult.concat(profileResult)
 		await tab.wait(2500 + Math.random() * 2000)

@@ -49,6 +49,8 @@ const findProfile = async (tab, email, keepGoingRateLimited) => {
 		const url = `https://www.linkedin.com/sales/gmail/profile/viewByEmail/${email}`
 		await tab.open(url)
 		await tab.waitUntilVisible(".li-tracking-panel")
+		await tab.screenshot(`${Date.now()}panel.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}panel.html`)
 		profile = Object.assign(profile, await tab.evaluate(extractProfile))
 		if (profile.profileUrl) {
 			if (rateLimited) {
@@ -76,6 +78,9 @@ const findProfile = async (tab, email, keepGoingRateLimited) => {
 		}
 		return profile
 	} catch (error) {
+		console.log("error", error)
+		await tab.screenshot(`${Date.now()}error.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}error.html`)
 		if (error === "Not an email") {
 			profile.error = error
 			return profile

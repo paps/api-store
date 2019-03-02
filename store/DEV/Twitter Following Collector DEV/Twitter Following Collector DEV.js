@@ -212,6 +212,10 @@ const getTwitterFollowing = async (tab, twitterHandle, followersPerAccount, resu
 						utils.log("Scraping stopped: Less than 90 seconds left. You can check your execution time at https://phantombuster.com/usage", "warning")
 						interrupted = true
 						break
+					} else if (profileCount > 150000 && timeLeft.timeValue < 1700) {
+						utils.log("Scraping stopped: Less than 17OO seconds left. You can check your execution time at https://phantombuster.com/usage", "warning")
+						interrupted = true
+						break
 					}
 					try {
 						[ res, twitterUrl, keepScraping ] = await scrapeFollowing(tab, profileUrl, twitterUrl, followersPerAccount)

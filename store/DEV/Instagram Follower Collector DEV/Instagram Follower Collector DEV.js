@@ -271,14 +271,18 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		}
 	} else { // CSV
 		urls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		console.log("urls:", urls)
 		urls = urls.filter(str => str) // removing empty lines
 		for (let i = 0; i < urls.length; i++) { // cleaning all instagram entries
-			if (urls[i].startsWith("@")) { // converting @profile_name to https://www.instagram/profile_name
-				urls[i] = "https://www.instagram.com/" + urls[i].slice(1)
-			} else {
-				urls[i] = utils.adjustUrl(urls[i], "instagram")
-				urls[i] = instagram.cleanInstagramUrl(urls[i])
+			if (urls[i]) {
+				if (urls[i].startsWith("@")) { // converting @profile_name to https://www.instagram/profile_name
+					urls[i] = "https://www.instagram.com/" + urls[i].slice(1)
+				} else {
+					urls[i] = utils.adjustUrl(urls[i], "instagram")
+					urls[i] = instagram.cleanInstagramUrl(urls[i])
+				}
 			}
+
 		}
 		if (!numberofProfilesperLaunch) {
 			numberofProfilesperLaunch = urls.length

@@ -74,7 +74,7 @@ This will launch the bot and, if you didn't already change the spreadsheet URL, 
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
 
-Every time the API is launched, it will process 10 profiles and then stop. (This number can be changed in the configuration)
+Every time the API is launched, it will process 10 lines of your spreadsheet and then stop. (This number can be changed in the configuration)
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
@@ -91,6 +91,6 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 
 Please be aware that this API will visit the profiles found in order to get their URLS.
 LinkedIn has set a daily limit for finding profiles from emails, around 50 profiles per day. You may choose to continue the scraping past that point, but the API will only be able to get the profile's name and not its URL.
-We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out). 
+We have noticed that visiting more than 80 profiles per day will almost always result in LinkedIn **invalidating your session cookie** (that is, logging you out).
 
 Having a LinkedIn Sales Navigator subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).

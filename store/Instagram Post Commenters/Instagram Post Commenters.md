@@ -4,7 +4,7 @@
 
 Too many brands _assume_ what their audience likes. This API is here to validate, or better, invalidate, your assumptions and have **scientific intelligence over reactions to your content**.
 
-Our tool will extract from a list of Instagram every single comments' and all available information. What will you do with it: Spreadsheet statistics? Language analysis to find new keywords? Something else? 
+Our tool will extract from a list of Instagram every single comments and all available information. What will you do with it: Spreadsheet statistics? Language analysis to find new keywords? Something else?
 
 # What will you need? ⚙️
 

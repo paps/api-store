@@ -32,13 +32,13 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-					"search": {
-						"label": "Hashtags / locations list <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_4enteratleasttwohashtagslocations\" target=\"_blank\">(?)</a>",
-						"helper": "You can also enter a public Google Spreadsheet URL or public CSV URL (each line containing multiple hashtags or locations in a single cell, separated by commas)"
-					},
 					"sessionCookie": {
 						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
 						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
+					},
+					"search": {
+						"label": "Hashtags / locations list <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_4enteratleasttwohashtagslocations\" target=\"_blank\">(?)</a>",
+						"helper": "You can also enter a public Google Spreadsheet URL or public CSV URL (each line containing multiple hashtags or locations in a single cell, separated by commas)"
 					},
 					"columnName": {
 						"label": "Spreadsheet column name for Instagram hashtags",
@@ -64,16 +64,16 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
 			"search": {
 				"type": "array",
 				"items": {
 					"type": "string",
 					"minLength": 1
 				},
-				"required": true
-			},
-			"sessionCookie": {
-				"type": "string",
 				"required": true
 			},
 			"columnName": {

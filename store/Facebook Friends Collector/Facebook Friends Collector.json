@@ -5,8 +5,8 @@
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
 	"argumentDescription": "",
-	"hidden": false,
-	"new": false,
+	"hidden": true,
+	"new": true,
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookieCUser": "your_c-user_session_cookie",

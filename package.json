@@ -26,5 +26,8 @@
     "eslint": "^5.1.0",
     "tslint": "^5.12.1",
     "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.3.29"
   }
 }

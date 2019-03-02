@@ -2,7 +2,7 @@
 	"slug": "twitter-following-collector",
 	"description": "Extract a list of all the profiles followed by any Twitter account",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_following_collector/twitter_following_collector.png",
-	"hidden": false,
+	"hidden": true,
 	"new": false,
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
@@ -36,7 +36,7 @@
 						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
 					},
 					"followersPerAccount": {
-						"label": "Number of followers to scrape per Twitter account",
+						"label": "Number of followers to scrape per launch",
 						"helper": "If you leave this field empty, the API will try to get as much followers as possible for every Twitter account"
 					},
 					"numberofProfilesperLaunch": {

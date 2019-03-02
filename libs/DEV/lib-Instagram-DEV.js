@@ -143,9 +143,12 @@ class Instagram {
 		})
 		const initDate = new Date()
 		try {
+			console.log("trying")
 			await tab.open("https://instagram.com")
 		} catch (err) {
 			console.log("erl", err.message)
+			await this.buster.saveText(await tab.getContent(), "login-err.html")
+			await this.buster.save(await tab.screenshot("login-err.jpg"))
 			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
 				await tab.wait(5000)
 				this.utils.log("Retrying connection...", "loading")
@@ -160,14 +163,18 @@ class Instagram {
 			}
 		}
 		console.log("elapsed:", new Date() - initDate)
+		await this.buster.saveText(await tab.getContent(), "log.html")
+		await this.buster.save(await tab.screenshot("log.jpg"))
 		try {
 			await tab.waitUntilVisible("main", 30000)
+			console.log("main")
 			const name = await tab.evaluate((arg, cb) => {
 				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
 		} catch (error) {
+			console.log("err:", error)
 			this.utils.log("Can't connect to Instagram with these session cookies.", "error")
 			this.nick.exit(this.utils.ERROR_CODES.INSTAGRAM_BAD_COOKIE)
 		}
@@ -453,7 +460,7 @@ class Instagram {
 			scrapedData.businessEmail = data.business_email
 		}
 		if (data.business_phone_number) {
-			scrapedData.PhoneNumber = data.phone_number
+			scrapedData.PhoneNumber = data.business_phone_number
 		}
 		if (data.business_address_json) {
 			const businessAddress = JSON.parse(data.business_address_json)

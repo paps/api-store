@@ -54,6 +54,16 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {
+			return false
+		}
+	}
+	return true
+}
+
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1) {
 		if (e.response.status === 200) {
@@ -61,7 +71,7 @@ const interceptInstagramApiCalls = e => {
 			console.log("graphUrl", graphqlUrl)
 		} else if (e.response.status === 429) {
 			rateLimited = true
-			utils.log("Still rate limited by Instagram.", "warning")
+			// utils.log("Still rate limited by Instagram.", "warning")
 		}
 	}
 }
@@ -102,7 +112,6 @@ const extractDataFromJson = (json, query) => {
 	// console.log("likers: ", likers)
 	const results = []
 	for (const comment of comments) {
-		console.log("comment:", comment)
 		const scrapedData = {}
 		const data = comment.node
 		scrapedData.username = data.owner.username
@@ -230,7 +239,6 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 		}
 		if (!graphqlUrl) {
 			if (noButton) {
-				console.log("results", results)
 				return results
 			}
 			utils.log("Can't access comments list.", "warning")
@@ -310,15 +318,15 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 
 	let result = await utils.getDb(csvName + ".csv")
 	const initialResultLength = result.length
+	try {
+		agentObject = await buster.getAgentObject()
+	} catch (err) {
+		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
+	}
 	console.log("initialResultLength", initialResultLength)
-	if (result.length) {
-		try {
-			agentObject = await buster.getAgentObject()
-			alreadyScraped = result.filter(el => el.postUrl === agentObject.lastQuery).length
+	if (initialResultLength && agentObject.nextUrl) {
+			alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
 			console.log("alreadyScraped", alreadyScraped)
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
 	}
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		postUrls = [ spreadsheetUrl ]
@@ -329,7 +337,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 			numberOfPostsPerLaunch = postUrls.length
 		}
 		console.log("postUrls:", postUrls)
-		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "query")), numberOfPostsPerLaunch)
+		postUrls = getpostUrlsToScrape(postUrls.filter(el => checkDb(el, result)), numberOfPostsPerLaunch)
 	}
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
@@ -362,7 +370,6 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 				for (let i = 0; i < tempResult.length ; i++) { // using postId as a unique comment identifier
 					if (!result.find(el => el.postID === tempResult[i].postID)) {
 						result.push(tempResult[i])
-						console.log("ph")
 					}
 				}
 				utils.log(`Got ${result.length - oldResultLength} comments for ${query}`, "done")
@@ -391,12 +398,18 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 	const finalCommentsCount = result.filter(el => !el.error).length
 	utils.log(`Got ${finalCommentsCount} comments in total.`, "done")
 	if (result.length !== initialResultLength) {
-		if (interrupted) {
-			await buster.setAgentObject({ nextUrl, lastQuery })
-		} else {
-			await buster.setAgentObject({})
-		}
+		console.log("result.length !== initialResultLength")
 		await utils.saveResults(result, result, csvName)
+		if (agentObject) {
+			if (interrupted) {
+				agentObject.nextUrl = nextUrl
+				agentObject.lastQuery = lastQuery
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastQuery
+			}
+			await buster.setAgentObject(agentObject)
+		}
 	}
 	nick.exit(0)
 })()

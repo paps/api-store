@@ -2,7 +2,7 @@
 	"slug": "domain-name-finder",
 	"description": "Turn business/company names into their online domain names",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Domain_Name_Finder/dmn_nm_fdr.png",
-	"hidden": false,
+	"hidden": true,
 	"gradientBegin": "#135058",
 	"gradientEnd": "#F1F2B5",
 	"argumentHelpAnchor": "#section_googlespreadsheet",

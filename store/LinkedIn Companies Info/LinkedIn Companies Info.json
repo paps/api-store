@@ -8,7 +8,7 @@
 	"gradientEnd": "#28485B",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/10s_woxByzUMc3kGB2RI6KcQb1Aazs8_LmkY4pDSr4Mo",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"companiesPerLaunch": 250
 	},
 	"outputDescription": {

@@ -185,12 +185,14 @@ const scrapeResultsAll = (arg, callback) => {
 				}
 			}
 			if (arg.searchCat === "groups") {
+				scrapedData.groupUrl = url
 				scrapedData.groupId = new URL(url).pathname.replace(/[^\d]/g, "")
 				if (result.querySelector("p.subline-level-1") && result.querySelector("p.subline-level-1").textContent) {
 					scrapedData.memberCount = parseInt(result.querySelector("p.subline-level-1").textContent.replace(/[^\d]/g, ""), 10)
 				}
 			}
 			if (arg.searchCat === "schools") {
+				scrapedData.schoolUrl = url
 				// .ghost-school class it means that the profile doesnt't contain a logo
 				if (result.querySelector("figure.search-result__image > img") && !result.querySelector("figure.search-result__image > img").classList.contains("ghost-school") && result.querySelector("figure.search-result__image > img").classList.contains("loaded")) {
 					scrapedData.logoUrl = result.querySelector("figure.search-result__image > img").src

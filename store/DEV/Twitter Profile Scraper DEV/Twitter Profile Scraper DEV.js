@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
 
 const { URL } = require("url")
 const Buster = require("phantombuster")
@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Twitter = require("./lib-Twitter")
+const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
 const DB_SHORT_NAME = "twitter-profile-scraper"
 // }
@@ -86,6 +86,7 @@ const isTwitterProfile = url => {
 			break
 		}
 		try {
+			await buster.saveText(await tab.getContent(), `${Date.now()}scrapeProf.html`)
 			const scrapedProfile = await twitter.scrapeProfile(tab, isUrl(profile) ? profile : `https://www.twitter.com/${profile}`, true)
 			scrapedProfile.query = profile
 			scrapingResult.push(scrapedProfile)

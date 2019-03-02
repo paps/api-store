@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 "phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 const { URL } = require("url")
 /* global $ */
@@ -60,7 +60,7 @@ const interceptInstagramApiCalls = e => {
 			graphqlUrl = e.response.url
 		} else if (e.response.status === 429) {
 			rateLimited = true
-			utils.log("Still rate limited by Instagram.", "warning")
+			// utils.log("Still rate limited by Instagram.", "warning")
 		}
 	}
 }
