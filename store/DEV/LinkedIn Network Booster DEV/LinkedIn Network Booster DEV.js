@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js, lib-Messaging.js"
 
 const { URL } = require("url")
 
@@ -22,7 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 let db
@@ -439,7 +439,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, hunterApiKey, disableScraping, waitDuration } = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, message, onlySecondCircle, numberOfAddsPerLaunch, columnName, emailChooser, hunterApiKey, dropcontactApiKey, disableScraping, waitDuration } = utils.validateArguments()
 
 	if (!hunterApiKey) {
 		hunterApiKey = ""
@@ -458,7 +458,7 @@ nick.newTab().then(async (tab) => {
 	await linkedIn.login(tab, sessionCookie)
 
 	hunterApiKey = hunterApiKey.trim()
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick, buster, dropcontactApiKey, emailChooser)
 	let rows = []
 	let columns = []
 	const result = []

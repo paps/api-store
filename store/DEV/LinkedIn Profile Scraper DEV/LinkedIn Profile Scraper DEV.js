@@ -108,7 +108,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -135,11 +135,10 @@ const removeLinkedinSubdomains = url => {
 	if (typeof jsonDb === "string") {
 		jsonDb = JSON.parse(jsonDb)
 	}
-	console.log("db", db)
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey, emailChooser)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 
@@ -155,7 +154,6 @@ const removeLinkedinSubdomains = url => {
 			if (linkedIn.isLinkedInProfile(scrapingUrl)) {
 				utils.log(`Opening page ${scrapingUrl}`, "loading")
 				const scrapedData = await linkedInScraper.scrapeProfile(tab, removeLinkedinSubdomains(scrapingUrl), saveImg, takeScreenshot, takePartialScreenshot)
-				await buster.saveText(await tab.getContent(), `${Date.now()}scrapeProf.html`)
 				if (scrapedData.json && scrapedData.json.error === "ERR_TOO_MANY_REDIRECTS") {
 					utils.log("Disconnected from LinkedIn, exiting...", "warning")
 					break

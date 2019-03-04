@@ -318,7 +318,11 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			if (!link.endsWith("/")) {
 				link = `${link}/`
 			}
-			await tab.open(link + "about")
+			if (link.endsWith("/about/")) {
+				await tab.open(link)
+			} else {
+				await tab.open(link + "about")
+			}
 		}
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		let currentUrl = await tab.getUrl()

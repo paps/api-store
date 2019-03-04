@@ -318,7 +318,11 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			if (!link.endsWith("/")) {
 				link = `${link}/`
 			}
-			await tab.open(link + "about")
+			if (link.endsWith("/about/")) {
+				await tab.open(link)
+			} else {
+				await tab.open(link + "about")
+			}
 		}
 		await tab.waitUntilVisible("div.organization-outlet", 15000)
 		let currentUrl = await tab.getUrl()
@@ -366,7 +370,7 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			disconnected = true
 			return {}
 		} else {
-			utils.log(`Error accessing company page: ${err} with current page:${currentUrl}`)
+			utils.log("Error accessing company page with current page.", "error")
 			return { link, query, invalidResults: "Couldn't access company profile" }
 		}
 	}
