@@ -45,15 +45,11 @@ const scrapeResults = (arg, cb) => {
 	const scrapedData = []
 	for (const result of results) {
 		if (result.querySelector(".search-result__result-link")) {
-			const scrapedEmployee = { query: arg.query, timestamp: (new Date()).toISOString() }
+			const scrapedEmployee = {}
 			const profileUrl = result.querySelector(".search-result__result-link").href
-			let currentJob = "none"
-			if (result.querySelector("p.search-result__snippets")) {
-				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
-				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
-				scrapedEmployee.currentJob = currentJob
-			}
+			let currentJob = ""
 			if (profileUrl !== window.location.href + "#") {
+				scrapedEmployee.profileUrl = profileUrl
 				let name
 				if (result.querySelector("figure.search-result__image > img")) {
 					name = result.querySelector("figure.search-result__image > img").alt
@@ -62,11 +58,25 @@ const scrapeResults = (arg, cb) => {
 				} else if (result.querySelector(".actor-name")) {
 					name = result.querySelector(".actor-name").textContent
 				}
-				scrapedEmployee.name = name
-				scrapedEmployee.profileUrl = profileUrl
+				if (name) {
+					scrapedEmployee.name = name
+					const nameArray = name.split(" ")
+					scrapedEmployee.firstName = nameArray.shift()
+					const lastName = nameArray.join(" ")
+					if (lastName) {
+						scrapedEmployee.lastName = lastName
+					}
+				}
 			}
-			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
+			if (result.querySelector("p.search-result__snippets")) {
+				currentJob = result.querySelector("p.search-result__snippets").textContent.trim()
+				currentJob = currentJob.replace(/^.+ ?: ?\n/, "").trim()
+				scrapedEmployee.currentJob = currentJob
+			}
 			scrapedEmployee.job = result.querySelector("div.search-result__info > p.subline-level-1") ? result.querySelector("div.search-result__info > p.subline-level-1").textContent.trim() : "no job found"
+			scrapedEmployee.location = (result.querySelector("div.search-result__info > p.subline-level-2")) ? result.querySelector("div.search-result__info > p.subline-level-2").textContent.trim() : "No location found"
+			scrapedEmployee.query = arg.query
+			scrapedEmployee.timestamp = (new Date()).toISOString()
 			scrapedData.push(scrapedEmployee)
 		}
 	}
@@ -242,7 +252,7 @@ const getIdFromUrl = async (url, tab) => {
 		}
 	}
 	results.push(...utils.filterRightOuter(results, currentResult))
-	await utils.saveResults(results, results, csvName)
+	await utils.saveResults(currentResult, results, csvName)
 	nick.exit()
 })()
 	.catch(err => {
