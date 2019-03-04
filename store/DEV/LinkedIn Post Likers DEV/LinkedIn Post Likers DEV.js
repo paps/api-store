@@ -121,6 +121,11 @@ const getLikes = async (tab, urls) => {
 			return el
 		})
 		results = results.concat(likes)
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 	}
 	return results
 }

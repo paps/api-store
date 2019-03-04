@@ -65,9 +65,10 @@ const craftMessage = (json: IUnknownObject[]) => {
 		const greetingIndex = Math.floor(Math.random() * GREETINGS.length)
 		const messageIndex = Math.floor(Math.random() * MESSAGES.length)
 		if (handles) {
-			let message = `${GREETINGS[greetingIndex]} ${handles}, ${MESSAGES[messageIndex]} https://productwars.phantombuster.com`
+			const productName = product.productName as string
+			const ref = productName.toLowerCase().split(" ").join("_")
+			let message = `${GREETINGS[greetingIndex]} ${handles}, ${MESSAGES[messageIndex]} https://productwars.phantombuster.com?ref=${ref}`
 			if (message.includes("#productName#")) {
-				const productName = product.productName as string
 				message = message.replace("#productName#", productName)
 			}
 			product.message = message
