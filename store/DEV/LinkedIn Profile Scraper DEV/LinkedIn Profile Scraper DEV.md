@@ -1,14 +1,10 @@
-<center>**New! This API now supports [email discovery](#section_email_discovery).**</center>
-
-<hr />
-
 # Extract info from LinkedIn profiles
 
-When building your CRM, you sometimes need to gather information from LinkedIn contacts/prospects. Don't waste your time copy/pasting anymore. Retrieve all the data you need of the specific LinkedIn profiles you're targeting in a CSV file.
+**Build** an incredibly detailed **list of prospects** from LinkedIn. 
 
-# Our Solution
+**Gather every data** about your prospects from **name** to **email address**, **phone number** and education and so much more. 
 
-Launch an automated agent that will connect on LinkedIn as you. It will then browse and collect all the info from the designated profiles.
+And do it **fast**: LinkedIn Profile Scraper will do the browsing for you and extract the data so you can easily use it.
 
 
 ❗<span style="color:red">**Caution**</span>❗
@@ -26,52 +22,6 @@ _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
 
 # Which data will you collect?
-
-
-
-## IN CSV 
-1. LinkedIn profile link
-1. Headline
-1. Description
-1. First name
-1. Last name
-<img src="https://phantombuster.imgix.net/api-store/Linkedin_profile_scrapper/keyword_short.png" style="float:right; border:none;box-shadow:none;">
-
-1. Full name
-1. N° of subscribers
-1. Company name
-1. Current job title
-1. Description of the current job
-1. Location of that job
-1. Email (if available)
-1. **Discovered email** (New! [See below](#section_email_discovery))
-1. Phone number (if available)
-1. Twitter (if available)
-1. Website (if available)
-1. Profile image URL
-1. Skills
-1. Number of endorsements per skill
-
-## IN JSON
-
-**In addition to everything listed above:**
-- Connections
-<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/owl_gif_wow.gif" style="float:right; border:none;box-shadow:none;">
-
-- Following infos from all listed Job
-	* Company name
-	* Company URL
-	* Job title
-	* Date range
-	* Location
-	* Description
-- Following infos from all listed education
-	* School name
-	* School URL
-	* Degree
-	* Degree specifications
-	* Date range
-	* Description
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -91,6 +41,9 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Linkedin authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
+
+Do it using our browser extension.
+
 * Using Chrome, go to your LinkedIn homepage and open the inspector
 → Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
 → <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
