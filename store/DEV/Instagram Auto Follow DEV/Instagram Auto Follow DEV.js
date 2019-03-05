@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram-DEV.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram")
+const Instagram = require("./lib-Instagram-DEV")
 const instagram = new Instagram(nick, buster, utils)
 
 let followSuccessCount = 0
@@ -189,6 +189,10 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			utils.log("Input is empty OR all profiles have been processed.", "warning")
 			nick.exit(0)
 		}
+		if (!urls[0]) {
+			utils.log("You spreadsheet doesn't contain any Instagram URL. Make sure you've set the correct column.", "warning")
+			nick.exit(utils.ERROR_CODES.BAD_INPUT)
+		}
 	}
 	followSuccessCount = result.filter(el => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter(el => el.unfollowAction === "Success").length
@@ -199,7 +203,7 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 	if (action.startsWith("Unfollow")) {
 		actionText = "unfollow"
 	}
-	
+
 	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
