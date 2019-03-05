@@ -10,17 +10,74 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MwWQt4QAviEbEhQkjMqyh1NxybjAwSHw-4JExpEkZwE",
 		"numberOfAddsPerLaunch": 10,
 		"onlySecondCircle": false,
 		"message": "Hey #firstName#,\n\nI added you thanks to this awesome Phantombuster script!\n➡️ https://phantombuster.com/api-store/2818/linkedin-network-booster\n\nNice to connect!\n\nBest regards",
 		"disableScraping": false,
 		"waitDuration": 30
 	},
+	"defaultArgument": {
+        "linkedinProfile": "",
+        "description": "",
+        "imgUrl": "",
+        "firstName": "",
+        "lastName": "",
+        "fullName": "",
+        "connectionDegree": "",
+        "vmid": "",
+        "linkedinSalesNavigatorUrl": "",
+        "mutualConnectionsUrl": "",
+        "company": "",
+        "companyUrl": "",
+        "jobTitle": "",
+        "jobDescription": "",
+        "location": "",
+        "jobDateRange": "",
+        "company2": "",
+        "companyUrl2": "",
+        "jobTitle2": "",
+        "jobDescription2": "",
+        "location2": "",
+        "jobDateRange2": "",
+        "school": "",
+        "schoolUrl": "",
+        "schoolDegree": "",
+        "schoolDescription": "",
+        "schoolDegreeSpec": "",
+        "schoolDateRange": "",
+        "mailFromDropcontact": "",
+        "mailQualificationFromDropContact": "",
+        "naf5CodeFromDropContact": "",
+        "naf5DesFromDropContact": "",
+        "nbEmployeesFromDropContact": "",
+        "sirenFromDropContact": "",
+        "siretFromDropContact": "",
+        "siretAddressFromDropContact": "",
+        "siretZipFromDropContact": "",
+        "vatFromDropContact": "",
+        "websiteFromDropContact": "",
+        "twitter": "",
+        "skill1": "",
+        "skill2": "",
+        "skill3": "",
+        "allSkills": "",
+        "url": "",
+        "baseUrl": "",
+        "profileId": "",
+        "profileUrl": ""
+	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"emailChooser": [ "disableScraping" ],
+					"dropcontactApiKey": [ "emailChooser" ],
+					"hunterApiKey": [ "emailChooser" ]
+				}
+			},
 			"options": {
 				"fields": {
 					"sessionCookie": {
@@ -45,6 +102,31 @@
 					"onlySecondCircle": {
 						"rightLabel": "<b>Only invite 2nd-degree connections</b>"
 					},
+					"emailChooser": {
+						"label": "Choose an email discovery service",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "None", "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
+						"type": "select",
+						"dependencies": {
+							"disableScraping": false
+						}
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io",
+						"dependencies": {
+							"emailChooser": [ "hunter", "hunter and dropcontact" ]
+						}
+					},
+					"dropcontactApiKey": {
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
+						"dependencies": {
+							"emailChooser": [ "dropcontact", "hunter and dropcontact" ]
+						}
+					},
 					"message": {
 						"label": "Message <a href=\"/api-store/2818/linkedin-network-booster#section_6addaprivatepersonalizedmessage\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
@@ -53,10 +135,6 @@
 							"You are limited by LinkedIn to 300 characters",
 							"Leave empty to send invites without message (not recommended)"
 						]
-					},
-					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/2818/linkedin-network-booster#section_email_discovery\" target=\"_blank\">(?)</a>",
-						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
 					"disableScraping": {
 						"rightLabel": "<b>Disable profile scraping</b> (not recommended — speeds up the API but prevents email discovery and tags other than #firstName#)"
@@ -92,13 +170,22 @@
 			"onlySecondCircle": {
 				"type": "boolean"
 			},
-			"message": {
+			"emailChooser": {
 				"type": "string",
-				"maxLength": 300
+				"enum": [ "none", "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
+				"default": "none"
 			},
 			"hunterApiKey": {
 				"type": "string",
 				"maxLength": 50
+			},
+			"dropcontactApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 300
 			},
 			"disableScraping": {
 				"type": "boolean"
