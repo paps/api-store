@@ -17,7 +17,7 @@
 		"disableScraping": false,
 		"waitDuration": 30
 	},
-	"defaultArgument": {
+	"outputDescription": {
         "linkedinProfile": "",
         "description": "",
         "imgUrl": "",
