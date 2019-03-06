@@ -217,7 +217,7 @@ const scrapePosts = async (tab, arr, maxPosts, term) => {
 	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
-	const webSearch = new WebSearch(tab, buster)
+	const webSearch = new WebSearch(tab, buster, null, null, utils)
 	const scrapedData = []
 	if (!csvName) { csvName = "result" }
 	let hasSpreadsheet = false

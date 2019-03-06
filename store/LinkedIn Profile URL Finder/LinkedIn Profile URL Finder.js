@@ -52,7 +52,7 @@ const normalizeLinkedInURL = url => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster)
+	const webSearch = new WebSearch(tab, buster, null, null, utils)
 	let {spreadsheetUrl, queries, columnName, csvName, numberOfLinesToProcess} = utils.validateArguments()
 	const toReturn = []
 	let i = 1
