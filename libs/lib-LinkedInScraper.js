@@ -263,6 +263,9 @@ const scrapeInfos = (arg, callback) => {
 		if (document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]")) {
 			infos.general.linkedinRecruiterUrl = document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]").href
 		}
+		if (document.querySelector("a[data-control-name=\"topcard_view_all_connections\"]")) {
+			infos.general.connectionsUrl = document.querySelector("a[data-control-name=\"topcard_view_all_connections\"]").href
+		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
 			// Issue 128: new UI (experiences are stacked in a li if the company doesn't change)
@@ -581,6 +584,7 @@ const craftCsvObject = infos => {
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
 		linkedinSalesNavigatorUrl: (hasGeneral) ? (infos.general.linkedinSalesNavigatorUrl || null) : null,
+		connectionsUrl: (hasGeneral) ? (infos.general.connectionsUrl || null) : null,
 		mutualConnectionsUrl: (hasGeneral) ? (infos.general.mutualConnectionsUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
