@@ -42,6 +42,10 @@
 							"You are limited by LinkedIn to 1000 characters",
 							"Leave empty to accept invitations without sending a message"
 						]
+					},
+					"csvName": {
+						"label": "Name of resulting CSV",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -71,6 +75,9 @@
 			"message": {
 				"type": "string",
 				"maxLength": 1000
+			},
+			"csvName": {
+				"type": "string"
 			}
 		}
 	}
