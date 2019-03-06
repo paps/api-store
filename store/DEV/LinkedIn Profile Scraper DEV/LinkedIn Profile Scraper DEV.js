@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper-DEV.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -22,7 +22,7 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
-const LinkedInScraper = require("./lib-LinkedInScraper")
+const LinkedInScraper = require("./lib-LinkedInScraper-DEV")
 const { URL } = require("url")
 
 const MAX_SKILLS = 6
@@ -108,7 +108,7 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
 	let urls = profileUrls
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
@@ -138,7 +138,7 @@ const removeLinkedinSubdomains = url => {
 	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey)
+	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey, emailChooser)
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 

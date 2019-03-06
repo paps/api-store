@@ -5,7 +5,7 @@
 	"argumentDescription": "",
 	"gradientBegin": "#DD6948",
 	"gradientEnd": "#DA552F",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"update": false,
 	"defaultArgument": {

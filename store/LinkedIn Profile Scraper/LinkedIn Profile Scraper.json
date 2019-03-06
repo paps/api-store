@@ -27,6 +27,7 @@
 		"jobTitle": "What is her/his current job title",
 		"jobDescription": "Description of the current job",
 		"location": "Where is she/he located",
+		"connectionsUrl": "The 'See Connections' search URL",
 		"mail": "Email address displayed on profile page (very few people do that)",
 		"mailFromHunter": "Discovered email (see 'Email discovery' section)",
 		"profileImageUrl": "",
