@@ -56,7 +56,7 @@ const setEmail = email => window.intercomSettings.email = email
 		try {
 			const raw = await utils.getRawCsv(spreadsheetUrl)
 			let csvHeaders = raw[0].filter(cell => !utils.isUrl(cell))
-			let messagesTags =  inflater.getMessageTags(message).filter(el => csvHeaders.includes(el))
+			let messagesTags = inflater.getMessageTags(message).filter(el => csvHeaders.includes(el))
 			let columns = [ columnName, ...messagesTags ]
 			rows = utils.extractRows(raw, columns)
 		} catch (err) {
@@ -88,6 +88,7 @@ const setEmail = email => window.intercomSettings.email = email
 			await tab.waitForSelector("iframe[name=\"intercom-messenger-frame\"]", { visible: true })
 			const frame = tab.frames().find(frame => frame.name() === "intercom-messenger-frame")
 			if (frame) {
+				await frame.waitForSelector("button.intercom-composer-send-button")
 				await frame.click("button.intercom-composer-send-button")
 				utils.log(`Message sent at ${query[columnName]}`, "info")
 				res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
