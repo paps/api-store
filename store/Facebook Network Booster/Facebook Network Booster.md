@@ -110,7 +110,7 @@ Please be aware that this API will manipulate your own account on your behalf.
 
 Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
 
-In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you.
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://intercom.help/phantombuster/help-home/setting-up-a-proxy-with-phantombuster) close to you.
 
 Also Facebook tends to notice when too many profiles viewings are done in a short period of time. Spamming invitations is probably reprimanded. We recommend spreading your invites (like 1 profile every 15min rather than 10 profiles in one go).
 If too many actions are done, Facebook may temporarily block your profile. If that happens, you should be careful and reduce your API frequency the next time.

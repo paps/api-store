@@ -38,10 +38,10 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Facebook authentication 🔑 { argument }
 Because the script will manipulate Facebook for you, it needs to be logged on your Facebook account. For that you just need to copy paste two session cookies in the script argument:
-* Using Chrome, go to your Facebook homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
+* Using Chrome, go to your Facebook homepage and open the inspector
+→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
+→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
+or
 → <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
 * Locate the “Application” tab
@@ -117,7 +117,7 @@ Please be aware that this API will manipulate your own account on your behalf.
 
 Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
 
-In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you. 
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://intercom.help/phantombuster/help-home/setting-up-a-proxy-with-phantombuster) close to you.
 
-Also Facebook tends to notice when too many profiles viewings are done in a short period of time. We recommend spreading your scraping (like 5 profiles every 30min rather than 100 profiles in one go). Also if you're scraping more pages for additionnal data (like the Work and Education or Places tabs), you should reduce that amount even further. 
+Also Facebook tends to notice when too many profiles viewings are done in a short period of time. We recommend spreading your scraping (like 5 profiles every 30min rather than 100 profiles in one go). Also if you're scraping more pages for additionnal data (like the Work and Education or Places tabs), you should reduce that amount even further.
 If too many viewing actions are done, Facebook will warn you and temporarily block profile viewing on your account for about one hour. If that happens, you should be careful and reduce your scraping frequency the next time.

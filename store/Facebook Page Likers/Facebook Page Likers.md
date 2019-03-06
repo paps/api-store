@@ -79,6 +79,6 @@ Please be aware that this API will manipulate your own account on your behalf.
 
 Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
 
-In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you. 
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://intercom.help/phantombuster/help-home/setting-up-a-proxy-with-phantombuster) close to you.
 
 Also there's a limit on how many likers can be extracted, around 5k Facebook profiles, even when the total count displayed by Facebook is higher. As it's loading and scrolling through the likers' list, once stopped this API cannot resume where it left off.
