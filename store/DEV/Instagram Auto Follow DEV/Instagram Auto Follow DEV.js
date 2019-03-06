@@ -29,6 +29,8 @@ let followRequestCount = 0
 let blockSuccessCount = 0
 let unblockSuccessCount = 0
 let rateLimited
+let username
+let followLimit
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -46,6 +48,17 @@ const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("web/friendships") > -1 && e.response.status === 403) {
 			rateLimited = true
 	}
+}
+
+const checkFollowCount = async () => {
+	const followTab = await nick.newTab()
+	const jsonUrl = `https://www.instagram.com/${username}?__a=1`
+	await followTab.open(jsonUrl)
+	let instagramJsonCode = await followTab.getContent()
+	const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
+	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+	const followCount = instagramJsonCode.graphql.user.edge_follow.count
+	return followCount
 }
 
 // function to follow a profile
@@ -90,7 +103,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 	await tab.wait(4000)
 	const checkFollowData = await instagram.scrapeProfile(tabJson, query, profileUrl)
 	if (action === "Follow") {
-		if (checkFollowData.status === "Following") {
+		if (checkFollowData.status === "Following" && 1 === 2) {
 			utils.log(`Successfully followed ${checkFollowData.profileName}.`, "done")
 			checkFollowData.followAction = "Success"
 			followSuccessCount++
@@ -102,6 +115,15 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 			return checkFollowData
 		} else {
 			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			try {
+				const followCount = await checkFollowCount()
+				if (followCount === 7500) {
+					utils.log("You follow 7500 profiles (maximum Instagram Limit)!", "warning")
+					followLimit = true
+				}
+			} catch (err) {
+				//
+			}
 			await tab.screenshot(`${Date.now()}failed.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}failed.html`)
 			return null
@@ -207,8 +229,8 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls, null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
-	await instagram.login(tab, sessionCookie)
-
+	username = await instagram.login(tab, sessionCookie)
+	console.log("username", username)
 	let pageCount = 0
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 
@@ -279,6 +301,9 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 		}
 		if (rateLimited) {
 			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (15min+).", "warning")
+			break
+		}
+		if (followLimit) {
 			break
 		}
 		await tab.wait(1500 + Math.random() * 2000)

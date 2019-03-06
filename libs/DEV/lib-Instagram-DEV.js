@@ -143,7 +143,6 @@ class Instagram {
 		})
 		const initDate = new Date()
 		try {
-			console.log("trying")
 			await tab.open("https://instagram.com")
 		} catch (err) {
 			console.log("erl", err.message)
@@ -167,12 +166,12 @@ class Instagram {
 		await this.buster.save(await tab.screenshot("log.jpg"))
 		try {
 			await tab.waitUntilVisible("main", 30000)
-			console.log("main")
 			const name = await tab.evaluate((arg, cb) => {
 				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
+			return name
 		} catch (error) {
 			console.log("err:", error)
 			this.utils.log("Can't connect to Instagram with these session cookies.", "error")

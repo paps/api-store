@@ -163,6 +163,7 @@ class Instagram {
 				cb(null, url.pathname.replace(/\//g, ""))
 			})
 			this.utils.log(`Connected as ${name}`, "done")
+			return name
 		} catch (error) {
 			this.utils.log("Can't connect to Instagram with these session cookies.", "error")
 			this.nick.exit(103)
