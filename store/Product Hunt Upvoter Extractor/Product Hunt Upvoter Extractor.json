@@ -9,7 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://www.producthunt.com/posts/typewrite-something",
+		"spreadsheetUrl": "https://www.producthunt.com/posts/phantombuster-2",
 		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": true,
@@ -26,11 +26,11 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Product Hunt product URL or Spreadsheet URL<a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Product Hunt product URL or Spreadsheet URL<a target=\"_blank\" href=\"/api-store/12133/product-hunt-upvoter-extractor#section_4aimaspecificproducthuntaccountorseveralatatime\">(?)</a>",
 						"helper": "Enter either a Product Hunt product URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"numberOfProfilesPerProduct": {
-						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of profiles to extract per product  <a target=\"_blank\" href=\"/api-store/12133/product-hunt-upvoter-extractor#section_repetition_setup\">(?)</a>",
 						"helper": "All of them if empty",
 						"inputType": "number"
 					},
@@ -39,7 +39,7 @@
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (All of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Number of lines to process per launch (All of them if empty) <a target=\"_blank\" href=\"/api-store/12133/product-hunt-upvoter-extractor#section_repetition_setup\">(?)</a>",
 						"helper": "If using a spreadsheet. By default the API will process 10 lines per launch",
 						"inputType": "number"
 					},

@@ -9,7 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://www.producthunt.com/posts/lemlist-2-0",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": false,
@@ -26,7 +26,7 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Product Hunt profile URL or Spreadsheet URL<a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
+						"label": "Product Hunt profile URL or Spreadsheet URL<a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimataspecificproducthuntprofileurlorseveralatatime\" target=\"_blank\">(?)</a>",
 						"helper": "Enter either a Product Hunt profile URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
