@@ -75,6 +75,7 @@ declare interface IMutableApiParams {
 	for (const query of queries as string[]) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
 			break
 		}
 		const _chan: string = query.startsWith("#") ? query.substring(1) : query
