@@ -120,8 +120,13 @@ const getEmployees = async (tab, id, query, numberOfPage) => {
 			await tab.wait(1500 + 1000 * Math.random())
 		}
 	}
-	utils.log(`All pages with employees scrapped for company: ${query}`, "done")
-	return result
+	if (result.length) {
+		utils.log(`All pages with employees scrapped for company: ${query}`, "done")
+		return result
+	} else {
+		utils.log(`No employees found for company: ${query}`, "info")
+		return [{ query, error: "No profiles found", timestamp: (new Date()).toISOString() }]
+	}
 }
 
 /**
@@ -244,6 +249,7 @@ const getIdFromUrl = async (url, tab) => {
 		try {
 			const id = await getIdFromUrl(query, tab)
 			const res = await getEmployees(tab, id, query, numberOfPagePerCompany)
+			console.log("res:", res)
 			currentResult = currentResult.concat(res)
 		} catch (error) {
 			utils.log(`Could not scrape company ${query} because ${error}`, "error")
