@@ -175,6 +175,8 @@ const connectTo = async (selector, tab, message) => {
 	} catch (error) {
 		if (await tab.isVisible("#li-modal-container > .send-invite .send-invite__header")) {
 			utils.log("Button clicked but LinkedIn didn't send the message", "warning")
+		} else if (await tab.isVisible("div.mn-invite-alert__content > a[data-control-name=\"profile\"].mn-invite-alert__link")) {
+			utils.log("LinkedIn didn't send the message, they display: Sorry, your invitation could not be sent at this time", "warning")
 		} else {
 			utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
 			await buster.saveText(await tab.getContent(), `${Date.now()}CouldNotVerify.html`)

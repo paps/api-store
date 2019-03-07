@@ -296,7 +296,7 @@ const loadAndScrape = async (tab, pageUrl, maxLikers, likeCount) => {
 					continue
 				}
 			}
-			utils.log(`Scraping likers of ${pageData.pageName} at ${likersUrl}`, "loading")
+			utils.log(`Scraping likers of ${pageData.pageName}`, "loading")
 			let likeCount = 0
 			if (pageData.likeCount) {
 				likeCount = pageData.likeCount
