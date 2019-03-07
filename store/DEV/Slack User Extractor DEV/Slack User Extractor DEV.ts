@@ -92,6 +92,7 @@ declare interface IMutableApiParams {
 			el.query = query
 			el.channel = query
 			el.workspaceUrl = slackWorkspaceUrl
+			el.timestamp = (new Date()).toISOString()
 		})
 		utils.log(`${members.length} users scraped in ${query} channel`, "done")
 		res.push(...members)
