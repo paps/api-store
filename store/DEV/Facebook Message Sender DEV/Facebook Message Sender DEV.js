@@ -51,7 +51,7 @@ const openChatPage = async (tab, profileUrl, message) => {
 	const urlObject = new URL(profileUrl)
 	let slug
 	if (profileUrl.includes("profile.php?id=")) {
-		slug = urlObject.searchParams.get("id")
+		slug = "/" + urlObject.searchParams.get("id")
 	} else if (urlObject.pathname.startsWith("/pg/")) {
 		slug = urlObject.pathname.substr(3)
 	} else {
@@ -82,7 +82,10 @@ const openChatPage = async (tab, profileUrl, message) => {
 			utils.log("Facebook is asking for an account verification.", "error")
 			return { profileUrl, error: "Account verification" }
 		}
+		console.log("url:", await tab.getUrl())
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
+		await buster.saveText(await tab.getContent(), `${Date.now()}name.html`)
+		await tab.screenshot(`${Date.now()}name.png`)
 		return { profileUrl, error: "Could get profile name" }
 	}
 }
@@ -186,8 +189,8 @@ nick.newTab().then(async (tab) => {
 						try {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
-							await sendMessage(tab, forgedMessage)
-							await tab.wait(4000)
+							// await sendMessage(tab, forgedMessage)
+							// await tab.wait(4000)
 							const isBanned = await tab.evaluate(checkIfBanned)
 							const isBlocked = await tab.evaluate(checkIfBlocked)
 							if (!isBanned && !isBlocked) {
