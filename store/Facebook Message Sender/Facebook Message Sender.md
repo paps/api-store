@@ -78,6 +78,7 @@ Below the column name you'll find the **message** configuration.
 
 In the message textbox you can write a private note which will be sent to the profile included in your Google spreadsheet.
 Note: Emojis aren't handled.
+Try sending a message to yourself to check that everything's working correctly!
 
 
 **\#fbFirstName\#** will be replaced in your message by the first name of the person you’re adding.

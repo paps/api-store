@@ -97,12 +97,30 @@ const _extractImagesFromCarousel = async (tab, scrapedData, selectors) => {
 	return scrapedData
 }
 
+/**
+ * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
+ * @return {boolean}
+ */
+const isUsingNick = tab => !!tab.driver
+
 class Instagram {
 
+	/**
+	 * @constructs Instagram
+	 * NOTE: when using puppeteer buster & utils are only required
+	 * @param {Nick} [nick]
+	 * @param {Buster} buster
+	 * @param {StoreUtilities} utils
+	 */
 	constructor(nick, buster, utils) {
-		this.nick = nick
-		this.buster = buster
-		this.utils = utils
+		if (arguments.length < 3) {
+			this.buster = arguments[0] // buster
+			this.utils = arguments[1] // utils
+		} else {
+			this.nick = nick
+			this.buster = buster
+			this.utils = utils
+		}
 	}
 
 	/**
@@ -112,13 +130,14 @@ class Instagram {
 	 * @throws if there were an error during the login process
 	 */
 	async login(tab, cookie) {
+		const isNick = isUsingNick(tab)
 		if ((typeof cookie !== "string") || (cookie.trim().length < 1)) {
 			this.utils.log("Invalid Instagram session cookie. Did you specify one?", "error")
-			this.nick.exit(107)
+			process.exit(107)
 		}
 		if (cookie === "your_session_cookie") {
 			this.utils.log("You didn't enter your Instagram session cookie into the API Configuration.", "error")
-			this.nick.exit(106)
+			process.exit(106)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {
 			try {
@@ -130,19 +149,25 @@ class Instagram {
 				}
 			} catch (e) {
 				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
-				this.nick.exit(75)
+				process.exit(75)
 			}
 		}
 		this.utils.log("Connecting to Instagram...", "loading")
-		await this.nick.setCookie({
+		const _cookie = {
 			name: "sessionid",
 			value: cookie,
 			domain: "www.instagram.com",
 			secure: true,
 			httpOnly: true
-		})
+		}
 		try {
-			await tab.open("https://instagram.com")
+			if (isNick) {
+				await this.nick.setCookie(_cookie)
+				await tab.open("https://instagram.com")
+			} else {
+				await tab.setCookie(_cookie)
+				await tab.goto("https://instagram.com")
+			}
 		} catch (err) {
 			if (err.message === "loading failed: net::ERR_CONNECTION_CLOSED") {
 				await tab.wait(5000)
@@ -157,16 +182,26 @@ class Instagram {
 			}
 		}
 		try {
-			await tab.waitUntilVisible("main", 15000)
-			const name = await tab.evaluate((arg, cb) => {
-				const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
-				cb(null, url.pathname.replace(/\//g, ""))
-			})
-			this.utils.log(`Connected as ${name}`, "done")
-			return name
+			if (isNick) {
+				await tab.waitUntilVisible("main", 15000)
+				const name = await tab.evaluate((arg, cb) => {
+					const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
+					cb(null, url.pathname.replace(/\//g, ""))
+				})
+				this.utils.log(`Connected as ${name}`, "done")
+				return name
+			} else {
+				await tab.waitForSelector("main", { visible: true })
+				const name = await tab.evaluate(() => {
+					const url = new URL(document.querySelector("nav > div > div > div > div:last-of-type > div > div:last-of-type a").href)
+					return url.pathname.replace(/\//g, "")
+				})
+				this.utils.log(`Connected as ${name}`, "done")
+				return name
+			}
 		} catch (error) {
 			this.utils.log("Can't connect to Instagram with these session cookies.", "error")
-			this.nick.exit(103)
+			process.exit(this.utils.ERROR_CODES.INSTAGRAM_BAD_COOKIE)
 		}
 	}
 
