@@ -222,8 +222,8 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 	if (action.startsWith("Unfollow")) {
 		actionText = "unfollow"
 	}
-	
-	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls, null, 4)}`)
+
+	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls.slice(0, 200), null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
