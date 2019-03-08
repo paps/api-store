@@ -51,7 +51,7 @@ const openChatPage = async (tab, profileUrl, message) => {
 	const urlObject = new URL(profileUrl)
 	let slug
 	if (profileUrl.includes("profile.php?id=")) {
-		slug = urlObject.searchParams.get("id")
+		slug = "/" + urlObject.searchParams.get("id")
 	} else if (urlObject.pathname.startsWith("/pg/")) {
 		slug = urlObject.pathname.substr(3)
 	} else {
