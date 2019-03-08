@@ -17,11 +17,16 @@ const nick = new Nick({
 	timeout: 60000
 })
 
+const puppeteer = require("puppeteer")
+
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const DB_NAME = "result"
 const DEFAULT_WAIT_TIME = 5000
 // }
+
+
+const isUsingNick = tab => !!tab.driver
 
 /**
  * @async
@@ -55,19 +60,29 @@ const extractMails = (arg, cb) => {
 	} else {
 		data = []
 	}
-	cb(null, data)
+	return typeof cb !== "undefined" ? cb(null, data) : data
 }
 
 const scrapeMails = async (tab, url, waitTime) => {
 	let result = { mails: [], url }
+	const isNick = isUsingNick(tab)
 	try {
-		const [ httpCode ] = await tab.open(url)
-		if (httpCode && (httpCode >= 300 || httpCode < 200)) {
-			utils.log(`${url} didn't opened properly got HTTP code ${httpCode}`, "warning")
-			result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
-			return result
+		if (isNick) {
+			const [ httpCode ] = await tab.open(url)
+			if (httpCode && (httpCode >= 300 || httpCode < 200)) {
+				utils.log(`${url} didn't opened properly got HTTP code ${httpCode}`, "warning")
+				result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
+				return result
+			}
+		} else {
+			const res = await tab.goto(url)
+			if (res && (res.status() >= 300 || res.status() < 200)) {
+				utils.log(`${url} didn't opened properly got HTTP code ${res.status()}`, "warning")
+				result.error = `${url} did'nt opened properly got HTTP code ${res.status()}`
+				return result
+			}
 		}
-		await tab.wait(waitTime)
+		isNick ? await tab.wait(waitTime) : await tab.waitFor(waitTime)
 		let mails = await tab.evaluate(extractMails)
 		result.mails = result.mails.concat(mails)
 	} catch (err) {
@@ -106,6 +121,8 @@ const createCsvOutput = json => {
 ;(async () => {
 	let { urls, timeToWait, pagesPerLaunch, csvName, queries } = utils.validateArguments()
 	const tab = await nick.newTab()
+	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ], ignoreHTTPSErrors: true })
+	const page = await browser.newPage()
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -146,6 +163,7 @@ const createCsvOutput = json => {
 	}
 
 	for (const url of urls) {
+		let foundMails = null
 		utils.log(`Scraping ${url}`, "loading")
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -153,7 +171,15 @@ const createCsvOutput = json => {
 			break
 		}
 		buster.progressHint((i + 1) / urls.length, `Scraping: ${url}`)
-		const foundMails = await scrapeMails(tab, url, timeToWait)
+		if (!tab.crashed) {
+			foundMails = await scrapeMails(tab, url, timeToWait)
+			if (tab.crashed) {
+				utils.log(`Rescraping ${url} due to: NickJS SIGSEGV`, "info")
+				foundMails = await scrapeMails(page, url, timeToWait)
+			}
+		} else {
+			foundMails = await scrapeMails(page, url, timeToWait)
+		}
 		scrapingRes = scrapingRes.concat(foundMails)
 		utils.log(`Got ${foundMails.mails.length} mail${ foundMails.mails.length === 1 ? "" : "s" } from ${url}`, "done")
 		i++
