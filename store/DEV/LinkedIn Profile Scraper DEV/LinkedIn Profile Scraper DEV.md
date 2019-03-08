@@ -1,27 +1,30 @@
-# Extract info from LinkedIn profiles
+# Get the most out of LinkedIn
 
-**Build** an incredibly detailed **list of prospects** from LinkedIn. 
+Salesman, recruiters, CEOs use it daily. But are you getting the most out of **your** LinkedIn account? 
 
-**Gather every data** about your prospects from **name** to **email address**, **phone number** and education and so much more. 
+Are you able to **efficiently** build **qualitative** and **instantly actionable lists of prospects**, potential hirees and new contacts yet?
 
-And do it **fast**: LinkedIn Profile Scraper will do the browsing for you and extract the data so you can easily use it.
+LinkedIn Profile Scraper is your new tool to have the **best return to time spent** on LinkedIn **for you and your team**. 
 
 
-❗<span style="color:red">**Caution**</span>❗
-1. _As the agent will connect to your account, use this script **sparingly**. LinkedIn only allows you to view a certain number of profiles per day/month. Consider this when launching the agent or it might get your account slowed down._
-_More infos about_ <span style="color:red"> >> [LinkedIn Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) <<</span>
-2. We've noticed that without LinkedIn Premium, you can only scrape 100 profiles in one go. Your mileage may vary.  
+# Turn LinkedIn Profile URLs into detailed data.
+
+LinkedIn Profile Scraper takes as an **input a list of LinkedIn Profile URLs**. 
+
+It will visit on your behalf each profile and **extract every single publicly available data from it**: Name, title, bio, experiences, education, skills, languages, etc.
+
+It's all done **in the cloud** so you can close your laptop and focus on other tasks.
+
+# Get real, verified, email addresses.
+
+For most 1st degree connection, you will obtain their **email addresses** and **phone number**. 
+
+For people you're not connected to, Phantombuster Email Discovery mode will take over and provide you with **verified professional email addresses** that do **not** bounce. *Quality first*.
 
 # What will you need? ⚙️ 
 
-- **Session cookie**: Your session cookie from LinkedIn.
+- **Session cookie**: Your session cookie from LinkedIn. (Download our browser extension for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/) or [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil))
 - **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn profile URLs in it.
-- **Save the profile picture/screenshot**: If you want to download the profile picture or take a screenshot of the page. Note that you won't be able to download all the files as a zip if you have more than 1000 files.
-
-_(**You already have all that?**  Click straight away on **"Use this API"**)_
-
-
-# Which data will you collect?
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
