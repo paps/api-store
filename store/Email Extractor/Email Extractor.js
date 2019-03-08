@@ -25,7 +25,6 @@ const DB_NAME = "result"
 const DEFAULT_WAIT_TIME = 5000
 // }
 
-
 const isUsingNick = tab => !!tab.driver
 
 /**
@@ -71,14 +70,14 @@ const scrapeMails = async (tab, url, waitTime) => {
 			const [ httpCode ] = await tab.open(url)
 			if (httpCode && (httpCode >= 300 || httpCode < 200)) {
 				utils.log(`${url} didn't opened properly got HTTP code ${httpCode}`, "warning")
-				result.error = `${url} did'nt opened properly got HTTP code ${httpCode}`
+				result.error = `${url} didn't opened properly got HTTP code ${httpCode}`
 				return result
 			}
 		} else {
 			const res = await tab.goto(url)
 			if (res && (res.status() >= 300 || res.status() < 200)) {
 				utils.log(`${url} didn't opened properly got HTTP code ${res.status()}`, "warning")
-				result.error = `${url} did'nt opened properly got HTTP code ${res.status()}`
+				result.error = `${url} didn't opened properly got HTTP code ${res.status()}`
 				return result
 			}
 		}
