@@ -17,6 +17,7 @@
 		"commentCount": "",
 		"likeCount ": "",
 		"pubDate": "Post date",
+		"type": "Photo or Video",
 		"caption": "Instagram caption of that post",
 		"imgUrl": "URL of the post's picture",
 		"id": "Instagram ID of the post",
