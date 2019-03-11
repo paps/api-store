@@ -22,6 +22,14 @@
 					"sidCookie": {
 						"label": "sid session cookie"
 					},
+					"from": {
+						"label": "Select the beginning of the range",
+						"inputType": "date"
+					},
+					"to": {
+						"label": "Select the end of the range",
+						"inputType": "date"
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -40,6 +48,12 @@
 			"sidCookie": {
 				"type": "string",
 				"required": true
+			},
+			"from": {
+				"type": "string"
+			},
+			"to": {
+				"type": "string"
 			},
 			"csvName": {
 				"type": "string"
