@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -54,17 +53,25 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {
+			return false
+		}
+	}
+	return true
+}
+
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("graphql/query/?query_hash") > -1) {
 		if (e.response.status === 200) {
 			graphqlUrl = e.response.url
 		} else if (e.response.status === 429) {
 			rateLimited = true
-			// utils.log("Still rate limited by Instagram.", "warning")
 		}
 	}
 }
-
 
 const onHttpRequest = (e) => {
 	if (e.request.url.indexOf("graphql/query/?query_hash") > -1) {
@@ -168,8 +175,6 @@ const clickCommentButton = async (tab) => {
 		}
 		await tab.wait(100)
 	} while (new Date() - initDate < 10000)
-	await tab.screenshot(`${Date.now()}sU2.png`)
-	await buster.saveText(await tab.getContent(), `${Date.now()}sU2s.html`)
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	return false
@@ -181,8 +186,6 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 		await tab.waitUntilVisible("article section")
 	} catch (err) {
 		utils.log("Couldn't access post, profile may be private.", "warning")
-		await tab.screenshot(`${Date.now()}privatet.png`)
-		await buster.saveText(await tab.getContent(), `${Date.now()}privatets.html`)
 		return ({ query, error: "Couldn't access post", timestamp: (new Date()).toISOString() })
 	}
 	let username
@@ -309,7 +312,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
 
-
+	let currentResult = []
 	for (let query of postUrls) {
 		let resuming = false
 		if (agentObject && query === agentObject.lastQuery) {
@@ -331,16 +334,9 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 				continue
 			}
 			const tempResult = await loadAndScrapeComments(tab, query, numberOfComments, resuming)
-			const oldResultLength = result.length
+			currentResult = currentResult.concat(tempResult)
 			if (!tempResult.error) {
-				for (let i = 0; i < tempResult.length ; i++) { // using postId as a unique comment identifier
-					if (!result.find(el => el.postID === tempResult[i].postID)) {
-						result.push(tempResult[i])
-					}
-				}
-				utils.log(`Got ${result.length - oldResultLength} comments for ${query}`, "done")
-			} else {
-				result.push(tempResult)
+				utils.log(`Got ${tempResult.length} comments for ${query}`, "done")
 			}
 			if (rateLimited) {
 				if (tempResult.length) {
@@ -352,22 +348,31 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 			}
 		} catch (err) {
 			utils.log(`Can't scrape post at ${query} due to: ${err.message || err}`, "warning")
-			result.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
+			currentResult.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
 		alreadyScraped = 0
 	}
 	if (rateLimited) {
 		interrupted = true
 	}
-	const finalCommentsCount = result.filter(el => !el.error).length
-	utils.log(`Got ${finalCommentsCount} comments in total.`, "done")
-	if (result.length !== initialResultLength) {
-		if (interrupted) {
-			await buster.setAgentObject({ nextUrl, lastQuery })
-		} else {
-			await buster.setAgentObject({})
+	for (const post of currentResult) { // using postId as a unique comment identifier
+		if (!result.find(el => el.postID === post.postID)) {
+			result.push(post)
 		}
-		await utils.saveResults(result, result, csvName)
+	}
+	await utils.saveResults(currentResult, result, csvName)
+
+	if (result.length !== initialResultLength) {
+		if (agentObject) {
+			if (interrupted) {
+				agentObject.nextUrl = nextUrl
+				agentObject.lastQuery = lastQuery
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastQuery
+			}
+			await buster.setAgentObject(agentObject)
+		}
 	}
 	nick.exit(0)
 })()
