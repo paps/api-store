@@ -188,8 +188,10 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 	let username
 	let totalCommentCount
 	let results = []
+	const urlObject = new URL(query)
+	const postUrl = urlObject.hostname + urlObject.pathname
 	try {
-		[ totalCommentCount, username, results ] = await getCommentCountAndUsername(query)
+		[ totalCommentCount, username, results ] = await getCommentCountAndUsername(postUrl)
 	} catch (err) {
 		return ({ query, error: "Couln't access first comments", timestamp: (new Date()).toISOString() })
 	}
