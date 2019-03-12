@@ -12,6 +12,7 @@ const ERROR_CODES = {
 	GO_NOT_ACCESSIBLE: 75,
 	BAD_INPUT: 76,
 	PROXY_ERROR: 77,
+	NO_INPUT: 78,
 	LINKEDIN_BAD_COOKIE: 83,
 	LINKEDIN_EXPIRED_COOKIE: 84,
 	LINKEDIN_BLOCKED_ACCOUNT: 85,
@@ -374,6 +375,10 @@ class StoreUtilities {
 	 * @return {Promise<Array<String>>} CSV content
 	 */
 	async getDataFromCsv2(url, columnName, printLogs = true) {
+		if (url === "https://docs.google.com/spreadsheets/d/(...)") {
+			this.log("You didn't enter any input spreadsheet!", "error")
+			process.exit(ERROR_CODES.NO_INPUT)
+		}
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")

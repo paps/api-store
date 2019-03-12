@@ -11,7 +11,7 @@ declare class StoreUtilities {
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
 	public getRawCsv(url: string, printLogs?: boolean): Promise<IUnknownObject[]>
-	public extractCsvRows(csv: IUnknownObject[], columnName?: string|string[], printLogs?: boolean): string[]|IUnknownObject[]
+	public extractCsvRows(csv: IUnknownObject[], columnName?: string|string[]): string[]|IUnknownObject[]
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
@@ -32,6 +32,8 @@ declare const enum ERRORS {
 	CSV_NOT_PUBLIC = 72,
 	GO_NOT_ACCESSIBLE = 75,
 	BAD_INPUT = 76,
+	PROXY_ERROR = 77,
+	NO_INPUT = 78,
 	LINKEDIN_BAD_COOKIE = 83,
 	LINKEDIN_EXPIRED_COOKIE = 84,
 	LINKEDIN_BLOCKED_ACCOUNT = 85,
