@@ -211,7 +211,8 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			utils.log("Input is empty OR all profiles have been processed.", "warning")
 			nick.exit(0)
 		}
-		if (!urls[0]) {
+		urls = urls.filter(el => el)
+		if (urls.length < 1) {
 			utils.log("You spreadsheet doesn't contain any Instagram URL. Make sure you've set the correct column.", "warning")
 			nick.exit(utils.ERROR_CODES.BAD_INPUT)
 		}
