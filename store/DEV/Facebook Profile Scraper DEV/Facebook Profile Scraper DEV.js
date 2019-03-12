@@ -15,7 +15,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
-	timeout: 30000
+	timeout: 60000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -353,6 +353,27 @@ const scrapeMainPageData = (arg, cb) => {
 	cb(null, scrapedData)
 }
 
+// scrape data from the main page URL
+const scrapeInfoAndAds = (arg, cb) => {
+	const scrapedData = {}
+	const languageArray = ["Page created on ", "Page créée le "]
+	let stringFound = ""
+	let divFound
+	for (const searchedString of languageArray) {
+		if (Array.from(document.querySelectorAll("div")).filter(el => el.textContent.startsWith(searchedString))[0]) {
+			divFound = Array.from(document.querySelectorAll("div")).filter(el => el.textContent.startsWith(searchedString))[0]
+			stringFound = searchedString
+			break
+		}
+	}
+	if (divFound) {
+		let createdOnText = divFound.textContent
+		createdOnText = createdOnText.replace(stringFound, "")
+		scrapedData.createdOn = createdOnText
+	}
+	cb(null, scrapedData)
+}
+
 // load profile page and handle tabs switching
 const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	await tab.open(forgeUrl(profileUrl, ""))
@@ -385,9 +406,15 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 			await buster.saveText(await tab.getContent(), `${Date.now()}pageavant.html`)
 			await tab.click("div[data-key=\"tab_home\"] a")
 			await tab.waitUntilVisible("#pages_side_column")
-			result = Object.assign(result, await tab.evaluate(scrapeMainPageData, { profileUrl }))
+			result = Object.assign(result, await tab.evaluate(scrapeMainPageData))
+			await tab.wait(500)
+			await tab.click("div[data-key=\"tab_ads\"] a")
 			await tab.screenshot(`${Date.now()}page.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}page.html`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}pagen.html`)
+			await tab.wait(4000)
+			result = Object.assign(result, await tab.evaluate(scrapeInfoAndAds))
+			await tab.screenshot(`${Date.now()}page2.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}pagen2.html`)
 			return result
 		} catch (err) {
 			return { profileUrl, error: "Error scraping that Page"}

@@ -20,6 +20,8 @@ class Facebook {
 					if (id) {
 						return "https://facebook.com/profile.php?id=" + id
 					}
+				} else if (url.includes("facebook.com/pg/")) {
+					return url
 				} else {
 					let path = urlObject.pathname.slice(1)
 					if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }

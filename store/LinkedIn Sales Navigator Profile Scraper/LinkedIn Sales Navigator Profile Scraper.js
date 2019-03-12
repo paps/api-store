@@ -14,6 +14,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000,
 })
 
 /* eslint-disable no-unused-vars */
@@ -69,19 +70,9 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
 
-const filterRows = (str, db) => {
-	for (const line of db) {
-		const regex = new RegExp(`/in/${line.profileId}($|/)`)
-		if (str.match(regex) || (str === line.baseUrl)) {
-			return false
-		}
-	}
-	return true
-}
-
 // main scraping function
 const scrapeProfile = (arg, cb) => {
-	const scrapedData = { query: arg.query, timestamp: (new Date()).toISOString(), salesNavigatorUrl: arg.salesNavigatorUrl}
+	const scrapedData = { salesNavigatorUrl: arg.salesNavigatorUrl}
 	const urlObject = new URL(arg.salesNavigatorUrl)
 	const vmid = urlObject.pathname.slice(14, urlObject.pathname.indexOf(","))
 	if (vmid) {
@@ -108,7 +99,7 @@ const scrapeProfile = (arg, cb) => {
 		scrapedData.currentCompanyDescription = jsonData.defaultPosition.description
 		scrapedData.currentCompanyLocation = jsonData.defaultPosition.location
 		scrapedData.currentCompanyName = jsonData.defaultPosition.companyName
-		scrapedData.currentTitle = jsonData.defaultPosition.title
+		scrapedData.currentJobTitle = jsonData.defaultPosition.title
 	}
 	if (jsonData.profilePictureDisplayImage) {
 		scrapedData.imgUrl = jsonData.profilePictureDisplayImage.artifacts[jsonData.profilePictureDisplayImage.artifacts.length - 1].fileIdentifyingUrlPathSegment
@@ -116,14 +107,19 @@ const scrapeProfile = (arg, cb) => {
 	scrapedData.summary = jsonData.summary
 	scrapedData.linkedinProfileUrl = jsonData.flagshipProfileUrl
 	if (document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position")) {
+		const jobDiv = document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position")
 		scrapedData.currentJob = document.querySelector(".profile-topcard__summary-position").textContent.split("\n").map(el => el.trim()).filter(el => el).join(" | ")
-		if (document.querySelector(".profile-topcard__summary-position a")) {
-			scrapedData.currentCompanyUrl = document.querySelector(".profile-topcard__summary-position a").href
+		if (jobDiv.querySelector(".profile-topcard__summary-position-title")) {
+			scrapedData.currentJobTitle = jobDiv.querySelector(".profile-topcard__summary-position-title").textContent
 		}
-		if (document.querySelector(".profile-topcard__summary-position [data-entity-hovercard-id]")) {
-			scrapedData.currentCompanyName = document.querySelector(".profile-topcard__summary-position [data-entity-hovercard-id]").textContent
+		if (jobDiv.querySelector(".align-self-center a")) {
+			scrapedData.currentCompanyUrl = jobDiv.querySelector(".align-self-center a").href
+			scrapedData.currentCompanyName = jobDiv.querySelector(".align-self-center a").textContent
+		} else if (jobDiv.querySelector(".align-self-center span:nth-child(2)")) {
+			scrapedData.currentCompanyName = jobDiv.querySelector(".align-self-center span:nth-child(2)").textContent
 		}
 	}
+	document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position .profile-topcard__summary-position-title").textContent
 	if (document.querySelector(".profile-topcard__previous-positions .profile-topcard__summary-position")) {
 		scrapedData.pastJob = document.querySelector(".profile-topcard__previous-positions .profile-topcard__summary-position").textContent.split("\n").map(el => el.trim()).filter(el => el).join(" | ")
 		if (document.querySelector(".profile-topcard__summary-position a")) {
@@ -186,6 +182,8 @@ const scrapeProfile = (arg, cb) => {
 			scrapedData.address = address
 		}
 	}
+	scrapedData.query = arg.query
+	scrapedData.timestamp = (new Date()).toISOString()
 	cb(null, scrapedData)
 }
 
@@ -193,7 +191,7 @@ const scrapeProfile = (arg, cb) => {
 const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, takeScreenshot) => {
 	try {
 		await tab.open(salesNavigatorUrl)
-		await tab.waitUntilVisible(".profile-topcard")
+		await tab.waitUntilVisible(".profile-topcard", 15000)
 		await tab.wait(1000)
 	} catch (err) {
 		const location = await tab.getUrl()
@@ -201,7 +199,7 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 			utils.log("Error opening the profile, you may not have a Sales Navigator Account.", "error")
 			return { query, timestamp: (new Date()).toISOString(), error: "Not a Sales Navigator Account" }
 		}
-		utils.log("Couldn't load the profile...", "error")
+		utils.log(`Couldn't load the profile: ${err}`, "error")
 		return { query, timestamp: (new Date()).toISOString(), error: "Couldn't load the profile" }
 	}
 	let scrapedData = {}
@@ -268,9 +266,116 @@ const getCompanyWebsite = async (tab, url, utils) => {
 	}
 }
 
+const extractJobs = (arg, cb) => {
+	const jobs = document.querySelectorAll("#profile-positions li.profile-position")
+	const scrapedJobs = []
+	for (const job of jobs) {
+		const scrapedJob = {}
+		if (job.querySelector(".profile-position__secondary-title span:not(.visually-hidden)")) {
+			scrapedJob.companyName = job.querySelector(".profile-position__secondary-title span:not(.visually-hidden)").textContent.trim()
+		}
+		if (job.querySelector("dl a")) {
+			let companyUrl = job.querySelector("dl a").href
+			if (companyUrl.includes(".com/sales/company/")) {
+				companyUrl = companyUrl.replace("/sales/", "/")
+			}
+			scrapedJob.companyUrl = companyUrl
+		}
+		if (job.querySelector(".profile-position__title")) {
+			scrapedJob.jobTitle = job.querySelector(".profile-position__title").textContent.trim()
+		}
+		if (job.querySelector(".profile-position__dates-employed")) {
+			job.querySelector(".profile-position__dates-employed").removeChild(job.querySelector(".profile-position__dates-employed span"))
+			scrapedJob.dateRange = job.querySelector(".profile-position__dates-employed").textContent.trim()
+		}
+		if (job.querySelector(".profile-position__company-location")) {
+			job.querySelector(".profile-position__company-location").removeChild(job.querySelector(".profile-position__company-location span"))
+			scrapedJob.location = job.querySelector(".profile-position__company-location").textContent.trim()
+		}
+		if (job.querySelector(".profile-position__description")) {
+			job.querySelector(".profile-position__description").removeChild(job.querySelector(".profile-position__description span"))
+			scrapedJob.description = job.querySelector(".profile-position__description").textContent.trim()
+		}
+		scrapedJobs.push(scrapedJob)
+	}
+	cb(null, scrapedJobs)
+}
+
+const extractSchools = (arg, cb) => {
+	const schools = document.querySelectorAll("#profile-educations li.profile-education")
+	const scrapedSchools = []
+	for (const school of schools) {
+		const scrapedSchool = {}
+		if (school.querySelector(".profile-education__school-name")) {
+			scrapedSchool.schoolName = school.querySelector(".profile-education__school-name").textContent.trim()
+		}
+		if (school.querySelector(".profile-education__school-name a")) {
+			scrapedSchool.schoolUrl = school.querySelector(".profile-education__school-name a").href
+		}
+		if (school.querySelector(".profile-education__degree span:not(.visually-hidden)")) {
+			scrapedSchool.degree = school.querySelector(".profile-education__degree span:not(.visually-hidden)").textContent.trim()
+		}
+		if (school.querySelector(".profile-education__field-of-study span:not(.visually-hidden)")) {
+			scrapedSchool.degreeSpec = school.querySelector(".profile-education__field-of-study span:not(.visually-hidden)").textContent.trim()
+		}
+		if (school.querySelector(".profile-education__dates span:not(.visually-hidden)")) {
+			scrapedSchool.dateRange = school.querySelector(".profile-education__dates span:not(.visually-hidden)").textContent.trim()
+		}
+		scrapedSchools.push(scrapedSchool)
+	}
+	cb(null, scrapedSchools)
+}
+
+const extractSkills = (arg, cb) => {
+	const skills = document.querySelectorAll("li.profile-skills__list-item")
+	const scrapedSkills = []
+	for (const skill of skills) {
+		const scrapedSkill = {}
+		if (skill.querySelector(".profile-skills__skill-name")) {
+			scrapedSkill.name = skill.querySelector(".profile-skills__skill-name").textContent.trim()
+		}
+		if (skill.querySelector(".profile-skills__endorsement-count")) {
+			scrapedSkill.endorsements = parseInt(skill.querySelector(".profile-skills__endorsement-count").textContent.trim(), 10)
+		}
+		scrapedSkills.push(scrapedSkill)
+	}
+	cb(null, scrapedSkills)
+}
+
+const getSkills = async (tab) => {
+	if (await tab.isVisible("button.profile-section__expansion-button")) {
+		await tab.click("button.profile-section__expansion-button")
+		await tab.wait(500)
+	}
+	const skills = await tab.evaluate(extractSkills)
+	return skills
+}
+
+const craftCsv = (json) => {
+	const resultCsv = []
+	for (const profile of json) {
+		const resultObject = {}
+		for (const key of Object.keys(profile)) {
+			if (key !== "jobs" && key !== "schools" && key !== "skills") {
+				resultObject[key] = profile[key]
+			} else if (key !== "skills") {
+				const newKey = key.slice(0, -1)
+				for (let i = 0; i < profile[key].length; i++) {
+					for (const secondKey of Object.keys(profile[key][i])) {
+						resultObject[secondKey + (i + 1)] = profile[key][i][secondKey]
+					}
+				}
+			}
+		}
+		resultCsv.push(resultObject)
+	}
+	return resultCsv
+}
+
+
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, scrapeJobs, scrapeSchools, scrapeSkills, saveImg, takeScreenshot} = utils.validateArguments()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -303,9 +408,8 @@ const getCompanyWebsite = async (tab, url, utils) => {
 	urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
-
 	const linkedInScraper = new LinkedInScraper(utils, null, nick, buster, null)
-
+	let currentResult = []
 	for (let profileUrl of urls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -329,6 +433,37 @@ const getCompanyWebsite = async (tab, url, utils) => {
 				const scrapedData = await loadAndScrapeProfile(tab, profileUrl, salesNavigatorUrl, saveImg, takeScreenshot)
 				if (scrapedData.introducerSalesNavigatorUrl) {
 					scrapedData.introducerProfileUrl = linkedInScraper.salesNavigatorUrlCleaner(scrapedData.introducerSalesNavigatorUrl, true)
+				}
+				if (scrapeJobs) {
+					try {
+						const jobs = await tab.evaluate(extractJobs)
+						if (jobs.length) {
+							scrapedData.jobs = jobs
+						}
+					} catch (err) {
+						utils.log(`Couldn't scrape jobs: ${err}`, "error")
+					}
+				}
+				if (scrapeSchools) {
+					try {
+						const schools = await tab.evaluate(extractSchools)
+						if (schools.length) {
+							scrapedData.schools = schools
+						}
+					} catch (err) {
+						utils.log(`Couldn't scrape schools: ${err}`, "error")
+					}
+				}
+				if (scrapeSkills) {
+					try {
+						const skills = await getSkills(tab)
+						if (skills.length) {
+							scrapedData.skills = skills
+							scrapedData.allSkills = skills.map(el => el.name).join(", ")
+						}
+					} catch (err) {
+						utils.log(`Couldn't scrape skills: ${err}`, "error")
+					}
 				}
 				try {
 					const companyTab = await nick.newTab()
@@ -361,13 +496,15 @@ const getCompanyWebsite = async (tab, url, utils) => {
 						utils.log(`Error from Hunter: ${err}`, "error")
 					}
 				}
-				result.push(scrapedData)
+				currentResult.push(scrapedData)
 			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${profileUrl} due to: ${err.message || err}`, "warning")
 		}
 	}
-	await utils.saveResults(result, result, csvName)
+	const craftedCsv = craftCsv(currentResult)
+	result.push(...craftedCsv)
+	await utils.saveResults(currentResult, result, csvName)
 	nick.exit(0)
 
 })()
