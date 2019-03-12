@@ -2,7 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
+// "phantombuster flags: save-folder"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
@@ -10,12 +10,21 @@ import StoreUtilities from "./lib-StoreUtilities"
 
 import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 
+import * as fs from "fs"
+// @ts-ignore
+// TODO: find a better alternative
+import { pack } from "sqlite3/node_modules/tar-pack"
+
 const buster = new Buster()
 const utils = new StoreUtilities(buster)
 
+const DL_DIR = "invoices"
+
+fs.mkdirSync(DL_DIR) // Create /invoices folder on agent FS
+
 declare interface IApiParams {
-	csidCookie: string,
-	sidCookie: string,
+	sessionCookieCsid: string,
+	sessionCookieSid: string,
 }
 
 declare interface IMutableApiParams {
@@ -41,8 +50,23 @@ declare interface IScrapingResult {
 }
 
 const DB_NAME = "result"
-const INVOICE_ZIP = `invoices-${Date.now()}.zip`
+const INVOICE_ZIP = `invoices-${Date.now()}.tar.gz`
 // }
+
+/**
+ * @async
+ * @description Function used to pack all files in DL_DIR directory into tar.gz file
+ * @param {String} archiveName - archive name
+ * @return {Promise<string>} archive name
+ */
+const createArchive = async (archiveName: string): Promise<string> => {
+	return new Promise((resolve, reject) => {
+		pack(`${process.cwd()}/${DL_DIR}`)
+			.pipe(fs.createWriteStream(archiveName))
+			.on("error", (err: Error) => reject(err))
+			.on("close", () => resolve(archiveName))
+	})
+}
 
 const getCsrfToken = (): string|null => {
 	const sel = document.querySelector("script#__CSRF_TOKEN__")
@@ -87,7 +111,7 @@ const doXHR = (bundle: IXhrBundle): Promise<string|IUnknownObject|IXhrError> => 
 	return xhrCall(bundle)
 }
 
-const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownObject, csrf: string): IUnknownObject => {
+const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownObject, csrf: string): Promise<IUnknownObject> => {
 	const res: IUnknownObject = {}
 
 	let rating: IUnknownObject = {}
@@ -117,18 +141,17 @@ const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownO
 	res.distance = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance as number : null
 	res.distanceUnity = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance_label as string : null
 	res.map = tripInformation && tripInformation.tripMap ? (tripInformation.tripMap as IUnknownObject).url : null
-
-	res.filename = await buster.download(invoice.data.invoice.url, `${one.uuid}.pdf`)
+	res.filename = await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
 
 	// res.city =
 	res.card = card ? card.name : null
 	return res
 }
 
-const formatTrips = async (page: puppeteer.Page, xhrResults: IUnknownObject, csrf: string): IUnknownObject[] => {
+const formatTrips = async (page: puppeteer.Page, xhrResults: IUnknownObject, csrf: string): Promise<IUnknownObject[]> => {
 	const res: IUnknownObject[] = []
 
-	for (const one of (xhrResults.data.trips as IUnknownObject).trips as IUnknownObject[]) {
+	for (const one of ((xhrResults.data as IUnknownObject).trips as IUnknownObject).trips as IUnknownObject[]) {
 		res.push(await _format(page, one, xhrResults, csrf))
 	}
 
@@ -169,13 +192,13 @@ const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
 			req.data = JSON.stringify(req.data)
 			const tmp: IUnknownObject = await page.evaluate(doXHR, req) as IUnknownObject
 			const data: IUnknownObject = tmp.data as IUnknownObject
-			if (data.data && data.trips.pagingResult) {
-				if (!(data.trips.pagingResult as IUnknownObject).hasMore) {
+			if (data.data && (data.trips as IUnknownObject).pagingResult) {
+				if (!((data.trips as IUnknownObject).pagingResult as IUnknownObject).hasMore) {
 					hasMore = false
 					continue
 				} else {
-					const nextCursor: string = (data.trips.pagingResult as IUnknownObject).nextCursor as string
-					bundle.data.offset = nextCursor
+					const nextCursor: string = ((data.trips as IUnknownObject).pagingResult as IUnknownObject).nextCursor as string
+					(bundle.data as IUnknownObject).offset = nextCursor
 				}
 			}
 			res.trips = res.trips.concat(await formatTrips(page, tmp, token as string))
@@ -188,7 +211,7 @@ const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
 	return res
 }
 
-const login = async (page: puppeteer.Page, csid: string, sid: string) => {
+const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<void> => {
 	const loginSel = "div[data-identity=\"user-name-desktop\"]"
 	try {
 		utils.log("Connecting to Uber...", "loading")
@@ -208,8 +231,8 @@ const login = async (page: puppeteer.Page, csid: string, sid: string) => {
 		}, loginSel)
 		utils.log(`Connected as ${name}`, "done")
 	} catch (err) {
-		console.log(err.message || err)
-		await page.screenshot({ path: "error.png", type: "png", fullPage: true })
+		utils.log("Can't connect with those session cookies", "error")
+		process.exit()
 	}
 }
 
@@ -217,18 +240,20 @@ const login = async (page: puppeteer.Page, csid: string, sid: string) => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { csidCookie, sidCookie } = args as IApiParams
+	const { sessionCookieCsid, sessionCookieSid } = args as IApiParams
 	let { csvName } = args as IMutableApiParams
 
 	if (!csvName) {
 		csvName = DB_NAME
 	}
 
-	await login(page, csidCookie, sidCookie)
+	await login(page, sessionCookieCsid, sessionCookieSid)
 	const res = await getAllTrips(page)
 	res.trips.forEach((el) => {
 		el.timestamp = (new Date()).toISOString()
 	})
+	const archive = await createArchive(INVOICE_ZIP)
+	await buster.save(archive, archive)
 	await page.close()
 	await browser.close()
 	await utils.saveResults(res.trips, res.trips, csvName, null, true)

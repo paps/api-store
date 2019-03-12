@@ -16,10 +16,10 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-					"csidCookie": {
+					"sessionCookieCsid": {
 						"label": "csid session cookie <a target=\"_blank\" href=\"\">(?)</a>"
 					},
-					"sidCookie": {
+					"sessionCookieSid": {
 						"label": "sid session cookie"
 					},
 					"from": {
@@ -33,6 +33,10 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"mail": {
+						"label": "Email for been notified",
+						"inputType": "email"
 					}
 				}
 			}
@@ -41,11 +45,11 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"csidCookie": {
+			"sessionCookieCsid": {
 				"type": "string",
 				"required": true
 			},
-			"sidCookie": {
+			"sessionCookieSid": {
 				"type": "string",
 				"required": true
 			},
@@ -56,6 +60,9 @@
 				"type": "string"
 			},
 			"csvName": {
+				"type": "string"
+			},
+			"mail": {
 				"type": "string"
 			}
 		}
