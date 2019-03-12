@@ -144,9 +144,10 @@ const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownO
 	res.distance = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance as number : null
 	res.distanceUnity = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance_label as string : null
 	res.map = tripInformation && tripInformation.tripMap ? (tripInformation.tripMap as IUnknownObject).url : null
-	// res.filename =
-	await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
-	// res.city =
+	res.stars = rating && rating.data ? (rating.data as IUnknownObject).rating : null
+	if (invoice && invoice.data && invoice.data.invoice && invoice.data.invoice.url) {
+		await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
+	}
 	res.card = card ? card.name : null
 	return res
 }
