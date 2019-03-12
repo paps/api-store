@@ -25,6 +25,9 @@ fs.mkdirSync(DL_DIR) // Create /invoices folder on agent FS
 declare interface IApiParams {
 	sessionCookieCsid: string,
 	sessionCookieSid: string,
+	from?: string,
+	to?: string,
+	mail?: string,
 }
 
 declare interface IMutableApiParams {
@@ -141,8 +144,8 @@ const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownO
 	res.distance = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance as number : null
 	res.distanceUnity = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance_label as string : null
 	res.map = tripInformation && tripInformation.tripMap ? (tripInformation.tripMap as IUnknownObject).url : null
-	res.filename = await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
-
+	// res.filename =
+	await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
 	// res.city =
 	res.card = card ? card.name : null
 	return res
@@ -158,7 +161,7 @@ const formatTrips = async (page: puppeteer.Page, xhrResults: IUnknownObject, csr
 	return res
 }
 
-const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
+const getAllTrips = async (page: puppeteer.Page, from: string|null = null, to: string|null = null): Promise<IScrapingResult> => {
 	let token = null
 	const res = { trips: [] , timestamp: (new Date()).toISOString() } as IScrapingResult
 	const bundle: IXhrBundle = {
@@ -169,8 +172,8 @@ const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
 		},
 		data: {
 			range: {
-				fromTime: null,
-				toTime: null,
+				fromTime: from,
+				toTime: to,
 			},
 			limit: 10,
 			offset: "0",
@@ -192,6 +195,10 @@ const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
 			req.data = JSON.stringify(req.data)
 			const tmp: IUnknownObject = await page.evaluate(doXHR, req) as IUnknownObject
 			const data: IUnknownObject = tmp.data as IUnknownObject
+
+			if (res.trips) {
+				res.trips = res.trips.concat(utils.filterRightOuter(res.trips, await formatTrips(page, tmp, token as string)))
+			}
 			if (data.data && (data.trips as IUnknownObject).pagingResult) {
 				if (!((data.trips as IUnknownObject).pagingResult as IUnknownObject).hasMore) {
 					hasMore = false
@@ -201,13 +208,14 @@ const getAllTrips = async (page: puppeteer.Page): Promise<IScrapingResult> => {
 					(bundle.data as IUnknownObject).offset = nextCursor
 				}
 			}
-			res.trips = res.trips.concat(await formatTrips(page, tmp, token as string))
+			utils.log(`${res.trips.length} trip${ res.trips.length === 1 ? "" : "s" } found`, "info")
 		}
 	} catch (err) {
 		const error = `Can't get trips due to: ${err.message || err}`
 		utils.log(err, "warning")
 		res.error = error
 	}
+	utils.log(`${res.trips.length} trip${ res.trips.length === 1 ? "" : "s" } scraped`, "done")
 	return res
 }
 
@@ -240,20 +248,37 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { sessionCookieCsid, sessionCookieSid } = args as IApiParams
+	const { sessionCookieCsid, sessionCookieSid, from, to, mail } = args as IApiParams
 	let { csvName } = args as IMutableApiParams
+	let archiveURL = null
 
 	if (!csvName) {
 		csvName = DB_NAME
 	}
 
 	await login(page, sessionCookieCsid, sessionCookieSid)
-	const res = await getAllTrips(page)
+	const res = await getAllTrips(page, from, to)
 	res.trips.forEach((el) => {
 		el.timestamp = (new Date()).toISOString()
 	})
-	const archive = await createArchive(INVOICE_ZIP)
-	await buster.save(archive, archive)
+
+	let archive = null
+	if (res.trips.length > 0) {
+		try {
+			archive = await createArchive(INVOICE_ZIP)
+		} catch (err) {
+			utils.log(`Can't create invoices archive due to: ${err.message || err}`, "warning")
+		}
+
+		if (archive) {
+			archiveURL = await buster.save(archive as string, archive)
+		}
+
+		if (mail) {
+			await buster.mail("Your Uber invoices are ready!", `Hello, you can find your Uber invoices ${ from && to ? `(Between ${from} and ${to})` : ""} here: ${archiveURL}\n\nHappy scraping\n` , mail)
+		}
+	}
+
 	await page.close()
 	await browser.close()
 	await utils.saveResults(res.trips, res.trips, csvName, null, true)
