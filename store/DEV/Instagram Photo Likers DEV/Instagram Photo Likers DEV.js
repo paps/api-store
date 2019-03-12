@@ -243,7 +243,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 		}
 		if (!graphqlUrl) {
 			utils.log("Can't access likers list.", "warning")
-			return ({ postUrl, error: "Can't access likers list"})
+			return ({ postUrl, timestamp: (new Date()).toISOString(), error: "Can't access likers list"})
 		}
 	}
 	let results = []
@@ -322,8 +322,6 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 	await instagram.login(tab, sessionCookie)
 
 	let result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length
-	console.log("initialResultLength", initialResultLength)
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
@@ -347,7 +345,7 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
 
-
+	let currentResult = []
 	for (let postUrl of postUrls) {
 		let resuming = false
 		if (agentObject && postUrl === agentObject.lastQuery) {
@@ -365,14 +363,14 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 			const urlObject = new URL(postUrl)
 			if (!urlObject.pathname.startsWith("/p/")) {
 				utils.log(`${postUrl} isn't a valid post URL.`, "warning")
-				result.push({ postUrl, error: "Not a post URL", timestamp: (new Date()).toISOString() })
+				currentResult.push({ postUrl, timestamp: (new Date()).toISOString(), error: "Not a post URL" })
 				continue
 			}
 			const tempResult = await loadAndScrapeLikers(tab, postUrl, numberOfLikers, resuming)
 			if (!tempResult.error) {
 				utils.log(`Got ${tempResult.length} likers for ${postUrl}`, "done")
 			}
-			result = result.concat(tempResult)
+			currentResult = currentResult.concat(tempResult)
 			if (rateLimited) {
 				if (tempResult.length) {
 					utils.log("Instagram rate limit reached, you should try again in 15min.", "info")
@@ -391,15 +389,17 @@ const loadAndScrapeLikers = async (tab, postUrl, numberOfLikers, resuming) => {
 	if (rateLimited) {
 		interrupted = true
 	}
-	const finalLikersCount = result.filter(el => !el.error).length
-	utils.log(`Got ${finalLikersCount} likers in total.`, "done")
-	if (result.length !== initialResultLength) {
-		if (interrupted) { 
+
+	if (currentResult.length) {
+		if (interrupted) {
 			await buster.setAgentObject({ nextUrl, lastQuery })
 		} else {
 			await buster.setAgentObject({})
 		}
-		await utils.saveResults(result, result, csvName)
+		result.push(...currentResult)
+		const finalLikersCount = result.filter(el => !el.error).length
+		utils.log(`Got ${finalLikersCount} likers in total.`, "done")
+		await utils.saveResults(currentResult, result, csvName)
 	}
 	nick.exit(0)
 })()
