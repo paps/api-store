@@ -1,6 +1,14 @@
 declare module "phantombuster" {
 
 	class Buster {
+		public agentId: number
+		public apiKey: string
+		public argument: object
+		public containerId: number
+		public retryCount: number
+		public maxRetries: number
+		public proxyAddress: string
+
 		public download(url: string, saveAs?: string, headers?: {[name: string]: string}): Promise<string>
 		public save(url: string, saveAs?: string, headers?: {[name: string]: string}): Promise<string>
 		public saveFolder(localFolder?: string, storageFolder?: string): Promise<string>
