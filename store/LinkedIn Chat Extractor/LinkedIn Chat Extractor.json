@@ -57,6 +57,9 @@
 					"csvName": {
 						"label": "Name of resulting CSV name",
 						"placeholder": "result"
+					},
+					"noDatabase": {
+						"rightLabel": "Scrape all URLs <b>even</b> they were scraped in past executions"
 					}
 				}
 			}
@@ -92,6 +95,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"noDatabase": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [
