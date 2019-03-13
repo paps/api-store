@@ -29,8 +29,12 @@
 			"options": {
 				"fields": {
 					"url": {
-						"helper": "This API will use up your Captcha counter.",
-						"label": "AngelList URL (<a target=\"_blank\" href=\"/api-store/3678/angellist-market-companies-extractor#section_4findyourangellistmarket\">?</a>)",
+						"helper": "This API will can consume captchas",
+						"label": "AngelList OR Google Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/3678/angellist-market-companies-extractor#section_4findyourangellistmarket\">?</a>)",
+						"type": "url"
+					},
+					"columnName": {
+						"label": "Column name where Angel.co URLs are stored",
 						"type": "url"
 					},
 					"limit": {
@@ -53,6 +57,9 @@
 				"type": "string",
 				"title": "AngelList URL",
 				"required": true
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"limit": {
 				"type": "number",
