@@ -1,16 +1,10 @@
-# Extract every comments out of a list of Instagram posts
+# Auto comment Instagram posts
 
-**Whoever is closest to his or her audience wins**. In order to deliver the best content, product or service to your audience, you have to know what they think, like, not like, and so much more.
-
-Too many brands _assume_ what their audience likes. This API is here to validate, or better, invalidate, your assumptions and have **scientific intelligence over reactions to your content**.
-
-Our tool will extract from a list of Instagram every single comments' and all available information. What will you do with it: Spreadsheet statistics? Language analysis to find new keywords? Something else? 
 
 # What will you need? ⚙️
 
 - **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in it.
-- **Number of comments per post**: The number of comments you want to collect per post. If left empty, the API will scrape all comments.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in one column, a list of messages in another column.
 - **Number of posts per launch**: The number of posts to process per API launch.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
