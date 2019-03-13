@@ -89,6 +89,7 @@ const isTwitterProfile = url => {
 		try {
 			const scrapedProfile = await twitter.scrapeProfile(tab, isUrl(profile) ? profile : `https://www.twitter.com/${profile}`, true)
 			scrapedProfile.query = profile
+			scrapedProfile.timestamp = (new Date()).toISOString()
 			scrapingResult.push(scrapedProfile)
 		} catch (err) {
 			utils.log(`Error while scraping ${profile}: ${err.message || err}`, "warning")
