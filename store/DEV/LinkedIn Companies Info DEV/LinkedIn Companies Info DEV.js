@@ -371,8 +371,8 @@ const getCompanyInfo = async (tab, link, query, saveImg) => {
 			disconnected = true
 			return {}
 		} else {
-			utils.log(`Error accessing company page: ${err} with current page:${currentUrl}`)
-			return { link, query, invalidResults: "Couldn't access company profile" }
+			utils.log(`Error accessing company page: ${err} with current page:${currentUrl}`, "error")
+			return { link, query, timestamp: (new Date()).toISOString(), invalidResults: "Couldn't access company profile" }
 		}
 	}
 }
@@ -396,9 +396,11 @@ const isLinkedUrl = url => {
 	if (!csvName) {
 		csvName = "result"
 	}
+	let singleInput
 	if (typeof spreadsheetUrl === "string") {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]
+			singleInput = true
 		} else {
 			companies = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
@@ -409,14 +411,17 @@ const isLinkedUrl = url => {
 	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb(csvName + ".csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
-	companies = companies.filter(el => el !== "no url" && utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
-	utils.log(`Processing ${companies.length} lines...`, "info")
+	if (!singleInput) {
+		companies = companies.filter(el => el !== "no url" && utils.checkDb(el, result, "query")).slice(0, companiesPerLaunch)
+	}
 	if (companies.length < 1) {
 		utils.log("Spreadsheet is empty OR all URLs are already scraped", "warning")
 		nick.exit(0)
 	}
+	utils.log(`Processing ${companies.length} lines...`, "info")
 	console.log(`Companies to scrape: ${JSON.stringify(companies.slice(0, 500), null, 4)}`)
 	await linkedIn.login(tab, sessionCookie)
+	let currentResult = []
 	for (const company of companies) {
 		if (company.length > 0) {
 			fullUrl = isLinkedUrl(company)
@@ -448,7 +453,7 @@ const isLinkedUrl = url => {
 							}
 						}
 						if (!link) {
-							result.push({ query: company, error:"No results found"})
+							currentResult.push({ query: company, timestamp: (new Date()).toISOString(), error:"No results found" })
 							throw "No results were found."
 						}
 					}
@@ -469,7 +474,7 @@ const isLinkedUrl = url => {
 					utils.log("Cookie session invalidated, exiting...", "error")
 					break
 				} else {
-					result.push(newResult)
+					currentResult.push(newResult)
 					if (!newResult.invalidResults) {
 						utils.log(`Scraped data for ${newResult.name ? `company ${newResult.name}` : company}.`, "done")
 					}
@@ -486,7 +491,12 @@ const isLinkedUrl = url => {
 		}
 	}
 	await linkedIn.saveCookie()
-	await utils.saveResults(result, result, csvName)
+	for (const line of currentResult) {
+		if (!result.find(el => el.query === line.query)) {
+			result.push(line)
+		}
+	}
+	await utils.saveResults(currentResult, result, csvName)
 	nick.exit()
 })()
 	.catch(err => {
