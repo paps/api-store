@@ -335,7 +335,7 @@ class StoreUtilities {
 	/**
 	 * @param {Array<Object>} csv - CSV content
 	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
-	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @param {number} [defaultColumn] - column to use if columnName isn't found
 	 * @return {Array<String>|Array<Object>} CSV rows with the columns
 	 */
 	extractCsvRows(csv, columnName, defaultColumn) {
@@ -717,10 +717,11 @@ class StoreUtilities {
 	}
 
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
-	async saveResults2(jsonResult, csvResult, name = "result", schema, saveJson = true) {
+	async saveResults2(jsonResult, csvResult, name = "result") {
 		let date = new Date()
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
+		console.log("csvResult", csvResult)
 		const fields = this._getFieldsFromArray(csvResult)
 		const backupResultObject = {}
 
@@ -740,14 +741,21 @@ class StoreUtilities {
 			let newJsonExport = fields.join(",") + "\n"
 			for (let i = 0; i < csvResult.length; i++) {
 				for (const val of fields) {
-					if (csvResult[i][val]) {
-						newJsonExport += csvResult[i][val]
-					} else {
-						newJsonExport += ","
+					let value = csvResult[i][val]
+					if (value) {
+						value = value.toString()
+						if (value.includes("\n") || value.includes("\"") || value.includes(",")) {
+							newJsonExport += "\"" + value.replace(/"+/g, "\"\"") + "\""
+						} else {
+							newJsonExport += value
+						}
 					}
+					newJsonExport += ","
 				}
-				newJsonExport += "\n"
+				newJsonExport = newJsonExport.slice(0, -1) + "\n"
 			}
+			newJsonExport = newJsonExport.slice(0, -1)
+			console.log("newJsonExport:", newJsonExport)
 			const csvUrl = await this.buster.saveText(newJsonExport, name + ".csv")
 			backupResultObject.csvURL = csvUrl
 			this.log(`CSV saved at ${csvUrl}`, "done")
@@ -755,7 +763,7 @@ class StoreUtilities {
 			date = new Date()
 			csvResult = null
 		}
-		if (saveJson) {
+		if (true) {
 			const stringified = JSON.stringify(jsonResult)
 			console.log("stringifiedL", stringified.length)
 			const jsonUrl = await this.buster.saveText(stringified, name + ".json")
@@ -811,6 +819,7 @@ class StoreUtilities {
 				const httpRes = await needle("get", url)
 				// Trying to access an unknown file in s3 will make an 403 HTTP status code for the response
 				if (httpRes.raw && httpRes.statusCode === 200) {
+					console.log("httpRes.raw.toString()", httpRes.raw.toString())
 					const data = parseContent ? Papa.parse(httpRes.raw.toString(), { header: true }).data : httpRes.raw.toString()
 					return data
 				} else {

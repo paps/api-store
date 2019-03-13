@@ -323,17 +323,27 @@ class StoreUtilities {
 	/**
 	 * @param {Array<Object>} csv - CSV content
 	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
-	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @param {number} [defaultColumn] - column to use if columnName isn't found
 	 * @return {Array<String>|Array<Object>} CSV rows with the columns
 	 */
-	extractCsvRows(csv, columnName) {
-		let column = 0
+	extractCsvRows(csv, columnName, defaultColumn) {
+		if (!defaultColumn) {
+			defaultColumn = 0
+		}
+		let rank = ""
+		if (defaultColumn === 0) {
+			rank = "first"
+		}
+		if (defaultColumn === 1) {
+			rank = "second"
+		}
+		let column = defaultColumn
 		let rows = []
 		if (typeof columnName === "string" && columnName) {
 			column = csv[0].findIndex(el => el === columnName)
 			if (column < 0) {
-				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-				column = 0
+				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+				column = defaultColumn
 			} else {
 				csv.shift()
 			}
@@ -348,8 +358,8 @@ class StoreUtilities {
 			for (const field of columns) {
 				let index = csv[0].findIndex(cell => cell === field)
 				if (index < 0) {
-					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-					index = 0
+					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+					index = defaultColumn
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}

@@ -82,13 +82,14 @@ const postComment = async (page: puppeteer.Page, query: string, messages: string
 		_csvName = "result"
 	}
 	const _spreadsheetUrl = spreadsheetUrl as string
+	const _sessionCookie = sessionCookie as string
 	let _columnNameProfiles = columnNameProfiles as string
 	const _columnNameMessages = columnNameMessages as string
 	let _numberOfPostsPerLaunch = numberOfPostsPerLaunch as number
 	browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
-	await instagram.login(page, sessionCookie)
+	await instagram.login(page, _sessionCookie)
 
 	let result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 
