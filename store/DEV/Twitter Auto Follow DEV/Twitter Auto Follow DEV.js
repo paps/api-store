@@ -54,6 +54,7 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
 		}
 		return true
 	})
+	result = result.filter(el => el)
 	if (result.length === 0) {
 		utils.log("Every account from this list is already added.", "warning")
 		await buster.setResultObject([])
@@ -171,7 +172,6 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, action) => {
 			newAdd.handle = profile
 		}
 		try {
-			console.log("subs:", newAdd)
 			await subscribe(tab, newAdd.url, action)
 			if (!newAdd.handle) {
 				const url = await tab.getUrl()
