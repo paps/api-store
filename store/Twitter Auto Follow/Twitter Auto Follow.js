@@ -160,10 +160,10 @@ const subscribeToAll = async (tab, profiles, numberOfAddsPerLaunch, action) => {
 		if (pmatch) {
 			newAdd.url = profile
 			newAdd.handle = removeNonPrintableChars(pmatch[1])
-		} else if (profile.match(/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/)) { // Check if profile is a valid URL
-			newAdd.url = profile
 		} else if (profile.includes("twitter.com/@")) { // ugly fix because twitter.com/@handle URLs are a thing too
 			newAdd.url = profile.replace(".com/@", ".com/")
+		} else if (utils.isUrl(profile)) { // Check if profile is a valid URL
+			newAdd.url = profile
 		} else {
 			newAdd.url = `https://twitter.com/${profile}`
 			newAdd.handle = profile
