@@ -11,6 +11,11 @@ import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 
 import * as fs from "fs"
+
+// @ts-ignore
+// TODO: find a way to fix tslint silly warning
+import needle from "needle"
+
 // @ts-ignore
 // TODO: find a better alternative
 import { pack } from "sqlite3/node_modules/tar-pack"
@@ -50,6 +55,69 @@ declare interface IScrapingResult {
 	trips: IUnknownObject[],
 	timestamp: string,
 	error?: string
+}
+
+declare interface ITripInformations {
+	status: string,
+	data: {
+		data: {
+			tripUUID: string,
+		},
+		trip: {
+			uuid: string,
+			status: string,
+			clientUUID: string,
+			driverUUID: string,
+			paymentProfileUUID: string,
+			cityID: number,
+			countryID: number,
+			vehicleViewName: string,
+			vehicleViewID: number,
+			clientFare: number,
+			currencyCode: string,
+			begintripFormattedAddress: string,
+			dropoffFormattedAddress: string,
+			requestTime: string,
+			directory: string,
+			driver?: string,
+		},
+		tripMap: {
+			url: string,
+			mapType: string,
+			mapTypeCompatible: boolean,
+		},
+		receipt: {
+			distance: number,
+			distance_label: string,
+			duration: string,
+		},
+	},
+}
+
+declare interface IUberInvoice {
+	status: string,
+	data: {
+		data: {
+			tripId: string,
+			userId: string,
+			token: string,
+		},
+		invoiceUrls: string[],
+		createZip?: IUnknownObject,
+		zip?: IUnknownObject,
+		invoice: {
+			status: string,
+			url: string,
+		},
+	},
+}
+
+declare interface IRating {
+	status: string,
+	data?: {
+		rating: number,
+		tripId: string,
+	}
 }
 
 const DB_NAME = "result"
@@ -117,15 +185,29 @@ const doXHR = (bundle: IXhrBundle): Promise<string|IUnknownObject|IXhrError> => 
 const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownObject, csrf: string): Promise<IUnknownObject> => {
 	const res: IUnknownObject = {}
 
-	let rating: IUnknownObject = {}
-	let invoice: IUnknownObject = {}
-	let tripInformation: IUnknownObject = {}
+	let rating: IRating = {} as IRating
+	let invoice: IUberInvoice = {} as IUberInvoice
+	let tripInformation: ITripInformations = {} as ITripInformations
 
 	try {
-		tripInformation = await page.evaluate(doXHR, { method: "POST", url: "https://riders.uber.com/api/getTrip", headers: { "x-csrf-token": csrf, "Content-Type": "application/json" }, data: { tripUUID: one.uuid } }) as IUnknownObject
-		tripInformation = tripInformation.data as IUnknownObject
-		rating = await page.evaluate(doXHR, { method: "POST", url: "https://riders.uber.com/api/getRating", headers: { "x-csrf-token": csrf, "Content-Type": "application/json" }, data: { tripId: one.uuid } }) as IUnknownObject
-		invoice = await page.evaluate(doXHR, { method: "POST", url: "https://riders.uber.com/api/downloadInvoice", headers: { "x-csrf-token": csrf, "Content-Type": "application/json" }, data: { tripId: one.uuid } }) as IUnknownObject
+		tripInformation = await page.evaluate(doXHR, {
+			method: "POST",
+			url: "https://riders.uber.com/api/getTrip",
+			headers: { "x-csrf-token": csrf, "Content-Type": "application/json" },
+			data: { tripUUID: one.uuid },
+		}) as ITripInformations
+		// tripInformation = tripInformation.data as IUnknownObject
+		rating = await page.evaluate(doXHR, {
+			method: "POST",
+			url: "https://riders.uber.com/api/getRating",
+			headers: { "x-csrf-token": csrf, "Content-Type": "application/json" },
+			data: { tripId: one.uuid },
+		}) as IRating
+		invoice = await page.evaluate(doXHR, {
+			method: "POST", url: "https://riders.uber.com/api/downloadInvoice",
+			headers: { "x-csrf-token": csrf, "Content-Type": "application/json" },
+			data: { tripId: one.uuid },
+		}) as IUberInvoice
 	} catch (err) {
 		utils.log(err, "warning")
 	}
@@ -133,20 +215,34 @@ const _format = async (page: puppeteer.Page, one: IUnknownObject, xhr: IUnknownO
 	const card = ((xhr.data as IUnknownObject).paymentProfiles as IUnknownObject[]).find((el: IUnknownObject) => el.randomUuid === one.paymentProfileUUID)
 
 	res.isCanceled = one.status && one.status !== "COMPLETED"
-	res.car = one.vehiculeViewName
+	res.car = one.vehicleViewName
 	res.price = one.clientFare
 	res.currency = one.currencyCode
 	res.startLocation = one.begintripFormattedAddress
 	res.endLocation = one.dropoffFormattedAddress
 	res.startTime = one.requestTime
 	res.endTime = one.dropoffTime
-	res.duration = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).duration as string : null
-	res.distance = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance as number : null
-	res.distanceUnity = tripInformation && tripInformation.receipt ? (tripInformation.receipt as IUnknownObject).distance_label as string : null
-	res.map = tripInformation && tripInformation.tripMap ? (tripInformation.tripMap as IUnknownObject).url : null
-	res.stars = rating && rating.data ? (rating.data as IUnknownObject).rating : null
+
+	if (tripInformation && tripInformation.data) {
+		res.duration = tripInformation.data.receipt ? tripInformation.data.receipt.duration : null
+		res.distance = tripInformation.data.receipt ? tripInformation.data.receipt.distance : null
+		res.distanceUnity = tripInformation.data.receipt ? tripInformation.data.receipt.distance_label : null
+		res.map = tripInformation.data.tripMap ? tripInformation.data.tripMap.url : null
+	}
+
+	res.stars = rating && rating.data ? rating.data.rating : null
+
 	if (invoice && invoice.data && invoice.data.invoice && invoice.data.invoice.url) {
-		await buster.download(((invoice.data as IUnknownObject).invoice as IUnknownObject).url as string, `${DL_DIR}/${one.uuid}.pdf`)
+		const _tmp = await needle("get", invoice.data.invoice.url)
+		if (_tmp.statusCode === 200) {
+			let filename = _tmp.headers["content-disposition"].split(";").pop().trim()
+			if (filename) {
+				filename = filename.split("=").pop().replace(/\"/g, "")
+				fs.writeFileSync(`${DL_DIR}/${filename}`, _tmp.body)
+			}
+		} else {
+			utils.log(`Can't download invoice for trip ${one.uuid}`, "warning")
+		}
 	}
 	res.card = card ? card.name : null
 	return res
@@ -276,7 +372,7 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 		}
 
 		if (mail) {
-			await buster.mail("Your Uber invoices are ready!", `Hello, you can find your Uber invoices ${ from && to ? `(Between ${from} and ${to})` : ""} here: ${archiveURL}\n\nHappy scraping\n` , mail)
+			await buster.mail("Your Uber invoices are ready!", `Hello,\nyou can find your Uber invoices ${ from && to ? `(Between ${from} and ${to})` : ""} here: ${archiveURL}\n\nHappy scraping\n` , mail)
 		}
 	}
 
