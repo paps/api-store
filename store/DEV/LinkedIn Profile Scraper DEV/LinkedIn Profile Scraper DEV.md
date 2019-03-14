@@ -4,7 +4,7 @@ Salesman, recruiters, CEOs use it daily. But are you getting the most out of **y
 
 Are you able to **efficiently** build **qualitative** and **instantly actionable lists of prospects**, potential hirees and new contacts yet?
 
-LinkedIn Profile Scraper is your new tool to have the **best return to time spent** on LinkedIn **for you and your team**. 
+LinkedIn Profile Scraper is *the* tool to have the **best return to time spent** on LinkedIn **for you and your team**. 
 
 
 # Turn LinkedIn Profile URLs into detailed data.
@@ -20,6 +20,10 @@ It's all done **in the cloud** so you can close your laptop and focus on other t
 For most 1st degree connection, you will obtain their **email addresses** and **phone number**. 
 
 For people you're not connected to, Phantombuster Email Discovery mode will take over and provide you with **verified professional email addresses** that do **not** bounce. *Quality first*.
+
+# Tutorial
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/WxPvAtbCeOE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 # What will you need? ⚙️ 
 
@@ -42,32 +46,27 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 
-## 4. Linkedin authentication 🔑 { argument }
+## 4. LinkedIn authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
 
-Do it using our browser extension.
+<table>
+	<tr>
+		<td style="width: 50%;">
+			<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil">
+				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 100px;">
+			</a>
+		</td>
+		<td style="width: 50%;">
+			<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/">
+				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 100px;">
+			</a>
+		</td>
+	</tr>
+</table>
 
-* Using Chrome, go to your LinkedIn homepage and open the inspector
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS
-or
-→ <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
-* Locate the “Application” tab
 
-<center>![](https://phantombuster.imgix.net/api-store/li_at+1.png)</center>
-
-* Select “Cookies” > “http://www.linkedin.com” on the left menu.
-
-<center>![](https://phantombuster.imgix.net/api-store/li_at+2.png)</center>
-
-* Locate the “li_at” cookie.
-
-<center>![](https://phantombuster.imgix.net/api-store/li_at+3.png)</center/>
-
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your API _Configuration_
-
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
+If you're operating from another browser and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
 ## 5. Add a Google Spreadsheet 📑
 Below your session cookie you’ll find _Spreadsheet URL_
