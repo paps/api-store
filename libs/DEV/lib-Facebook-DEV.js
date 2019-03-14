@@ -20,6 +20,8 @@ class Facebook {
 					if (id) {
 						return "https://facebook.com/profile.php?id=" + id
 					}
+				} else if (url.includes("facebook.com/pg/")) {
+					return url
 				} else {
 					let path = urlObject.pathname.slice(1)
 					if (path.includes("/")) { path = path.slice(0, path.indexOf("/")) }
@@ -367,6 +369,9 @@ class Facebook {
 			try {
 				 await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
+				console.log("err:", err)
+				await tab.screenshot(`errz${new Date()}.png`)
+				await this.buster.saveText(await tab.getContent(), `errz${Date.now()}.html`)
 				// await tab.screenshot(`timeout${new Date()}.png`)
 				// await this.buster.saveText(await tab.getContent(), `timeout${Date.now()}.html`)
 				return "Timeout"

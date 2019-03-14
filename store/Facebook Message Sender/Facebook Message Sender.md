@@ -78,6 +78,7 @@ Below the column name you'll find the **message** configuration.
 
 In the message textbox you can write a private note which will be sent to the profile included in your Google spreadsheet.
 Note: Emojis aren't handled.
+Try sending a message to yourself to check that everything's working correctly!
 
 
 **\#fbFirstName\#** will be replaced in your message by the first name of the person you’re adding.
@@ -121,7 +122,7 @@ Please be aware that this API will manipulate your own account on your behalf.
 
 Since Phantombuster's servers are located on the west coast of the USA, Facebook might to consider those login attempts as unusual activities. It's likely that they'll then temporarily lock your account and ask you to confirm your login.
 
-In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://phantombuster.com/proxies) close to you.
+In order to use the Facebook APIs to their max potential, we recommend [using a proxy](https://intercom.help/phantombuster/help-home/setting-up-a-proxy-with-phantombuster) close to you.
 
 Also Facebook tends to notice when too many messages are sent in a short period of time. Spamming messages is probably reprimanded. We recommend spreading your messages (like 1 message every 15min rather than 10 in one go).
 If too many actions are done too quickly, Facebook may temporarily block your messages. If that happens, you would need to wait for a few hours before being able to send them again. Be careful and reduce your API frequency the next time.

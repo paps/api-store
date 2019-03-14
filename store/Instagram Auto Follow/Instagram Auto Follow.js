@@ -28,6 +28,8 @@ let followRequestCount = 0
 let blockSuccessCount = 0
 let unblockSuccessCount = 0
 let rateLimited
+let username
+let followLimit
 // }
 
 const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
@@ -45,6 +47,17 @@ const interceptInstagramApiCalls = e => {
 	if (e.response.url.indexOf("web/friendships") > -1 && e.response.status === 403) {
 			rateLimited = true
 	}
+}
+
+const checkFollowCount = async () => {
+	const followTab = await nick.newTab()
+	const jsonUrl = `https://www.instagram.com/${username}?__a=1`
+	await followTab.open(jsonUrl)
+	let instagramJsonCode = await followTab.getContent()
+	const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
+	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+	const followCount = instagramJsonCode.graphql.user.edge_follow.count
+	return followCount
 }
 
 // function to follow a profile
@@ -101,6 +114,15 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 			return checkFollowData
 		} else {
 			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			try {
+				const followCount = await checkFollowCount()
+				if (followCount === 7500) {
+					utils.log("You follow 7500 profiles (maximum Instagram Limit)!", "warning")
+					followLimit = true
+				}
+			} catch (err) {
+				//
+			}
 			return null
 		}
 	} else if (!checkFollowData.status) {
@@ -186,6 +208,11 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			utils.log("Input is empty OR all profiles have been processed.", "warning")
 			nick.exit(0)
 		}
+		urls = urls.filter(el => el)
+		if (urls.length < 1) {
+			utils.log("You spreadsheet doesn't contain any Instagram URL. Make sure you've set the correct column.", "warning")
+			nick.exit(utils.ERROR_CODES.BAD_INPUT)
+		}
 	}
 	followSuccessCount = result.filter(el => el.followAction === "Success").length
 	unfollowSuccessCount = result.filter(el => el.unfollowAction === "Success").length
@@ -196,8 +223,8 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 	if (action.startsWith("Unfollow")) {
 		actionText = "unfollow"
 	}
-	
-	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls, null, 4)}`)
+
+	console.log(`Profiles to ${actionText}: ${JSON.stringify(urls.slice(0, 200), null, 4)}`)
 	const tab = await nick.newTab()
 	const jsonTab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
@@ -272,6 +299,9 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 		}
 		if (rateLimited) {
 			utils.log("Rate limited by Instagram, stopping the agent... Please retry later (15min+).", "warning")
+			break
+		}
+		if (followLimit) {
 			break
 		}
 		await tab.wait(1500 + Math.random() * 2000)

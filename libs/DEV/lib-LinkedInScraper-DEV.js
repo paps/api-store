@@ -264,6 +264,9 @@ const scrapeInfos = (arg, callback) => {
 		if (document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]")) {
 			infos.general.linkedinRecruiterUrl = document.querySelector("a[data-control-name=\"view_profile_in_recruiter\"]").href
 		}
+		if (document.querySelector("a[data-control-name=\"topcard_view_all_connections\"]")) {
+			infos.general.connectionsUrl = document.querySelector("a[data-control-name=\"topcard_view_all_connections\"]").href
+		}
 		if (document.querySelector("span.background-details")) {
 			// Get all profile jobs listed
 			// Issue 128: new UI (experiences are stacked in a li if the company doesn't change)
@@ -447,14 +450,14 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 		throw `Expects HTTP code 200 when opening a LinkedIn profile but got ${httpCode}`
 	}
 	try {
-		/**
-		 * Using 7500ms timeout to make sure that the page is loaded
-		 */
+		console.log("watu")
+
 		await tab.waitUntilVisible("#profile-wrapper", 15000)
 		if (!silence) {
 			utils.log("Profile loaded.", "done")
 		}
 	} catch (error) {
+		console.log("wou")
 		throw ("Could not load the profile.")
 	}
 	if (fullLoad) {
@@ -585,6 +588,7 @@ const craftCsvObject = infos => {
 		partialScreenshot: (hasGeneral) ? (infos.general.partialScreenshot || null) : null,
 		linkedinRecruiterUrl: (hasGeneral) ? (infos.general.linkedinRecruiterUrl || null) : null,
 		linkedinSalesNavigatorUrl: (hasGeneral) ? (infos.general.linkedinSalesNavigatorUrl || null) : null,
+		connectionsUrl: (hasGeneral) ? (infos.general.connectionsUrl || null) : null,
 		mutualConnectionsUrl: (hasGeneral) ? (infos.general.mutualConnectionsUrl || null) : null,
 		company: job.companyName || null,
 		companyUrl: job.companyUrl || null,
@@ -820,7 +824,6 @@ class LinkedInScraper {
 				result.error = "ERR_TOO_MANY_REDIRECTS"
 			}
 		}
-
 		if ((this.hunter || this.dropcontact || this.phantombusterMail) && result.jobs.length > 0) {
 			let init
 			const timeLeft = await this.utils.checkTimeLeft()
@@ -878,6 +881,7 @@ class LinkedInScraper {
 						mailPayload.company = result.jobs[0].companyName
 						mailPayload.siren = true
 						init = new Date()
+						console.log("mailPayload", mailPayload)
 						const dropcontactSearch = await this.phantombusterMail.find(mailPayload)
 						const foundData = dropcontactSearch.data
 						console.log("dropcontactSearch", dropcontactSearch)

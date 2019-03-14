@@ -228,7 +228,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		}
 		if (!graphqlUrl) {
 			utils.log("Can't access likers list.", "warning")
-			return ({ photoUrl, error: "Can't access likers list"})
+			return ({ photoUrl, timestamp: (new Date()).toISOString(), error: "Can't access likers list"})
 		}
 	}
 	let results = []
@@ -287,7 +287,6 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 	let result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length
 	if (result.length) {
 		try {
 			agentObject = await buster.getAgentObject()
@@ -306,6 +305,8 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		}
 		photoUrls = getphotoUrlsToScrape(photoUrls.filter(el => checkDb(el, result)), numberOfPhotosPerLaunch)
 	}
+
+	let currentResult = []
 	for (let photoUrl of photoUrls) {
 		let resuming = false
 		if (agentObject && photoUrl === agentObject.lastQuery) {
@@ -323,14 +324,14 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 			const urlObject = new URL(photoUrl)
 			if (!urlObject.pathname.startsWith("/p/")) {
 				utils.log(`${photoUrl} isn't a valid photo URL.`, "warning")
-				result.push({ photoUrl, error: "Not a photo URL", timestamp: (new Date()).toISOString() })
+				currentResult.push({ photoUrl, timestamp: (new Date()).toISOString(), error: "Not a photo URL" })
 				continue
 			}
 			const tempResult = await loadAndScrapeLikers(tab, photoUrl, numberOfLikers, resuming)
 			if (!tempResult.error) {
 				utils.log(`Got ${tempResult.length} likers for ${photoUrl}`, "done")
 			}
-			result = result.concat(tempResult)
+			currentResult = currentResult.concat(tempResult)
 			if (rateLimited) {
 				if (tempResult.length) {
 					utils.log("Instagram rate limit reached, you should try again in 15min.", "info")
@@ -347,15 +348,16 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 	if (rateLimited) {
 		interrupted = true
 	}
-	const finalLikersCount = result.filter(el => !el.error).length
-	utils.log(`Got ${finalLikersCount} likers in total.`, "done")
-	if (result.length !== initialResultLength) {
+	if (currentResult.length) {
 		if (interrupted) {
 			await buster.setAgentObject({ nextUrl, lastQuery })
 		} else {
 			await buster.setAgentObject({})
 		}
-		await utils.saveResults(result, result, csvName)
+		result.push(...currentResult)
+		const finalLikersCount = result.filter(el => !el.error).length
+		utils.log(`Got ${finalLikersCount} likers in total.`, "done")
+		await utils.saveResults(currentResult, result, csvName)
 	}
 	nick.exit(0)
 })()

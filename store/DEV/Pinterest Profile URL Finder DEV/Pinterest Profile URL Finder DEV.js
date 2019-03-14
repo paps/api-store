@@ -27,7 +27,7 @@ let db
 
 ;(async () => {
 	const tab = await nick.newTab()
-	const webSearch = new WebSearch(tab, buster)
+	const webSearch = new WebSearch(tab, buster, null, null, utils)
 	let { spreadsheetUrl, columnName, csvName, numberOfLinesToProcess } = utils.validateArguments()
 	let queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	const toReturn = []

@@ -131,18 +131,20 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	const scrapedHashtags = []
 	for (const result of results) {
 		const node = result.node
-		const extractedData = { query }
-		extractedData.imgUrl = node.display_url
+		const extractedData = {}
+		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
+		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
 		extractedData.commentCount = node.edge_media_to_comment.count
 		extractedData.likeCount = node.edge_liked_by.count
-		extractedData.ownerId = node.owner.id
 		extractedData.pubDate = new Date(node.taken_at_timestamp * 1000).toISOString()
+		extractedData.ownerId = node.owner.id
+		extractedData.imgUrl = node.display_url
 		extractedData.postId = node.id
-		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
-		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
 		if (node.edge_media_to_caption.edges[0]) {
 			extractedData.description = node.edge_media_to_caption.edges[0].node.text
 		}
+		extractedData.query = query
+		extractedData.timestamp = (new Date()).toISOString()
 		scrapedHashtags.push(extractedData)
 	}
 	const endCursor = edge.page_info.end_cursor
@@ -175,7 +177,7 @@ const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
  * @param {String} hashtag - Hashtag name
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
-const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
+const loadPosts = async (tab, maxPosts, query, resuming) => {
 	let newlyScraped = 0
 	let results = []
 	if (!resuming) {
@@ -219,9 +221,8 @@ const loadPosts = async (tab, maxPosts, query, resuming, resultsCount) => {
 			if (!maxToScrape) {
 				maxToScrape = totalHashtagsCount
 			}
-			const resultsLength = results.length + resultsCount
-			utils.log(`Got ${resultsLength} hashtags.`, "info")
-			buster.progressHint(newlyScraped / maxToScrape, `Charging ${resultsLength} hashtags...`)
+			utils.log(`Got ${results.length} hashtags.`, "info")
+			buster.progressHint(newlyScraped / maxToScrape, `Charging ${results.length} hashtags...`)
 			if (hasNextPage && endCursor){
 				nextUrl = forgeNewUrl(endCursor)
 				lastDate = new Date()
@@ -324,8 +325,16 @@ const isUrl = target => url.parse(target).hostname !== null
 		} else {
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 		}
-		results = results.concat(await loadPosts(tab, maxPosts, hashtag, resuming, results.length))
-		if (rateLimited) {
+		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming)
+		const oldResultLength = results.length
+		for (let i = 0; i < tempResult.length; i++) {
+			if (!results.find(el => el.postUrl === tempResult[i].postUrl)) {
+				results.push(tempResult[i])
+			}
+		}
+		const newResultsLength = results.length - oldResultLength
+		utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
+			if (rateLimited) {
 			break
 		}
 		const timeLeft = await utils.checkTimeLeft()

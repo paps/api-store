@@ -101,8 +101,8 @@ const scrapeProfiles = (arg, cb) => {
 	cb(null, scrapedData)
 }
 
-// load profile page and handle tabs switching
-const loadFacebookProfile = async (tab, query, maxFriends) => {
+// load profile page
+const loadFriendsList = async (tab, query, maxFriends) => {
 	await tab.open(forgeUrl(query, ""))
 	let selector
 	try {
@@ -137,7 +137,7 @@ const loadFacebookProfile = async (tab, query, maxFriends) => {
 		await tab.waitUntilVisible("#pagelet_timeline_medley_friends div[id*=\"collection_wrapper\"]")
 	} catch (err) {
 		utils.log("Error accessible friends page!", "error")
-		return [{query, timestamp: (new Date()).toISOString(), error: "Error accessible friends page"}]
+		return [{ query, timestamp: (new Date()).toISOString(), error: "Error accessible friends page" }]
 	}
 	let lastDate = new Date()
 	let friendCount = 0
@@ -155,7 +155,8 @@ const loadFacebookProfile = async (tab, query, maxFriends) => {
 		const newFriendsCount = await tab.evaluate(getFriendsCount)
 		if (newFriendsCount > friendCount) {
 			friendCount = newFriendsCount
-			utils.log(`Loaded ${friendCount} profiles`, "done")
+			const friendsCountDisplay = maxFriends ? Math.min(maxFriends, friendCount) : friendCount
+			utils.log(`Loaded ${friendsCountDisplay} profiles.`, "done")
 			lastDate = new Date()
 			await tab.scrollToBottom()
 		}
@@ -166,9 +167,12 @@ const loadFacebookProfile = async (tab, query, maxFriends) => {
 	}
 	if (friendCount) {
 		result = await tab.evaluate(scrapeProfiles, { query })
+		if (maxFriends) {
+			result = result.slice(0, maxFriends)
+		}
 	} else {
 		utils.log("No friends to show.", "warning")
-		result = [{query, timestamp: (new Date()).toISOString(), error: "No friends to show"}]
+		result = [{ query, timestamp: (new Date()).toISOString(), error: "No friends to show "}]
 	}
 	return result
 }
@@ -176,7 +180,7 @@ const loadFacebookProfile = async (tab, query, maxFriends) => {
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookieCUser, sessionCookieXs, profileUrls, spreadsheetUrl, columnName, maxFriends, profilesPerLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, profileUrls, spreadsheetUrl, columnName, maxFriends, profilesPerLaunch, csvName, removeDuplicate } = utils.validateArguments()
 	let profilesToScrape = profileUrls
 	if (!csvName) {
 		csvName = "result"
@@ -222,9 +226,14 @@ nick.newTab().then(async (tab) => {
 		if (facebook.isFacebookUrl(profileUrl)) { // Facebook Profile URL
 			utils.log(`Processing profile of ${profileUrl}...`, "loading")
 			try {
-				const tempResult = await loadFacebookProfile(tab, profileUrl, maxFriends)
+				const tempResult = await loadFriendsList(tab, profileUrl, maxFriends)
 				if (tempResult.length) {
-					result = result.concat(tempResult)
+					console.log("tempResult.length", tempResult.length)
+					for (const tempObject of tempResult) {
+						if (!result.find(el => el.profileUrl === tempObject.profileUrl && (el.query === tempObject.query || removeDuplicate))) {
+							result.push(tempObject)
+						}
+					}
 				}
 				if (blocked) {
 					utils.log("Temporarily blocked by Facebook! (too many profiles viewing in a short, please wait for a while)", "error")
@@ -237,10 +246,24 @@ nick.newTab().then(async (tab) => {
 			utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 		}
 		if (profileCount < profilesToScrape.length) { // waiting before each page
-			await tab.wait(3000 + 2000 * Math.random())
+			await tab.wait(1000 + 2000 * Math.random())
 		}
 	}
-	db.push(...result)
+	if (removeDuplicate) {
+		for (const object of result) {
+			if (!db.find(el => el.profileUrl === object.profileUrl || (object.error && el.query === object.query))) {
+				db.push(object)
+			}
+		}
+	} else {
+		console.log("resultadd", result)
+		for (const object of result) {
+			if (!db.find(el => (el.profileUrl === object.profileUrl || object.error) && el.query === object.query)) {
+				db.push(object)
+			}
+		}
+	}
+	console.log("db.length", db.length)
 	await utils.saveResults(result, db, csvName)
 	utils.log("Job is done!", "done")
 	nick.exit(0)

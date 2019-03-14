@@ -11,12 +11,12 @@ declare class StoreUtilities {
 	public validateArguments(): IUnknownObject
 	public isUrl(url: string): boolean
 	public getRawCsv(url: string, printLogs?: boolean): Promise<IUnknownObject[]>
-	public extractCsvRows(csv: IUnknownObject[], columnName?: string|string[], printLogs?: boolean): string[]|IUnknownObject[]
+	public extractCsvRows(csv: IUnknownObject[], columnName?: string|string[], defaultColumn?: number): string[]|IUnknownObject[]
 	public getDataFromCsv(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>
-	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<void>
+	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<{ csvUrl: string, jsonUrl?: string }>
 	public getDb(filename: string, parseContent?: boolean): Promise<IUnknownObject[]>
 	public saveResult(result: IUnknownObject[], csvName?: "result"|null|string, schema?: string[]): Promise<void>
 	public checkArguments(args: IUnknownObject[]): IUnknownObject[]
@@ -32,6 +32,8 @@ declare const enum ERRORS {
 	CSV_NOT_PUBLIC = 72,
 	GO_NOT_ACCESSIBLE = 75,
 	BAD_INPUT = 76,
+	PROXY_ERROR= 77,
+	NO_INPUT= 78,
 	LINKEDIN_BAD_COOKIE = 83,
 	LINKEDIN_EXPIRED_COOKIE = 84,
 	LINKEDIN_BLOCKED_ACCOUNT = 85,
@@ -56,6 +58,8 @@ declare const enum ERRORS {
 	INSTAGRAM_BLOCKED_ACCOUNT = 105,
 	INSTAGRAM_DEFAULT_COOKIE = 106,
 	INSTAGRAM_INVALID_COOKIE = 107,
+	UBER_BAD_COOKIE = 111,
+	UBER_DEFAULT_COOKIE = 112,
 	FACEBOOK_BAD_COOKIE = 113,
 	FACEBOOK_EXPIRED_COOKIE = 114,
 	FACEBOOK_BLOCKED_ACCOUNT = 115,

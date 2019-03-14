@@ -84,6 +84,15 @@
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
 					},
+					"scrapeJobs": {
+						"rightLabel": "<b>Extract the profile's jobs</b>"
+					},
+					"scrapeSchools": {
+						"rightLabel": "<b>Extract the profile's schools</b>"
+					},
+					"scrapeSkills": {
+						"rightLabel": "<b>Extract the profile's skills</b>"
+					},
 					"saveImg": {
 						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
 					},
@@ -120,6 +129,15 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"scrapeJobs": {
+				"type": "boolean"
+			},
+			"scrapeSchools": {
+				"type": "boolean"
+			},
+			"scrapeSkills": {
+				"type": "boolean"
 			},
 			"saveImg": {
 				"type": "boolean"

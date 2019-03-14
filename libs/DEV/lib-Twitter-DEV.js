@@ -155,7 +155,7 @@ class Twitter {
 			const imgPath = `Tok${Date.now()}.png`
 			const opts = isNick ? imgPath : { path: imgPath, type: "png", fullPage: true }
 			await tab.screenshot(opts)
-			if (this.nick._options.httpProxy) {
+			if (isNick && this.nick._options.httpProxy) {
 				this.utils.log("Can't connect to Twitter with a proxy, please remove it.", "error")
 			} else {
 				this.utils.log("Could not connect to Twitter with this session cookie.", "error")

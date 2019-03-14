@@ -1,0 +1,84 @@
+{
+	"slug": "instagram-auto-commenter",
+	"description": "Auto comment Instagram posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Post+Commenters/Instagram+Posts+Commenters.png",
+	"hidden": true,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "instagram_posts_urls",
+		"numberOfPostsPerLaunch": 10
+	},
+	"outputDescription": {
+		"message": "Message sent"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/14303/instagram-auto-commenter#section_argument\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value"
+					},
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single post URL" ],
+							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/14303/instagram-auto-commenter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						},
+						"columnNameProfiles": {
+							"label": "Column name from which to get post URLs",
+							"placeholder": "Instagram Post Link",
+							"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						},
+						"columnNameMessages": {
+							"label": "Column name from which to get messages",
+							"placeholder": "Messages",
+							"helper": "By default, we'll use the second column of your spreadsheet (column B)"
+						},
+						"numberOfPostsPerLaunch": {
+							"label": "Number of posts to process per launch <a href=\"/api-store/14303/instagram-auto-commenter#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"inputType": "number",
+							"helper": "All of them if empty"
+						},
+						"csvName": {
+							"label": "Name of resulting CSV file",
+							"placeholder": "result"
+						}
+					}
+				}
+			}
+		},
+		"argumentSchema": {
+			"type": "object",
+			"properties": {
+				"sessionCookie": {
+					"type": "string",
+					"required": true
+				},
+				"spreadsheetUrl": {
+					"type": "string",
+					"required": true
+				},
+				"columnNameProfiles": {
+					"type": "string"
+				},
+				"columnNameMessages": {
+					"type": "string"
+				},
+				"numberOfPostsPerLaunch": {
+					"type": "number",
+					"minimum": 1
+				},
+				"csvName": {
+					"type": "string",
+					"required": false
+				}
+			}
+		}
+	}

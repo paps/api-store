@@ -2,7 +2,7 @@
 
 Are you making the most of the people you're already connected to on LinkedIn? Who can you leverage on in your network?
 
-This API can extract in a few minutes all your first degree connections. Use it to track who you're connected to and how your network is evolving. 
+This API can extract in a few minutes your first degree connections (up to 2-3k profiles). Use it to track who you're connected to and how your network is evolving.
 
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). We browse the web for you so you can focus on not automatable tasks.

@@ -126,7 +126,7 @@ const checkRateLimit = (arg, cb) => {
 			result.push(tempResult[i])
 		}
 	}
-	await utils.saveResults(result, result, csvName)
+	await utils.saveResults(tempResult, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {

@@ -12,6 +12,7 @@ const ERROR_CODES = {
 	GO_NOT_ACCESSIBLE: 75,
 	BAD_INPUT: 76,
 	PROXY_ERROR: 77,
+	NO_INPUT: 78,
 	LINKEDIN_BAD_COOKIE: 83,
 	LINKEDIN_EXPIRED_COOKIE: 84,
 	LINKEDIN_BLOCKED_ACCOUNT: 85,
@@ -36,6 +37,8 @@ const ERROR_CODES = {
 	INSTAGRAM_BLOCKED_ACCOUNT: 105,
 	INSTAGRAM_DEFAULT_COOKIE: 106,
 	INSTAGRAM_INVALID_COOKIE: 107,
+	UBER_BAD_COOKIE: 111,
+	UBER_DEFAULT_COOKIE: 112,
 	FACEBOOK_BAD_COOKIE: 113,
 	FACEBOOK_EXPIRED_COOKIE: 114,
 	FACEBOOK_BLOCKED_ACCOUNT: 115,
@@ -332,17 +335,27 @@ class StoreUtilities {
 	/**
 	 * @param {Array<Object>} csv - CSV content
 	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
-	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @param {number} [defaultColumn] - column to use if columnName isn't found
 	 * @return {Array<String>|Array<Object>} CSV rows with the columns
 	 */
-	extractCsvRows(csv, columnName) {
-		let column = 0
+	extractCsvRows(csv, columnName, defaultColumn) {
+		if (!defaultColumn) {
+			defaultColumn = 0
+		}
+		let rank = ""
+		if (defaultColumn === 0) {
+			rank = "first"
+		}
+		if (defaultColumn === 1) {
+			rank = "second"
+		}
+		let column = defaultColumn
 		let rows = []
 		if (typeof columnName === "string" && columnName) {
 			column = csv[0].findIndex(el => el === columnName)
 			if (column < 0) {
-				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-				column = 0
+				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+				column = defaultColumn
 			} else {
 				csv.shift()
 			}
@@ -357,8 +370,8 @@ class StoreUtilities {
 			for (const field of columns) {
 				let index = csv[0].findIndex(cell => cell === field)
 				if (index < 0) {
-					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-					index = 0
+					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+					index = defaultColumn
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
@@ -384,6 +397,10 @@ class StoreUtilities {
 	 * @return {Promise<Array<String>>} CSV content
 	 */
 	async getDataFromCsv2(url, columnName, printLogs = true) {
+		if (url === "https://docs.google.com/spreadsheets/d/(...)") {
+			this.log("You didn't enter any input spreadsheet!", "error")
+			process.exit(ERROR_CODES.NO_INPUT)
+		}
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -581,12 +598,21 @@ class StoreUtilities {
 		return ""
 	}
 
-	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
+	/**
+	 * @async
+	 * XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
+	 * @param {object} jsonResult
+	 * @param {object} csvResult
+	 * @param {string} [name]
+	 * @param {object} [schema]
+	 * @param {saveJson} [boolean]
+	 * @return {Promise<{ csvUrl: string, jsonUrl?: string }>}
+	 */
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
 		// const v8 = require("v8")
-		// let date
+		let date
 		if (schema) {
 			const newResult = []
 			for (let i = 0; i < csvResult.length; i++) {
@@ -603,12 +629,12 @@ class StoreUtilities {
 			csvResult = newResult
 		// If no schema is supplied, the function will try to create a csv with all gaps filled
 		} else {
-			// date = new Date()
+			date = new Date()
 			const newResult = []
-			// console.log("part1")
+			console.log("part1")
 			const fields = this._getFieldsFromArray(csvResult)
-			// console.log("part2:", new Date() - date)
-			// date = new Date()
+			console.log("part2:", new Date() - date)
+			date = new Date()
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
@@ -616,37 +642,168 @@ class StoreUtilities {
 				}
 				newResult.push(newItem)
 			}
-			// console.log("part3:", new Date() - date)
-			// date = new Date()
-			csvResult = newResult
+			console.log("part3:", new Date() - date)
+			date = new Date()
+			// csvResult = newResult
 		}
 		// console.log("v8", v8.getHeapStatistics())
-		const csvUrl = await this.buster.saveText(await jsonexport(csvResult), name + ".csv")
-		this.log(`CSV saved at ${csvUrl}`, "done")
+		const fs = require("fs")
+		const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
+		console.log("part3-4:", new Date() - date)
+		date = new Date()
+		// const reader = fs.createReadStream(jsonUrl)
+		const writer = fs.createWriteStream(name + ".csv")
+		// try {
+		// 	reader.pipe(jsonexport()).pipe(writer)
+
+		// } catch (err) {
+		// 	console.log("err:", err)
+		// }
+		console.log("writer", writer)
+		console.log("part3-5:", new Date() - date)
+		date = new Date()
+		// console.log("JSON.stringify(jsonResult)", JSON.stringify(jsonResult))
+		const data = csvResult
+		// // // const dest = "config.json"
+		// // const s = require("stream");
+
+		// // const stream = new s.Readable();
+		// // stream.push(JSON.stringify(data))
+		// // stream.push(null)
+		// // console.log("stream", stream)
+		// // console.log("part3-55:", new Date() - date)
+		// // date = new Date()
+		// // const dummy = () => {
+		// // 	return new Promise((resolve, reject) => {
+		// // 		stream.pipe(jsonexport()).pipe(writer)
+		// // 		writer.on("finish", () => {
+		// // 			resolve()
+		// // 		})
+		// // 		writer.on("error", () => {
+		// // 			reject()
+		// // 		})
+		// // 	})
+		// // }
+		// try {
+		// 	const exported = await dummy()
+		// 	console.log("writer:", writer)
+		// 	console.log("exported:", exported)
+		// } catch (err) {
+		// 	console.log("errn", err)
+		// }
+
+		const jsonExported = await jsonexport(csvResult)
+		console.log("jsonExported:",jsonExported)
+		console.log("part3-6:", new Date() - date)
+		date = new Date()
+		// const csvUrl = await this.buster.saveText(jsonExported, name + ".csv")
+		const csv = await this.buster.save(name + ".csv", name + ".csv")
+		// this.log(`CSV saved at ${csvUrl}`, "done")
 		// console.log("v8", v8.getHeapStatistics())
 
-		// console.log("part4:", new Date() - date)
-		// date = new Date()
-		const backupResultObject = { csvUrl }
-		if (saveJson) {
-			const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
-			this.log(`JSON saved at ${jsonUrl}`, "done")
-			// console.log("part5:", new Date() - date)
-			backupResultObject.jsonUrl = jsonUrl
-		}
-		// date = new Date()
+		console.log("part4:", new Date() - date)
+		date = new Date()
+		// const backupResultObject = { csvUrl }
+		// if (saveJson) {
+		// 	const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
+		// 	this.log(`JSON saved at ${jsonUrl}`, "done")
+		// 	console.log("part5:", new Date() - date)
+		// 	backupResultObject.jsonUrl = jsonUrl
+		// }
+		date = new Date()
 		try {
 			await this.buster.setResultObject(jsonResult)
 		} catch (error) {
-			await this.buster.setResultObject(backupResultObject)
+			// await this.buster.setResultObject(backupResultObject)
 		}
 		this.log("Data successfully saved!", "done")
-		// console.log("part6:", new Date() - date)
+		console.log("part6:", new Date() - date)
 		if (this.test) {
 			this.output += "|END|"
 			this._testResult(csvResult)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
+		// TODO: cleanup this method and return jsonUrl when possible
+		return { csvUrl: csv }
+	}
+
+	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
+	async saveResults2(jsonResult, csvResult, name = "result") {
+		let date = new Date()
+		name = _filterName(name)
+		this.log("Saving data...", "loading")
+		console.log("csvResult", csvResult)
+		const fields = this._getFieldsFromArray(csvResult)
+		const backupResultObject = {}
+
+		if (true) {
+			const newResult = []
+			console.log("fields", fields)
+			for (let i = 0, len = csvResult.length; i < len; i++) {
+				const newItem = {}
+				for (const val of fields) {
+					newItem[val] = csvResult[i][val] !== null && csvResult[i][val] !== "undefined" ? csvResult[i][val] : ""
+				}
+				newResult.push(newItem)
+			}
+			csvResult = newResult
+			console.log("part1:", new Date() - date)
+			date = new Date()
+			let newJsonExport = fields.join(",") + "\n"
+			for (let i = 0; i < csvResult.length; i++) {
+				for (const val of fields) {
+					let value = csvResult[i][val]
+					if (value) {
+						value = value.toString()
+						if (value.includes("\n") || value.includes("\"") || value.includes(",")) {
+							newJsonExport += "\"" + value.replace(/"+/g, "\"\"") + "\""
+						} else {
+							newJsonExport += value
+						}
+					}
+					newJsonExport += ","
+				}
+				newJsonExport = newJsonExport.slice(0, -1) + "\n"
+			}
+			newJsonExport = newJsonExport.slice(0, -1)
+			console.log("newJsonExport:", newJsonExport)
+			const csvUrl = await this.buster.saveText(newJsonExport, name + ".csv")
+			backupResultObject.csvURL = csvUrl
+			this.log(`CSV saved at ${csvUrl}`, "done")
+			console.log("part2:", new Date() - date)
+			date = new Date()
+			csvResult = null
+		}
+		if (true) {
+			const stringified = JSON.stringify(jsonResult)
+			console.log("stringifiedL", stringified.length)
+			const jsonUrl = await this.buster.saveText(stringified, name + ".json")
+			this.log(`JSON saved at ${jsonUrl}`, "done")
+			console.log("part3:", new Date() - date)
+			date = new Date()
+			backupResultObject.jsonUrl = jsonUrl
+		}
+		// const jsonExported = await jsonexport(csvResult)
+		// console.log("jsonExported", jsonExported)
+		// const csvUrl = await this.buster.saveText(newJsonExport, name + ".csv")
+		// newJsonExport = null
+
+
+		try {
+			await this.buster.setResultObject(jsonResult)
+		} catch (error) {
+			await this.buster.setResultObject(backupResultObject)
+		}
+		console.log("part4:", new Date() - date)
+		date = new Date()
+		this.log("Data successfully saved!", "done")
+		if (this.test) {
+			this.output += "|END|"
+			this._testResult(csvResult)
+			console.log("Test succeed: ended with output:\n" + this.output)
+		}
+		console.log("part5:", new Date() - date)
+		date = new Date()
 	}
 
 	/**
@@ -668,10 +825,12 @@ class StoreUtilities {
 		}
 		if (res.body && res.body.status === "success" && res.body.data.awsFolder && res.body.data.userAwsFolder) {
 			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
+			// const url = `https://phantombuster.s3.amazonaws.com/bfF2udGAeUg/CwMEoAv928kOGjS7atvSAw/${filename}`
 			try {
 				const httpRes = await needle("get", url)
 				// Trying to access an unknown file in s3 will make an 403 HTTP status code for the response
 				if (httpRes.raw && httpRes.statusCode === 200) {
+					console.log("httpRes.raw.toString()", httpRes.raw.toString())
 					const data = parseContent ? Papa.parse(httpRes.raw.toString(), { header: true }).data : httpRes.raw.toString()
 					return data
 				} else {
@@ -805,6 +964,9 @@ class StoreUtilities {
 
 	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
 	adjustUrl(url, domain) {
+		if (url.startsWith("#")) {
+			return url
+		}
 		let urlObject = parse(url.toLowerCase())
 		if (urlObject.pathname.startsWith(domain)) {
 			urlObject = parse("https://www." + url)

@@ -323,8 +323,6 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 			return []
 		} else {
 			utils.log(`Could not get total results count. ${err}`, "warning")
-			await tab.screenshot(`${Date.now()}nocount.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}nocount.html`)
 		}
 	}
 	for (let i = 1; i <= pageCount; i++) {
@@ -370,6 +368,25 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
 	utils.log("All pages with result scrapped.", "done")
 	return result
+}
+
+// scrolls through each Lead result
+const scrollLeads = async (tab) => {
+	const profileCount = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll("ol.search-results__result-list li .search-results__result-container").length))
+	for (let i = 1; i <= profileCount ; i++) {
+		try {
+			await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+				if (document.querySelector(`ol.search-results__result-list li.search-results__result-item:nth-of-type(${arg.i})`)) {
+					callback(null, document.querySelector(`ol.search-results__result-list li.search-results__result-item:nth-of-type(${arg.i})`).scrollIntoView())
+				} else {
+					callback(null, "hi")
+				}
+			}, { i })
+			await tab.wait(100)
+		} catch (err) {
+			break
+		}
+	}
 }
 
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
@@ -429,6 +446,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			try {
 				containerSelector = await tab.waitUntilVisible(selectors, 15000, "or")
 			} catch (err) {
+				console.log("errm", err)
 				// No need to go any further, if the API can't determine if there are (or not) results in the opened page
 				utils.log("Error getting a response from LinkedIn, this may not be a Sales Navigator Account", "warning")
 				return result
@@ -436,8 +454,6 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			await tab.waitUntilVisible([".spotlight-result-label", ".artdeco-tab-primary-text"], 45000, "or")
 			await tab.scrollToBottom()
 			await tab.wait(1500)
-			await tab.screenshot(`${Date.now()}page${i}.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}page${i}.html`)
 			const numberOnThisPage = Math.min(numberOfProfiles - numberPerPage * (i - 1), numberPerPage)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -446,9 +462,12 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			}
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
+					await scrollLeads(tab)
 					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
+					await tab.screenshot(`${Date.now()}leads${i}.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}leads${i}.html`)
 				} catch (err) {
-					//
+					console.log("el", err)
 				}
 			} else {
 				result = result.concat(await tab.evaluate(scrapeResults, {query, numberOnThisPage}))
@@ -463,6 +482,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 						break
 					}
 				} catch (err) {
+					console.log("errbt", err)
 					utils.log("Error click on Next button", "error")
 					break
 				}
@@ -475,7 +495,6 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		}
 	}
 	buster.progressHint(1, `${profilesFoundCount} profiles loaded`)
-	console.log("profilesFoundCount", profilesFoundCount)
 	utils.log(`All pages with result scrapped. Got ${result.length} profiles.`, "done")
 	return result
 }
@@ -552,7 +571,6 @@ const isLinkedInSearchURL = (url) => {
 				if (notSalesNav) {
 					break
 				}
-				console.log("tempResult.length", tempResult.length)
 				if (extractDefaultUrl) {
 					tempResult = await extractDefaultUrls(tempResult)
 				}

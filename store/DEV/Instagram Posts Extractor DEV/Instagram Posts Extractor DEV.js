@@ -114,6 +114,7 @@ const getPosts = async (tab, profileUrl, query, numberOfPostsPerProfile) => {
 }
 
 const extractPostData = (post, profileUrl, query) => {
+	console.log("postData", post)
 	const postData = {}
 	postData.postUrl = `https://www.instagram.com/p/${post.shortcode}/`
 	if (post.edge_media_to_caption.edges[0]) {
@@ -130,6 +131,14 @@ const extractPostData = (post, profileUrl, query) => {
 		postData.locationId = post.location.id
 	}
 	postData.pubDate = new Date(post.taken_at_timestamp * 1000).toISOString()
+	if (post.is_video) {
+		postData.type = "Video"
+		if (post.video_view_count) {
+			postData.viewCount = post.video_view_count
+		}
+	} else {
+		postData.type = "Photo"
+	}
 	if (post.accessibility_caption) {
 		postData.caption = post.accessibility_caption
 	}

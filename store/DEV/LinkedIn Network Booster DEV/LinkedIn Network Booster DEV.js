@@ -175,6 +175,8 @@ const connectTo = async (selector, tab, message) => {
 	} catch (error) {
 		if (await tab.isVisible("#li-modal-container > .send-invite .send-invite__header")) {
 			utils.log("Button clicked but LinkedIn didn't send the message", "warning")
+		} else if (await tab.isVisible("div.mn-invite-alert__content > a[data-control-name=\"profile\"].mn-invite-alert__link")) {
+			utils.log("LinkedIn didn't send the message, they display: Sorry, your invitation could not be sent at this time", "warning")
 		} else {
 			utils.log(`Button clicked but could not verify if the user was added: ${error}`, "warning")
 			await buster.saveText(await tab.getContent(), `${Date.now()}CouldNotVerify.html`)
@@ -196,7 +198,12 @@ const openProfile = async (tab, url, noScraping = true, libScraper) => {
 	let retData = null
 	if (noScraping) {
 		await tab.open(url)
-		await tab.waitUntilVisible("#profile-wrapper", 15000)
+		try {
+			await tab.waitUntilVisible("#profile-wrapper", 15000)
+		} catch (err) {
+			utils.log(`Couldn't open ${url}`, "error")
+			throw new Error("Couln't open")
+		}
 	} else {
 		const scrapedProfile = await libScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
 		retData = Object.assign({}, scrapedProfile.csv)
@@ -287,6 +294,10 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			invitation = Object.assign({}, profileScraping, invitation) // Custom tags aren't overwritten by the scraping result
 		}
 	} catch (err) {
+		if (err.message === "Couln't open") {
+			invitation.error = "Couln't open"
+			return invitation
+		}
 		await tab.wait(5000)
 		// No need to continue
 		if ((await tab.getUrl()) === UNREACHABLE_PROFILE) {

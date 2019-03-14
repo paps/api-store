@@ -17,6 +17,9 @@ const nick = new Nick({
 	debug: false,
 })
 
+const puppeteer = require("puppeteer")
+let browser
+
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
 const LinkedIn = require("./lib-LinkedIn-DEV")
@@ -54,7 +57,7 @@ const getUrlsToScrape = (data, numberOfAddsPerLaunch) => {
 
 // main scraping function
 const scrapeProfile = (arg, cb) => {
-	const scrapedData = { query: arg.profileUrl, recruiterProfileUrl: arg.recruiterUrl }
+	const scrapedData = { recruiterProfileUrl: arg.recruiterUrl }
 	if (document.querySelector(".module-footer .public-profile a")) {
 		scrapedData.profileUrl = document.querySelector(".module-footer .public-profile a").href
 	}
@@ -161,6 +164,8 @@ const scrapeProfile = (arg, cb) => {
 			return data
 		})
 	}
+	scrapedData.query = arg.profileUrl
+	scrapedData.timestamp = (new Date()).toISOString()
 	cb(null, scrapedData)
 }
 
@@ -172,7 +177,7 @@ const loadAndScrapeProfile = async (tab, recruiterUrl, profileUrl, saveImg, take
 		await tab.waitUntilVisible("#profile-ugc")
 	} catch (err) {
 		utils.log(`Couldn't open profile: ${err}`, "error")
-		return null
+		return { query: profileUrl, timestamp: (new Date()).toISOString(), error: "Couldn't open profile" }
 	}
 	let scrapedData
 	try {
@@ -277,6 +282,10 @@ const getMailFromHunter = async (scrapedData, hunter) => {
 ;(async () => {
 	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfAddsPerLaunch, csvName, saveImg, takeScreenshot} = utils.validateArguments()
 	const tab = await nick.newTab()
+	// browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
+	// const page = await browser.newPage()
+
+	// await linkedIn.recruiterLoginP(page, sessionCookie)
 	await linkedIn.recruiterLogin(tab, sessionCookie)
 	let singleProfile
 	if (spreadsheetUrl) {
@@ -327,6 +336,7 @@ const getMailFromHunter = async (scrapedData, hunter) => {
 			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${profileUrl} due to: ${err.message || err}`, "warning")
+			result.push({ query: profileUrl, timestamp: (new Date()).toISOString(), error: err.message || err })
 			await tab.screenshot(`${Date.now()}err.png`)
 			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
 		}

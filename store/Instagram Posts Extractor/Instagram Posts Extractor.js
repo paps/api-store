@@ -130,6 +130,14 @@ const extractPostData = (post, profileUrl, query) => {
 		postData.locationId = post.location.id
 	}
 	postData.pubDate = new Date(post.taken_at_timestamp * 1000).toISOString()
+	if (post.is_video) {
+		postData.type = "Video"
+		if (post.video_view_count) {
+			postData.viewCount = post.video_view_count
+		}
+	} else {
+		postData.type = "Photo"
+	}
 	if (post.accessibility_caption) {
 		postData.caption = post.accessibility_caption
 	}

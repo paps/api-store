@@ -256,7 +256,8 @@ const sendMessage = async (tab, message, tags, profile) => {
 		} catch (err) {
 			utils.log(`${err.message || err}`, "warning")
 			const _errMessage = err.message || err
-			result.push({ profileUrl: row[columnName], timestamp: (new Date()).toISOString(), error: err.message || err })
+			const bundle = Object.assign({}, profile ? profile.csv : null, { profileUrl: row[columnName], timestamp: (new Date()).toISOString(), error: _errMessage })
+			result.push(bundle)
 			// Detecting LinkedIn cookie invalidation
 			if (typeof _errMessage === "string" && _errMessage.indexOf("net::ERR_TOO_MANY_REDIRECTS") > -1) {
 				utils.log("You're currently disconnected from LinkedIn, please update your session cookie", "warning")

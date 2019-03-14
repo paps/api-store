@@ -50,6 +50,11 @@
 						],
 						"inputType": "number"
 					},
+					"reviewsPerExtensions": {
+						"label": "Number of reviews to extract for each extensions",
+						"helper": "When the field is empty, the API will scrape all reviews for each extensions",
+						"inputType": "number"
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -73,6 +78,10 @@
 				"type": "number",
 				"minimum": 1,
 				"default": 2
+			},
+			"reviewsPerExtensions": {
+				"type": "number",
+				"minimum": 1
 			},
 			"csvName": {
 				"type": "string"

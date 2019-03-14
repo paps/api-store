@@ -307,6 +307,9 @@ const scrapeAboutPageFromPage = (arg, cb) => {
 	} catch (err) {
 		//
 	}
+	if (document.querySelector("img[src*=\"Qz1rawS_hSy.png\"]") && document.querySelector("img[src*=\"Qz1rawS_hSy.png\"]").parentElement.parentElement) {
+		scrapedData.createdOn = document.querySelector("img[src*=\"Qz1rawS_hSy.png\"]").parentElement.parentElement.textContent
+	}
 	cb(null, scrapedData)
 }
 
@@ -351,6 +354,28 @@ const scrapeMainPageData = (arg, cb) => {
 	cb(null, scrapedData)
 }
 
+// scrape data from the main page URL
+const scrapeInfoAndAds = (arg, cb) => {
+	const scrapedData = {}
+	const languageArray = ["Page created on ", "Page créée le "]
+	let stringFound = ""
+	let divFound
+	for (const searchedString of languageArray) {
+		if (Array.from(document.querySelectorAll("div")).filter(el => el.textContent.startsWith(searchedString))[0]) {
+			divFound = Array.from(document.querySelectorAll("div")).filter(el => el.textContent.startsWith(searchedString))[0]
+			stringFound = searchedString
+			break
+		}
+	}
+	if (divFound) {
+		let createdOnText = divFound.textContent
+		createdOnText = createdOnText.replace(stringFound, "")
+		scrapedData.createdOn = createdOnText
+	}
+	cb(null, scrapedData)
+}
+
+
 // load profile page and handle tabs switching
 const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	await tab.open(forgeUrl(profileUrl, ""))
@@ -360,8 +385,6 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 	} catch (err) {
 		if (await tab.evaluate(checkUnavailable)) {
 			utils.log(`${profileUrl} page is not available.`, "error")
-			await tab.screenshot(`${Date.now()}page is not available.png`)
-			await buster.saveText(await tab.getContent(), `${Date.now()}page is not available.html`)
 			return { profileUrl, error: "The profile page isn't available"}
 		}
 	}
@@ -382,6 +405,10 @@ const loadFacebookProfile = async (tab, profileUrl, pagesToScrape) => {
 			await tab.click("div[data-key=\"tab_home\"] a")
 			await tab.waitUntilVisible("#pages_side_column")
 			result = Object.assign(result, await tab.evaluate(scrapeMainPageData, { profileUrl }))
+			await tab.wait(500)
+			await tab.click("div[data-key=\"tab_ads\"] a")
+			await tab.wait(4000)
+			result = Object.assign(result, await tab.evaluate(scrapeInfoAndAds))
 			return result
 		} catch (err) {
 			return { profileUrl, error: "Error scraping that Page"}

@@ -18,6 +18,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+const DB_NAME = "result"
 // }
 
 /**
@@ -109,62 +110,94 @@ const getCompaniesInfos = (arg, callback) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { url, limit, csvName } = utils.validateArguments()
+	let { url, columnName, limit, csvName } = utils.validateArguments()
 	const clickSelector = "div.more:last-of-type"
 	const selectors = [ SELECTORS.RESULT_DIV_MARKETS, SELECTORS.RESULT_DIV_COMPANIES, "form.challenge-form" ]
 
-	await tab.open(url)
-	const sel = await tab.waitUntilVisible(selectors, "or", 15000)
-	try {
-		if (sel === selectors[2]) {
-			utils.log(`Got a reCAPTCHA while opening ${url}`, "info")
-			const token = await tab.evaluate((arg, cb) => {
-				const el = document.querySelector(arg.sel)
-				return cb(null, el ? el.dataset.sitekey : null)
-			}, { sel: `${sel} script`})
-			utils.log("Solving reCAPTCHA...", "loading")
-			const solved = await buster.solveNoCaptcha(await tab.getUrl(), token)
-			await tab.evaluate((arg, cb) => {
-				document.querySelector("textarea.g-recaptcha-response").value = arg.val
-				document.querySelector(arg.formSel).submit()
-				cb(null)
-			}, { val: solved, formSel: sel })
-			await tab.waitUntilVisible(selectors.slice(0, 2), "or", 15000)
-			utils.log("Resuming scraping", "done")
-		}
-	} catch (err) {
-		const _redirected = "https://angel.co/"
-		if ((await tab.getUrl()).indexOf(_redirected) > -1) {
-			await tab.open(url)
-			try {
-				await tab.waitUntilVisible(selectors.slice(0, 2), "or")
-			} catch (err) {
-				utils.log("Can't bypass reCAPTCHA even after the first solve", "warning")
-				nick.exit(1)
-			}
-		} else {
-			utils.log("Can't bypass reCAPTCHA", "warning")
-			nick.exit(1)
-		}
+	if (!csvName) {
+		csvName = DB_NAME
 	}
-	let length = await tab.evaluate(getListLength, { selectors: SELECTORS })
-	while (length < limit) {
-		utils.log(`Loaded ${length} companies.`, "info")
-		try {
-			await tab.waitUntilVisible(clickSelector)
-			await tab.click(clickSelector)
-		} catch (error) {
-			utils.log(`Error: ${error.message || error}`, "error")
-			break
-		}
 
-		await tab.waitWhilePresent("img.loading_image")
-		length = await tab.evaluate(getListLength, { selectors: SELECTORS })
+	const db = await utils.getDb(csvName + ".csv")
+
+	try {
+		url = await utils.getDataFromCsv2(url, columnName)
+	} catch (err) {
+		url = [ url ]
 	}
-	utils.log(`Loaded ${length} companies.`, "done")
-	let result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })
-	result.forEach(el => el.timestamp = (new Date()).toISOString())
-	await utils.saveResult(result, csvName)
+
+	for (const one of url) {
+		utils.log(`Opening ${one}...`, "loading")
+		let sel = null
+		try {
+			await tab.open(one)
+			sel = await tab.waitUntilVisible(selectors, "or", 15000)
+		} catch (err) {
+			db.push({ query: one, error: err.message || err, timestamp: (new Date()).toISOString() })
+			continue
+		}
+		try {
+			if (sel === selectors[2]) {
+				utils.log(`Got a reCAPTCHA while opening ${one}`, "info")
+				const token = await tab.evaluate((arg, cb) => {
+					const el = document.querySelector(arg.sel)
+					return cb(null, el ? el.dataset.sitekey : null)
+				}, { sel: `${sel} script`})
+				utils.log("Solving reCAPTCHA...", "loading")
+				const solved = await buster.solveNoCaptcha(await tab.getUrl(), token)
+				await tab.evaluate((arg, cb) => {
+					document.querySelector("textarea.g-recaptcha-response").value = arg.val
+					document.querySelector(arg.formSel).submit()
+					cb(null)
+				}, { val: solved, formSel: sel })
+				await tab.waitUntilVisible(selectors.slice(0, 2), "or", 15000)
+				utils.log("Resuming scraping", "done")
+			}
+		} catch (err) {
+			const _redirected = "https://angel.co/"
+			if ((await tab.getUrl()).indexOf(_redirected) > -1) {
+				await tab.open(one)
+				try {
+					await tab.waitUntilVisible(selectors.slice(0, 2), "or")
+				} catch (_err) {
+					const __err = "Can't bypass reCAPTCHA even after the first solve"
+					utils.log(__err, "warning")
+					db.push({ error: __err, timestamp: (new Date()).toISOString(), query: one })
+					continue
+				}
+			} else {
+				const error = "Can't bypass reCAPTCHA"
+				utils.log(error, "warning")
+				db.push({ error, timestamp: (new Date()).toISOString(), query: one })
+				continue
+			}
+		}
+		let length = await tab.evaluate(getListLength, { selectors: SELECTORS })
+		while (length < limit) {
+			utils.log(`Loaded ${length} companies.`, "info")
+			try {
+				await tab.waitUntilVisible(clickSelector)
+				await tab.click(clickSelector)
+			} catch (error) {
+				utils.log(`Error: ${error.message || error}`, "error")
+				break
+			}
+
+			await tab.waitWhilePresent("img.loading_image")
+			length = await tab.evaluate(getListLength, { selectors: SELECTORS })
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+		}
+		utils.log(`Loaded ${length} companies.`, "done")
+
+		let result = await tab.evaluate(getCompaniesInfos, { selectors: SELECTORS })
+		result.forEach(el => el.timestamp = (new Date()).toISOString())
+		db.push(...utils.filterRightOuter(db, result))
+	}
+	await utils.saveResult(db, csvName)
 })()
 .catch(err => {
 	utils.log(err, "error")

@@ -36,7 +36,7 @@ const MESSAGES = [
 	"Check how #productName# is doing on",
 	"Good luck for your launch! Follow it live on",
 	"Follow #productName#'s launch LIVE on",
-	"Don't stress over #productName# launch; Follow it like a pro on",
+	"Don't stress over #productName# launch! Follow it like a pro on",
 	"Your #productName#'s war-room is now live.",
 	"What actions are working during your launch? Check it on ProductWars!",
 	"The competition is on! Follow #productName#'s growth on",

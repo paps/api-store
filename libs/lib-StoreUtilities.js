@@ -12,6 +12,7 @@ const ERROR_CODES = {
 	GO_NOT_ACCESSIBLE: 75,
 	BAD_INPUT: 76,
 	PROXY_ERROR: 77,
+	NO_INPUT: 78,
 	LINKEDIN_BAD_COOKIE: 83,
 	LINKEDIN_EXPIRED_COOKIE: 84,
 	LINKEDIN_BLOCKED_ACCOUNT: 85,
@@ -322,17 +323,27 @@ class StoreUtilities {
 	/**
 	 * @param {Array<Object>} csv - CSV content
 	 * @param {String|Array<String>} [columnName] - column(s) to fetch in the CSV for each rows
-	 * @throws if columns or one of the columns doesn't exist in the CSV
+	 * @param {number} [defaultColumn] - column to use if columnName isn't found
 	 * @return {Array<String>|Array<Object>} CSV rows with the columns
 	 */
-	extractCsvRows(csv, columnName) {
-		let column = 0
+	extractCsvRows(csv, columnName, defaultColumn) {
+		if (!defaultColumn) {
+			defaultColumn = 0
+		}
+		let rank = ""
+		if (defaultColumn === 0) {
+			rank = "first"
+		}
+		if (defaultColumn === 1) {
+			rank = "second"
+		}
+		let column = defaultColumn
 		let rows = []
 		if (typeof columnName === "string" && columnName) {
 			column = csv[0].findIndex(el => el === columnName)
 			if (column < 0) {
-				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-				column = 0
+				this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+				column = defaultColumn
 			} else {
 				csv.shift()
 			}
@@ -347,8 +358,8 @@ class StoreUtilities {
 			for (const field of columns) {
 				let index = csv[0].findIndex(cell => cell === field)
 				if (index < 0) {
-					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using first column instead.`, "warning")
-					index = 0
+					this.log(`The Column Name is set to '${columnName}' but there's no column named '${columnName}' in your input spreadsheet. Using ${rank} column instead.`, "warning")
+					index = defaultColumn
 				}
 				fieldsPositions.push({ name: field, position: index })
 			}
@@ -374,6 +385,10 @@ class StoreUtilities {
 	 * @return {Promise<Array<String>>} CSV content
 	 */
 	async getDataFromCsv2(url, columnName, printLogs = true) {
+		if (url === "https://docs.google.com/spreadsheets/d/(...)") {
+			this.log("You didn't enter any input spreadsheet!", "error")
+			process.exit(ERROR_CODES.NO_INPUT)
+		}
 		let urlObj = null
 		if (printLogs) {
 			this.log(`Getting data from ${url}...`, "loading")
@@ -620,6 +635,7 @@ class StoreUtilities {
 			this._testResult(csvResult)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
+		return backupResultObject
 	}
 
 	/**
@@ -778,6 +794,9 @@ class StoreUtilities {
 
 	// adds "https://www." to a url if not present, and forces to lowercase. domain is "facebook", "linkedin", ...
 	adjustUrl(url, domain) {
+		if (url.startsWith("#")) {
+			return url
+		}
 		let urlObject = parse(url.toLowerCase())
 		if (urlObject.pathname.startsWith(domain)) {
 			urlObject = parse("https://www." + url)

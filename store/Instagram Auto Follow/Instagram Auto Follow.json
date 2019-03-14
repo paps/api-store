@@ -49,8 +49,8 @@
 					},
 					"numberOfProfilesPerLaunch": {
 						"label": "Number of profiles to follow per launch <a href=\"/api-store/10274/instagram-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
-						"inputType": "number"
+						"inputType": "number",
+						"helper": "All of them if empty"
 					},
 					"action": {
 						"label": "Follow/Unfollow action",

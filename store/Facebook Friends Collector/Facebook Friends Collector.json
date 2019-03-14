@@ -32,11 +32,11 @@
 			"options": {
 				"fields": {
 					"sessionCookieCUser": {
-						"label": "Session cookie c_user <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie c_user <a href=\"/api-store/13502/facebook-friends-collector#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your c_user session cookie here"
 					},
 					"sessionCookieXs": {
-						"label": "Session cookie xs <a href=\"/api-store/8369/facebook-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie xs <a href=\"/api-store/13502/facebook-friends-collector#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your xs session cookie here"
 					},
 					"spreadsheetUrl": {
@@ -44,19 +44,19 @@
 							"Enter either a Facebook Profile URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook Profile URL / Spreadsheet <a href=\"/api-store/13502/facebook-friends-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
-						"label": "Column name from which to get Profile URLs <a href=\"/api-store/8369/facebook-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"label": "Column name from which to get Profile URLs <a href=\"/api-store/13502/facebook-friends-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
 						"placeholder": "Facebook Profile URLs",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"maxFriends": {
-						"label": "Number of friends to collect per profile - if none will try to scrape all of them  <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"label": "Number of friends to collect per profile - if none will try to scrape all of them  <a href=\"/api-store/13502/facebook-friends-collector#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"profilesPerLaunch": {
-						"label": "Number of profiles to process per launch - if none will process of all your spreadsheet <a href=\"/api-store/8369/facebook-profile-scraper#section_repetitionsetup\" target=\"_blank\">(?)</a>",
+						"label": "Number of profiles to process per launch - if none will process of all your spreadsheet <a href=\"/api-store/13502/facebook-friends-collector#section_repetitionsetup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {

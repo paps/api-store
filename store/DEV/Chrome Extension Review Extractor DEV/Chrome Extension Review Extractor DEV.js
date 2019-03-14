@@ -28,8 +28,8 @@ const selectors = {
 	root: "div[role=dialog]",
 	reviewsTab: "div[role=tablist] > div[role=tab]:nth-child(2)",
 	reviewsPanel: "div[role=tablist] ~ div:nth-child(3) div[webstore-source=ReviewsTab]",
-	nextPaginationElement: "div[ga\\:type=PaginationBar] a[ga\\:type=NextLink]",
-	waitCondition: "span[ga\\:type=PaginationMessage]",
+	nextPaginationElement: "div[webstore-source=\"ReviewsTab\"] > div:last-of-type a:last-of-type",
+	waitCondition: "div[webstore-source=\"ReviewsTab\"] > div:last-of-type span",
 	filtersBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span",
 	dropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span > span:nth-child(1)",
 	reviewsDropDownBase: "div[role=tablist] ~ div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > span > span:last-of-type",
@@ -54,18 +54,21 @@ const handleSpreadsheet = async (url, column) => {
 }
 
 const getReviews = (arg, cb) => {
-	const reviews = Array.from(document.querySelectorAll("div[ga\\:annotation-index]"))
+	const reviews = Array.from(document.querySelectorAll("div[webstore-source=\"ReviewsTab\"] > div:first-of-type > div:not(class)"))
 	const toRet = reviews.map(el => {
 		const review = {}
-		review.profileImg = el.querySelector("img[ga\\:type=ProfileImage]") ? el.querySelector("img[ga\\:type=ProfileImage]").src : ""
-		const reviewer = el.querySelector("div a.comment-thread-displayname[ga\\:type=DisplayName]")
+		const profileImgSel = el.querySelector("img")
+		const dateSel = el.querySelector("a.comment-thread-displayname ~ span")
+		const reviewer = el.querySelector("a.comment-thread-displayname")
+		const _commentSel = el.querySelector("a.comment-thread-displayname ~ div[dir=auto]")
 		if (reviewer) {
 			review.name = reviewer.textContent.trim()
 			review.profileLink = reviewer.href
 		}
-		review.date = el.querySelector("span[ga\\:type=Timestamp]").textContent.trim()
-		review.mark = el.querySelectorAll("div.rsw-starred").length
-		review.review = el.querySelector("div[ga\\:type=Comment]").textContent.trim()
+		review.profileImg = profileImgSel.src
+		review.date = dateSel ? dateSel.textContent.trim() : ""
+		review.mark = el.querySelectorAll("div.rsw-stars > div.rws-starred").length
+		review.review = _commentSel ? _commentSel.textContent.trim() : ""
 		review.url = arg.url
 		review.timestamp = (new Date()).toISOString()
 		return review
@@ -84,8 +87,17 @@ const getReviews = (arg, cb) => {
 const waitUntilNewReviews = (arg, cb) => {
 	const startTime = Date.now()
 	const waitNewReviews = () => {
-		const data = document.querySelector(arg.selectors.waitCondition).textContent.trim()
-		if ((!data) || (data === arg.lastCount)) {
+		const el = document.querySelector(arg.selectors.waitCondition)
+		let val = 0
+		if (el) {
+			let tmp = el.textContent.trim().match(/\d+/g).map(el => parseInt(el, 10))
+			tmp = tmp.filter(el => !isNaN(el))
+			if (tmp.length === 3) {
+				tmp.pop()
+			}
+			val = Math.min.apply(null, tmp)
+		}
+		if ((!val) || (val === arg.lastCount)) {
 			if ((Date.now() - startTime) >= 30000) {
 				cb("New reviews can't be loaded after 30s")
 			}
@@ -136,7 +148,19 @@ const loadAndScrape = async (tab, url) => {
 	ret = await tab.evaluate(getReviews, { selectors, url })
 	await tab.wait(MIN_DEBOUNCE + Math.round(Math.random() * 200)) // Waiting at least 2000 ms before clicking in order to prevent bot detection system
 	if (await tab.isVisible(selectors.nextPaginationElement)) {
-		let tmp = await tab.evaluate((arg, cb) => { cb(null, document.querySelector(arg.selectors.waitCondition).textContent.trim()) }, { selectors })
+		let tmp = await tab.evaluate((arg, cb) => {
+			const el = document.querySelector(arg.selectors.waitCondition)
+			let val = 0
+			if (el) {
+				let tmp = el.textContent.trim().match(/\d+/g).map(el => parseInt(el, 10))
+				tmp = tmp.filter(el => !isNaN(el))
+				if (tmp.length === 3) {
+					tmp.pop()
+				}
+				val = Math.min.apply(null, tmp)
+			}
+			cb(null, val)
+		}, { selectors })
 		await tab.click(selectors.nextPaginationElement)
 		try {
 			await tab.evaluate(waitUntilNewReviews, { selectors, lastCount: tmp })
@@ -153,10 +177,10 @@ const loadAndScrape = async (tab, url) => {
  * @async
  * @description Function used to scrape a single extension review
  * @param {Object} tab - Nickjs Tab instance
- * @param {String} url - Extension review URLs
- * @return {Promise<Array<String>>} Array containing all reviews or an empty array is an error happened
+ * @param {string} url - Extension review URLs
+ * @return {Promise<{ name: string, reviews: object[] }} Array containing all reviews or an empty array is an error happened
  */
-const scrapeReviews = async (tab, url) => {
+const scrapeReviews = async (tab, url, maxCount = Infinity) => {
 	let res = { name: "", reviews: [] }
 	let extensionName
 	try {
@@ -184,8 +208,12 @@ const scrapeReviews = async (tab, url) => {
 			if (!timeLeft.timeLeft) {
 				break
 			}
-			res.reviews = res.reviews.concat(await loadAndScrape(tab, url))
+			res.reviews = res.reviews.concat(utils.filterRightOuter(res.reviews, await loadAndScrape(tab, url)))
 			utils.log(`Got ${res.reviews.length} reviews`, "info")
+			if (res.reviews.length >= maxCount) {
+				res.reviews = res.reviews.slice(0, maxCount)
+				break
+			}
 		}
 	} catch (err) {
 		utils.log(err.message || err, "warning")
@@ -206,7 +234,7 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, columnName, extensionsPerLaunch, csvName } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, extensionsPerLaunch, reviewsPerExtensions, csvName } = utils.validateArguments()
 	let urls = []
 	const scrapingRes = []
 	let i = 0
@@ -250,7 +278,7 @@ const createCsvOutput = json => {
 			await tab.wait(100000) // Wait 1min if the error count has been incremented
 			rateLimit = !rateLimit
 		}
-		const reviewRes = await scrapeReviews(tab, url)
+		const reviewRes = await scrapeReviews(tab, url, reviewsPerExtensions)
 		utils.log(`Got ${reviewRes.reviews.length} reviews from ${reviewRes.name}`, "done")
 		scrapingRes.push(reviewRes)
 		i++

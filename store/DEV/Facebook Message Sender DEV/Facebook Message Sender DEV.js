@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook-DEV.js, lib-Messaging.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -24,6 +25,7 @@ const facebook = new Facebook(nick, buster, utils)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 const { URL } = require("url")
+let temporarilyBlocked = false
 
 const isUrl = url => {
 	try {
@@ -51,7 +53,7 @@ const openChatPage = async (tab, profileUrl, message) => {
 	const urlObject = new URL(profileUrl)
 	let slug
 	if (profileUrl.includes("profile.php?id=")) {
-		slug = urlObject.searchParams.get("id")
+		slug = "/" + urlObject.searchParams.get("id")
 	} else if (urlObject.pathname.startsWith("/pg/")) {
 		slug = urlObject.pathname.substr(3)
 	} else {
@@ -82,7 +84,10 @@ const openChatPage = async (tab, profileUrl, message) => {
 			utils.log("Facebook is asking for an account verification.", "error")
 			return { profileUrl, error: "Account verification" }
 		}
+		console.log("url:", await tab.getUrl())
 		utils.log(`Couldn't get name from chat with ${profileUrl}: ${err}`, "error")
+		await buster.saveText(await tab.getContent(), `${Date.now()}name.html`)
+		await tab.screenshot(`${Date.now()}name.png`)
 		return { profileUrl, error: "Could get profile name" }
 	}
 }
@@ -93,6 +98,13 @@ const sendMessage = async (tab, message) => {
 		utils.log("Starting conversation...", "loading")
 		await tab.wait(500)
 	}
+	if (await tab.isVisible("a[href=\"https://www.facebook.com/help/181183045316843\"]")) { // temporarily blocked from starting new conversations
+		utils.log("Can't send any message: You're temporarily blocked from starting new conversations: https://www.facebook.com/help/181183045316843", "warning")
+		temporarilyBlocked = true
+		return null
+	}
+	await buster.saveText(await tab.getContent(), `${Date.now()}mess.html`)
+	await tab.screenshot(`${Date.now()}mess.png`)
 	const messageArray = facebook.reverseMessage(message)
 	for (const line of messageArray) {
 		await tab.sendKeys(".notranslate", line)
@@ -187,6 +199,9 @@ nick.newTab().then(async (tab) => {
 							let forgedMessage = facebook.replaceTags(message, tempResult.name, tempResult.firstName)
 							forgedMessage = inflater.forgeMessage(forgedMessage, profileObject)
 							await sendMessage(tab, forgedMessage)
+							if (temporarilyBlocked) {
+								break
+							}
 							await tab.wait(4000)
 							const isBanned = await tab.evaluate(checkIfBanned)
 							const isBlocked = await tab.evaluate(checkIfBlocked)
@@ -230,7 +245,7 @@ nick.newTab().then(async (tab) => {
 						utils.log(`Could not connect to ${profileUrl}  ${err}`, "error")
 					}
 				}
-			} else { 
+			} else {
 				utils.log(`${profileUrl} doesn't constitute a Facebook Profile URL... skipping entry`, "warning")
 			}
 		}
