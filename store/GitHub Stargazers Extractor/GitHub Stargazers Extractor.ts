@@ -98,10 +98,7 @@ const scrapePage = (): Promise<IUnknownObject[]> => {
 	return Promise.resolve(stars)
 }
 
-const isListFinished = (): boolean => {
-	const el = document.querySelector("div.pagination > *:last-child")
-	return el ? el.classList.contains("disabled") : true
-}
+const isListFinished = (): boolean => !!document.querySelector("div.paginate-container > a:last-child")
 
 const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownObject> => {
 	const res: IUnknownObject = { rateLimitPage: null as string|null, stars: [] as IUnknownObject[], scrapedCount: null as number|null }
@@ -116,7 +113,7 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 			break
 		}
 		try {
-			await page.waitForSelector("div.pagination")
+			await page.waitForSelector("div.paginate-container")
 			hasNext = await page.evaluate(isListFinished) as boolean
 		} catch (err) {
 			break
@@ -127,11 +124,14 @@ const scrape = async (page: puppeteer.Page, count = Infinity): Promise<IUnknownO
 		utils.log(`${(res.stars as IUnknownObject[]).length} stargazers scraped`, "info")
 		if (!hasNext) {
 			try {
-				await page.click("div.pagination > *:last-child")
+				await page.click("div.paginate-container a:last-child")
 				await page.waitForSelector("nav.tabnav-tabs > a:first-of-type")
 			} catch (err) {
-				res.rateLimitPage = page.url()
-				res.scrapedCount = scrapedCount
+				const check = await page.title()
+				if (check.toLowerCase().includes("rate limit")) {
+					res.rateLimitPage = page.url()
+					res.scrapedCount = scrapedCount
+				}
 				break
 			}
 		}
