@@ -39,6 +39,9 @@
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file <a href=\"/api-store/2880/linkedin-post-likers#section_5nameyourfuturecsv\" target=\"_blank\">(?)</a>"
+					},
+					"removeDuplicate": {
+						"rightLabel": "<b>Remove all duplicate profiles</b>"
 					}
 				}
 			}
@@ -62,6 +65,10 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"removeDuplicate": {
+				"type": "boolean",
+				"default": false
 			}
 		}
 	}

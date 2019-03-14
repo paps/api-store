@@ -23,6 +23,18 @@ const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
+const unique = (left, right) => {
+	const rLength = right.length
+	const res = right.slice(0)
+	for (let i = 0; i < rLength; i++) {
+		const leftIdx = left.findIndex(el => el.profileLink === right[i].profileLink && el.query === right[i].query)
+		if (leftIdx > -1) {
+			res[leftIdx] = right[i]
+		}
+	}
+	return res
+}
+
 // Get the number of comments loaded
 const getLikesNumber = (arg, callback) => {
 	callback(null, document.querySelectorAll("li.actor-item").length)
@@ -74,7 +86,7 @@ const scrapeLikes = (arg, callback) => {
 }
 
 // Function to launch every others and handle errors
-const getLikes = async (tab, urls) => {
+const getLikes = async (tab, urls, removeDuplicates = false) => {
 	let results = []
 	const selectors = {}
 
@@ -120,7 +132,11 @@ const getLikes = async (tab, urls) => {
 			el.timestamp = (new Date()).toISOString()
 			return el
 		})
-		results = results.concat(likes)
+		if (removeDuplicates) {
+			results = unique(results, likes) // results.concat(unique(results, likes))
+		} else {
+			results = results.concat(likes)
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
@@ -134,7 +150,7 @@ const getLikes = async (tab, urls) => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let db = null
-	let { sessionCookie, postUrl, columnName, csvName } = utils.validateArguments()
+	let { sessionCookie, postUrl, columnName, csvName, removeDuplicate } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = "result"
@@ -152,13 +168,14 @@ const getLikes = async (tab, urls) => {
 	}
 	utils.log(`URLs to scrape: ${JSON.stringify(postUrl, null, 2)}`, "info")
 	await linkedIn.login(tab, sessionCookie)
-	const results = await getLikes(tab, postUrl)
+	const results = await getLikes(tab, postUrl, removeDuplicate)
 	db.push(...utils.filterRightOuter(db, results))
-	utils.log(`Got ${results.length} likers.`, "done")
+	utils.log(`Got ${results.length} likers in total.`, "done")
 	await linkedIn.updateCookie()
 	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {
 		utils.log(err, "error")
+		console.log(err.stack || err)
 		nick.exit(1)
 	})
