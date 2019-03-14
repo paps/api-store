@@ -48,9 +48,9 @@
 		"connectedOn": "date of connection (if connection)",
 		"phone": "public phone number",
 		"mail": "email address if 1st degree connection",
-		"email from Dropcontact.io": "result of an email request with DropContact (if activated)",
-		"email from Hunter.io": "result of an email request with DropContact (if activated)",
-		"email from Phantombuster": "result of an email request with DropContact (if activated)",
+		"email from Dropcontact.io": "result of an email request with Dropontact (if activated)",
+		"email from Hunter.io": "result of an email request with Hunter (if activated)",
+		"email from Phantombuster": "result of an email request with Phantombuster (if activated)",
 		"skill": "all skills and endorsements for each one"
 	},
 	"defaultArgumentAllowed": false,
