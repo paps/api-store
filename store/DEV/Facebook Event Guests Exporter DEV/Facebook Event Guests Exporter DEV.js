@@ -343,7 +343,7 @@ const checkUnavailable = (arg, cb) => {
 					result = result.concat(extractedGuests)
 				} catch (err) {
 					if (await tab.evaluate(checkUnavailable)) {
-						result.push({ eventUrl, error: "Event not available"})
+						result.push({ eventUrl, timestamp: (new Date()).toISOString(), error: "Event not available"})
 						utils.log("Event isn't available", "warning")
 					} else {
 						utils.log(`Error accessing page!: ${err}`, "error")
