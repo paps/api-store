@@ -16,7 +16,7 @@ declare class StoreUtilities {
 	public getDataFromCsv2(url: string, columnName?: string|string[], printLogs?: boolean): Promise<string[]>
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>
-	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<void>
+	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<{ csvUrl: string, jsonUrl?: string }>
 	public getDb(filename: string, parseContent?: boolean): Promise<IUnknownObject[]>
 	public saveResult(result: IUnknownObject[], csvName?: "result"|null|string, schema?: string[]): Promise<void>
 	public checkArguments(args: IUnknownObject[]): IUnknownObject[]

@@ -635,6 +635,7 @@ class StoreUtilities {
 			this._testResult(csvResult)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
+		return backupResultObject
 	}
 
 	/**
