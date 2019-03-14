@@ -449,18 +449,26 @@ class Facebook {
 				let errorMessage = "Connection has timed out."
 				const proxyUsed = this.nick._options.httpProxy
 				if (proxyUsed) {
-					errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
+					let unauthorized = false
 					if (proxyUsed.includes(".proxymesh.com")) {
-						if (proxyUsed.includes(":@")) {
-							errorMessage += " Your ProxyMesh password seems to be missing."
-						}
-						if (proxyUsed.startsWith("http://:")) {
-							errorMessage += " Your ProxyMesh username seems to be missing."
-						}
+						unauthorized = await this.utils.detectProxymeshError(tab)
 					}
-					const charMatch = this.nick._options.httpProxy.match(/@/g)
-					if (charMatch && charMatch.length > 1) {
-						errorMessage += " Also do not use special characters such as '@' in your username/password."
+					if (unauthorized) {
+						errorMessage += " It seems you didn't authorized your proxy. Check your ProxyMesh dashboard: https://proxymesh.com/account/edit_proxies"
+					} else {
+						errorMessage += " Your proxy may not be working, make sure to test it in your web browser first."
+						if (proxyUsed.includes(".proxymesh.com")) {
+							if (proxyUsed.includes(":@")) {
+								errorMessage += " Your ProxyMesh password seems to be missing."
+							}
+							if (proxyUsed.startsWith("http://:")) {
+								errorMessage += " Your ProxyMesh username seems to be missing."
+							}
+						}
+						const charMatch = this.nick._options.httpProxy.match(/@/g)
+						if (charMatch && charMatch.length > 1) {
+							errorMessage += " Also do not use special characters such as '@' in your username/password."
+						}
 					}
 				}
 				this.utils.log(errorMessage, "error")

@@ -880,6 +880,31 @@ class StoreUtilities {
 		return savedImg
 	}
 
+	/**
+	 * @description detects if ProxyMesh proxy isn't authorized
+	 * @param {Object} tab
+	 * @return {Boolean} True if proxy isn't authorized, otherwise false
+	 */
+	async detectProxymeshError(tab) {
+		try {
+			await tab.open("www.google.com")
+			await tab.waitUntilVisible("body")
+			const bodyText = await tab.evaluate((arg, cb) => {
+				if (document.querySelector("body")) {
+					cb(null, document.querySelector("body").textContent)
+				} else {
+					cb(null, null)
+				}
+			})
+			if (bodyText && bodyText.endsWith("proxy not authorized")) {
+				return true
+			}
+		} catch (err) {
+			//
+		}
+		return false
+	}
+
 }
 
 module.exports = StoreUtilities
