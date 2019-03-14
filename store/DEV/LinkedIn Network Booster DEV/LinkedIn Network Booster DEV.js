@@ -142,11 +142,17 @@ const connectTo = async (selector, tab, message) => {
 		try {
 			await tab.click(".send-invite__actions > button:nth-child(1)")
 			// Write the message
+			console.log("messageL", message.length)
+
 			await tab.waitUntilVisible("#custom-message")
+			console.log("1")
+
 			await tab.evaluate((arg, callback) => {
 				document.getElementById("custom-message").value = arg.message
 				callback()
 			}, {message})
+			console.log("2")
+
 			await tab.sendKeys("#custom-message", "") // Trigger the event of textarea
 			utils.log(`Message sent: ${message}`, "done")
 		} catch (err) {
@@ -512,8 +518,10 @@ nick.newTab().then(async (tab) => {
 	if (db.length) {
 		utils.log(`${db.length} profiles have already been processed.`, "done")
 	}
+	const date = new Date()
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
+	console.log("elapsed:", new Date() - date)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
@@ -531,7 +539,12 @@ nick.newTab().then(async (tab) => {
 			row.baseUrl = row[columnName]
 			try {
 				utils.log(`Adding ${row[columnName]}...`, "loading")
-				const newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
+				let newUrl
+				if (row[columnName].includes("/sales/profile/")) {
+					newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+				} else {
+					newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
+				}
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.timestamp = (new Date()).toISOString()
