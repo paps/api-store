@@ -54,6 +54,7 @@ const ajaxCall = (arg, cb) => {
 }
 
 // Checks if a url is already in the csv
+/* eslint-disable-next-line no-unused-vars */
 const checkDb = (str, db) => {
 	for (const line of db) {
 		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {

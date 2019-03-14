@@ -108,6 +108,7 @@ declare module "nickjs" {
 
 	}
 
+	// @ts-ignore
 	export = Nick
 
 }

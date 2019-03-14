@@ -33,7 +33,7 @@ const twitter = new Twitter(buster, utils);
 	const results = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 	console.log("results:", results)
 	if (spreadsheetUrl) {
-		tweetsArray = await utils.getDataFromCsv2(spreadsheetUrl, _columnName)
+		tweetsArray = await utils.getDataFromCsv2(spreadsheetUrl as string, _columnName)
 	}
 	if (tweets && typeof tweets === "string") {
 		tweetsArray = [ tweets ]
