@@ -369,6 +369,25 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 	return result
 }
 
+// scrolls through each Lead result
+const scrollLeads = async (tab) => {
+	const profileCount = await tab.evaluate((arg, cb) => cb(null, document.querySelectorAll("ol.search-results__result-list li .search-results__result-container").length))
+	for (let i = 1; i <= profileCount ; i++) {
+		try {
+			await tab.evaluate((arg, callback) => { // scroll one by one to correctly load images
+				if (document.querySelector(`ol.search-results__result-list li.search-results__result-item:nth-of-type(${arg.i})`)) {
+					callback(null, document.querySelector(`ol.search-results__result-list li.search-results__result-item:nth-of-type(${arg.i})`).scrollIntoView())
+				} else {
+					callback(null, "hi")
+				}
+			}, { i })
+			await tab.wait(100)
+		} catch (err) {
+			break
+		}
+	}
+}
+
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
 	let pageCount
@@ -441,6 +460,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			}
 			if (containerSelector === "section.search-results__container") { // Lead Search
 				try {
+					await scrollLeads(tab)
 					result = result.concat(await tab.evaluate(scrapeResultsLeads, {query, numberOnThisPage}))
 				} catch (err) {
 					//

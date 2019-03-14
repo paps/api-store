@@ -9,7 +9,7 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_profile_urls",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"numberofProfilesperLaunch": 10
 	},
 	"outputDescription": {
