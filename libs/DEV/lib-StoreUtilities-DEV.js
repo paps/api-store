@@ -598,7 +598,16 @@ class StoreUtilities {
 		return ""
 	}
 
-	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
+	/**
+	 * @async
+	 * XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
+	 * @param {object} jsonResult
+	 * @param {object} csvResult
+	 * @param {string} [name]
+	 * @param {object} [schema]
+	 * @param {saveJson} [boolean]
+	 * @return {Promise<{ csvUrl: string, jsonUrl?: string }>}
+	 */
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
@@ -714,6 +723,8 @@ class StoreUtilities {
 			this._testResult(csvResult)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
+		// TODO: cleanup this method and return jsonUrl when possible
+		return { csvUrl: csv }
 	}
 
 	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
