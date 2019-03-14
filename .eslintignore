@@ -13,6 +13,15 @@ store/GitHub Stargazers Extractor/GitHub Stargazers Extractor.js
 store/Github Profile Scraper/GitHub Profile Scraper.js
 store/DEV/GitHub Stargazers Extractor DEV/GitHub Stargazers Extractor DEV.js
 store/DEV/Meetup Attendees Extractor DEV/Meetup Attendees Extractor DEV.js
+store/DEV/Instagram Auto Commenter DEV/Instagram Auto Commenter DEV.js
+store/DEV/Product Hunt Upvoter Extractor DEV/Product Hunt Upvoter Extractor DEV.js
+store/DEV/Uber Billing Extractor DEV/Uber Billing Extractor DEV.js
+store/Instagram Auto Commenter/Instagram Auto Commenter.js
+store/Product Hunt Upvoter Extractor/Product Hunt Upvoter Extractor.js
+store/DEV/Product Hunt Products Extractor DEV/Product Hunt Products Extractor DEV.js
+store/Product Hunt Products Extractor/Product Hunt Products Extractor.js
+store/DEV/Twitter Tweet Sender DEV/Twitter Tweet Sender DEV.js
+store/Twitter Tweet Sender/Twitter Tweet Sender.js
 libs/DEV/lib-ProductHunt-DEV.js
 libs/DEV/lib-Slack-DEV.js
 store/Product Hunt Auto Follow/Product Hunt Auto Follow.js
