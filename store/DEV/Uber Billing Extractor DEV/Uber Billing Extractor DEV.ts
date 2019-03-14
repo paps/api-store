@@ -1,12 +1,14 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Messaging.js"
 // "phantombuster flags: save-folder"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities"
+
+import Messaging from "./lib-Messaging"
 
 import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 
@@ -122,6 +124,19 @@ declare interface IRating {
 
 const DB_NAME = "result"
 const INVOICE_ZIP = `invoices-${Date.now()}.tar.gz`
+const email = `The Uber invoices export you requested using Phantombuster () is ready to go!
+Just click the links below to start the download. Those fiels will be available until the next extract request.
+
+Export details:
+- Invoices: #zipname# (#zipurl#)
+- Data recap: #csvname# (#csvurl#)
+{{- Peroid date: between #from# and #to#}}
+
+We'll be here to help you with any step along the way. You can get in touch with the support team at support@phantombuster.com.
+
+Best,
+--
+The Phantombuster team`
 // }
 
 /**
@@ -348,6 +363,7 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 	const { sessionCookieCsid, sessionCookieSid, from, to, mail } = args as IApiParams
 	let { csvName } = args as IMutableApiParams
 	let archiveURL = null
+	const inflater = new Messaging(utils)
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -370,15 +386,26 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 		if (archive) {
 			archiveURL = await buster.save(archive as string, archive)
 		}
-
-		if (mail) {
-			await buster.mail("Your Uber invoices are ready!", `Hello,\nyou can find your Uber invoices ${ from && to ? `(Between ${from} and ${to})` : ""} here: ${archiveURL}\n\nHappy scraping\n` , mail)
-		}
 	}
 
 	await page.close()
 	await browser.close()
-	await utils.saveResults(res.trips, res.trips, csvName, null, true)
+	const pbBundle = await utils.saveResults(res.trips, res.trips, csvName, null, true)
+	const bundle = { zipname: INVOICE_ZIP, zipurl: archiveURL, csvname: `${csvName}.csv`, csvurl: pbBundle.csvUrl, from, to }
+	if (mail) {
+		let message = email
+
+		if (!from || !to) {
+			const start = message.indexOf("{")
+			const end = message.lastIndexOf("}")
+			message = message.slice(0, start - 1) + message.slice(end + 1, email.length)
+		} else {
+			message = message.replace(/[{}]+/g, "\r")
+		}
+
+		const toSend = inflater.forgeMessage(message, bundle)
+		await buster.mail("Your Uber invoices are ready!", toSend, mail)
+	}
 	process.exit()
 })()
 .catch((err) => {
