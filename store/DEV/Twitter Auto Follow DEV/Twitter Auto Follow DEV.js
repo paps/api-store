@@ -43,26 +43,36 @@ const getProfilesToAdd = async (spreadsheetUrl, columnName, db, numberOfAddsPerL
 	} else {
 		result = [spreadsheetUrl]
 	}
-
-	result = result.filter(el => {
-		for (const line of db) {
-			el = el.toLowerCase()
-			const regex = new RegExp(`twitter.com/${line.handle}$`)
-			if (line.handle && el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex) || (el.includes("twitter.com/@") && (el.replace(".com/@", ".com/") === line.url))) {
-				return false
+	const dataToProcess = []
+	let dataCount = 0
+	for (const resultLine of result) {
+		if (resultLine) {
+			let found = false
+			for (const line of db) {
+				const el = resultLine.toLowerCase()
+				const regex = new RegExp(`twitter.com/${line.handle}$`)
+				if (line.handle && el === removeNonPrintableChars(line.handle) || el === line.url || el.match(regex) || (el.includes("twitter.com/@") && (el.replace(".com/@", ".com/") === line.url))) {
+					found = true
+					break
+				}
+			}
+			if (!found) {
+				dataToProcess.push(resultLine)
+				dataCount++
+				if (dataCount === numberOfAddsPerLaunch) {
+					break
+				}
 			}
 		}
-		return true
-	})
-	result = result.filter(el => el)
-	if (result.length === 0) {
+	}
+	if (dataToProcess.length === 0) {
 		utils.log("Every account from this list is already added.", "warning")
 		await buster.setResultObject([])
 		nick.exit()
 	} else {
-		utils.log(`Adding ${result.length > numberOfAddsPerLaunch ? numberOfAddsPerLaunch : result.length} twitter profiles.`, "info")
+		utils.log(`Adding ${dataToProcess.length} twitter profiles.`, "info")
 	}
-	return result
+	return dataToProcess
 }
 
 /**
