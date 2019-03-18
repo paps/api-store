@@ -65,6 +65,7 @@ const checkDb = (str, db) => {
 }
 
 // Removes any duplicate profile
+/* eslint-disable-next-line no-unused-vars */
 const removeDuplicatesSelf = (arr) => {
 	let resultArray = []
 	console.log("arr.length", arr.length)

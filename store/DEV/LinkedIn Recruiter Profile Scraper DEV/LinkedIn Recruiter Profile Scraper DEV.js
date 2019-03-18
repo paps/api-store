@@ -17,7 +17,9 @@ const nick = new Nick({
 	debug: false,
 })
 
+/* eslint-disable-next-line no-unused-vars */
 const puppeteer = require("puppeteer")
+/* eslint-disable-next-line no-unused-vars */
 let browser
 
 const StoreUtilities = require("./lib-StoreUtilities")

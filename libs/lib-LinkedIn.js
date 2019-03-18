@@ -125,19 +125,23 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
+			const proxyUsed = this.nick._options.httpProxy
+			if (proxyUsed) {
+				if (proxyUsed.includes(".proxymesh.com") && await this.utils.detectProxymeshError(tab)) {
+					this.utils.log("It seems you didn't authorized your proxy. Check your ProxyMesh dashboard: https://proxymesh.com/account/edit_proxies", "error")
+					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
+				}
+				if (error.message && (error.message.startsWith("timeout: load event did not fire after")) || error.message.includes("ERR_PROXY_CONNECTION_FAILED")) {
+					this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
+					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
+				}
+			}
 			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
-				this.utils.log("Session cookie not valid anymore. Please log in to LinkedIn to get a new one.", "error")
+				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
-			}
-			if (this.nick._options.httpProxy && error.message && error.message.startsWith("timeout: load event did not fire after")) {
-				this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
-				this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
 			} else {
-				this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
+				this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			}
-			// if (this.originalSessionCookie.length < 110) {
-			// 	this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")
-			// }
 			if (this.originalSessionCookie.length !== 152) {
 				this.utils.log(`The LinkedIn li_at session cookie has usually 152 characters, yours has ${this.originalSessionCookie.length} characters, make sure you correctly copy-pasted the cookie.`, "error")
 			}
@@ -216,7 +220,7 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log("Can't connect to LinkedIn Recruiter with this session cookie.", "error")
+			this.utils.log(`Can't connect to LinkedIn Recruiter with this session cookie: ${error}`, "error")
 			this.utils.log("From your browser in private mode, go to https://www.linkedin.com/cap, log in, THEN copy-paste your li_at session cookie.", "info")
 			if (this.originalSessionCookieliAt.length < 100) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	

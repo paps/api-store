@@ -608,6 +608,7 @@ class StoreUtilities {
 	 * @param {saveJson} [boolean]
 	 * @return {Promise<{ csvUrl: string, jsonUrl?: string }>}
 	 */
+	/* eslint-disable-next-line no-unused-vars */
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
@@ -647,7 +648,9 @@ class StoreUtilities {
 			// csvResult = newResult
 		}
 		// console.log("v8", v8.getHeapStatistics())
+		/* eslint-disable-next-line no-unused-vars */
 		const fs = require("fs")
+		/* eslint-disable-next-line no-unused-vars */
 		const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
 		console.log("part3-4:", new Date() - date)
 		date = new Date()
@@ -663,6 +666,7 @@ class StoreUtilities {
 		console.log("part3-5:", new Date() - date)
 		date = new Date()
 		// console.log("JSON.stringify(jsonResult)", JSON.stringify(jsonResult))
+		/* eslint-disable-next-line no-unused-vars */
 		const data = csvResult
 		// // // const dest = "config.json"
 		// // const s = require("stream");
@@ -1048,6 +1052,31 @@ class StoreUtilities {
 			this.log(errorMessage, "error")
 		}
 		return savedImg
+	}
+
+	/**
+	 * @description detects if ProxyMesh proxy isn't authorized
+	 * @param {Object} tab
+	 * @return {Boolean} True if proxy isn't authorized, otherwise false
+	 */
+	async detectProxymeshError(tab) {
+		try {
+			await tab.open("www.google.com")
+			await tab.waitUntilVisible("body")
+			const bodyText = await tab.evaluate((arg, cb) => {
+				if (document.querySelector("body")) {
+					cb(null, document.querySelector("body").textContent)
+				} else {
+					cb(null, null)
+				}
+			})
+			if (bodyText && bodyText.endsWith("proxy not authorized")) {
+				return true
+			}
+		} catch (err) {
+			//
+		}
+		return false
 	}
 
 }

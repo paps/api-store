@@ -513,7 +513,7 @@ nick.newTab().then(async (tab) => {
 		utils.log(`${db.length} profiles have already been processed.`, "done")
 	}
 	// if columnName isn't defined, utils.extractCsvRow will return a field "0" by default with the first column in the CSV
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl || el[columnName].match(new RegExp(`/in/${line.profileId}($|/)`))) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.baseUrl) < 0).filter(el => el[columnName] !== "no url" && el[columnName]).slice(0, numberOfAddsPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Spreadsheet is empty or everyone is already added from this sheet.", "warning")
 		nick.exit()
@@ -531,7 +531,12 @@ nick.newTab().then(async (tab) => {
 			row.baseUrl = row[columnName]
 			try {
 				utils.log(`Adding ${row[columnName]}...`, "loading")
-				const newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
+				let newUrl
+				if (row[columnName].includes("/sales/profile/")) {
+					newUrl = await linkedInScraper.salesNavigatorUrlConverter(row[columnName])
+				} else {
+					newUrl = await linkedInScraper.salesNavigatorUrlCleaner(row[columnName])
+				}
 				let invitationResult = await addLinkedinFriend(row, newUrl, tab, message, onlySecondCircle, disableScraping, linkedInScraper)
 				if (invitationResult) {
 					invitationResult.timestamp = (new Date()).toISOString()

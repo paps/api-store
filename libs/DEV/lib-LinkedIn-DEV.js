@@ -1,9 +1,19 @@
 class LinkedIn {
 
+	// constructor(nick, buster, utils) {
+	// 	this.nick = nick
+	// 	this.buster = buster
+	// 	this.utils = utils
+	// }
 	constructor(nick, buster, utils) {
-		this.nick = nick
-		this.buster = buster
-		this.utils = utils
+		if (arguments.length < 3) {
+			this.buster = arguments[0] // buster
+			this.utils = arguments[1] // utils
+		} else {
+			this.nick = nick
+			this.buster = buster
+			this.utils = utils
+		}
 	}
 
 	// Get LinkedIn username from URL: "https://www.linkedin.com/in/toto" -> "toto"
@@ -125,19 +135,25 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
+			await this.buster.saveText(await tab.getContent(), "login-err1.html")
+			await this.buster.save(await tab.screenshot("login-err1.jpg"))
+			const proxyUsed = this.nick._options.httpProxy
+			if (proxyUsed) {
+				if (proxyUsed.includes(".proxymesh.com") && await this.utils.detectProxymeshError(tab)) {
+					this.utils.log("It seems you didn't authorized your proxy. Check your ProxyMesh dashboard: https://proxymesh.com/account/edit_proxies", "error")
+					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
+				}
+				if (error.message && (error.message.startsWith("timeout: load event did not fire after")) || error.message.includes("ERR_PROXY_CONNECTION_FAILED")) {
+					this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
+					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
+				}
+			}
 			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
 				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.${error}`, "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
-			}
-			if (this.nick._options.httpProxy && error.message && error.message.startsWith("timeout: load event did not fire after")) {
-				this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
-				this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
 			} else {
 				this.utils.log(`Can't connect to LinkedIn with this session cookie.${error}`, "error")
 			}
-			// if (this.originalSessionCookie.length < 110) {
-			// 	this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")
-			// }
 			if (this.originalSessionCookie.length !== 152) {
 				this.utils.log(`The LinkedIn li_at session cookie has usually 152 characters, yours has ${this.originalSessionCookie.length} characters, make sure you correctly copy-pasted the cookie.`, "error")
 			}
@@ -182,7 +198,7 @@ class LinkedIn {
 			try {
 				[httpCode] = await tab.open("https://www.linkedin.com/cap/")
 			} catch (err) {
-				console.log("m:", err)
+				console.log("Error:", err)
 				await this.buster.saveText(await tab.getContent(), "login-err1.html")
 				await this.buster.save(await tab.screenshot("login-err1.jpg"))
 			}
@@ -239,7 +255,7 @@ class LinkedIn {
 				console.log("Debug:")
 				console.log(error)
 			}
-			this.utils.log("Can't connect to LinkedIn Recruiter with this session cookie.", "error")
+			this.utils.log(`Can't connect to LinkedIn Recruiter with this session cookie: ${error}`, "error")
 			this.utils.log("From your browser in private mode, go to https://www.linkedin.com/cap, log in, THEN copy-paste your li_at session cookie.", "info")
 			if (this.originalSessionCookieliAt.length < 100) {
 				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
@@ -247,6 +263,117 @@ class LinkedIn {
 			await this.buster.saveText(await tab.getContent(), "login-err.html")
 			await this.buster.save(await tab.screenshot("login-err.jpg"))
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
+		}
+	}
+
+	// url is optional (will open LinkedIn feed by default)
+	async recruiterLoginP(page, sessionCookieliAt) {
+		if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.trim().length <= 0)) {
+			this.utils.log("Invalid LinkedIn session cookie. Did you specify one?", "error")
+			process.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
+		}
+		if (sessionCookieliAt === "your_li_atsession_cookie") {
+			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
+			process.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
+		}
+		if (sessionCookieliAt.indexOf("from-global-object:") === 0) {
+			try {
+				const path = sessionCookieliAt.replace("from-global-object:", "")
+				this.utils.log(`Fetching session cookie from global object at "${path}"`, "info")
+				sessionCookieliAt = require("lodash").get(await this.buster.getGlobalObject(), path)
+				if ((typeof(sessionCookieliAt) !== "string") || (sessionCookieliAt.length <= 0)) {
+					throw `Could not find a non empty string at path ${path}`
+				}
+			} catch (e) {
+				this.utils.log(`Could not get session cookie from global object: ${e.toString()}`, "error")
+				process.exit(this.utils.ERROR_CODES.LINKEDIN_GO_NOT_ACCESSIBLE)
+			}
+		}
+
+		this.utils.log("Connecting to LinkedIn...", "loading")
+		this.originalSessionCookieliAt = sessionCookieliAt.trim()
+
+		// small function that detects if we're logged in
+		// return a string in case of error, null in case of success
+		const _recruiterLoginP = async () => {
+			try {
+				await page.goto("https://www.linkedin.com/cap/")
+			} catch (err) {
+				console.log("Error:", err)
+				// await this.buster.saveText(await page.getContent(), "login-err1.html")
+				// await this.buster.save(await page.screenshot("login-err1.jpg"))
+			}
+
+			// if (httpCode && httpCode !== 200) {
+			// 	return `linkedin responded with http ${httpCode}`
+			// }
+			let sel
+			try {
+				await page.waitForSelector("#nav-tools-user, form#login")
+				if (page.$("#nav-tools-user")) {
+					sel = "#nav-tools-user"
+				} else {
+					sel = "form#login"
+				}
+				console.log("sel:", sel)
+				// await page.screenshot({ path: `${Date.now()}sel.jpg`, type: "jpeg", quality: 50 })
+				// await this.buster.saveText(await page.evaluate(() => document.body.innerHTML), `${Date.now()}sel.html`)
+			} catch (e) {
+				console.log("oula:", e)
+				return e.toString()
+			}
+			// console.log("sel:", sel)
+			// if (sel === "form#login") {
+			// 	console.log("Entering password...")
+			// 	await tab.sendKeys("#session_key-login", "")
+			// 	await tab.wait(500)
+			// 	await tab.sendKeys("#session_password-login", "")
+			// 	await tab.wait(500)
+			// 	await tab.click("#btn-primary")
+			// 	await tab.wait(3000)
+			// 	sel = await tab.untilVisible(["#nav-tools-user", "form#login"], "or", 15000)
+			// }
+			if (sel === "#nav-tools-user") {
+				let name
+				try {
+					name = await page.evaluate(() => {
+						return document.querySelector("#nav-tools-user img").alt
+					})
+				} catch (err) {
+					console.log("lll", err)
+				}
+				this.utils.log(`Connected successfully ${name ? `as ${name}` : ""}`, "done")
+				return null
+			}
+			return "cookie not working"
+		}
+
+		try {
+			console.log("trying set cookie")
+			await page.setCookie({
+				name: "li_at",
+				value: this.originalSessionCookieliAt,
+				domain: "www.linkedin.com"
+			})
+			const loginResult = await _recruiterLoginP()
+			if (loginResult !== null) {
+				throw loginResult
+			}
+
+		} catch (error) {
+			console.log("error:", error)
+			if (this.utils.test) {
+				console.log("Debug:")
+				console.log(error)
+			}
+			this.utils.log(`Can't connect to LinkedIn Recruiter with this session cookie: ${error}`, "error")
+			this.utils.log("From your browser in private mode, go to https://www.linkedin.com/cap, log in, THEN copy-paste your li_at session cookie.", "info")
+			if (this.originalSessionCookieliAt.length < 100) {
+				this.utils.log("LinkedIn li_at session cookie is usually longer, make sure you copy-pasted the whole cookie.", "error")	
+			}
+			await page.screenshot({ path: `${Date.now()}err-login-.jpg`, type: "jpeg", quality: 50 })
+			await this.buster.saveText(await page.evaluate(() => document.body.innerHTML), `${Date.now()}err-login.html`)
+			process.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
 

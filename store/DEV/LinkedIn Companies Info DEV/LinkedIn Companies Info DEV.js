@@ -397,6 +397,9 @@ const isLinkedUrl = url => {
 		csvName = "result"
 	}
 	let singleInput
+	if (companies && companies.length === 1) {
+		singleInput = true
+	}
 	if (typeof spreadsheetUrl === "string") {
 		if (spreadsheetUrl.includes("linkedin.com/company")) {
 			companies = [ spreadsheetUrl]

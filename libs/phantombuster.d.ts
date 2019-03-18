@@ -31,6 +31,7 @@ declare module "phantombuster" {
 		public setResultObject(object: object): Promise<void>
 	}
 
+	// @ts-ignore
 	export = Buster
 
 }

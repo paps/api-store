@@ -120,12 +120,26 @@ const scrapeTweets = (arg, cb) => {
  * @return {Promise<Boolean>}
  */
 const retweet = async (tab, bundle, isSingle = false) => {
+	const sel = `li.js-stream-item:not(.has-profile-promoted-tweet):nth-child(${bundle.index}) div.tweet.js-stream-tweet.js-actionable-tweet button.js-actionRetweet`
 	try {
-		await tab.click(isSingle ? "div.tweet.js-actionable-tweet button.js-actionRetweet" : `li.js-stream-item:not(.has-profile-promoted-tweet):nth-child(${bundle.index}) div.tweet.js-stream-tweet.js-actionable-tweet button.js-actionRetweet`)
-		await tab.waitUntilVisible("div.RetweetDialog-modal", 15000)
+		if (isSingle && !await tab.isVisible(sel)) {
+			return false
+			// utils.log(`Can`, "warning")
+		}
+		await tab.click(isSingle ? "div.tweet.js-actionable-tweet button.js-actionRetweet" : sel)
+		const found = await tab.waitUntilVisible([ "div.RetweetDialog-modal", "div.SignupDialog-content" ], "or", 15000)
+		if (found === "div.SignupDialog-content") {
+			throw "LOGOUT"
+		}
 		await tab.click("div.tweet-button button.retweet-action")
+		if (await tab.isVisible("div.RetweetDialog-modal")) {
+			await tab.click("div.RetweetDialog-modal")
+		}
 		await tab.waitWhileVisible("div.RetweetDialog-modal", 15000)
 	} catch (err) {
+		if (await tab.isVisible("div.message.sticky") || await tab.isVisible("div.SignupDialog-content")) {
+			throw "LOGOUT"
+		}
 		utils.log(`Error while retweeting: ${err.message || err}`, "warning")
 		return false
 	}
@@ -207,6 +221,11 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 	queries = queries.slice(0, numberOfLinesPerLaunch || DEFAULT_LINES)
 	utils.log(`Twitter profiles: ${JSON.stringify(queries, null, 2)}`, "info")
 	for (const query of queries) {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
 		const processUrl = isTwitterUrl(query) || isTweetUrl(query) ? query : `https://www.twitter.com/${query}`
 		const isTweet = isTweetUrl(query)
 		try {
@@ -221,9 +240,22 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 		let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
 		tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
 		for (const tweet of tweets) {
-			if (await retweet(tab, tweet, isTweet)) {
-				delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
-				res.push(tweet)
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			try {
+				if (await retweet(tab, tweet, isTweet)) {
+					delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
+					res.push(tweet)
+				}
+			} catch (err) {
+				if (typeof err === "string") {
+					utils.log("You were logout during the API execution, don't forget to update your session cookie", "warning")
+					break
+				}
+				utils.log(err.message || err, "warning")
 			}
 		}
 	}

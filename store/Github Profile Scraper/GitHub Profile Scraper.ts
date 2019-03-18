@@ -90,7 +90,8 @@ const scrapeUser = (): Promise<IUnknownObject> => {
 			const _final = values.filter((_el: string) => _el)
 			const _data = _final ? _final.pop() : ""
 			const name = _data ? _data.toLowerCase() : ""
-			const data = isNaN(parseInt(el.textContent.trim(), 10)) ? el.textContent.trim() : parseInt(el.textContent.trim(), 10)
+			const data = el.textContent.trim()
+			// const data = isNaN(parseInt(el.textContent.trim(), 10)) ? el.textContent.trim() : parseInt(el.textContent.trim(), 10)
 			profile[name] = data
 		}
 	}

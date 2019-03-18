@@ -1,6 +1,7 @@
 import "puppeteer"
 
 declare module "puppeteer" {
+	// @ts-ignore
 	class FrameBase {
 		// tslint:disable-next-line:no-any
 		public evaluate(fn: EvaluateFn, ...args: any[]): Promise<unknown>
