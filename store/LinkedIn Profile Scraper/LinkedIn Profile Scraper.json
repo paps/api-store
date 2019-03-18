@@ -1,7 +1,7 @@
 {
 	"slug": "linkedin-profile-scraper",
 	"description": "Collect valuable information you need from LinkedIn profiles, including emails",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/LinkedIn+Profile+Scraper+2+(4).png",
 	"hidden": false,
 	"updated": false,
 	"gradientBegin": "#4CA1AF",
@@ -16,8 +16,17 @@
 		"takePartialScreenshot": false
 	},
 	"outputDescription": {
-		"linkedinProfile": "LinkedIn profile URL",
-		"description": "LinkedIn profile description",
+		"imgUrl": "",
+		"headline": "",
+		"company": "",
+		"school": "",
+		"location": "",
+		"connections": "connections count",
+		"profileUrl": "",
+		"connectionDegree": "",
+		"linkedinSalesNavigatorUrl": "",
+		"mutualConnectionsUrl": "",
+		"description": "",
 		"firstName": "",
 		"lastName": "",
 		"fullName": "",
@@ -33,8 +42,16 @@
 		"profileImageUrl": "",
 		"phoneNumber": "",
 		"twitter": "",
-		"skill1 to skill6": "Top skills",
-		"endorsements1 to endorsements6": "Number of endorsements per top skill"
+		"facebook": "",
+		"im": "",
+		"birthday": "",
+		"connectedOn": "date of connection (if connection)",
+		"phone": "public phone number",
+		"mail": "email address if 1st degree connection",
+		"email from Dropcontact.io": "result of an email request with Dropontact (if activated)",
+		"email from Hunter.io": "result of an email request with Hunter (if activated)",
+		"email from Phantombuster": "result of an email request with Phantombuster (if activated)",
+		"skill": "all skills and endorsements for each one"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

@@ -2,7 +2,7 @@
 	"slug": "linkedin-recruiter-profile-scraper",
 	"description": "Collect valuable information you need from LinkedIn Recruiter profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
-	"hidden": false,
+	"hidden": true,
 	"updated": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
@@ -10,6 +10,7 @@
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
 		"spreadsheetUrl": "linkedin_profile_urls",
+		"numberOfProfilesPerLaunch": 10,
 		"saveImg": false,
 		"takeScreenshot": false
 	},
@@ -41,7 +42,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie <a href=\"/api-store/3112/linkedin-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie <a href=\"/api-store/10786/linkedin-recruiter-profile-scraper#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {
@@ -51,7 +52,7 @@
 							"OR a LinkedIn Recruiter/regular profile URL",
 							"<b>Please be gentle.</b> This API will manipulate LinkedIn on your behalf. Scraping 100+ profiles in a short period of time is not recommended."
 						],
-						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/3112/linkedin-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/10786/linkedin-recruiter-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get profile URLs",
@@ -59,12 +60,11 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/10786/linkedin-recruiter-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io"
 					},
-					"numberOfAddsPerLaunch": {
-						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/3112/linkedin-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"placeholder": 10,
+					"numberOfProfilesPerLaunch": {
+						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/10786/linkedin-recruiter-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -99,7 +99,7 @@
 				"type": "string",
 				"maxLength": 50
 			},
-			"numberOfAddsPerLaunch": {
+			"numberOfProfilesPerLaunch": {
 				"type": "number",
 				"minimum": 1,
 				"maximum": 25

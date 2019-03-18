@@ -2,7 +2,7 @@
 	"slug": "linkedin-recruiter-profile-scraper",
 	"description": "Collect valuable information you need from LinkedIn Recruiter profiles, including emails",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/lkd_prfl_scrppr.png",
-	"hidden": false,
+	"hidden": true,
 	"updated": false,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
