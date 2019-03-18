@@ -14,6 +14,12 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"from": [ "range" ],
+					"to": [ "range" ]
+				}
+			},
 			"options": {
 				"fields": {
 					"sessionCookieCsid": {
@@ -22,13 +28,27 @@
 					"sessionCookieSid": {
 						"label": "sid session cookie"
 					},
+					"range": {
+						"label": "Choose which invoices you want to extract",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "All", "Last month", "Last quarter", "Custom" ],
+						"type": "select"
+					},
 					"from": {
 						"label": "Select the beginning of the range",
-						"inputType": "date"
+						"inputType": "date",
+						"dependencies": {
+							"range": [ "custom" ]
+						}
 					},
 					"to": {
 						"label": "Select the end of the range",
-						"inputType": "date"
+						"inputType": "date",
+						"dependencies": {
+							"range": [ "custom" ]
+						}
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
@@ -52,6 +72,11 @@
 			"sessionCookieSid": {
 				"type": "string",
 				"required": true
+			},
+			"range": {
+				"enum": [ "all", "lm", "lq", "custom" ],
+				"type": "string",
+				"default": "lm"
 			},
 			"from": {
 				"type": "string"

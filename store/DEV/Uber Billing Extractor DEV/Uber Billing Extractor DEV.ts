@@ -32,13 +32,14 @@ fs.mkdirSync(DL_DIR) // Create /invoices folder on agent FS
 declare interface IApiParams {
 	sessionCookieCsid: string,
 	sessionCookieSid: string,
-	from?: string,
-	to?: string,
+	range?: string,
 	mail?: string,
 }
 
 declare interface IMutableApiParams {
-	csvName?: string
+	csvName?: string,
+	from?: string,
+	to?: string,
 }
 
 declare interface IXhrBundle {
@@ -128,7 +129,7 @@ const email = `The Uber invoices export you requested using Phantombuster () is 
 Just click the links below to start the download. Those fiels will be available until the next extract request.
 
 Export details:
-- Invoices: #zipname# (#zipurl#)
+[[- Invoices: #zipname# (#zipurl#)]]
 - Data recap: #csvname# (#csvurl#)
 {{- Peroid date: between #from# and #to#}}
 
@@ -360,13 +361,29 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { sessionCookieCsid, sessionCookieSid, from, to, mail } = args as IApiParams
-	let { csvName } = args as IMutableApiParams
+	const { sessionCookieCsid, sessionCookieSid, range, mail } = args as IApiParams
+	let { csvName, from, to } = args as IMutableApiParams
 	let archiveURL = null
 	const inflater = new Messaging(utils)
 
 	if (!csvName) {
 		csvName = DB_NAME
+	}
+
+	if (range) {
+		const currentDate = new Date()
+		switch (range) {
+			case "lm":
+				to = currentDate.toLocaleDateString()
+				currentDate.setDate(currentDate.getDate() - 30)
+				from = currentDate.toLocaleDateString()
+				break
+			case "lq":
+				to = currentDate.toLocaleDateString()
+				currentDate.setDate(currentDate.getDate() - 15)
+				from = currentDate.toLocaleDateString()
+				break
+		}
 	}
 
 	await login(page, sessionCookieCsid, sessionCookieSid)
@@ -394,6 +411,14 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 	const bundle = { zipname: INVOICE_ZIP, zipurl: archiveURL, csvname: `${csvName}.csv`, csvurl: pbBundle.csvUrl, from, to }
 	if (mail) {
 		let message = email
+
+		if (!archive) {
+			const _start = message.indexOf("[")
+			const _end = message.lastIndexOf("]")
+			message = message.slice(0, _start - 1) + message.slice(_end + 1, email.length)
+		} else {
+			message = message.replace(/[\[\]]+/g, "\r")
+		}
 
 		if (!from || !to) {
 			const start = message.indexOf("{")
