@@ -1,6 +1,6 @@
-<center>**New! This API now supports [email discovery](#section_email_discovery).**</center>
+<center>**New! Find 20x more emails with [Phantombuster Email Discovery](#section_email_discovery).**</center>
 
-<hr />
+<hr/>
 
 # You have to grow your LinkedIn network for 3 reasons
 1. LinkedIn is a highly competitive network. **Get higher in search results** by increasing your 1st and 2nd degree connection network.
@@ -11,25 +11,15 @@
 
 _Bonus: It looks really cool to have a lot of connections!_
 
-# Our solution: Add into your account a list of LinkedIn profiles
+# Our solution: Automatically add a list of valuable new connections to your LinkedIn account.
 Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phantombuster will send **automatically**, in addition to a **private message**, an invitation to all those profiles.
 
 <center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
 
 # What will you need? ⚙️ 
 
-- **Session cookie**: Your session cookie from LinkedIn.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn profile URLs in it.
-- **Number of adds per launch**: How many _(between **1** and **10**)_ invites to send per launch
-- **Only second circle**: Do you only want to **only** connect with people from your 2nd circle or not.
 - **Message**: The message you want to send.
-- **Wait duration**: As it may take a while for LinkedIn to process them, the API needs to wait - with a default value of 30s - before checking if the invitations were correctly sent in the Invitation Manager.
-
-_(**You already have all that?** Click straight away on **"Use this API"**)_
-
-
-# How long does that take to set up this amazing hack?
-It takes 5 minutes and 20 seconds (we like to do things precisely). 🕒
 
 # What you need to do.
 ## 1. Create an account on Phantombuster.com 💻
@@ -51,27 +41,22 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Linkedin authentication 🔑 { argument }
 Because the script will manipulate LinkedIn for you, it needs to be logged on your LinkedIn account. For that you just need to copy paste your session cookie in the script argument:
-* Using Chrome, go to your LinkedIn homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
-→ <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
-* Locate the “Application” tab
+<div class="row">
+	<div class="col-xs-6 text-center">
+		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" target="_blank">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 100px;">
+		</a>
+	</div>
+	<div class="col-xs-6 text-center">
+		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" target="_blank">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 100px;">
+		</a>
+	</div>
+</div>
 
-<center>![](https://phantombuster.imgix.net/api-store/li_at+1.png)</center>
 
-* Select “Cookies” > “http://www.linkedin.com” on the left menu.
-
-<center>![](https://phantombuster.imgix.net/api-store/li_at+2.png)</center>
-
-* Locate the “li_at” cookie.
-
-<center>![](https://phantombuster.imgix.net/api-store/li_at+3.png)</center/>
-
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Argument_)
-
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
+If you're operating from another browser and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
 
 ## 5. Add a Google Spreadsheet 📑
@@ -109,6 +94,18 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn connection requests.
 
+# Email discovery (optional) { email_discovery }
+
+LinkedIn allows its users access to the email addresses of their 1st degree connections. 
+
+However, if you’re looking for the email addresses of people you’re not connected to, picking an email discovery services is paramount.
+
+As a Phantombuster user, you have a daily limit of email requests. (You can see that figure down below next to your execution time).
+
+Use your credit by selecting "Phantombuster" as your email discovery service.
+
+Already have a subscription with another data enrichment service such as [Dropcontact.io](https://dropcontact.io) or [Hunter.io](https://hunter.io)? Select a service and past your API key in the field below.
+
 # ⚙️️Repetition setup ⚙️
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
@@ -129,22 +126,6 @@ Now that this is set, click 💾 <span style="color:blue">Save</span> at the bot
 
 
 There you go, you only have to wait for connections to be made for you!
-
-# Email discovery (optional) { email_discovery }
-
-**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
-
-To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
-
-<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
-
-Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
-
-Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
-
-**Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your visits to **40 profiles per day**.
-
-
 
 # Limits
 
