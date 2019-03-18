@@ -32,16 +32,16 @@ const createUrl = (search) => {
 	return (`https://www.linkedin.com/sales/search?keywords=${encodeURIComponent(search)}`)
 }
 
-// forces the search to display up to 100 profiles per page
-const forceCount = (url) => {
-	try {
-		let parsedUrl = new URL(url)
-		parsedUrl.searchParams.set("count", "100")
-		return parsedUrl.toString()
-	} catch (err) {
-		return url
-	}
-}
+// // forces the search to display up to 100 profiles per page
+// const forceCount = (url) => {
+// 	try {
+// 		let parsedUrl = new URL(url)
+// 		parsedUrl.searchParams.set("count", "100")
+// 		return parsedUrl.toString()
+// 	} catch (err) {
+// 		return url
+// 	}
+// }
 
 const scrapeResults = (arg, callback) => {
 	const results = document.querySelectorAll("div.search-results ul > li, ul#results-list > li")
@@ -390,6 +390,7 @@ const scrollLeads = async (tab) => {
 }
 
 const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
+	console.log("getSearchResults")
 	utils.log(`Getting data${query ? ` for search ${query}` : ""} ...`, "loading")
 	let pageCount
 	let result = []
@@ -397,9 +398,17 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 	let profilesFoundCount = 0
 	let maxResults = Math.min(1000, numberOfProfiles)
 	let numberPerPage
-	await tab.open(searchUrl)
 	try {
-		let selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message"], 30000, "or")
+		let selector
+		for (let i = 0; i < 10; i++) {
+			await tab.open(searchUrl)
+			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text", "article.contract-chooser", ".generic-error > p.error-message", "ul#insights-list"], 30000, "or")
+			console.log("sel", selector)
+			if (selector !== "ul#insights-list") {
+				break
+			}
+			console.log("retrying")
+		}
 		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
 			await tab.click("article.contract-chooser ul > li > button")
 			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 30000, "or")
@@ -424,6 +433,8 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
 		await tab.wait(10000)
+		await tab.screenshot(`${Date.now()}redire.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}redire.html`)
 		const currentUrl = await tab.getUrl()
 		if (currentUrl === "https://www.linkedin.com/feed/") {
 			utils.log("It seems you don't have a Sales Navigator Account...", "error")
@@ -554,7 +565,8 @@ const isLinkedInSearchURL = (url) => {
 			const isSearchURL = isLinkedInSearchURL(search)
 
 			if (isSearchURL === 0) { // LinkedIn Sales Navigator Search
-				searchUrl = forceCount(search)
+				// searchUrl = forceCount(search)
+				searchUrl = search
 			} else if (isSearchURL === 1) { // Not a URL -> Simple search
 				searchUrl = createUrl(search)
 			} else {
