@@ -30,7 +30,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie <a href=\"/api-store/9058/email-to-linked-profile-url-finder#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie <a href=\"/api-store/9058/linkedin-email-to-profile-url-finder#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your session cookie here"
 					},
 					"spreadsheetUrl": {

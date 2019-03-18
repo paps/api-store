@@ -878,11 +878,38 @@ class LinkedInScraper {
 					if (this.phantombusterMail) {
 						mailPayload.company = result.jobs[0].companyName
 						mailPayload.siren = true
-						const dropcontactSearch = await this.phantombusterMail.find(mailPayload)
-						const foundData = dropcontactSearch.data
-						this.utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
-						result.details.mailFromDropcontact = foundData.email
-						result.dropcontact = Object.assign({}, foundData)
+						let status = ""
+						try {
+							const dropcontactSearch = await this.phantombusterMail.find(mailPayload)
+							const foundData = dropcontactSearch.data
+							this.utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
+							result.details.mailFromDropcontact = foundData.email
+							result.dropcontact = Object.assign({}, foundData)
+							if (foundData.email) {
+								const qualification = foundData["email qualification"]
+								status = `Email Found ${qualification}`
+							} else {
+								status = "Email Not found"
+							}
+						} catch (err) {
+							status = err.message
+						}
+						try {
+							const needle = require("needle")
+							const options = {
+								headers:  {
+									"Content-Type": "application/x-www-form-urlencoded",
+								}
+							}
+							const os = require("os")
+							const hostname = os.hostname()
+							const user_id = `dropcontact_${hostname}`
+							const event_type = "email_request"
+							const apiKey = "5f442f063c9d596a7157f248f1010e1a"
+							await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
+						} catch (err) {
+							//
+						}
 					}
 				} catch (err) {
 					this.utils.log(err.toString(), "error")
