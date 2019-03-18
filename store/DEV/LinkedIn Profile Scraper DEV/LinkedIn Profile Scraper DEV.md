@@ -1,3 +1,7 @@
+<center>**New! Find 20x more emails with [Phantombuster Email Discovery](#section_email_discovery).**</center>
+
+<hr/>
+
 # Get the most out of LinkedIn
 
 Salesman, recruiters, CEOs use it daily. But are you getting the most out of **your** LinkedIn account? 
