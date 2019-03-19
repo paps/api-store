@@ -138,10 +138,15 @@ const hasReachedOldestInvitations = (arg, cb) => {
 			utils.log("Still working...", "info")
 		}
 	}
-	await tab.untilVisible(selectors, 15000, "or")
-	await tab.untilVisible(_selectors.pageWaitAnchor)
-	await tab.wait(10000)
-	await tab.scrollToBottom()
+	try {
+		await tab.untilVisible(selectors, 15000, "or")
+		await tab.untilVisible(_selectors.pageWaitAnchor)
+		await tab.wait(10000)
+		await tab.scrollToBottom()
+	} catch (err) {
+		utils.log("Error navigating on the page, abort", "warning")
+		nick.exit(1)
+	}
 
 	/**
 	 * withdraw until we get the same value of peopleCountToKeep
@@ -154,13 +159,16 @@ const hasReachedOldestInvitations = (arg, cb) => {
 				utils.log(`Process stopped: ${timeLeft.message}`, "warning")
 				break
 			}
-			await tab.click(_selectors.withdrawElement)
-			await tab.wait(200)
-			await tab.click(_selectors.withdrawBtn)
-			await tab.wait(1000)
+
 			try {
+				await tab.click(_selectors.withdrawElement)
+				await tab.wait(200)
+				await tab.click(_selectors.withdrawBtn)
+				await tab.wait(1000)
 				await tab.untilVisible(_selectors.withdrawSuccess, 7500)
 			} catch (err) {
+				utils.log("Can't select a invitation to withdraw / can't withdraw selected elements, abort", "warning")
+				break
 				//
 			}
 			withdrawCount++
