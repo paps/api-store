@@ -51,6 +51,10 @@
 					"spreadsheetUrl": {
 						"required": true
 					}
+				},
+				"dependencies": {
+					"hunterApiKey": [ "emailChooser" ],
+					"dropcontactApiKey": [ "emailChooser" ]
 				}
 			},
 			"options": {
@@ -72,9 +76,27 @@
 						"placeholder": "LinkedIn Profile Link",
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
+					"emailChooser": {
+						"label": "Choose an email discovery service",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "None", "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
+						"type": "select"
+					},
 					"hunterApiKey": {
 						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
-						"helper": "Leave this field empty if you don't want to use Hunter.io"
+						"helper": "Leave this field empty if you don't want to use Hunter.io",
+						"dependencies": {
+							"emailChooser": [ "hunter", "hunter and dropcontact" ]
+						}
+					},
+					"dropcontactApiKey": {
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
+						"dependencies": {
+							"emailChooser": [ "dropcontact", "hunter and dropcontact" ]
+						}
 					},
 					"numberOfProfilesPerLaunch": {
 						"label": "Number of profiles to visit per launch (25 max.) <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
@@ -117,7 +139,15 @@
 			"columnName": {
 				"type": "string"
 			},
+			"emailChooser": {
+				"enum": [ "none", "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
+				"default": "none"
+			},
 			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"dropcontactApiKey": {
 				"type": "string",
 				"maxLength": 50
 			},

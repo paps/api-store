@@ -729,10 +729,18 @@ const getCompanyWebsite = async (tab, url, utils) => {
 			utils.log(`Can't open the LinkedIn company URL: ${url}`, "warning")
 			return null
 		}
-		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
-		return await tab.evaluate((arg, cb) => {
-			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
-		})
+		const selector = await tab.waitUntilVisible([".org-top-card-module__container", "a[data-control-name = page_member_main_nav_about_tab]"], "or", 15000)
+		if (selector === ".org-top-card-module__container") {
+			return await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
+			})
+		} else {
+			await tab.click(selector)
+			await tab.waitUntilVisible("a[data-control-name = page_details_module_website_external_link]", 15000)
+			return await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("a[data-control-name = page_details_module_website_external_link]").href)
+			})
+		}
 	} catch (err) {
 		// utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
 		return null
@@ -847,7 +855,9 @@ class LinkedInScraper {
 						const companyTab = await this.nick.newTab()
 						companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
 						await companyTab.close()
-						result.details.companyWebsite = companyUrl || ""
+						if (companyUrl) {
+							result.details.companyWebsite = companyUrl
+						}
 					}
 					const mailPayload = {}
 					if (result.general.firstName && result.general.lastName) {

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js, lib-Hunter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -68,6 +68,16 @@ const getUrlsToScrape = (data, numberOfProfilesPerLaunch) => {
 		nick.exit()
 	}
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
+}
+
+const filterRows = (str, db) => {
+	for (const line of db) {
+		const regex = new RegExp(`/in/${line.profileId}($|/)`)
+		if (str.match(regex) || (str === line.baseUrl)) {
+			return false
+		}
+	}
+	return true
 }
 
 // main scraping function
@@ -356,15 +366,63 @@ const craftCsv = (json) => {
 	for (const profile of json) {
 		const resultObject = {}
 		for (const key of Object.keys(profile)) {
-			if (key !== "jobs" && key !== "schools" && key !== "skills") {
+			if (key !== "jobs" && key !== "schools" && key !== "skills" && key !== "dropcontact") {
 				resultObject[key] = profile[key]
-			} else if (key !== "skills") {
+			} else if (key !== "skills" && key !== "dropcontact") {
 				const newKey = key.slice(0, -1)
 				for (let i = 0; i < profile[key].length; i++) {
 					for (const secondKey of Object.keys(profile[key][i])) {
 						resultObject[secondKey + (i + 1)] = profile[key][i][secondKey]
 					}
 				}
+			}
+		}
+		if (profile.dropcontact) {
+			const dropcontact = profile.dropcontact
+			if (dropcontact.civility) {
+				resultObject.civilityFromDropContact = dropcontact.civility
+			}
+			if (dropcontact["email qualification"]) {
+				resultObject.mailQualificationFromDropContact = dropcontact["email qualification"]
+			}
+			if (dropcontact.naf5_code) {
+				resultObject.naf5CodeFromDropContact = dropcontact.naf5_code
+			}
+			if (dropcontact.naf5_des) {
+				resultObject.naf5DesFromDropContact = dropcontact.naf5_des
+			}
+			if (dropcontact.nb_employees) {
+				resultObject.nbEmployeesFromDropContact = dropcontact.nb_employees
+			}
+			if (dropcontact.siren) {
+				resultObject.sirenFromDropContact = dropcontact.siren
+			}
+			if (dropcontact.siret) {
+				resultObject.siretFromDropContact = dropcontact.siret
+			}
+			if (dropcontact.siret_address) {
+				resultObject.siretAddressFromDropContact = dropcontact.siret_address
+			}
+			if (dropcontact.siret_zip) {
+				resultObject.siretZipFromDropContact = dropcontact.siret_zip
+			}
+			if (dropcontact.vat) {
+				resultObject.vatFromDropContact = dropcontact.vat
+			}
+			if (dropcontact.website) {
+				resultObject.websiteFromDropContact = dropcontact.website
+			}
+			if (dropcontact.facebook) {
+				resultObject.facebookFromDropContact = dropcontact.facebook
+			}
+			if (dropcontact.googleplus) {
+				resultObject.googleplusFromDropContact = dropcontact.googleplus
+			}
+			if (dropcontact.github) {
+				resultObject.githubFromDropContact = dropcontact.github
+			}
+			if (dropcontact.generate_id) {
+				resultObject.generate_idFromDropContact = dropcontact.generate_id
 			}
 		}
 		resultCsv.push(resultObject)
@@ -375,7 +433,7 @@ const craftCsv = (json) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, hunterApiKey, numberOfProfilesPerLaunch, csvName, scrapeJobs, scrapeSchools, scrapeSkills, saveImg, takeScreenshot} = utils.validateArguments()
+	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfProfilesPerLaunch, csvName, scrapeJobs, scrapeSchools, scrapeSkills, saveImg, takeScreenshot} = utils.validateArguments()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -398,15 +456,26 @@ const craftCsv = (json) => {
 	} else if (numberOfProfilesPerLaunch > urls.length) {
 		numberOfProfilesPerLaunch = urls.length
 	}
+	let dropcontact
 	let hunter
-	if (hunterApiKey) {
+	let phantombusterMail
+	if (emailChooser === "phantombuster") {
+		require("coffee-script/register")
+		phantombusterMail = new (require("./lib-DiscoverMail"))(buster.apiKey)
+	}
+	if ((typeof(hunterApiKey) === "string") && (hunterApiKey.trim().length > 0)) {
 		require("coffee-script/register")
 		hunter = new (require("./lib-Hunter"))(hunterApiKey.trim())
+	}
+	if ((typeof(dropcontactApiKey) === "string") && (dropcontactApiKey.trim().length > 0)) {
+		require("coffee-script/register")
+		dropcontact = new (require("./lib-Dropcontact"))(dropcontactApiKey.trim())
 	}
 	if (!csvName) { csvName = "result" }
 	const result = await utils.getDb(csvName + ".csv")
 	urls = getUrlsToScrape(urls.filter(el => utils.checkDb(el, result, "query")), numberOfProfilesPerLaunch)
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
+
 
 	const linkedInScraper = new LinkedInScraper(utils, null, nick, buster, null)
 	let currentResult = []
@@ -473,24 +542,72 @@ const craftCsv = (json) => {
 				} catch (err) {
 					//
 				}
-				if (hunterApiKey) {
+				if (hunter || dropcontact || phantombusterMail) {
 					try {
-						const hunterPayload = {}
+						const mailPayload = {}
 						if (scrapedData.firstName && scrapedData.lastName) {
-							hunterPayload.first_name = scrapedData.firstName
-							hunterPayload.last_name = scrapedData.lastName
+							mailPayload.first_name = scrapedData.firstName
+							mailPayload.last_name = scrapedData.lastName
 						} else {
-							hunterPayload.full_name = scrapedData.fullName
+							mailPayload.full_name = scrapedData.fullName
 						}
-						if (!scrapedData.companyWebsite) {
-							hunterPayload.company = scrapedData.currentCompanyName
-						} else {
-							hunterPayload.domain = scrapedData.companyWebsite
+						if (scrapedData.companyWebsite) {
+							mailPayload.domain = scrapedData.companyWebsite
 						}
-						const hunterSearch = await hunter.find(hunterPayload)
-						utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
-						if (hunterSearch.email) {
-							scrapedData.mailFromHunter = hunterSearch.email
+						if (scrapedData.currentCompanyName) {
+							mailPayload.company = scrapedData.currentCompanyName
+
+						}
+						if (hunter) {
+							const hunterSearch = await hunter.find(mailPayload)
+							utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
+							if (hunterSearch.email) {
+								scrapedData.mailFromHunter = hunterSearch.email
+							}
+						}
+						if (dropcontact) {
+							const dropcontactSearch = await dropcontact.clean(mailPayload)
+							utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
+							if (dropcontactSearch.email) {
+								scrapedData.mailFromDropContact = dropcontactSearch.email
+							}
+							scrapedData.dropcontact = Object.assign({}, dropcontactSearch)
+						}
+						if (phantombusterMail) {
+							mailPayload.siren = true
+							let init = new Date()
+							let status = ""
+							try {
+								const dropcontactSearch = await phantombusterMail.find(mailPayload)
+								const foundData = dropcontactSearch.data
+								utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${scrapedData.fullName} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite }`, "info")
+								scrapedData.mailFromDropContact = foundData.email
+								scrapedData.dropcontact = Object.assign({}, foundData)
+								if (foundData.email) {
+									const qualification = foundData["email qualification"]
+									status = `Found ${qualification}`
+								} else {
+									status = "Not found"
+								}
+							} catch (err) {
+								status = err.message
+							}
+							try {
+								const needle = require("needle")
+								const options = {
+									headers:  {
+										"Content-Type": "application/x-www-form-urlencoded",
+									}
+								}
+								const os = require("os")
+								const hostname = os.hostname()
+								const user_id = `dropcontact_${hostname}`
+								const event_type = "email_request"
+								const apiKey = "5f442f063c9d596a7157f248f1010e1a"
+								const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
+							} catch (err) {
+								//
+							}
 						}
 					} catch (err) {
 						utils.log(`Error from Hunter: ${err}`, "error")

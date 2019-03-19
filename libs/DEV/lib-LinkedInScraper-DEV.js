@@ -723,18 +723,30 @@ const defaultCsvResult = {
  * @param {String} url - LinkedIn company URL
  * @return {Promise<String>} Website company
  */
-const getCompanyWebsite = async (tab, url, utils) => {
+const getCompanyWebsite = async (tab, url, utils, buster) => {
 	try {
 		const [httpCode] = await tab.open(url)
 		if (httpCode === 404) {
 			utils.log(`Can't open the LinkedIn company URL: ${url}`, "warning")
 			return null
 		}
-		await tab.waitUntilVisible(".org-top-card-module__container", 15000)
-		return await tab.evaluate((arg, cb) => {
-			cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
-		})
+		const selector = await tab.waitUntilVisible([".org-top-card-module__container", "a[data-control-name = page_member_main_nav_about_tab]"], "or", 15000)
+		console.log("sel", selector)
+		if (selector === ".org-top-card-module__container") {
+			return await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector(".org-about-company-module__company-page-url a").href)
+			})
+		} else {
+			await tab.click(selector)
+			await tab.waitUntilVisible("a[data-control-name = page_details_module_website_external_link]", 15000)
+			return await tab.evaluate((arg, cb) => {
+				cb(null, document.querySelector("a[data-control-name = page_details_module_website_external_link]").href)
+			})
+		}
 	} catch (err) {
+		console.log("ecompa", err)
+		await buster.saveText(await tab.getContent(), "ecompa.html")
+		await buster.save(await tab.screenshot("ecompa.jpg"))
 		// utils.log(`${err.message || err}\n${err.stack || ""}`, "warning")
 		return null
 	}
@@ -841,9 +853,12 @@ class LinkedInScraper {
 					let companyUrl = null
 					if (this.nick) {
 						const companyTab = await this.nick.newTab()
-						companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils)
+						companyUrl = await getCompanyWebsite(companyTab, result.jobs[0].companyUrl, this.utils, this.buster)
+						console.log("companyUrl found:", companyUrl)
 						await companyTab.close()
-						result.details.companyWebsite = companyUrl || ""
+						if (companyUrl) {
+							result.details.companyWebsite = companyUrl
+						}
 					}
 					this.utils.log(`Searching for emails with ${servicesUsed}...`, "loading")
 					const mailPayload = {}
