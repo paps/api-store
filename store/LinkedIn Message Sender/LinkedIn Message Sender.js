@@ -166,7 +166,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 }
 
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping, profileUrls } = utils.validateArguments()
 	if (!message || !message.trim()) {
 		throw "No message found!"
 	}
@@ -175,19 +175,29 @@ const sendMessage = async (tab, message, tags, profile) => {
 	const db = await utils.getDb(DB_NAME)
 	let rows = []
 	let columns = []
-	if (isLinkedInProfile(spreadsheetUrl)) {
-		rows = [{ "0": spreadsheetUrl }]
-		columnName = "0"
-	} else {
-		rows = await utils.getRawCsv(spreadsheetUrl)
-		let csvHeader = rows[0].filter(cell => !isUrl(cell))
-		let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
-		columns = [columnName, ...msgTags]
-		rows = utils.extractCsvRows(rows, columns)
-		if (!columnName) {
+
+	if (spreadsheetUrl) {
+		if (isLinkedInProfile(spreadsheetUrl)) {
+			rows = [{ "0": spreadsheetUrl }]
 			columnName = "0"
+		} else {
+			rows = await utils.getRawCsv(spreadsheetUrl)
+			let csvHeader = rows[0].filter(cell => !isUrl(cell))
+			let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
+			columns = [columnName, ...msgTags]
+			rows = utils.extractCsvRows(rows, columns)
+			if (!columnName) {
+				columnName = "0"
+			}
 		}
 	}
+
+	if (typeof profileUrls === "string") {
+		rows = [ { "0": profileUrls } ]
+	} else if (Array.isArray(profileUrls)) {
+		rows = profileUrls.map(el => ({ "0": el }))
+	}
+
 	rows.forEach(el => {
 		if (el[columnName] && !el[columnName].endsWith("/")) {
 			el[columnName] += "/"
