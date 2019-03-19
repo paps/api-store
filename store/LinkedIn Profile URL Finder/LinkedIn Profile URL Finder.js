@@ -96,6 +96,8 @@ const normalizeLinkedInURL = url => {
 			break
 		}
 		let link = null
+		let description
+		let title
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/in/") > 0) {
 				link = normalizeLinkedInURL(res.link)
@@ -105,6 +107,12 @@ const normalizeLinkedInURL = url => {
 		const foundData = { query: one, timestamp: (new Date()).toISOString() }
 		if (link) {
 			foundData.linkedinUrl = link
+			if (description) {
+				foundData.description = description
+			}
+			if (title) {
+				foundData.title = title
+			}
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
 			foundData.error = "No result found"

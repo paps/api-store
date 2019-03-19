@@ -14,6 +14,8 @@
 	},
 	"outputDescription": {
 		"linkedinUrl": "Matched LinkedIn company URL (if found)",
+		"title": "",
+		"description": "",
 		"query": "The search query that lead to this URL"
 	},
 	"argumentForm": {

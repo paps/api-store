@@ -13,6 +13,8 @@
 	},
 	"outputDescription": {
 		"linkedinUrl": "Matched LinkedIn profile URL (if found)",
+		"title": "",
+		"description": "",
 		"query": "The search query that lead to this URL"
 	},
 	"defaultArgumentAllowed": false,

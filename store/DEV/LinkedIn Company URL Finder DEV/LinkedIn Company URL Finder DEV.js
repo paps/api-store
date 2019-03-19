@@ -78,20 +78,32 @@ let db
 			break
 		}
 		let link = null
+		let description
+		let title
 		for (const res of search.results) {
 			if (res.link.indexOf("linkedin.com/company/") > 0) {
 				link = res.link
+				description = res.description
+				title = res.title
 				break
 			}
 		}
-		const foundData = { query: one, timestamp: (new Date()).toISOString() }
+		const foundData = {}
 		if (link) {
 			foundData.linkedinUrl = link
+			if (description) {
+				foundData.description = description
+			}
+			if (title) {
+				foundData.title = title
+			}
 			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
 		} else {
 			foundData.error = "No result found"
 			utils.log(`No result for ${one} (${search.codename})`, "done")
 		}
+		foundData.query = one
+		foundData.timestamp = (new Date()).toISOString()
 		toReturn.push(foundData)
 		i++
 	}
