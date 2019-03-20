@@ -24,15 +24,16 @@ const DEF_LINES = 20
 
 declare interface IApiParams {
 	sessionCookie: string,
-	spreadsheetUrl: string,
+	spreadsheetUrl?: string,
 	columnName?: string,
 	unfollowProfiles?: boolean,
 }
 
-declare interface IMupageleApiParams {
+declare interface IMutableApiParams {
 	numberOfAddsPerLaunch?: number,
 	csvName?: string,
 	actionToPerform?: string,
+	queries?: string|string[]
 }
 
 declare interface IDbRow {
@@ -43,6 +44,9 @@ declare interface IDbRow {
 }
 
 enum FollowStatus {
+	UNFOL_WT_FOL = -4,
+	USER_N_FOUND = -3,
+	API_ERROR = -2,
 	RATE_LIMIT = -1,
 	ERROR = 0,
 	SUCCESS = 1,
@@ -50,9 +54,10 @@ enum FollowStatus {
 	UFLB_ERROR = 3,
 	ALREADY_FOLLOW = 4,
 }
+
 // }
 
-const removeNonPrinpageleChars = (str: string): string => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
+const removeNonPrintableChars = (str: string): string => str.replace(/[^a-zA-Z0-9_@]+/g, "").trim()
 
 const isTwitterUrl = (url: string): boolean => {
 	try {
@@ -79,8 +84,12 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 
 const follow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string) => {
 	await page.click(followSel)
-	const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json")
-	console.log(response.status())
+	try {
+		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json")
+	} catch (err) {
+		console.log(err.message || err)
+		return FollowStatus.API_ERROR
+	}
 	let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, pendingSel ])
 	res = await res.jsonValue()
 
@@ -99,9 +108,11 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 		/* no limit reached */
 	}
 
-	if (res === followingSel) {
-		return FollowStatus.SUCCESS
+	if (res === pendingSel) {
+		return FollowStatus.PENDING
 	}
+
+	return FollowStatus.SUCCESS
 }
 
 const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: string, action: string) => {
@@ -110,22 +121,25 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 			await page.waitForSelector("span.FollowStatus", { timeout: 5000, visible: true })
 			return FollowStatus.UFLB_ERROR
 		} catch (err) {
-			/* unfollowback option & the user follows you */
+			/* unfollowback option & the user doesn't follows you */
 		}
 	}
 	await page.click(followingSel)
-	await page.waitForResponse("https://api.twitter.com/1.1/friendships/destroy.json")
-	const found = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel ])
+	try {
+		await page.waitForResponse("https://api.twitter.com/1.1/friendships/destroy.json")
+	} catch (err) {
+		console.log(err.message || err)
+		return FollowStatus.API_ERROR
+	}
+	let found = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel ])
+	found = await found.jsonValue()
 	try {
 		await page.waitForSelector(".alter-messages", { timeout: 5000 })
 		return FollowStatus.RATE_LIMIT
 	} catch (err) {
 		/* No rate limit */
 	}
-	if (found === followSel) {
-		return FollowStatus.SUCCESS
-	}
-	return FollowStatus.SUCCESS
+	return found === followSel ? FollowStatus.SUCCESS : FollowStatus.ERROR
 }
 
 const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
@@ -134,42 +148,64 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 	const pendingSel = ".pending"
 	let selector = null
 	let status
+	const http = await page.goto(url)
+	if (http && http.status() === 404) {
+		utils.log(`${url} doesn't exists`, "warning")
+		return FollowStatus.USER_N_FOUND
+	}
 	try {
-		await page.goto(url)
 		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 7500, visible: true })
 		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel ])
 		selector = await selector.jsonValue()
-		console.log(selector)
-		await page.screenshot({ path: "test.jpg", type: "jpeg", fullPage: true })
+		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	} catch (err) {
-		console.log(err.message || err)
 		utils.log(`${url} isn't a valid Twitter URL`, "warning")
 	}
 
 	if (selector === followSel) {
 		if (action === "unfollow" || action === "unfollowback") {
-			utils.log(`You need to follow ${url} before sending an unfollow request`, "warning")
-			return true
+			return FollowStatus.UNFOL_WT_FOL
 		}
 		status = await follow(page, followSel, followingSel, pendingSel)
-		if (status === FollowStatus.RATE_LIMIT) {
-			return false
-		}
 	} else if (selector === followingSel) {
 		if (action === "follow") {
-			utils.log(`You are already following ${url}`, "warning")
 			return FollowStatus.ALREADY_FOLLOW
 		}
 		status = await unfollow(page, followSel, followingSel, action)
 	}
-	console.log(status)
+	return status
+}
+
+const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] => {
+	const res: string[] = []
+	let rowCount = 0
+
+	for (const line of rawCsv) {
+		if (line) {
+			let seek = false
+			for (const dbLine of db) {
+				const tmp = line.toLowerCase()
+				if (dbLine.handle && tmp === removeNonPrintableChars(tmp) || tmp === dbLine.url || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
+					seek = true
+					break
+				}
+			}
+			if (!seek) {
+				res.push(line)
+				rowCount++
+				if (rowCount === count) {
+					break
+				}
+			}
+		}
+	}
+	return res
 }
 
 (async () => {
 	const args = utils.validateArguments()
 	const { sessionCookie, spreadsheetUrl, columnName, unfollowProfiles } = args as IApiParams
-	let { numberOfAddsPerLaunch, csvName, actionToPerform } = args as IMupageleApiParams
-	let queries = []
+	let { numberOfAddsPerLaunch, csvName, actionToPerform, queries } = args as IMutableApiParams
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -181,40 +217,33 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 
 	if (!actionToPerform) {
 		if (typeof unfollowProfiles === "boolean") {
-			actionToPerform = unfollowProfiles ? "unfollowProfiles" : "follow"
+			actionToPerform =  `${unfollowProfiles ? "un" : "" }follow`
 		} else {
 			actionToPerform = "follow"
 		}
 	}
 
-	try {
-		queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
-	} catch (err) {
-		queries = [ spreadsheetUrl ]
+	if (spreadsheetUrl) {
+		try {
+			queries = isTwitterUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		} catch (err) {
+			queries = [ spreadsheetUrl ]
+		}
 	}
 
-	const db = await utils.getDb(csvName + ".csv") as IDbRow[]
+	if (typeof queries === "string") {
+		queries = [ queries ]
+	}
 
-	// TODO: replace filter by a for loop
+	let db = await utils.getDb(csvName + ".csv") as IUnknownObject[]
+	const execResult: IUnknownObject[] = []
 
-	queries.filter((el: string) => db.findIndex((line: IUnknownObject) =>
-		line.handle &&
-		el === removeNonPrinpageleChars(line.handle as string) ||
-		el === line.url as string ||
-		(el.includes("twitter.com/@") && el.replace(".com/@", ".com/") === line.url)) < 0)
-
-	queries = queries.slice(0, numberOfAddsPerLaunch)
-
+	queries = getProfiles(queries as string[], db as IDbRow[], numberOfAddsPerLaunch)
 	if (queries.length < 1) {
-		utils.log("Every account from input are already added.", "warning")
+		utils.log("Every profiles from input are already processed", "warning")
 		process.exit()
 	}
-
-	/* queries = queries.filter((el) => db.findIndex((line) => line.handle &&
-		el === removeNonPrinpageleChars(line.handle) &&
-		isTwitterUrl(`twitter.com/${line.handle}`) &&
-		el.replace(".com/@", ".com/") === line.url
-	) < 0)*/
+	utils.log(`Adding ${queries.length} twitter profile${ queries.length === 1 ? "" : "s" }: ${JSON.stringify(queries, null, 2)}`, "info")
 
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
@@ -222,10 +251,58 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 	await twitter.login(page, sessionCookie)
 
 	for (const one of queries) {
-		utils.log(`${actionToPerform === "follow" ? "Following" : "Unfollowing" } ${one}`, "loading")
+		let errMsg = null
+		let successMsg = null
 		const url = utils.isUrl(one) ? one : `https://twitter.com/${one}`
-		await subscribe(page, url, actionToPerform)
+		const result: IUnknownObject = { url, handle: one }
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(timeLeft.message, "warning")
+			break
+		}
+		utils.log(`${actionToPerform === "follow" ? "Following" : "Unfollowing" } ${one}`, "loading")
+		const actionResult = await subscribe(page, url, actionToPerform)
+		if (actionResult === FollowStatus.RATE_LIMIT) {
+			utils.log("Twitter rate limit reached, you'll need to wait until tomorrow", "warning")
+			break
+		}
+
+		switch (actionResult) {
+			case FollowStatus.ERROR:
+				errMsg = `Error while ${actionToPerform === "follow" ? "following" : "unfollowing" } ${one}`
+				break
+			case FollowStatus.SUCCESS:
+				successMsg = `${one} ${ actionToPerform === "follow" ? "followed" : "unfollowed" }`
+				break
+			case FollowStatus.PENDING:
+				successMsg = `Follow request for ${one} is now pending`
+				break
+			case FollowStatus.ALREADY_FOLLOW:
+				errMsg = `You are already following ${one}`
+				break
+			case FollowStatus.USER_N_FOUND:
+				errMsg = `${one} doesn't exist in Twitter`
+				break
+			case FollowStatus.UFLB_ERROR:
+				errMsg = `Unfollow request can't be done: ${one} is following you back`
+				break
+			case FollowStatus.UNFOL_WT_FOL:
+				errMsg = `You need to follow ${one} before sending an unfollow request`
+				break
+		}
+
+		if (typeof errMsg === "string") {
+			result.error = errMsg
+		}
+
+		utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "info")
+		result.timestamp = (new Date()).toISOString()
+		execResult.push(result)
 	}
+	const tmp = execResult.filter((el) => !el.error)
+	utils.log(`${tmp.length} user${ tmp.length === 1 ? "" : "s" } successfully ${ actionToPerform === "follow" ? "followed" : "unfollowed" } (${execResult.length} users processed during this execution)`, tmp.length > 1 ? "done" :  "warning")
+	db = db.concat(utils.filterRightOuter(db, execResult))
+	await utils.saveResults(execResult, db, csvName)
 	process.exit()
 })()
 .catch((err) => {

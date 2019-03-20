@@ -66,8 +66,7 @@
 			},
 			"spreadsheetUrl": {
 				"type": "string",
-				"minLength": 1,
-				"required": true
+				"minLength": 1
 			},
 			"columnName": {
 				"type": "string"
@@ -85,6 +84,35 @@
 				"enum": [ "follow", "unfollow", "unfollowback" ],
 				"default": "follow"
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }
