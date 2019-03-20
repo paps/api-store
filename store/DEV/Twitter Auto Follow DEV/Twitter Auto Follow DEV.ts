@@ -259,11 +259,15 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		let errMsg = null
 		let successMsg = null
 		const url = utils.isUrl(one) ? one : `https://twitter.com/${one}`
+		const handleMatch = url.match(/twitter\.com\/(?:@)?([A-z0-9_]+)/)
 		const result: IUnknownObject = { url, handle: one }
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
+		}
+		if (handleMatch) {
+			result.handle = removeNonPrintableChars(handleMatch[1])
 		}
 		utils.log(`${actionToPerform === "follow" ? "Following" : "Unfollowing" } ${one}`, "loading")
 		const actionResult = await subscribe(page, url, actionToPerform)
