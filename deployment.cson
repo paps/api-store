@@ -10,6 +10,7 @@
 		'lib-DiscoverMail.js': 'libs/lib-DiscoverMail.js'
 		'lib-Dropcontact.js': 'libs/lib-Dropcontact.js'
 		'lib-Facebook.js': 'libs/lib-Facebook.js'
+		'lib-GitHub.js': 'libs/lib-GitHub.js'
 		'lib-Google.js': 'libs/lib-Google.js'
 		'lib-Hunter.js': 'libs/lib-Hunter.js'
 		'lib-Instagram.js': 'libs/lib-Instagram.js'
