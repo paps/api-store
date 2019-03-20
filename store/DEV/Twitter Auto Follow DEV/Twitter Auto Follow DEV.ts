@@ -20,7 +20,7 @@ const utils = new StoreUtilities(buster)
 const twitter = new Twitter(buster, utils)
 
 const DB_NAME = "database-twitter-auto-follow"
-const DEF_LINES = 20
+const DEF_LINES = 50
 
 declare interface IApiParams {
 	sessionCookie: string,
@@ -44,6 +44,7 @@ declare interface IDbRow {
 }
 
 enum FollowStatus {
+	FOLLOW_SELF = -5,
 	UNFOL_WT_FOL = -4,
 	USER_N_FOUND = -3,
 	API_ERROR = -2,
@@ -145,6 +146,7 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 	const followingSel = ".ProfileNav-item .following-text"
 	const followSel = ".ProfileNav-item .follow-text"
+	const editProfile = ".ProfileNav-item .UserActions-editButton"
 	const pendingSel = ".pending"
 	let selector = null
 	let status
@@ -155,11 +157,12 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 	}
 	try {
 		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 7500, visible: true })
-		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel ])
+		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel, editProfile ])
 		selector = await selector.jsonValue()
 		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	} catch (err) {
 		utils.log(`${url} isn't a valid Twitter URL`, "warning")
+		return FollowStatus.ERROR
 	}
 
 	if (selector === followSel) {
@@ -172,6 +175,8 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 			return FollowStatus.ALREADY_FOLLOW
 		}
 		status = await unfollow(page, followSel, followingSel, action)
+	} else if (selector === editProfile) {
+		status = FollowStatus.FOLLOW_SELF
 	}
 	return status
 }
@@ -288,6 +293,9 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 				break
 			case FollowStatus.UNFOL_WT_FOL:
 				errMsg = `You need to follow ${one} before sending an unfollow request`
+				break
+			case FollowStatus.FOLLOW_SELF:
+				errMsg = `Trying to ${actionToPerform === "follow" ? actionToPerform : "unfollow" } your own profile`
 				break
 		}
 
