@@ -27,7 +27,12 @@ const unique = (left, right) => {
 	const rLength = right.length
 	const res = right.slice(0)
 	for (let i = 0; i < rLength; i++) {
-		const leftIdx = left.findIndex(el => el.profileLink === right[i].profileLink && el.query === right[i].query)
+		const leftIdx = left.findIndex(el => {
+			if (el && el.profileLink) {
+				return el.profileLink === right[i].profileLink && el.query === right[i].query
+			}
+			return false
+		})
 		if (leftIdx > -1) {
 			res[leftIdx] = right[i]
 		}
@@ -133,7 +138,9 @@ const getLikes = async (tab, urls, removeDuplicates = false) => {
 			return el
 		})
 		if (removeDuplicates) {
-			results = unique(results, likes) // results.concat(unique(results, likes))
+			results = results.concat(utils.filterRightOuter(results, likes))
+			// unique(results, likes)
+			// results.concat(unique(results, likes))
 		} else {
 			results = results.concat(likes)
 		}
