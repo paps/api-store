@@ -19,7 +19,7 @@ const buster = new Buster()
 const utils = new StoreUtilities(buster)
 const twitter = new Twitter(buster, utils)
 
-const DB_NAME = "dapagease-twitter-auto-follow"
+const DB_NAME = "database-twitter-auto-follow"
 const DEF_LINES = 20
 
 declare interface IApiParams {
@@ -69,7 +69,9 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 			const elStyle = getComputedStyle(el)
 			const elSize = el.getBoundingClientRect()
 			const isVisible = (elStyle.visibility !== "hidden" && elStyle.display !== "none")
-			return sel.toString()
+			if (isVisible) {
+				return sel.toString()
+			}
 		}
 	}
 	return false
@@ -131,12 +133,14 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 	const followSel = ".ProfileNav-item .follow-text"
 	const pendingSel = ".pending"
 	let selector = null
-
+	let status
 	try {
 		await page.goto(url)
 		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 7500, visible: true })
 		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel ])
 		selector = await selector.jsonValue()
+		console.log(selector)
+		await page.screenshot({ path: "test.jpg", type: "jpeg", fullPage: true })
 	} catch (err) {
 		console.log(err.message || err)
 		utils.log(`${url} isn't a valid Twitter URL`, "warning")
@@ -147,7 +151,7 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 			utils.log(`You need to follow ${url} before sending an unfollow request`, "warning")
 			return true
 		}
-		const status = await follow(page, followSel, followingSel, pendingSel)
+		status = await follow(page, followSel, followingSel, pendingSel)
 		if (status === FollowStatus.RATE_LIMIT) {
 			return false
 		}
@@ -156,8 +160,9 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 			utils.log(`You are already following ${url}`, "warning")
 			return FollowStatus.ALREADY_FOLLOW
 		}
-		const status = await unfollow(page, followSel, followingSel, action)
+		status = await unfollow(page, followSel, followingSel, action)
 	}
+	console.log(status)
 }
 
 (async () => {
