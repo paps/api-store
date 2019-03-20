@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js, lib-LinkedInScraper.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -129,7 +130,6 @@ const scrapeProfile = (arg, cb) => {
 			scrapedData.currentCompanyName = jobDiv.querySelector(".align-self-center span:nth-child(2)").textContent
 		}
 	}
-	document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position .profile-topcard__summary-position-title").textContent
 	if (document.querySelector(".profile-topcard__previous-positions .profile-topcard__summary-position")) {
 		scrapedData.pastJob = document.querySelector(".profile-topcard__previous-positions .profile-topcard__summary-position").textContent.split("\n").map(el => el.trim()).filter(el => el).join(" | ")
 		if (document.querySelector(".profile-topcard__summary-position a")) {
@@ -213,6 +213,8 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 		return { query, timestamp: (new Date()).toISOString(), error: "Couldn't load the profile" }
 	}
 	let scrapedData = {}
+	await tab.screenshot(`${Date.now()}scrapons.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}scrapons.html`)
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { query, salesNavigatorUrl })
 		if (saveImg || takeScreenshot) {
@@ -241,6 +243,8 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 		}
 	} catch (err) {
 		utils.log(`Error scraping profile: ${err}`, "error")
+		await tab.screenshot(`${Date.now()}error.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}error.html`)
 	}
 	return scrapedData
 }
@@ -558,56 +562,60 @@ const craftCsv = (json) => {
 							mailPayload.company = scrapedData.currentCompanyName
 
 						}
-						if (hunter) {
-							const hunterSearch = await hunter.find(mailPayload)
-							utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
-							if (hunterSearch.email) {
-								scrapedData.mailFromHunter = hunterSearch.email
-							}
-						}
-						if (dropcontact) {
-							const dropcontactSearch = await dropcontact.clean(mailPayload)
-							utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
-							if (dropcontactSearch.email) {
-								scrapedData.mailFromDropContact = dropcontactSearch.email
-							}
-							scrapedData.dropcontact = Object.assign({}, dropcontactSearch)
-						}
-						if (phantombusterMail) {
-							mailPayload.siren = true
-							let init = new Date()
-							let status = ""
-							try {
-								const dropcontactSearch = await phantombusterMail.find(mailPayload)
-								const foundData = dropcontactSearch.data
-								utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${scrapedData.fullName} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite }`, "info")
-								scrapedData.mailFromDropContact = foundData.email
-								scrapedData.dropcontact = Object.assign({}, foundData)
-								if (foundData.email) {
-									const qualification = foundData["email qualification"]
-									status = `Found ${qualification}`
-								} else {
-									status = "Not found"
+						if (mailPayload.domain || mailPayload.company) {
+							if (hunter) {
+								const hunterSearch = await hunter.find(mailPayload)
+								utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
+								if (hunterSearch.email) {
+									scrapedData.mailFromHunter = hunterSearch.email
 								}
-							} catch (err) {
-								status = err.message
 							}
-							try {
-								const needle = require("needle")
-								const options = {
-									headers:  {
-										"Content-Type": "application/x-www-form-urlencoded",
+							if (dropcontact) {
+								const dropcontactSearch = await dropcontact.clean(mailPayload)
+								utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite}`, "info")
+								if (dropcontactSearch.email) {
+									scrapedData.mailFromDropContact = dropcontactSearch.email
+								}
+								scrapedData.dropcontact = Object.assign({}, dropcontactSearch)
+							}
+							if (phantombusterMail) {
+								mailPayload.siren = true
+								let init = new Date()
+								let status = ""
+								try {
+									const dropcontactSearch = await phantombusterMail.find(mailPayload)
+									const foundData = dropcontactSearch.data
+									utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${scrapedData.fullName} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite }`, "info")
+									scrapedData.mailFromDropContact = foundData.email
+									scrapedData.dropcontact = Object.assign({}, foundData)
+									if (foundData.email) {
+										const qualification = foundData["email qualification"]
+										status = `Found ${qualification}`
+									} else {
+										status = "Not found"
 									}
+								} catch (err) {
+									status = err.message
 								}
-								const os = require("os")
-								const hostname = os.hostname()
-								const user_id = `dropcontact_${hostname}`
-								const event_type = "email_request"
-								const apiKey = "5f442f063c9d596a7157f248f1010e1a"
-								const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
-							} catch (err) {
-								//
+								try {
+									const needle = require("needle")
+									const options = {
+										headers:  {
+											"Content-Type": "application/x-www-form-urlencoded",
+										}
+									}
+									const os = require("os")
+									const hostname = os.hostname()
+									const user_id = `dropcontact_${hostname}`
+									const event_type = "email_request"
+									const apiKey = "5f442f063c9d596a7157f248f1010e1a"
+									const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
+								} catch (err) {
+									//
+								}
 							}
+						} else {
+							utils.log("Can't search for emails as no current company's been found!", "warning")
 						}
 					} catch (err) {
 						utils.log(`Error from Hunter: ${err}`, "error")
