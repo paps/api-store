@@ -39,11 +39,11 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Spreadsheet URL or a Twitter profile URL",
+						"label": "Spreadsheet URL or a Twitter profile URL <a href=\"/api-store/8835/twitter-media-extractor\" target=\"_blank\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"sessionCookie": {
-						"label": "Twitter session cookie",
+						"label": "Twitter session cookie <a href=\"/api-store/8835/twitter-media-extractor#section_4aimaspecifictwitteraccountorseveralatatime\" target=\"_blank\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"columnName": {

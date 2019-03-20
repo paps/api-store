@@ -87,6 +87,8 @@ const scrapeMediasMetadata = (arg, cb) => {
 		if (el.querySelector("div.js-adaptive-photo img")) {
 			res.pubImage = Array.from(el.querySelectorAll("div.js-adaptive-photo img")).map(el => el.src)
 			res.pubImage = res.pubImage.length > 1 ? res.pubImage : res.pubImage[0]
+			const likesEl = el.querySelector(".js-actionFavorite span.ProfileTweet-actionCountForPresentation")
+			res.likes = likesEl ? likesEl.textContent.trim() : "0"
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p") ? el.querySelector("div.js-tweet-text-container p").textContent.trim() : "no content found"
 		} else if (el.querySelector("div.js-tweet-text-container p") && !el.querySelector("div.js-macaw-cards-iframe-container")) {
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p").textContent.trim()
