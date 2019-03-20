@@ -46,7 +46,7 @@ const scrapeUser = (): Promise<IUnknownObject> => {
 	const organization = document.querySelector("ul.vcard-details li[itemprop=\"worksFor\"]")
 	const emailSelector = document.querySelector("ul.vcard-details li[itemprop=\"email\"]")
 	const accountCreationYear = document.querySelector("div.profile-timeline-year-list ul li:last-of-type")
-	const pinnedRepos = document.querySelectorAll("li.pinned-repo-item")
+	const pinnedRepos = document.querySelectorAll("li.pinned-item-list-item")
 	const commitsCount = document.querySelector("div.js-yearly-contributions h2")
 	const websiteSelector = document.querySelector("li[itemprop=\"url\"] a")
 
@@ -79,7 +79,7 @@ const scrapeUser = (): Promise<IUnknownObject> => {
 	}
 
 	profile.createdYear = accountCreationYear && accountCreationYear.textContent ? parseInt(accountCreationYear.textContent.trim(), 10) : null
-	profile.pinnedRepos = Array.from(pinnedRepos).map((el) => el.querySelector("span.d-block a") ? (el.querySelector("span.d-block a") as HTMLAnchorElement).href : null)
+	profile.pinnedRepos = Array.from(pinnedRepos).map((el) => el.querySelector("svg.octicon-repo ~ a") ? (el.querySelector("svg.octicon-repo ~ a") as HTMLAnchorElement).href : null)
 
 	const infos = Array.from(document.querySelectorAll("nav a.UnderlineNav-item span.Counter"))
 	for (const el of infos) {
@@ -91,7 +91,6 @@ const scrapeUser = (): Promise<IUnknownObject> => {
 			const _data = _final ? _final.pop() : ""
 			const name = _data ? _data.toLowerCase() : ""
 			const data = el.textContent.trim()
-			// const data = isNaN(parseInt(el.textContent.trim(), 10)) ? el.textContent.trim() : parseInt(el.textContent.trim(), 10)
 			profile[name] = data
 		}
 	}
