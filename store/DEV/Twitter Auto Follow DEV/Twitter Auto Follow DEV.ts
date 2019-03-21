@@ -72,7 +72,6 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 		const el = document.querySelector(sel)
 		if (el) {
 			const elStyle = getComputedStyle(el)
-			const elSize = el.getBoundingClientRect()
 			const isVisible = (elStyle.visibility !== "hidden" && elStyle.display !== "none")
 			if (isVisible) {
 				return sel.toString()
@@ -114,7 +113,7 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	return FollowStatus.SUCCESS
 }
 
-const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: string, action: string) => {
+const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string, action: string) => {
 	if (action === "unfollowback") {
 		try {
 			await page.waitForSelector("span.FollowStatus", { timeout: 5000, visible: true })
@@ -124,8 +123,11 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 		}
 	}
 	try {
-		await page.click(followingSel)
-		await page.waitForResponse("https://api.twitter.com/1.1/friendships/destroy.json")
+		let foundSel = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, pendingSel ])
+		foundSel = await foundSel.jsonValue()
+		await page.click(foundSel)
+		const endpoint = foundSel === pendingSel ? "https://twitter.com/i/user/cancel" : "https://api.twitter.com/1.1/friendships/destroy.json"
+		await page.waitForResponse(endpoint)
 	} catch (err) {
 		return FollowStatus.API_ERROR
 	}
@@ -157,7 +159,6 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel, editProfile ])
 		selector = await selector.jsonValue()
 	} catch (err) {
-		utils.log(`${url} isn't a valid Twitter URL`, "warning")
 		return FollowStatus.ERROR
 	}
 
@@ -170,9 +171,11 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 		if (action === "follow") {
 			return FollowStatus.ALREADY_FOLLOW
 		}
-		status = await unfollow(page, followSel, followingSel, action)
+		status = await unfollow(page, followSel, followingSel, pendingSel, action)
 	} else if (selector === editProfile) {
 		status = FollowStatus.FOLLOW_SELF
+	} else if (selector === pendingSel) {
+		status = action === "follow" ? FollowStatus.PENDING : await unfollow(page, followSel, followingSel, pendingSel, action)
 	}
 	return status
 }
@@ -186,8 +189,9 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 			let seek = false
 			for (const dbLine of db) {
 				const tmp = line.toLowerCase()
-				const pattern = new RegExp(`twitter.com/${dbLine.handle.toLowerCase()}$`)
-				if (dbLine.handle && tmp === removeNonPrintableChars(tmp) || tmp === dbLine.url || tmp.match(pattern) || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
+				const handle = dbLine.handle ? dbLine.handle.toLowerCase() : ""
+				const pattern = new RegExp(`twitter.com/${handle}$`)
+				if (handle && tmp === removeNonPrintableChars(handle) || tmp === dbLine.url || tmp.match(pattern) || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
 					seek = true
 					break
 				}
@@ -249,15 +253,15 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-
 	await twitter.login(page, sessionCookie)
-
+	let i = 0
 	for (const one of queries) {
 		let errMsg = null
 		let successMsg = null
-		const url = utils.isUrl(one) ? one : `https://twitter.com/${one}`
+		const url = utils.adjustUrl(one, "twitter")
 		const handleMatch = url.match(/twitter\.com\/(?:@)?([A-z0-9_]+)/)
 		const result: IUnknownObject = { url, handle: one }
+		buster.progressHint(++i / queries.length, `${actionToPerform === "follow" ? "F" : "Unf" }ollowning ${one}`)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
@@ -266,7 +270,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		if (handleMatch) {
 			result.handle = removeNonPrintableChars(handleMatch[1])
 		}
-		utils.log(`${actionToPerform === "follow" ? "Following" : "Unfollowing" } ${one}`, "loading")
+		utils.log(`${actionToPerform === "follow" ? "F" : "Unf" }ollowing ${one}`, "loading")
 		const actionResult = await subscribe(page, url, actionToPerform)
 		if (actionResult === FollowStatus.RATE_LIMIT) {
 			utils.log("Twitter rate limit reached, you'll need to wait until tomorrow", "warning")
@@ -275,10 +279,10 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 
 		switch (actionResult) {
 			case FollowStatus.ERROR:
-				errMsg = `Error while ${actionToPerform === "follow" ? "following" : "unfollowing" } ${one}`
+				errMsg = `Error while ${actionToPerform === "follow" ? "" : "un" }following ${one}`
 				break
 			case FollowStatus.SUCCESS:
-				successMsg = `${one} ${ actionToPerform === "follow" ? "followed" : "unfollowed" }`
+				successMsg = `${one} ${ actionToPerform === "follow" ? "" : "un" }followed`
 				break
 			case FollowStatus.PENDING:
 				successMsg = `Follow request for ${one} is now pending`
@@ -296,7 +300,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 				errMsg = `You need to follow ${one} before sending an unfollow request`
 				break
 			case FollowStatus.FOLLOW_SELF:
-				errMsg = `Trying to ${actionToPerform === "follow" ? actionToPerform : "unfollow" } your own profile`
+				errMsg = `Trying to ${actionToPerform === "follow" ? "" : "un" }follow your own profile`
 				break
 		}
 
@@ -309,7 +313,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		execResult.push(result)
 	}
 	const tmp = execResult.filter((el) => !el.error)
-	utils.log(`${tmp.length} user${ tmp.length === 1 ? "" : "s" } successfully ${ actionToPerform === "follow" ? "followed" : "unfollowed" } (${execResult.length} users processed during this execution)`, tmp.length > 1 ? "done" :  "warning")
+	utils.log(`${tmp.length} user${ tmp.length === 1 ? "" : "s" } successfully ${ actionToPerform === "follow" ? "" : "un" }followed (${execResult.length} user${ execResult.length === 1 ? "" : "s" } processed during this execution)`, "done")
 	db = db.concat(utils.filterRightOuter(db, execResult))
 	await utils.saveResults(execResult, db, csvName, null, false)
 	process.exit()
