@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Instagram.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
@@ -19,7 +19,7 @@ const nick = new Nick({
 	timeout: 30000
 })
 
-const StoreUtilities = require("./lib-StoreUtilities")
+const StoreUtilities = require("./lib-StoreUtilities-DEV")
 const utils = new StoreUtilities(nick, buster)
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
@@ -294,7 +294,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 
 	let urlCount = 0
-
+	let currentResult = []
 	for (let url of urls) {
 		try {
 			let resuming = false
@@ -313,7 +313,7 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 				followerCount = await tab.evaluate(scrapeFollowerCount)
 				if (followerCount === 0) {
 					utils.log("Profile has no follower.", "warning")
-					result.push({ query: url, error: "Profile has no follower" })
+					currentResult.push({ query: url, timestamp: (new Date()).toISOString(), error: "Profile has no follower" })
 					continue
 				} else {
 					utils.log(`Profile has around ${followerCount} followers.`, "info")
@@ -324,11 +324,11 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			const selected = await tab.waitUntilVisible(["main ul li:nth-child(2) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
-				result.push({ query: url, error: "Broken link or page has been removed" })
+				currentResult.push({ query: url, timestamp: (new Date()).toISOString(), error: "Broken link or page has been removed" })
 				continue
 			} else if (selected === "article h2") {
 				utils.log("Private account, cannot access follower list.", "warning")
-				result.push({ query: url, error: "Can't access private account list" })
+				currentResult.push({ query: url, timestamp: (new Date()).toISOString(), error: "Can't access private account list" })
 				continue
 			}
 			let numberToScrape = numberMaxOfFollowers
@@ -337,8 +337,12 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			}
 			let followers = await getFollowers(tab, url, numberToScrape, resuming)
 			followers = removeDuplicatesSelf(followers)
-			if (followers.length) { result = result.concat(followers) }
-			if (interrupted) { break }
+			if (followers.length) {
+				currentResult = currentResult.concat(followers)
+			}
+			if (interrupted) {
+				break
+			}
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
@@ -348,8 +352,9 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	if (rateLimited) {
 		utils.log("Stopping the agent. You should retry in 15min.", "warning")
 	}
-	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result, csvName)
+	if (currentResult.length) {
+		result = result.concat(currentResult)
+		await utils.saveFlatResults(currentResult, result, csvName)
 		if (agentObject) {
 			if (interrupted) {
 				agentObject.nextUrl = nextUrl

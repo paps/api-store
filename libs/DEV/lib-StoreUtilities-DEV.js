@@ -731,12 +731,11 @@ class StoreUtilities {
 		return { csvUrl: csv }
 	}
 
-	// XXX NOTE: contrary to saveResult() this method doesn't call nick.exit()
-	async saveResults2(jsonResult, csvResult, name = "result") {
+	// saveResults but faster, only for flat CSVs
+	async saveFlatResults(jsonResult, csvResult, name = "result") {
 		let date = new Date()
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
-		console.log("csvResult", csvResult)
 		const fields = this._getFieldsFromArray(csvResult)
 		const backupResultObject = {}
 
@@ -754,9 +753,13 @@ class StoreUtilities {
 			console.log("part1:", new Date() - date)
 			date = new Date()
 			let newJsonExport = fields.join(",") + "\n"
-			for (let i = 0; i < csvResult.length; i++) {
-				for (const val of fields) {
-					let value = csvResult[i][val]
+			const fieldsLength = fields.length
+			const csvResultLength = csvResult.length
+			// for (const line of csvResult) {
+			for (let j = 0; j < csvResultLength; j++) {
+				const line = csvResult[j]
+				for (let i = 0; i < fieldsLength; i++) {
+					let value = line[fields[i]]
 					if (value) {
 						value = value.toString()
 						if (value.includes("\n") || value.includes("\"") || value.includes(",")) {
@@ -765,12 +768,17 @@ class StoreUtilities {
 							newJsonExport += value
 						}
 					}
-					newJsonExport += ","
+					if (i !== fieldsLength - 1) {
+						newJsonExport += ","
+					}
 				}
-				newJsonExport = newJsonExport.slice(0, -1) + "\n"
+				if (j !== csvResultLength - 1) {
+					newJsonExport += "\n"
+				}
 			}
-			newJsonExport = newJsonExport.slice(0, -1)
-			console.log("newJsonExport:", newJsonExport)
+			console.log("elapsed:", new Date() - date)
+			date = new Date()
+			console.log("newJsonExportLength", newJsonExport.length)
 			const csvUrl = await this.buster.saveText(newJsonExport, name + ".csv")
 			backupResultObject.csvURL = csvUrl
 			this.log(`CSV saved at ${csvUrl}`, "done")
@@ -779,6 +787,9 @@ class StoreUtilities {
 			csvResult = null
 		}
 		if (true) {
+			if (jsonResult.length > 100000) {
+				jsonResult = jsonResult.slice(0, 100000)
+			}
 			const stringified = JSON.stringify(jsonResult)
 			console.log("stringifiedL", stringified.length)
 			const jsonUrl = await this.buster.saveText(stringified, name + ".json")
@@ -834,7 +845,6 @@ class StoreUtilities {
 				const httpRes = await needle("get", url)
 				// Trying to access an unknown file in s3 will make an 403 HTTP status code for the response
 				if (httpRes.raw && httpRes.statusCode === 200) {
-					console.log("httpRes.raw.toString()", httpRes.raw.toString())
 					const data = parseContent ? Papa.parse(httpRes.raw.toString(), { header: true }).data : httpRes.raw.toString()
 					return data
 				} else {

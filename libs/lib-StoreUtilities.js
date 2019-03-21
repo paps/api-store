@@ -638,6 +638,71 @@ class StoreUtilities {
 		return backupResultObject
 	}
 
+	// saveResults but faster, only for flat CSVs
+	async saveFlatResults(jsonResult, csvResult, name = "result") {
+		name = _filterName(name)
+		this.log("Saving data...", "loading")
+		const fields = this._getFieldsFromArray(csvResult)
+		const backupResultObject = {}
+		if (true) {
+			const newResult = []
+			for (let i = 0, len = csvResult.length; i < len; i++) {
+				const newItem = {}
+				for (const val of fields) {
+					newItem[val] = csvResult[i][val] !== null && csvResult[i][val] !== "undefined" ? csvResult[i][val] : ""
+				}
+				newResult.push(newItem)
+			}
+			csvResult = newResult
+			let newJsonExport = fields.join(",") + "\n"
+			const fieldsLength = fields.length
+			const csvResultLength = csvResult.length
+			for (let j = 0; j < csvResultLength; j++) {
+				const line = csvResult[j]
+				for (let i = 0; i < fieldsLength; i++) {
+					let value = line[fields[i]]
+					if (value) {
+						value = value.toString()
+						if (value.includes("\n") || value.includes("\"") || value.includes(",")) {
+							newJsonExport += "\"" + value.replace(/"+/g, "\"\"") + "\""
+						} else {
+							newJsonExport += value
+						}
+					}
+					if (i !== fieldsLength - 1) {
+						newJsonExport += ","
+					}
+				}
+				if (j !== csvResultLength - 1) {
+					newJsonExport += "\n"
+				}
+			}
+			const csvUrl = await this.buster.saveText(newJsonExport, name + ".csv")
+			backupResultObject.csvURL = csvUrl
+			this.log(`CSV saved at ${csvUrl}`, "done")
+		}
+		if (true) {
+			if (jsonResult.length > 100000) {
+				jsonResult = jsonResult.slice(0, 100000)
+			}
+			const stringified = JSON.stringify(jsonResult)
+			const jsonUrl = await this.buster.saveText(stringified, name + ".json")
+			this.log(`JSON saved at ${jsonUrl}`, "done")
+			backupResultObject.jsonUrl = jsonUrl
+		}
+		try {
+			await this.buster.setResultObject(jsonResult)
+		} catch (error) {
+			await this.buster.setResultObject(backupResultObject)
+		}
+		this.log("Data successfully saved!", "done")
+		if (this.test) {
+			this.output += "|END|"
+			this._testResult(csvResult)
+			console.log("Test succeed: ended with output:\n" + this.output)
+		}
+	}
+
 	/**
 	 * @async
 	 * @param {String} filename - Agent DB filename to retrieve (csv file)
