@@ -93,30 +93,57 @@ const scrapeProfile = (arg, cb) => {
 	const jsonCode = Array.from(document.querySelectorAll("code")).filter(el => el.textContent.includes("contactInfo") && !el.textContent.includes("\"request\":"))[0]
 	if (jsonCode) {
 		jsonData = JSON.parse(jsonCode.textContent)
+		scrapedData.name = jsonData.fullName
+		scrapedData.firstName = jsonData.firstName
+		scrapedData.lastName = jsonData.lastName
+		scrapedData.industry = jsonData.industry
+		scrapedData.location = jsonData.location
+		scrapedData.headline = jsonData.headline
+		scrapedData.connectionDegree = jsonData.connectionDegree
+		scrapedData.numberOfConnections = jsonData.numOfConnections
+		scrapedData.numberOfSharedConnections = jsonData.numOfSharedConnections
+		scrapedData.companyName = jsonData.companyName
+		if (jsonData.defaultPosition) {
+			scrapedData.currentCompanyDescription = jsonData.defaultPosition.description
+			scrapedData.currentCompanyLocation = jsonData.defaultPosition.location
+			scrapedData.currentCompanyName = jsonData.defaultPosition.companyName
+			scrapedData.currentJobTitle = jsonData.defaultPosition.title
+		}
+		if (jsonData.profilePictureDisplayImage) {
+			scrapedData.imgUrl = jsonData.profilePictureDisplayImage.artifacts[jsonData.profilePictureDisplayImage.artifacts.length - 1].fileIdentifyingUrlPathSegment
+		}
+		scrapedData.summary = jsonData.summary
+		scrapedData.linkedinProfileUrl = jsonData.flagshipProfileUrl
 	} else {
-		cb("Couldn't find profile data")
+		// cb("Couldn't find profile data")
+		if (document.querySelector(".profile-topcard-person-entity__name")) {
+			scrapedData.name = document.querySelector(".profile-topcard-person-entity__name").textContent.trim()
+			const nameArray = scrapedData.name.split(" ")
+			const firstName = nameArray.shift()
+			const lastName = nameArray.join(" ")
+			scrapedData.firstName = firstName
+			if (lastName) {
+				scrapedData.lastName = lastName
+			}
+		}
+		if (document.querySelector(".profile-topcard__connections-data")) {
+			scrapedData.numberOfConnections = document.querySelector(".profile-topcard__connections-data").textContent.trim()
+		}
+		if (document.querySelector(".profile-topcard__connections-data.type-shared")) {
+			scrapedData.numberOfSharedConnections = document.querySelector(".profile-topcard__connections-data.type-shared").textContent.trim()
+		}
+		if (document.querySelector(".profile-topcard__connections-data")) {
+			scrapedData.numberOfConnections = document.querySelector(".profile-topcard__connections-data").textContent.trim()
+		}
+		if (document.querySelector(".profile-topcard__location-data")) {
+			scrapedData.location = document.querySelector(".profile-topcard__location-data").textContent.trim()
+		}
+		if (document.querySelector(".profile-topcard-person-entity__content .mt2")) {
+			scrapedData.location = document.querySelector(".profile-topcard-person-entity__content .mt2").textContent.trim()
+		}
+
 	}
-	scrapedData.name = jsonData.fullName
-	scrapedData.firstName = jsonData.firstName
-	scrapedData.lastName = jsonData.lastName
-	scrapedData.industry = jsonData.industry
-	scrapedData.location = jsonData.location
-	scrapedData.headline = jsonData.headline
-	scrapedData.connectionDegree = jsonData.connectionDegree
-	scrapedData.numberOfConnections = jsonData.numOfConnections
-	scrapedData.numberOfSharedConnections = jsonData.numOfSharedConnections
-	scrapedData.companyName = jsonData.companyName
-	if (jsonData.defaultPosition) {
-		scrapedData.currentCompanyDescription = jsonData.defaultPosition.description
-		scrapedData.currentCompanyLocation = jsonData.defaultPosition.location
-		scrapedData.currentCompanyName = jsonData.defaultPosition.companyName
-		scrapedData.currentJobTitle = jsonData.defaultPosition.title
-	}
-	if (jsonData.profilePictureDisplayImage) {
-		scrapedData.imgUrl = jsonData.profilePictureDisplayImage.artifacts[jsonData.profilePictureDisplayImage.artifacts.length - 1].fileIdentifyingUrlPathSegment
-	}
-	scrapedData.summary = jsonData.summary
-	scrapedData.linkedinProfileUrl = jsonData.flagshipProfileUrl
+
 	if (document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position")) {
 		const jobDiv = document.querySelector(".profile-topcard__current-positions .profile-topcard__summary-position")
 		scrapedData.currentJob = document.querySelector(".profile-topcard__summary-position").textContent.split("\n").map(el => el.trim()).filter(el => el).join(" | ")
@@ -178,19 +205,13 @@ const scrapeProfile = (arg, cb) => {
 		}
 	}
 	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling) {
-		let email = document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling.href
-		if (email) {
-			if (email.startsWith("mailto:")) {
-				email = email.slice(7)
-			}
-			scrapedData.email = email
-		}
-	}
-	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling) {
 		const address = document.querySelector(".profile-topcard__contact-info li-icon[type=\"map-marker-icon\"]").nextElementSibling.innerText
 		if (address) {
 			scrapedData.address = address
 		}
+	}
+	if (document.querySelector(".profile-topcard__photo-expand-btn img")) {
+		scrapedData.imgUrl = document.querySelector(".profile-topcard__photo-expand-btn img").src
 	}
 	scrapedData.query = arg.query
 	scrapedData.timestamp = (new Date()).toISOString()
@@ -198,7 +219,7 @@ const scrapeProfile = (arg, cb) => {
 }
 
 
-const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, takeScreenshot) => {
+const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl) => {
 	try {
 		await tab.open(salesNavigatorUrl)
 		await tab.waitUntilVisible(".profile-topcard", 15000)
@@ -217,27 +238,6 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl, saveImg, take
 	await buster.saveText(await tab.getContent(), `${Date.now()}scrapons.html`)
 	try {
 		scrapedData = await tab.evaluate(scrapeProfile, { query, salesNavigatorUrl })
-		if (saveImg || takeScreenshot) {
-			let slug = scrapedData.linkedinProfileUrl.slice(28)
-			if (saveImg) {
-				for (let i = 0; i < 10; i++) {
-					try {
-						scrapedData.savedImg = await buster.save(scrapedData.imgUrl, `${slug}.jpeg`)
-						break
-					} catch (err) {
-						//
-					}
-					await tab.wait(500)
-				}
-			}
-			try {
-				if (takeScreenshot) {
-					scrapedData.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
-				}
-			} catch (err) {
-				//
-			}
-		}
 		if (scrapedData.name) {
 			utils.log(`Successfully scraped profile of ${scrapedData.name}.`, "done")
 		}
@@ -437,7 +437,7 @@ const craftCsv = (json) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfProfilesPerLaunch, csvName, scrapeJobs, scrapeSchools, scrapeSkills, saveImg, takeScreenshot} = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfProfilesPerLaunch, csvName, scrapeJobs, scrapeSchools, scrapeSkills, saveImg, takeScreenshot, extractRegularUrl } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await linkedIn.login(tab, sessionCookie)
 	let urls = profileUrls
@@ -491,19 +491,50 @@ const craftCsv = (json) => {
 		}
 		try {
 			let salesNavigatorUrl
-			if (isLinkedInProfile(profileUrl) === "regular") {
+			let regularLinkedInUrl
+			const linkedInProfileType = isLinkedInProfile(profileUrl)
+			if (linkedInProfileType === "regular") {
 				utils.log(`Converting regular URL ${profileUrl}...`, "loading")
 				const scrapedData = await linkedInScraper.scrapeProfile(tab, profileUrl, null, null, null, false, true)
+				console.log("scrapedRegu:", scrapedData)
 				if (scrapedData.csv.linkedinSalesNavigatorUrl) {
 					salesNavigatorUrl = scrapedData.csv.linkedinSalesNavigatorUrl
+					regularLinkedInUrl = scrapedData.csv.linkedinProfile
 				}
 			}
-			if (isLinkedInProfile(profileUrl) === "sales") {
+			if (linkedInProfileType === "sales") {
 				salesNavigatorUrl = profileUrl
 			}
 			if (salesNavigatorUrl) {
 				utils.log(`Opening Sales Navigator profile ${salesNavigatorUrl}...`, "loading")
-				const scrapedData = await loadAndScrapeProfile(tab, profileUrl, salesNavigatorUrl, saveImg, takeScreenshot)
+				const scrapedData = await loadAndScrapeProfile(tab, profileUrl, salesNavigatorUrl)
+				if (extractRegularUrl) {
+					if (!regularLinkedInUrl) {
+						regularLinkedInUrl = await linkedInScraper.salesNavigatorUrlConverter(salesNavigatorUrl)
+					}
+					scrapedData.linkedinProfileUrl = regularLinkedInUrl
+				}
+				if (saveImg || takeScreenshot) {
+					const slug = scrapedData.name
+					if (saveImg) {
+						for (let i = 0; i < 10; i++) {
+							try {
+								scrapedData.savedImg = await buster.save(scrapedData.imgUrl, `${slug}.jpeg`)
+								break
+							} catch (err) {
+								//
+							}
+							await tab.wait(500)
+						}
+					}
+					try {
+						if (takeScreenshot) {
+							scrapedData.screenshot = await buster.save((await tab.screenshot(`screenshot_${slug}.jpeg`)))
+						}
+					} catch (err) {
+						//
+					}
+				}
 				if (scrapedData.introducerSalesNavigatorUrl) {
 					scrapedData.introducerProfileUrl = linkedInScraper.salesNavigatorUrlCleaner(scrapedData.introducerSalesNavigatorUrl, true)
 				}
@@ -553,7 +584,7 @@ const craftCsv = (json) => {
 							mailPayload.first_name = scrapedData.firstName
 							mailPayload.last_name = scrapedData.lastName
 						} else {
-							mailPayload.full_name = scrapedData.fullName
+							mailPayload.full_name = scrapedData.name
 						}
 						if (scrapedData.companyWebsite) {
 							mailPayload.domain = scrapedData.companyWebsite
@@ -585,7 +616,7 @@ const craftCsv = (json) => {
 								try {
 									const dropcontactSearch = await phantombusterMail.find(mailPayload)
 									const foundData = dropcontactSearch.data
-									utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${scrapedData.fullName} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite }`, "info")
+									utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${scrapedData.name} working at ${scrapedData.currentCompanyName || scrapedData.companyWebsite }`, "info")
 									scrapedData.mailFromDropContact = foundData.email
 									scrapedData.dropcontact = Object.assign({}, foundData)
 									if (foundData.email) {
@@ -618,7 +649,7 @@ const craftCsv = (json) => {
 							utils.log("Can't search for emails as no current company's been found!", "warning")
 						}
 					} catch (err) {
-						utils.log(`Error from Hunter: ${err}`, "error")
+						utils.log(`Error: ${err}`, "error")
 					}
 				}
 				currentResult.push(scrapedData)
