@@ -114,15 +114,17 @@ const scrapeProfile = (arg, cb) => {
 		scrapedData.summary = jsonData.summary
 		scrapedData.linkedinProfileUrl = jsonData.flagshipProfileUrl
 	} else {
-		// cb("Couldn't find profile data")
 		if (document.querySelector(".profile-topcard-person-entity__name")) {
-			scrapedData.name = document.querySelector(".profile-topcard-person-entity__name").textContent.trim()
-			const nameArray = scrapedData.name.split(" ")
-			const firstName = nameArray.shift()
-			const lastName = nameArray.join(" ")
-			scrapedData.firstName = firstName
-			if (lastName) {
-				scrapedData.lastName = lastName
+			const name = document.querySelector(".profile-topcard-person-entity__name").textContent.trim()
+			if (!document.querySelector(".profile-body__upgrade-button") || !name || !name.includes("LinkedIn")) {
+				scrapedData.name = name
+				const nameArray = scrapedData.name.split(" ")
+				const firstName = nameArray.shift()
+				const lastName = nameArray.join(" ")
+				scrapedData.firstName = firstName
+				if (lastName) {
+					scrapedData.lastName = lastName
+				}
 			}
 		}
 		if (document.querySelector(".profile-topcard__connections-data")) {
@@ -237,6 +239,8 @@ const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl) => {
 		scrapedData = await tab.evaluate(scrapeProfile, { query, salesNavigatorUrl })
 		if (scrapedData.name) {
 			utils.log(`Successfully scraped profile of ${scrapedData.name}.`, "done")
+		} else {
+			utils.log("Out of network profile!", "warning")
 		}
 	} catch (err) {
 		utils.log(`Error scraping profile: ${err}`, "error")
