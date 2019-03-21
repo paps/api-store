@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js, lib-api-store.js"
-"phantombuster flags: save-folder"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
@@ -40,7 +39,7 @@ declare interface IDbRow {
 	timestamp: string,
 	url: string,
 	handle: string,
-	error ?: string,
+	error?: string,
 }
 
 enum FollowStatus {
@@ -84,11 +83,10 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 }
 
 const follow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string) => {
-	await page.click(followSel)
 	try {
+		await page.click(followSel)
 		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json")
 	} catch (err) {
-		console.log(err.message || err)
 		return FollowStatus.API_ERROR
 	}
 	let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, pendingSel ])
@@ -125,11 +123,10 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 			/* unfollowback option & the user doesn't follows you */
 		}
 	}
-	await page.click(followingSel)
 	try {
+		await page.click(followingSel)
 		await page.waitForResponse("https://api.twitter.com/1.1/friendships/destroy.json")
 	} catch (err) {
-		console.log(err.message || err)
 		return FollowStatus.API_ERROR
 	}
 	let found = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel ])
@@ -159,7 +156,6 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 7500, visible: true })
 		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel, editProfile ])
 		selector = await selector.jsonValue()
-		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	} catch (err) {
 		utils.log(`${url} isn't a valid Twitter URL`, "warning")
 		return FollowStatus.ERROR
@@ -190,7 +186,8 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 			let seek = false
 			for (const dbLine of db) {
 				const tmp = line.toLowerCase()
-				if (dbLine.handle && tmp === removeNonPrintableChars(tmp) || tmp === dbLine.url || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
+				const pattern = new RegExp(`twitter.com/${dbLine.handle.toLowerCase()}$`)
+				if (dbLine.handle && tmp === removeNonPrintableChars(tmp) || tmp === dbLine.url || tmp.match(pattern) || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
 					seek = true
 					break
 				}
@@ -314,7 +311,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 	const tmp = execResult.filter((el) => !el.error)
 	utils.log(`${tmp.length} user${ tmp.length === 1 ? "" : "s" } successfully ${ actionToPerform === "follow" ? "followed" : "unfollowed" } (${execResult.length} users processed during this execution)`, tmp.length > 1 ? "done" :  "warning")
 	db = db.concat(utils.filterRightOuter(db, execResult))
-	await utils.saveResults(execResult, db, csvName)
+	await utils.saveResults(execResult, db, csvName, null, false)
 	process.exit()
 })()
 .catch((err) => {
