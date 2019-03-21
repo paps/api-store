@@ -4,7 +4,6 @@
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 "phantombuster flags: save-folder"
 
-const url = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -133,7 +132,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	for (const result of results) {
 		const node = result.node
 		const extractedData = {}
-		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
+		// extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
 		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
 		extractedData.commentCount = node.edge_media_to_comment.count
 		extractedData.likeCount = node.edge_liked_by.count
@@ -222,8 +221,8 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 			if (!maxToScrape) {
 				maxToScrape = totalHashtagsCount
 			}
-			utils.log(`Got ${results.length} hashtags.`, "info")
-			buster.progressHint(newlyScraped / maxToScrape, `Charging ${results.length} hashtags...`)
+			utils.log(`Got ${results.length} posts.`, "info")
+			buster.progressHint(newlyScraped / maxToScrape, `Loading ${results.length} posts...`)
 			if (hasNextPage && endCursor){
 				nextUrl = forgeNewUrl(endCursor)
 				lastDate = new Date()
@@ -242,14 +241,6 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 	} while (!maxPosts || newlyScraped < maxPosts)
 	return results
 }
-
-/**
- * @description Tiny function used to check if a given string represents an URL
- * @param {String} target
- * @return { Boolean } true if target represents an URL otherwise false
- */
-const isUrl = target => url.parse(target).hostname !== null
-
 
 /**
  * @description Main function
@@ -276,7 +267,7 @@ const isUrl = target => url.parse(target).hostname !== null
 	}
 
 	if (spreadsheetUrl) {
-		if (isUrl(spreadsheetUrl)) {
+		if (utils.isUrl(spreadsheetUrl)) {
 			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 			hashtags = hashtags.filter(el => el).map(el => el.trim())
 			hashtags = getUrlsToScrape(hashtags.filter(el => utils.checkDb(el, results, "query")), numberOfLinesPerLaunch)
@@ -343,11 +334,59 @@ const isUrl = target => url.parse(target).hostname !== null
 		}
 		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming)
 		const oldResultLength = results.length
-		for (let i = 0; i < tempResult.length; i++) {
-			if (!results.find(el => el.postUrl === tempResult[i].postUrl)) {
-				results.push(tempResult[i])
+		console.log("tempRL", tempResult.length)
+		let init = new Date()
+		if (results.length) {
+			for (const post of tempResult) {
+				if (!results.find(el => el.postUrl === post.postUrl)) {
+					results.push(post)
+				}
+			}
+		} else {
+			results = results.concat(tempResult)
+		}
+		console.log("elapsedconcat:", new Date() - init)
+		const test1 = []
+		init = new Date()
+		for (const post of tempResult) {
+			if (!test1.find(el => el.postUrl === post.postUrl)) {
+				test1.push(post)
 			}
 		}
+		console.log("elapsedtest1:", new Date() - init)
+		const test2 = []
+		init = new Date()
+		for (const post of tempResult) {
+			let found = false
+			for (let i = 0; i < test2.length; i++) {
+				if (test2[i].postUrl === post.postUrl) {
+					found = true
+					break
+				}
+			}
+			if (!found) {
+				test2.push(post)
+			}
+		}
+		console.log("elapsedtest2:", new Date() - init)
+		const test3 = []
+		init = new Date()
+		for (const tempPost of tempResult) {
+			let found = false
+			for (const post of test3) {
+				if (post.postUrl === tempPost.postUrl) {
+					found = true
+					break
+				}
+			}
+			if (!found) {
+				test3.push(tempPost)
+			}
+		}
+		console.log("elapsedtest3:", new Date() - init)
+		console.log("test1Length", test1.length)
+		console.log("test2Length", test2.length)
+		console.log("test3Length", test3.length)
 		const newResultsLength = results.length - oldResultLength
 		utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
 		if (rateLimited) {
@@ -362,8 +401,10 @@ const isUrl = target => url.parse(target).hostname !== null
 	if (rateLimited) {
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
+	const init = new Date()
 	if (results.length !== initialResultLength) {
-		await utils.saveResults(results, results, csvName)
+		utils.log(`${results.length} posts scraped.`, "done")
+		await utils.saveFlatResults(results, results, csvName)
 		if (agentObject) {
 			if (!allCollected) {
 				agentObject.nextUrl = nextUrl
@@ -377,7 +418,7 @@ const isUrl = target => url.parse(target).hostname !== null
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	utils.log(`${results.length} posts scraped.`, "done")
+	console.log("elapsed:", new Date() - init)
 	nick.exit()
 })()
 	.catch(err => {

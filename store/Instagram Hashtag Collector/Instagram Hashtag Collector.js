@@ -132,7 +132,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	for (const result of results) {
 		const node = result.node
 		const extractedData = {}
-		extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
+		// extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
 		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
 		extractedData.commentCount = node.edge_media_to_comment.count
 		extractedData.likeCount = node.edge_liked_by.count
@@ -347,7 +347,7 @@ const isUrl = target => url.parse(target).hostname !== null
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
 	if (results.length !== initialResultLength) {
-		await utils.saveResults(results, results, csvName)
+		await utils.saveFlatResults(results, results, csvName)
 		if (agentObject) {
 			if (!allCollected) {
 				agentObject.nextUrl = nextUrl
