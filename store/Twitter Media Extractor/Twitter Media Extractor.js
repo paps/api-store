@@ -84,11 +84,12 @@ const scrapeMediasMetadata = (arg, cb) => {
 	const data = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).map(el => {
 		let res = { timestamp: (new Date()).toISOString() }
 		res.twitterPostUrl = "https://twitter.com" + el.dataset.permalinkPath
+		const likesEl = el.querySelector(".js-actionFavorite span.ProfileTweet-actionCountForPresentation")
+		res.likes = likesEl ? likesEl.textContent.trim() : "0"
+		res.likes = res.likes ? res.likes : "0"
 		if (el.querySelector("div.js-adaptive-photo img")) {
 			res.pubImage = Array.from(el.querySelectorAll("div.js-adaptive-photo img")).map(el => el.src)
 			res.pubImage = res.pubImage.length > 1 ? res.pubImage : res.pubImage[0]
-			const likesEl = el.querySelector(".js-actionFavorite span.ProfileTweet-actionCountForPresentation")
-			res.likes = likesEl ? likesEl.textContent.trim() : "0"
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p") ? el.querySelector("div.js-tweet-text-container p").textContent.trim() : "no content found"
 		} else if (el.querySelector("div.js-tweet-text-container p") && !el.querySelector("div.js-macaw-cards-iframe-container")) {
 			res.tweetContent = el.querySelector("div.js-tweet-text-container p").textContent.trim()
