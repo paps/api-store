@@ -181,7 +181,6 @@ const scrapeCommenters = (arg, cb) => {
 		const one = {}
 		const profile = comment.querySelector("a[data-control-name")
 		const occupationSelector = comment.querySelector("a.feed-shared-post-meta__profile-link span.feed-shared-post-meta__headline")
-		const commentSelector = comment.querySelector("p.feed-shared-comment-item__main-content")
 		if (profile) {
 			one.profileLink = profile.href
 			one.fullName = profile.querySelector("div.member span:first-of-type") ? profile.querySelector("div.member span:first-of-type").textContent.trim() : null
@@ -190,7 +189,13 @@ const scrapeCommenters = (arg, cb) => {
 			one.lastName = tmp ? tmp.join(" ") : null
 			one.occupation = occupationSelector ? occupationSelector.textContent.trim() : null
 		}
-		one.comment = commentSelector ? commentSelector.textContent.trim() : null
+		if (comment.querySelector(".comments-comment-item-content-body")) {
+			one.comment = comment.querySelector(".comments-comment-item-content-body").textContent.trim()
+		} else if (comment.querySelector(".feed-shared-reply-item-content-body")) {
+			one.comment = comment.querySelector(".feed-shared-reply-item-content-body").textContent.trim()
+		} else {
+			one.comment = null
+		}
 		return one
 	}
 	const commenters = Array.from(document.querySelectorAll(".comments-comments-list article.comments-comment-item ")).map(comment => {
