@@ -23,6 +23,7 @@ const LinkedIn = require("./lib-LinkedIn")
 const linkedIn = new LinkedIn(nick, buster, utils)
 // }
 
+/* eslint-disable-next-line no-unused-vars */
 const unique = (left, right) => {
 	const rLength = right.length
 	const res = right.slice(0)
