@@ -203,7 +203,7 @@ const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
  * @return {String} filtered csvName
  */
 const _filterName = (csvName) => {
-	return csvName.replace(/[%#+\\,|]+/g, "")
+	return csvName.replace(/[%#+\\,|]+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
 class StoreUtilities {
@@ -612,8 +612,6 @@ class StoreUtilities {
 	async saveResults(jsonResult, csvResult, name = "result", schema, saveJson = true) {
 		name = _filterName(name)
 		this.log("Saving data...", "loading")
-		// const v8 = require("v8")
-		let date
 		if (schema) {
 			const newResult = []
 			for (let i = 0; i < csvResult.length; i++) {
@@ -630,12 +628,8 @@ class StoreUtilities {
 			csvResult = newResult
 		// If no schema is supplied, the function will try to create a csv with all gaps filled
 		} else {
-			date = new Date()
 			const newResult = []
-			console.log("part1")
 			const fields = this._getFieldsFromArray(csvResult)
-			console.log("part2:", new Date() - date)
-			date = new Date()
 			for (let i = 0, len = csvResult.length; i < len; i++) {
 				const newItem = {}
 				for (const val of fields) {
@@ -643,92 +637,28 @@ class StoreUtilities {
 				}
 				newResult.push(newItem)
 			}
-			console.log("part3:", new Date() - date)
-			date = new Date()
-			// csvResult = newResult
+			csvResult = newResult
 		}
-		// console.log("v8", v8.getHeapStatistics())
-		/* eslint-disable-next-line no-unused-vars */
-		const fs = require("fs")
-		/* eslint-disable-next-line no-unused-vars */
-		const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
-		console.log("part3-4:", new Date() - date)
-		date = new Date()
-		// const reader = fs.createReadStream(jsonUrl)
-		const writer = fs.createWriteStream(name + ".csv")
-		// try {
-		// 	reader.pipe(jsonexport()).pipe(writer)
-
-		// } catch (err) {
-		// 	console.log("err:", err)
-		// }
-		console.log("writer", writer)
-		console.log("part3-5:", new Date() - date)
-		date = new Date()
-		// console.log("JSON.stringify(jsonResult)", JSON.stringify(jsonResult))
-		/* eslint-disable-next-line no-unused-vars */
-		const data = csvResult
-		// // // const dest = "config.json"
-		// // const s = require("stream");
-
-		// // const stream = new s.Readable();
-		// // stream.push(JSON.stringify(data))
-		// // stream.push(null)
-		// // console.log("stream", stream)
-		// // console.log("part3-55:", new Date() - date)
-		// // date = new Date()
-		// // const dummy = () => {
-		// // 	return new Promise((resolve, reject) => {
-		// // 		stream.pipe(jsonexport()).pipe(writer)
-		// // 		writer.on("finish", () => {
-		// // 			resolve()
-		// // 		})
-		// // 		writer.on("error", () => {
-		// // 			reject()
-		// // 		})
-		// // 	})
-		// // }
-		// try {
-		// 	const exported = await dummy()
-		// 	console.log("writer:", writer)
-		// 	console.log("exported:", exported)
-		// } catch (err) {
-		// 	console.log("errn", err)
-		// }
-
-		const jsonExported = await jsonexport(csvResult)
-		console.log("jsonExported:",jsonExported)
-		console.log("part3-6:", new Date() - date)
-		date = new Date()
-		// const csvUrl = await this.buster.saveText(jsonExported, name + ".csv")
-		const csv = await this.buster.save(name + ".csv", name + ".csv")
-		// this.log(`CSV saved at ${csvUrl}`, "done")
-		// console.log("v8", v8.getHeapStatistics())
-
-		console.log("part4:", new Date() - date)
-		date = new Date()
-		// const backupResultObject = { csvUrl }
-		// if (saveJson) {
-		// 	const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
-		// 	this.log(`JSON saved at ${jsonUrl}`, "done")
-		// 	console.log("part5:", new Date() - date)
-		// 	backupResultObject.jsonUrl = jsonUrl
-		// }
-		date = new Date()
+		const csvUrl = await this.buster.saveText(await jsonexport(csvResult), name + ".csv")
+		this.log(`CSV saved at ${csvUrl}`, "done")
+		const backupResultObject = { csvUrl }
+		if (saveJson) {
+			const jsonUrl = await this.buster.saveText(JSON.stringify(jsonResult), name + ".json")
+			this.log(`JSON saved at ${jsonUrl}`, "done")
+			backupResultObject.jsonUrl = jsonUrl
+		}
 		try {
 			await this.buster.setResultObject(jsonResult)
 		} catch (error) {
-			// await this.buster.setResultObject(backupResultObject)
+			await this.buster.setResultObject(backupResultObject)
 		}
 		this.log("Data successfully saved!", "done")
-		console.log("part6:", new Date() - date)
 		if (this.test) {
 			this.output += "|END|"
 			this._testResult(csvResult)
 			console.log("Test succeed: ended with output:\n" + this.output)
 		}
-		// TODO: cleanup this method and return jsonUrl when possible
-		return { csvUrl: csv }
+		return backupResultObject
 	}
 
 	// saveResults but faster, only for flat CSVs
@@ -751,6 +681,9 @@ class StoreUtilities {
 			}
 			csvResult = newResult
 			console.log("part1:", new Date() - date)
+			date = new Date()
+			csvResult.forEach(el => delete el.imgUrl)
+			console.log("part1clean:", new Date() - date)
 			date = new Date()
 			let newJsonExport = fields.join(",") + "\n"
 			const fieldsLength = fields.length

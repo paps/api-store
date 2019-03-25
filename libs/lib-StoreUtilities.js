@@ -190,7 +190,7 @@ const _handleDefault = urlObject => _downloadCsv(urlObject.toString())
  * @return {String} filtered csvName
  */
 const _filterName = (csvName) => {
-	return csvName.replace(/[%#+\\,|]+/g, "")
+	return csvName.replace(/[%#+\\,|]+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
 
