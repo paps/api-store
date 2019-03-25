@@ -484,8 +484,9 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
 		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
-			let slug = infos.general.profileUrl.slice(28)
+			let slug = decodeURIComponent(infos.general.profileUrl.slice(28))
 			slug = slug.slice(0, slug.indexOf("/"))
+			// .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 			if (saveImg) {
 				if (infos.general.imgUrl) {
 					const savedImg = await utils.saveImg(tab, infos.general.imgUrl, slug, "Error while saving profile picture.")
