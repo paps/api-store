@@ -32,8 +32,9 @@
 		# API store
 		# ---------
 		'AngelList Market Companies Extractor.js': 'store/AngelList Market Companies Extractor/AngelList Market Companies Extractor.js'
-		'Domain Name Finder.js': 'store/Domain Name Finder/Domain Name Finder.js'
 		'Chrome Extension Review Extractor.js': '/store/Chrome Extension Review Extractor/Chrome Extension Review Extractor.js'
+		'Craigslist Page Scraper.js': '/store/Craigslist Page Scraper/Craigslist Page Scraper.js'
+		'Domain Name Finder.js': 'store/Domain Name Finder/Domain Name Finder.js'
 		'Email Extractor.js': 'store/Email Extractor/Email Extractor.js'
 		'Email To LinkedIn Profile URL Finder.js': 'store/Email To LinkedIn Profile URL Finder/Email To LinkedIn Profile URL Finder.js'
 		'Facebook Audience Builder.js': 'store/Facebook Audience Builder/Facebook Audience Builder.js'
@@ -53,7 +54,8 @@
 		'Facebook Profile URL Finder.js': 'store/Facebook Profile URL Finder/Facebook Profile URL Finder.js'
 		'GitHub Contributors Extractor.js': 'store/GitHub Contributors Extractor/GitHub Contributors Extractor.js'
 		'GitHub Stargazers Extractor.js': 'store/GitHub Stargazers Extractor/GitHub Stargazers Extractor.js'
-		'GitHub Profile Scraper.js': 'store/Github Profile Scraper/GitHub Profile Scraper.js'
+		'GitHub Profile Scraper.js': 'store/Github Profile Scraper/Github Profile Scraper.js'
+		'Instagram Auto Commenter.js': 'store/Instagram Auto Commenter/Instagram Auto Commenter.js'
 		'Instagram Auto Follow.js': 'store/Instagram Auto Follow/Instagram Auto Follow.js'
 		'Instagram Auto Liker.js': 'store/Instagram Auto Liker/Instagram Auto Liker.js'
 		'Instagram Follower Collector.js': 'store/Instagram Follower Collector/Instagram Follower Collector.js'
