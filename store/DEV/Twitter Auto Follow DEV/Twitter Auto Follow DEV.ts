@@ -105,11 +105,6 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	} catch (err) {
 		/* no limit reached */
 	}
-
-	if (res === pendingSel) {
-		return FollowStatus.PENDING
-	}
-
 	return FollowStatus.SUCCESS
 }
 
@@ -258,7 +253,8 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 	for (const one of queries) {
 		let errMsg = null
 		let successMsg = null
-		const url = utils.adjustUrl(one, "twitter")
+		let url = utils.adjustUrl(one, "twitter")
+		url = utils.isUrl(url) ? url : `https://twitter.com/${one}`
 		const handleMatch = url.match(/twitter\.com\/(?:@)?([A-z0-9_]+)/)
 		const result: IUnknownObject = { url, handle: one }
 		buster.progressHint(++i / queries.length, `${actionToPerform === "follow" ? "F" : "Unf" }ollowning ${one}`)
@@ -301,6 +297,9 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 				break
 			case FollowStatus.FOLLOW_SELF:
 				errMsg = `Trying to ${actionToPerform === "follow" ? "" : "un" }follow your own profile`
+				break
+			case FollowStatus.API_ERROR:
+				errMsg = `Error while ${actionToPerform === "follow" ? "" : "un" }following ${one}`
 				break
 		}
 
