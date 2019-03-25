@@ -1,20 +1,23 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js"
+"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js, lib-GitHub.js"
 
 import { URL } from "url"
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject } from "./lib-api-store"
+import GitHub from "./lib-GitHub"
 
 const buster: Buster = new Buster()
 const utils: StoreUtilities = new StoreUtilities(buster)
+const github: GitHub = new GitHub(buster, utils)
 const DB_NAME: string = "result"
 
 declare interface IApiParams {
 	spreadsheetUrl: string,
+	sessionCookieUserSession?: string,
 	columnName?: string,
 	numberOfLinesPerLaunch?: number,
 	noDatabase?: boolean,
@@ -131,7 +134,7 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	const page = await browser.newPage()
 
 	const args = utils.validateArguments()
-	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, noDatabase, scrapeHireable } = args as IApiParams
+	const { spreadsheetUrl, sessionCookieUserSession, columnName, numberOfLinesPerLaunch, noDatabase, scrapeHireable } = args as IApiParams
 	let { queries, csvName } = args as IMutableApiParams
 
 	const profiles = []
@@ -163,6 +166,14 @@ const scrapeHireStatus = async (username: string): Promise<boolean> => {
 	if ((queries as string[]).length < 1) {
 		utils.log("Input is empty OR every profiles are already scraped", "warning")
 		process.exit()
+	}
+
+	if (sessionCookieUserSession) {
+		try {
+			await github.login(page, "https://github.com", sessionCookieUserSession)
+		} catch (err) {
+			utils.log("Can't connect to GitHub with this session cookie", "warning")
+		}
 	}
 
 	for (const query of queries as string[]) {

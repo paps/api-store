@@ -73,7 +73,11 @@ const getReviews = (arg, cb) => {
 		review.timestamp = (new Date()).toISOString()
 		return review
 	})
-	document.querySelector(arg.selectors.lastReviewInPage).scrollIntoView()
+	const el = document.querySelector(arg.selectors.lastReviewInPage)
+	if (el) {
+		el.scrollIntoView()
+	}
+	// document.querySelector(arg.selectors.lastReviewInPage).scrollIntoView()
 	cb(null, toRet)
 }
 
@@ -139,7 +143,13 @@ const emulateHumanClick = async (tab, selector) => {
 	await tab.driver.client.Input.dispatchMouseEvent(opts)
 }
 
-const scrollToLastVisibleReview	= (arg, cb) => cb(null, document.querySelector(arg.selector).scrollIntoView())
+const scrollToLastVisibleReview = (arg, cb) => {
+	const el = document.querySelector(arg.selector)
+	if (el) {
+		el.scrollIntoView()
+	}
+	cb(null)
+}
 
 const scrapeExtensionName = (arg, cb) => cb(null, document.querySelector("h1").textContent.trim())
 

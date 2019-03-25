@@ -28,6 +28,10 @@
 						"label": "Spreadsheet URL or a GitHub profile URL <a target=\"_blank\" href=\"/api-store/12016/github-profile-scraper#section_4specifytheusersyoureinterestedin\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a GitHub profile URL / username"
 					},
+					"sessionCookieUserSession": {
+						"label": "GitHub user_session session cookie (optional)"
+
+					},
 					"columnName": {
 						"label": "Column name where GitHub profiles URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
@@ -60,6 +64,7 @@
 		"createdYear": "",
 		"pinnedRepos": "",
 		"repositories": "",
+		"projects": "",
 		"stars": "",
 		"followers": "",
 		"following": "",
@@ -73,6 +78,9 @@
 		"type": "object",
 		"properties": {
 			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"sessionCookieUserSession": {
 				"type": "string"
 			},
 			"columnName": {

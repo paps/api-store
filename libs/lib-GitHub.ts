@@ -15,12 +15,12 @@ class GitHub {
 		const _login = async () => {
 			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
 			if (response !== null && response.status() !== 200) {
-				return `GitHub responsed with ${response.status()}`
+				throw new Error(`GitHub responsed with ${response.status()}`)
 			}
 			await page.waitForSelector("summary.HeaderNavlink img.avatar")
 			const name = await page.evaluate(() => {
-				const el = document.querySelector("img.avatar") as HTMLImageElement
-				return el !== null ? el.alt : null
+				const el = document.querySelector("summary div.select-menu-button-gravatar ~ span")
+				return el !== null && el.textContent ? el.textContent.trim() : null
 			})
 			this.utils.log(`Connected as ${name}`, "done")
 		}
@@ -36,7 +36,6 @@ class GitHub {
 			await _login()
 		} catch (err) {
 			this.utils.log("Could not connect to GitHub with this session cookie", "error")
-			process.exit(-1)
 		}
 	}
 
