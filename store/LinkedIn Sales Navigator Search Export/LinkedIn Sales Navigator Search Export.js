@@ -307,7 +307,7 @@ const getListResults = async (tab, listUrl, numberOfProfiles, query) => {
 		const resultsCount = await tab.evaluate(totalResults, { selector })
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
 
-		utils.log(`Getting ${resultsCount} results`, "done")
+		utils.log(`Getting ${resultsCount} results.`, "done")
 		if (resultsCount === "0") {
 			return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
 		}
@@ -411,15 +411,25 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 		} else if (selector === ".generic-error > p.error-message") {
 			throw "LinkedIn is experiencing technical difficulties."
 		}
-		const resultsCount = await tab.evaluate(totalResults, { selector })
+		let resultsCount
+		let resultsCountText
 		if (selector === ".artdeco-tab-primary-text") {
 			numberPerPage = 25
+			const resultsObject = await tab.evaluate((arg, cb) => {
+				const count = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-primary-text").textContent
+				const text = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-secondary-text").textContent
+				cb(null, { count, text })
+			})
+			resultsCount = resultsObject.count
+			resultsCountText = resultsObject.text
 		} else {
 			numberPerPage = 100
+			resultsCount = await tab.evaluate(totalResults, { selector })
+			resultsCountText = "results"
 		}
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
 
-		utils.log(`Getting ${resultsCount} results`, "done")
+		utils.log(`Getting ${resultsCount} ${resultsCountText}.`, "done")
 		if (resultsCount === "0") {
 			return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
 		}
