@@ -94,6 +94,9 @@ declare interface IMutableApiParams {
 			el.workspaceUrl = slackWorkspaceUrl
 			el.timestamp = (new Date()).toISOString()
 		})
+		if (members.findIndex((el: IUnknownObject) => !el.email) > -1) {
+			utils.log("No mails found (administators can make them private)", "info")
+		}
 		utils.log(`${members.length} users scraped in ${query} channel`, "done")
 		res.push(...members)
 	}
