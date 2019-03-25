@@ -29,7 +29,7 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available) or a GitHub profile URL / username"
 					},
 					"sessionCookieUserSession": {
-						"label": "GitHub user_session session cookie (optional)"
+						"label": "GitHub user_session session cookie (optional) <a target=\"_blank\" href=\"/api-store/12016/github-profile-scraper\"></a>"
 
 					},
 					"columnName": {
