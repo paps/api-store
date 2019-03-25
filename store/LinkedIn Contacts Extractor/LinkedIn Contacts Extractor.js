@@ -100,7 +100,7 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 			result = result.concat(tempResult)
 			scrapeCount = result.length
 			if (scrapeCount) {
-				utils.log(`Scraped ${Math.min(scrapeCount, numberOfProfiles)} profiles.`, "done")
+				utils.log(`Scraped ${numberOfProfiles ? Math.min(scrapeCount, numberOfProfiles) : scrapeCount} profiles.`, "done")
 			}
 			buster.progressHint(Math.min(scrapeCount, numberOfProfiles) / numberOfProfiles, `${scrapeCount} profiles scraped`)
 			connectionsCount = 30
@@ -116,7 +116,7 @@ const loadConnectionsAndScrape = async (tab, numberOfProfiles) => {
 			break
 		}
 		await tab.wait(1000)
-	} while (scrapeCount < numberOfProfiles)
+	} while (!numberOfProfiles || scrapeCount < numberOfProfiles)
 	result = result.concat(await tab.evaluate(scrapeConnectionsProfilesAndRemove, { limiter: 0 })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfProfiles)
 	const resultLength = result.length
