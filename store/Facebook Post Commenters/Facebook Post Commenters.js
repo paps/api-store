@@ -171,8 +171,12 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	let lastDate = new Date()
 	let newCommentsCount
 	let selector = ".userContentWrapper"
-	if (postType === "video") {
-		selector = ".UFIContainer"
+	if (postType === "video" || postType === "video2") {
+		if (postType === "video") {
+			selector = ".UFIContainer"
+		} else {
+			selector = "div[data-testid*=\"UFI2CommentsList/root_depth\"]"
+		}
 		try {
 			await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("video")).map(el => el.pause()))) //pausing the video so that it doesn't skip to the next one
 		} catch (err) {
@@ -335,6 +339,15 @@ const getTotalCommentsCount = (arg, cb) => {
 					postType = "video"
 					try {
 						await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].click()))
+					} catch (err) {
+						utils.log(`Couldn't access comments to this video: ${err}`, "error")
+						continue
+					}
+				}
+				if (currentUrl.includes("/watch/?v=")) { // other type of video
+					postType = "video2"
+					try {
+						await tab.click("a[data-testid=\"UFI2CommentsCount/root\"]")
 					} catch (err) {
 						utils.log(`Couldn't access comments to this video: ${err}`, "error")
 						continue

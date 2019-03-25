@@ -172,18 +172,24 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	let lastDate = new Date()
 	let newCommentsCount
 	let selector = ".userContentWrapper"
-	if (postType === "video") {
-		selector = ".UFIContainer"
+	if (postType === "video" || postType === "video2") {
+		if (postType === "video") {
+			selector = ".UFIContainer"
+		} else {
+			selector = "div[data-testid*=\"UFI2CommentsList/root_depth\"]"
+		}
 		try {
 			await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("video")).map(el => el.pause()))) //pausing the video so that it doesn't skip to the next one
 		} catch (err) {
-			//
+			console.log("ero", err)
 		}
 	}
+	console.log("postType", postType)
 	let result = []
 	let totalScraped = 0
 	do {
 		newCommentsCount = await tab.evaluate(getCommentsCount, { selector })
+		console.log("newCommentsCount", newCommentsCount)
 		if (newCommentsCount > commentsCount) {
 			if (expandAllComments) {
 				utils.log("Expanding all comments.", "loading")
@@ -194,7 +200,7 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 			try {
 				result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, firstComment:true }))
 			} catch (err) {
-				//
+				console.log("eru", err)
 			}
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -230,7 +236,9 @@ const loadAllCommentersAndScrape = async (tab, query, numberOfCommentsPerPost, e
 	try {
 		result = result.concat(await tab.evaluate(scrapeCommentsAndRemove, { query, selector, first:false }))
 	} catch (err) {
-		//
+		console.log("eaao", err)
+		await tab.screenshot(`${Date.now()}eaao.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}eaao.html`)
 	}
 	if (result.length) {
 		if (numberOfCommentsPerPost) {
@@ -328,6 +336,7 @@ const getTotalCommentsCount = (arg, cb) => {
 				}
 				await tab.wait(5000) // waiting for the &theater parameter to come up
 				const currentUrl = await tab.getUrl()
+				console.log("currentUrl", currentUrl)
 				if (currentUrl.includes("&theater") && await tab.isVisible("#photos_snowlift a")) {
 					await tab.click("#photos_snowlift a")
 					await tab.wait(500)
@@ -336,6 +345,15 @@ const getTotalCommentsCount = (arg, cb) => {
 					postType = "video"
 					try {
 						await tab.evaluate((arg, cb) => cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.getAttribute("data-comment-prelude-ref"))[0].click()))
+					} catch (err) {
+						utils.log(`Couldn't access comments to this video: ${err}`, "error")
+						continue
+					}
+				}
+				if (currentUrl.includes("/watch/?v=")) { // other type of video
+					postType = "video2"
+					try {
+						await tab.click("a[data-testid=\"UFI2CommentsCount/root\"]")
 					} catch (err) {
 						utils.log(`Couldn't access comments to this video: ${err}`, "error")
 						continue
