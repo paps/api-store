@@ -134,7 +134,6 @@ Export details:
 {{- Date range: between #from# and #to#}}
 
 Of you found this automation useful feel free to share it with a friend or a colleague.
-
 Don't forget to schedule repetitive launches if you need your invoices every week or month.
 
 Need support? You can reach us at support@phantombuster.com.
