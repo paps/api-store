@@ -124,15 +124,19 @@ declare interface IRating {
 
 const DB_NAME = "result"
 const INVOICE_ZIP = `invoices-${Date.now()}.tar.gz`
-const email = `The Uber invoices export you requested using Phantombuster () is ready to go!
-Just click the links below to start the download. Those fiels will be available until the next extract request.
+const email = `The Uber invoices you requested using Phantombuster are ready!
+
+Simply click on the link below to start your download.
 
 Export details:
 [[- Invoices: #zipname# (#zipurl#)]]
 - Data recap: #csvname# (#csvurl#)
-{{- Peroid date: between #from# and #to#}}
+{{- Date range: between #from# and #to#}}
 
-We'll be here to help you with any step along the way. You can get in touch with the support team at support@phantombuster.com.
+Of you found this automation useful feel free to share it with a friend or a colleague.
+Don't forget to schedule repetitive launches if you need your invoices every week or month.
+
+Need support? You can reach us at support@phantombuster.com.
 
 Best,
 --
