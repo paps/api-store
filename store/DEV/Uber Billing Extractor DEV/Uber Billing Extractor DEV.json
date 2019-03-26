@@ -12,6 +12,23 @@
 		"sessionCookieSid": "sid_cookie",
 		"sessionCookieCsid": "csid_cookie"
 	},
+	"outputDescription": {
+		"car": "",
+		"card": "",
+		"date": "",
+		"isCanceled": "",
+		"price": "",
+		"currency": "",
+		"startLocation": "",
+		"endLocation": "",
+		"startTime": "",
+		"endTime": "",
+		"duration": "",
+		"distance": "",
+		"distanceUnity": "",
+		"map": "",
+		"stars": ""
+	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
@@ -28,7 +45,7 @@
 						"label": "csid session cookie <a target=\"_blank\" href=\"/api-store/14080/uber-billing-extractor\">(?)</a>"
 					},
 					"sessionCookieSid": {
-						"label": "sid session cookie"
+						"label": "sid session cookie <a target=\"_blank\" href=\"/api-store/14080/uber-billing-extractor\">(?)</a>"
 					},
 					"range": {
 						"label": "Choose which invoices you want to extract",
