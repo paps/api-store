@@ -1,0 +1,78 @@
+{
+	"slug": "product-hunt-auto-follow",
+	"description": "Automatically follow a list of Product Hunt makers in one click",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Auto+Follow/Product+Hunt+Auto+Follow.png",
+	"argumentDescription": "",
+	"gradientBegin": "#DD6948",
+	"gradientEnd": "#DA552F",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "_intercom_session",
+		"spreadsheetUrl": "",
+		"numberOfLinesPerLaunch": 10
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"sessionCookie": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Intercom session cookie <a href=\"/api-store/12214/product-hunt-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your '_intercom_session' session cookie here"
+					},
+					"columnName": {
+						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (All of them if empty) <a href=\"/api-store/12214/product-hunt-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"helper": "If using a spreadsheet. By default the API will try to follow 10 profiles per launch",
+						"inputType": "number"
+					},
+					"csvName": {
+					   "label": "Name of resulting CSV file",
+					   "placeholder": "result"
+					},
+					"unfollow": {
+						"rightLabel": "<b>Unfollow profiles</b>"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"unfollow": {
+				"type": "boolean"
+			}
+		}
+	}
+}
