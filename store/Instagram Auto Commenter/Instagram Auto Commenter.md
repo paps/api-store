@@ -12,9 +12,9 @@ Like any auto-comment tool, you'll have the possibility of writing numerous comm
 - **Comments**: A list of comments that will be published automatically at randon on the posts specified in the spreadsgeet above.
 
 # Which steps to follow?
+
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
-
 
 ## 2. Use this API on your account.👌
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
@@ -26,10 +26,9 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-
 ## 4. Instagram authentication 🔑 { argument }
 
-Because the automation will manipulate Instagram for you, it needs to be logged into your Uber account. In order to get your session cookies, we've built a browser extension that makes it super easy. You can download it below for Chrome and Firefox.
+Because the automation will manipulate Instagram for you, it needs to be logged into your account. In order to get your session cookies, we've built a browser extension that makes it super easy. You can download it below for Chrome and Firefox.
 
 <div class="row">
 	<div class="col-xs-6 text-center">
@@ -60,6 +59,8 @@ You can specify the name of the column that contains the post links. Simply ente
 You can also enter a single Instagram post URL directly in the field.
 
 ## 6. Your list of comments
+
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/insta+posts+and+messages.png)</center>
 
 You'll need to specify a list of comments in your input spreadsheet. To do so, choose an empty column, name it (by writing `comments` for example in the first row of the column). Then on the rows belows, write each comment, one by line.
 
