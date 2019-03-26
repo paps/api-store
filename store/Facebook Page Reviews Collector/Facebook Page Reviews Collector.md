@@ -31,7 +31,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Facebook authentication 🔑 { argument }
 
-Because this automation will manipulate Facebook on your behalf, it needs to be logged into your account. In order to get your session cookies, we've built a browser extension that makes it super easy. You can download it below for Chrome and Firefox.
+Because this automation will manipulate Facebook on your behalf, it needs to be logged into your account. To do so we use your session cookies. You can download our browser extension to get them in one click below:
 
 <div class="row">
 	<div class="col-xs-6 text-center">
