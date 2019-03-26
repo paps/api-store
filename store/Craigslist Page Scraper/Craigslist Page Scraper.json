@@ -1,15 +1,15 @@
 {
-	"slug": "craigslist-page-scraper",
-	"description": "Extract every information out of a list of Product Hunt Profiles",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Profile+Scraper/Product+Hunt+Profile+Scraper.png",
+	"slug": "craiglist-page-scraper",
+	"description": "Extract email, phone and every information out of a Craiglist page",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Craigslist+Page+Scraper/Craigslist+Page+Extractor.png",
 	"argumentDescription": "",
-	"gradientBegin": "#DD6948",
-	"gradientEnd": "#DA552F",
+	"gradientBegin": "#562D87",
+	"gradientEnd": "#7846B4",
 	"hidden": true,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"spreadsheetUrl": "https://www.producthunt.com/posts/lemlist-2-0",
+		"spreadsheetUrl": "https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html",
 		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": false,
@@ -26,16 +26,16 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Product Hunt profile URL or Spreadsheet URL<a href=\"/api-store/12134/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
-						"helper": "Enter either a Product Hunt profile URL, a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+						"label": "Craigslist page or a Spreadsheet URL<a href=\"/api-store/15093/product-hunt-profile-scraper#section_4aimaspecificproducthuntaccountorseveralatatime\" target=\"_blank\">(?)</a>",
+						"helper": "Enter either a Craigslist page or a Google Spreadsheet URL. Make sure your file is publicly available"
 					},
 					"columnName": {
-						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
+						"label": "Column name where Craigslist pages URLs are stored in your spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used"
 					},
 					"numberOfLinesPerLaunch": {
 						"label": "Number of lines to process per launch (All of them if empty) <a href=\"/api-store/12134/product-hunt-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will open 10 profiles per launch",
+						"helper": "If using a spreadsheet. By default the API will open 10 pages per launch",
 						"inputType": "number"
 					},
 					"csvName": {

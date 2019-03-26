@@ -1,12 +1,11 @@
-# Retrieve every public info out of a list of Product Hunt Profiles
+# Scrape emails and data from Craigslist
 
-Basically, this API will extract **every piece of public information** out of a list of Product Hunt Profiles: 
-From their names to their Twitter handles, followers and upvotes counts and more.
+Craigslist is one of the oldest and biggest websites on the Internet. Despite having passed its prime since the rise of web 2.0, it still is a reference for many people.
 
-This data will be super useful for taking further marketing action, such as building custom audiences, retargeting, messaging, etc.
+This API will extract **every piece of public information** out of a list of Craigslist pages: From all the written data to potential email addresses and phone numbers.
 
 # What will you need? ⚙️
-- **"Product Hunt account or Spreadsheet URL"**: Choose a specific Product Hunt profile such as `https://www.producthunt.com/@jack` or choose an **open** spreadsheet url with a list of Product Hunt profile URL's.
+- **"Craigslist page or Spreadsheet URL"**: Choose a specific Craigslist page profile such as `https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html` or choose an **open** spreadsheet url with a list of Product Hunt profile URL's.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -22,17 +21,22 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-## 4. Aim at a specific Product Hunt profile URL or several at a time
-In the 1st argument field **"`Product Hunt account or Spreadsheet URL`"** you have to let Phantombuster know whose profiles you're interested in.
+## 4. Aim at a specific Craigslist Page URL or several at a time
+In the 1st argument field **"`Craigslist page or Spreadsheet URL`"** you have to let Phantombuster know which Crigslist pages you'd like to scrape.
 
-* One at a time: Just fill the form with a Product Hunt username, example: `https://www.producthunt.com/@jack`
+* One at a time: Just fill the form with a Craigslist username, example: `https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html`
 
 * Several at a time: Paste the URL of a Google Spreadsheet filled with Product Hunt username and/or Product Hunt accounts URLs **on column A**
+
+# Click on Launch & Enjoy!
+It’s done! All that is left to do is to click on "launch" to try your script!
+<center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
+
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 You're all set! Launch the API manually by saving then clicking on `Launch`. 
 
-If you happen to have a lot of profiles to extract, you might want to do it over multiple launches.
+If you happen to have a lot of pages to extract, you might want to do it over multiple launches.
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
@@ -43,7 +47,3 @@ Then, select a frequency:
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
-
-# Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" to try your script!
-<center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
