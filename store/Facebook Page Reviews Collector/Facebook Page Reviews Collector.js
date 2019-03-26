@@ -117,22 +117,22 @@ const scrapeReviews = (arg, cb) => {
 	const results = []
 	for (const review of reviews) {
 		const scrapedData = { query: arg.pageUrl, timestamp: (new Date()).toISOString() }
-		if (review.querySelector("div[data-ad-preview=\"message\"]")) {
-			scrapedData.message = review.querySelector("div[data-ad-preview=\"message\"]").textContent
-			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img")) {
-				scrapedData.name = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img").getAttribute("aria-label")
+		if (review.querySelector(".userContent")) {
+			scrapedData.message = review.querySelector(".userContent").textContent
+			if (review.querySelector(".userContent").parentElement.querySelector("div img")) {
+				scrapedData.name = review.querySelector(".userContent").parentElement.querySelector("div img").getAttribute("aria-label")
 			}
-			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img")) {
-				scrapedData.imgUrl = review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector("div img").src
+			if (review.querySelector(".userContent").parentElement.querySelector("div img")) {
+				scrapedData.imgUrl = review.querySelector(".userContent").parentElement.querySelector("div img").src
 			}
-			if (review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink") && review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href) {
-				const profileUrl = cleanFacebookProfileUrl(review.querySelector("div[data-ad-preview=\"message\"]").parentElement.querySelector(".profileLink").href)
+			if (review.querySelector(".userContent").parentElement.querySelector(".profileLink") && review.querySelector(".userContent").parentElement.querySelector(".profileLink").href) {
+				const profileUrl = cleanFacebookProfileUrl(review.querySelector(".userContent").parentElement.querySelector(".profileLink").href)
 				if (!profileUrl.includes("/reviews/")) {
 					scrapedData.profileUrl
 				}
 			}
-			if (review.querySelector("div[data-ad-preview=\"message\"]") && review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList")) {
-				scrapedData.tags = review.querySelector("div[data-ad-preview=\"message\"]").nextElementSibling.querySelector(".uiCollapsedList").textContent
+			if (review.querySelector(".userContent") && review.querySelector(".userContent").nextElementSibling.querySelector(".uiCollapsedList")) {
+				scrapedData.tags = review.querySelector(".userContent").nextElementSibling.querySelector(".uiCollapsedList").textContent
 			}
 		}
 		if (review.querySelector("abbr")) {
