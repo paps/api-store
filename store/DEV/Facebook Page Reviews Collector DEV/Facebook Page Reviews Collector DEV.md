@@ -25,6 +25,8 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Facebook authentication 🔑 { argument }
 
+🤓 **Pro tip**: Your authentication cookies are only necessary if you also want to scrape the Facebook profile URLs of the comments. 
+
 Because this automation will manipulate Facebook on your behalf, it needs to be logged into your account. To do so we use your session cookies. You can download our browser extension to get them in one click below:
 
 <div class="row">
