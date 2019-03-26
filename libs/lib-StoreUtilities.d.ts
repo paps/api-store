@@ -19,6 +19,7 @@ declare class StoreUtilities {
 	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<{ csvUrl: string, jsonUrl?: string }>
 	public getDb(filename: string, parseContent?: boolean): Promise<IUnknownObject[]>
 	public saveResult(result: IUnknownObject[], csvName?: "result"|null|string, schema?: string[]): Promise<void>
+	public saveFlatResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string): Promise<void>
 	public checkArguments(args: IUnknownObject[]): IUnknownObject[]
 	public adjustUrl(url: string, domain: string): string
 	public checkDb(str: string, db: IUnknownObject[], property: string): boolean

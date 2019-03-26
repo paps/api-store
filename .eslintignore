@@ -35,3 +35,6 @@ libs/lib-Slack.js
 libs/lib-DiscoverMail.js
 store/DEV/Twitter Auto Follow DEV/Twitter Auto Follow DEV.js
 store/Uber Billing Extractor/Uber Billing Extractor.js
+store/DEV/Craigslist Page Scraper DEV/Craigslist Page Scraper DEV.js
+store/Craigslist Page Scraper/Craigslist Page Scraper.js
+store/Twitter Auto Follow/Twitter Auto Follow.js
