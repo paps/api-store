@@ -76,9 +76,7 @@ const addMediaPathname = url => {
 	}
 }
 
-const getLoadedMediaCount = (arg, cb) => {
-	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
-}
+const getLoadedMediaCount = (arg, cb) => cb(null, document.querySelectorAll("div.tweet.js-actionable-tweet").length)
 
 const scrapeMediasMetadata = (arg, cb) => {
 	const data = Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).map(el => {
@@ -113,7 +111,7 @@ const interceptTwitterApiCalls = e => {
 	}
 }
 
-const lazyScroll = (arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-stream-tweet")).map(el => el.scrollIntoView()))
+const lazyScroll = (arg, cb) => cb(null, Array.from(document.querySelectorAll("div.tweet.js-stream-tweet")).map(el => el && el.scrollIntoView()))
 
 const isTimelineLoaded = (arg, cb) => cb(null, !document.querySelector(".stream-container").dataset.minPosition)
 
@@ -129,7 +127,7 @@ const scrapeMedias = async (tab, url) => {
 		await twitter.openProfile(tab, url)
 	} catch (err) {
 		tab.driver.client.removeListener("Network.responseReceived", interceptTwitterApiCalls)
-		utils.log(`Can't properly ${url}, expecting HTTP code 200, got: ${err.message || err}`, "error")
+		utils.log(`Can't open properly ${url}, expecting HTTP code 200, got: ${err.message || err}`, "error")
 		return { url }
 	}
 	const selectors = [ ".ProfileHeading", "svg ~ a" ]
