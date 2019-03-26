@@ -84,23 +84,23 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 const follow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string) => {
 	try {
 		await page.click(followSel)
-		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json")
+		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json", { timeout: 1000 })
 	} catch (err) {
 		return FollowStatus.API_ERROR
 	}
-	let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, pendingSel ])
-	res = await res.jsonValue()
 
 	try {
-		await page.waitForSelector(pendingSel, { timeout: 5000 })
-		return FollowStatus.PENDING
+		let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel ])
+		res = await res.jsonValue()
+		if (res === pendingSel) {
+			return FollowStatus.PENDING
+		}
 	} catch (err) {
 		/* No pending request */
 	}
 
 	try {
 		await page.waitForSelector(".alert-messages", { timeout: 5000, visible: true })
-		utils.log("Twitter daily follow limit reached", "error")
 		return FollowStatus.RATE_LIMIT
 	} catch (err) {
 		/* no limit reached */
@@ -118,19 +118,21 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 		}
 	}
 	try {
-		let foundSel = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, pendingSel ])
+		let foundSel = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel ])
 		foundSel = await foundSel.jsonValue()
 		await page.click(foundSel)
 		const endpoint = foundSel === pendingSel ? "https://twitter.com/i/user/cancel" : "https://api.twitter.com/1.1/friendships/destroy.json"
-		await page.waitForResponse(endpoint)
+		await page.waitForResponse(endpoint, { timeout: 1000 })
 	} catch (err) {
 		return FollowStatus.API_ERROR
 	}
-	let found = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel ])
-	found = await found.jsonValue()
+	let found: puppeteer.JSHandle|string = ""
 	try {
-		await page.waitForSelector(".alter-messages", { timeout: 5000 })
-		return FollowStatus.RATE_LIMIT
+		found = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, ".alter-messages" ])
+		found = await (found as puppeteer.JSHandle).jsonValue()
+		if (found ===  ".alter-messages") {
+			return FollowStatus.RATE_LIMIT
+		}
 	} catch (err) {
 		/* No rate limit */
 	}
@@ -150,8 +152,8 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 		return FollowStatus.USER_N_FOUND
 	}
 	try {
-		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 7500, visible: true })
-		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 7500 }, [ followingSel, followSel, pendingSel, editProfile ])
+		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 5000, visible: true })
+		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, pendingSel, editProfile ])
 		selector = await selector.jsonValue()
 	} catch (err) {
 		return FollowStatus.ERROR
