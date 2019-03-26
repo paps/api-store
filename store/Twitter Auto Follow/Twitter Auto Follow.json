@@ -38,7 +38,7 @@
 					},
 					"numberOfAddsPerLaunch": {
 						"label": "Number of follows per launch (max. 50) <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_6configurerepetitivelaunches\">(?)</a>",
-						"helper": "By default, the API will follow 20 profiles per launch.",
+						"helper": "By default, the API will follow 50 profiles per launch.",
 						"inputType": "number"
 					},
 					"csvName": {
@@ -66,8 +66,7 @@
 			},
 			"spreadsheetUrl": {
 				"type": "string",
-				"minLength": 1,
-				"required": true
+				"minLength": 1
 			},
 			"columnName": {
 				"type": "string"
@@ -85,6 +84,35 @@
 				"enum": [ "follow", "unfollow", "unfollowback" ],
 				"default": "follow"
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }
