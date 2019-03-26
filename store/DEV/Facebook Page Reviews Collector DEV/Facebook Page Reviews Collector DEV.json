@@ -15,13 +15,15 @@
 		"maxReviews": 50
 	},
 	"outputDescription": {
-		"profileUrl": "Facebook profile URL",
-		"name": "Full name",
-		"profilePictureUrl": "Profile picture URL",
-		"facebookID": "Facebook Unique ID",
-		"eventName": "",
-		"eventStatus": "Interested/Invited/Going/Declined",
-		"friendStatus": "Friend/Not friend"
+        "query": "The page you gave as an input",
+        "timestamp": "The time of scraping",
+        "message": "Body of text of the review",
+        "name": "Full name of the reviewer",
+        "imgUrl": "Profile picture of the reviewer",
+        "tags": "Tags given by the reviewer",
+        "postDate": "Date of the review",
+        "postTimestamp": "Timestamp of the date of the review",
+        "review": "Whether the reviewer recommends the product/service or not"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
