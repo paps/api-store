@@ -1,8 +1,11 @@
 # Collect reviews from a Facebook Page
 
+What are people saying about you or your business. Better: what are they saying abour your competitors or your inspirations?
+
+Simply make a list of Facebook Pages and extract all their reviews, comments & ratings, automatically.
+
 # What will you need? ⚙️ 
 
-- **Session cookies c\_user and xs**: Your _c\_user_ and _xs_ session cookies from Facebook.
 - **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook Page URLs in it, OR the direct link of a single Facebook Page.
 
 _(**You already have all that?** Click straight away on **"Use this API"**)_
@@ -27,40 +30,30 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 
 ## 4. Facebook authentication 🔑 { argument }
-Because the script will manipulate Facebook for you, it needs to be logged on your Facebook account. For that you just need to copy paste two session cookies in the script argument:
-* Using Chrome, go to your Facebook homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
-→ <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
 
-* Locate the “Application” tab
+Because this automation will manipulate Facebook on your behalf, it needs to be logged into your account. To do so we use your session cookies. You can download our browser extension to get them in one click below:
 
-<center>![](https://phantombuster.imgix.net/api-store/li_at+1.png)</center>
+<div class="row">
+	<div class="col-xs-6 text-center">
+		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" target="_blank">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 100px;">
+		</a>
+	</div>
+	<div class="col-xs-6 text-center">
+		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" target="_blank">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 100px;">
+		</a>
+	</div>
+</div>
 
-* Select “Cookies” > “http://www.facebook.com” on the left menu.
+If you're operating from another browser and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-<center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/cookiesFB.png)</center>
-
-* Locate the “c_user” cookie.
-
-<center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/c_userCookie.png)</center/>
-
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script _Argument_)
-
-* Do the same for the “xs” cookie.
-
-<center>![](https://phantombuster.imgix.net/api-store/facebook_group_extractor/xsCookie.png)</center/>
-
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a>//_
 
 
 ## 5. Add a Google Spreadsheet 📑
-Below your session cookies you’ll find Spreadsheet URL.
+Below your session cookies you’ll find a **Spreadsheet URL** field.
 
-Add in the Spreadsheet URL textbox the link of a Google spreadsheet with this same format **(Share option must be OPEN)**.
-
-Your spreadsheet should contain a list of Facebook Page URLs (**one link per row**).
+Gather in a Google spreadsheet the list of Facebook Page URLs (**one link per row**).
 
 You can specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 You can also enter a single Facebook page URL directly in the field.

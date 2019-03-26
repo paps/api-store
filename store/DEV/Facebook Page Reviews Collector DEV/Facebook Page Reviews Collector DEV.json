@@ -1,7 +1,7 @@
 {
 	"slug": "facebook-page-reviews-collector",
-	"description": "Extract a list of reviews from facebook pages",
-	"image": "https://phantombuster.imgix.net/api-store/Facebook_Page_Likers/Facebook+Page+Likers.png",
+	"description": "Extract Reviews from a list of Facebook pages",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Page+Reviews+Collector/Facebook+Page+Reviews.png",
 	"hidden": false,
 	"new": true,
 	"gradientBegin": "#32C1F1",
@@ -30,11 +30,11 @@
 			"options": {
 				"fields": {
 					"sessionCookieCUser": {
-						"label": "Session cookie c_user <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie c_user <a href=\"/api-store/11433/facebook-page-reviews-collector#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your c_user session cookie here (optional)"
 					},
 					"sessionCookieXs": {
-						"label": "Session cookie xs <a href=\"/api-store/8368/facebook-post-likers#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Session cookie xs <a href=\"/api-store/11433/facebook-page-reviews-collector#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your xs session cookie here (optional)"
 					},
 					"spreadsheetUrl": {
@@ -42,7 +42,7 @@
 						"helpers": [
 							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available), or directly an Facebook page URL"
 						],
-						"label": "Facebook page or Spreadsheet URL <a href=\"/api-store/8368/facebook-post-likers#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Facebook page or Spreadsheet URL <a href=\"/api-store/11433/facebook-page-reviews-collector#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
 					"columnName": {
 						"label": "Column name from which to get Pages URLs",
