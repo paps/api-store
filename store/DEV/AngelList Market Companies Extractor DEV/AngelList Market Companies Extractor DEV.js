@@ -179,7 +179,7 @@ const getCompaniesInfos = (arg, callback) => {
 				await tab.waitUntilVisible(clickSelector)
 				await tab.click(clickSelector)
 			} catch (error) {
-				utils.log(`Error: ${error.message || error}`, "error")
+				// utils.log(`Error: ${error.message || error}`, "error")
 				break
 			}
 
