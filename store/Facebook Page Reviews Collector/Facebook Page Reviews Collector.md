@@ -4,14 +4,8 @@ What are people saying about you or your business. Better: what are they saying 
 
 Simply make a list of Facebook Pages and extract all their reviews, comments & ratings, automatically.
 
-# What will you need? ⚙️ 
+# Start Extracting Facebook Page Reviews in minutes
 
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with Facebook Page URLs in it, OR the direct link of a single Facebook Page.
-
-_(**You already have all that?** Click straight away on **"Use this API"**)_
-
-
-# What you need to do.
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
