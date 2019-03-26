@@ -1,10 +1,10 @@
 # Automatically receive all your Uber ride bills
 
-How do you manage yout Uber bill? How do you separate personnal bills from professional ones?
+How do you manage yout Uber bill? How do you keep track of personnal bills versus professional ones?
 
-Stop wasting your time logging in to Uber and downloading your receipts every week or month. 
+Make things simple by using this automation. Uber Billing Extractor will connect to Uber, gather all your bills and send it to your emails how often as you wish.
 
-This API will do that job for you so you can do better stuff.
+Set up this API once and fix the Uber Bill issue once and for all.
 
 # What will you need? ⚙️ 
 
@@ -44,28 +44,27 @@ Because the automation will manipulate Uber for you, it needs to be logged on yo
 
 If you're operating from another browser and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
+## 5. Email address to receive your bills at.
+
+Specify here your email address. You will receive at the pace you chose a zipped folder with your bills as .pdf files.
 
 # Click on Launch & Enjoy!
-It’s done! Click on "launch" to start the extraction.
+It’s done! Click on "launch" to extract your bills once.
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-Phantombuster will do the busy work for you and visit LinkedIn on your behalf. After a while you will find yourself with all the data neatly organized in a .csv file. Feel free to import it in your CRM or use it as is.
-
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
-
-Every time the API is launched, it will scrape 10 profiles and then stop. (This number can be changed in the configuration, the maximum is 100 per launch even though we don't recommend scraping so much.)
+Now that your API is ready, you want to schedule it in order to receive your bills each month. 
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
 <center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 
-Then, select a frequency:
+Then, select a frequency. Once a month for example:
 
 <center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
-For example, 10 profiles scraped per launch, 8 launches per day: you'll have a total of 80 profiles per day. We recommend not exceeding these values with this API. (Read more below about LinkedIn's limits.)
+That's it!	
