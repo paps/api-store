@@ -1,7 +1,7 @@
 {
 	"slug": "instagram-auto-commenter",
-	"description": "Auto comment Instagram posts",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Post+Commenters/Instagram+Posts+Commenters.png",
+	"description": "Automatically comment a list of specific Instagram posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Auto+Commenter/Instagram+Auto+Commenter+(2).png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#FCCF6B",

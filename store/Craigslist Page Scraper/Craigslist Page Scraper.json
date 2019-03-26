@@ -1,5 +1,5 @@
 {
-	"slug": "product-hunt-profile-scraper",
+	"slug": "craigslist-page-scraper",
 	"description": "Extract every information out of a list of Product Hunt Profiles",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Profile+Scraper/Product+Hunt+Profile+Scraper.png",
 	"argumentDescription": "",

@@ -1,10 +1,10 @@
-# Automatically receive all your Uber ride bills
+# All your Uber Receipts in your mailbox.
 
-How do you manage yout Uber bill? How do you keep track of personnal bills versus professional ones?
+How do you manage yout Uber bills? How do you keep track of personnal receipts *vs* professional ones?
 
 Make things simple by using this automation. Uber Billing Extractor will connect to Uber, gather all your bills and send it to your emails how often as you wish.
 
-Set up this API once and fix the Uber Bill issue once and for all.
+Set up this API once and **fix the Uber bill issue once and for all**.
 
 # What will you need? ⚙️ 
 
