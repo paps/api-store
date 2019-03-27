@@ -410,38 +410,80 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			console.log("retrying")
 		}
 		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
+			await tab.screenshot(`${Date.now()}contr.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}contr.html`)
 			await tab.click("article.contract-chooser ul > li > button")
-			selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 30000, "or")
+			try {
+				selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 10000, "or")
+			} catch (err) {
+				console.log("mop", err)
+				await tab.screenshot(`${Date.now()}momo.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}momo.html`)
+				try {
+					// await tab.evaluate((arg, cb) => {
+					// 	Array.from(document.querySelectorAll("article.contract-chooser ul > li")).filter(el => el.textContent.includes("Navigator Professional"))[0].querySelector("button").click()
+					// })
+					await tab.click("article.contract-chooser ul > li:last-of-type > button")
+				} catch (err) {
+					console.log("erclki", err)
+					await tab.click("article.contract-chooser ul > li > button")
+				}
+				await tab.wait(10000)
+				const currentUrl = await tab.getUrl()
+				console.log("current:", await tab.getUrl())
+				await tab.screenshot(`${Date.now()}mino.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}mino.html`)
+				if (currentUrl === "https://www.linkedin.com/sales/home" || await tab.isVisible(".usage-reporting-top-bar")) {
+					console.log("reporting")
+					await tab.open(searchUrl)
+					console.log("opnag")
+					try {
+						selector = await tab.waitUntilVisible([".spotlight-result-count", ".artdeco-tab-primary-text"], 20000, "or")
+					} catch (err) {
+						throw "Couldn't access results page"
+					}
+				}
+			}
 		} else if (selector === ".generic-error > p.error-message") {
 			throw "LinkedIn is experiencing technical difficulties."
 		}
 		let resultsCount
 		let resultsCountText
-		if (selector === ".artdeco-tab-primary-text") {
-			numberPerPage = 25
-			const resultsObject = await tab.evaluate((arg, cb) => {
-				const count = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-primary-text").textContent
-				const text = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-secondary-text").textContent
-				cb(null, { count, text })
-			})
-			resultsCount = resultsObject.count
-			resultsCountText = resultsObject.text
-		} else {
-			numberPerPage = 100
-			resultsCount = await tab.evaluate(totalResults, { selector })
-			resultsCountText = "results"
+		try {
+			if (selector === ".artdeco-tab-primary-text") {
+				numberPerPage = 25
+				const resultsObject = await tab.evaluate((arg, cb) => {
+					const count = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-primary-text").textContent
+					const text = document.querySelector("artdeco-spotlight-tablist [aria-selected=\"true\"] .artdeco-tab-secondary-text").textContent
+					cb(null, { count, text })
+				})
+				resultsCount = resultsObject.count
+				resultsCountText = resultsObject.text
+			} else {
+				numberPerPage = 100
+				resultsCount = await tab.evaluate(totalResults, { selector })
+				resultsCountText = "results"
+			}
+		} catch (err) {
+			console.log("redo:", err)
+			await tab.screenshot(`${Date.now()}redo.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}redo.html`)
 		}
 		pageCount = Math.ceil(numberOfProfiles / numberPerPage) // 25 or 100 results per page
-
-		utils.log(`Getting ${resultsCount} ${resultsCountText}.`, "done")
-		if (resultsCount === "0") {
-			return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
+		if (resultsCount) {
+			utils.log(`Getting ${resultsCount} ${resultsCountText}.`, "done")
+			if (resultsCount === "0") {
+				return [{ query, timestamp: (new Date()).toISOString(), error: "No result found" }]
+			}
+			let multiplicator = 1
+			if (resultsCount.includes("K")) { multiplicator = 1000 }
+			if (resultsCount.includes("M")) { multiplicator = 1000000 }
+			maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
+		} else {
+			utils.log("Couldn't read total results count", "info")
 		}
-		let multiplicator = 1
-		if (resultsCount.includes("K")) { multiplicator = 1000 }
-		if (resultsCount.includes("M")) { multiplicator = 1000000 }
-		maxResults = Math.min(parseFloat(resultsCount) * multiplicator, maxResults)
 	} catch (err) {
+		console.log("erragainm", err)
 		await tab.wait(10000)
 		await tab.screenshot(`${Date.now()}redire.png`)
 		await buster.saveText(await tab.getContent(), `${Date.now()}redire.html`)
