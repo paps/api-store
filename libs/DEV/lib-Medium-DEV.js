@@ -16,6 +16,7 @@ class Medium {
 	 * @param {Nick.Tab|Puppeteer.Page} tab - nickjs instance
 	 * @param {String} uid - uid session cookie
 	 * @param {String} sid - sid session cookie
+	 * @throws Error
 	 */
 	async login(tab, uid, sid) {
 		const isNick = isUsingNick(tab)
@@ -38,8 +39,7 @@ class Medium {
 			const _cookie2 = { name: "sid", value: sid, domain: ".medium.com", secure: true, httpOnly: true }
 			if (isNick) {
 				if (!this.nick) {
-					this.utils.log("This lib was setup with NickJS, but no NickJS instance were found, abort", "error")
-					process.exit(1)
+					throw new Error("NickJS is undefined")
 				}
 				await this.nick.setCookie(_cookie1)
 				await this.nick.setCookie(_cookie2)
