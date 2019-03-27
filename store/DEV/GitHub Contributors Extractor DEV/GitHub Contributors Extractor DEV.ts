@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js"
-"phantombuster flags: save-folder"
 
 import { URL } from "url"
 
@@ -176,7 +175,7 @@ const scrapeContributors = async (page: puppeteer.Page): Promise<IUnknownObject[
 	}
 
 	if (Array.isArray(queries)) {
-		// Make repositories uniquescrape
+		// Make repositories unique for the statefull process
 		queries = Array.from(new Set(queries)).filter((el) => el)
 		queries = queries.filter((el) => db.findIndex((line) => line.query === el) < 0)
 		if (typeof numberOfLinesPerLaunch === "number") {
