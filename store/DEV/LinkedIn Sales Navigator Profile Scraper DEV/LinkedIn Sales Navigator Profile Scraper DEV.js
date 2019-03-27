@@ -224,7 +224,12 @@ const scrapeProfile = (arg, cb) => {
 const loadAndScrapeProfile = async (tab, query, salesNavigatorUrl) => {
 	try {
 		await tab.open(salesNavigatorUrl)
-		await tab.waitUntilVisible(".profile-topcard", 15000)
+		const selector = await tab.waitUntilVisible([".profile-topcard", "article.contract-chooser"], "or", 15000)
+		if (selector === "article.contract-chooser") { // if multiple sales navigator teams, LinkedIn is asking to pick one
+			console.log("contractchooser")
+			await tab.click("article.contract-chooser ul > li > button")
+			await tab.waitUntilVisible(".profile-topcard", 15000)
+		}
 		await tab.wait(1000)
 	} catch (err) {
 		const location = await tab.getUrl()
