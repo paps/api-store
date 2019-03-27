@@ -39,7 +39,13 @@ const getCommentCountAndUsername = async (postUrl: string) => {
 	const owner = postData.owner as IUnknownObject
 	const username = owner.username as string
 	const edgeMediaToComment = postData.edge_media_to_comment as IUnknownObject
-	const totalCommentCount = edgeMediaToComment.count as number
+	const edgeMediaToParentComment = postData.edge_media_to_parent_comment as IUnknownObject
+	let totalCommentCount = 0
+	if (edgeMediaToComment) {
+		totalCommentCount = edgeMediaToComment.count as number
+	} else if (edgeMediaToParentComment){
+		totalCommentCount = edgeMediaToParentComment.count as number
+	}
 	return [ totalCommentCount, username ]
 }
 

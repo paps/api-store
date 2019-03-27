@@ -28,7 +28,7 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL, a CSV URL (make sure your file is publicly available) or a single post URL" ],
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
 							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/14303/instagram-auto-commenter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 						},
 						"columnNameProfiles": {

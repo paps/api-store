@@ -35,12 +35,20 @@ const getCommentCountAndUsername = async (postUrl: string) => {
 	const instagramJsonString = await jsonTab.evaluate(() => document.body.innerHTML) as string
 	const partCode = instagramJsonString.slice(instagramJsonString.indexOf("{"))
 	const instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<"))) as IUnknownObject
+
 	const graphql = instagramJsonCode.graphql as IUnknownObject
 	const postData = graphql.shortcode_media as IUnknownObject
 	const owner = postData.owner as IUnknownObject
 	const username = owner.username as string
+	
 	const edgeMediaToComment = postData.edge_media_to_comment as IUnknownObject
-	const totalCommentCount = edgeMediaToComment.count as number
+	const edgeMediaToParentComment = postData.edge_media_to_parent_comment as IUnknownObject
+	let totalCommentCount = 0
+	if (edgeMediaToComment) {
+		totalCommentCount = edgeMediaToComment.count as number
+	} else if (edgeMediaToParentComment){
+		totalCommentCount = edgeMediaToParentComment.count as number
+	}
 	return [ totalCommentCount, username ]
 }
 
@@ -77,8 +85,8 @@ const postComment = async (page: puppeteer.Page, query: string, messages: string
 	await page.waitFor(2000)
 	await page.screenshot({ path: `${Date.now()}god.jpg`, type: "jpeg", quality: 50 })
 	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}god.html`)
-	// await page.type("form > textarea", String.fromCharCode(13))
-	// await page.waitFor(2000)
+	await page.type("form > textarea", String.fromCharCode(13))
+	await page.waitFor(2000)
 	// await page.screenshot({ path: `${Date.now()}typed.jpg`, type: "jpeg", quality: 50 })
 	// await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}typed.html`)
 	return { query, message, timestamp }
