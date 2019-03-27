@@ -2,6 +2,18 @@ import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject, isUnknownObject, IEvalAny } from "./lib-api-store"
 import Buster from "phantombuster"
 import * as Puppeteer from "puppeteer"
+import { parse } from "url"
+
+const adjustWorkspaceUrl = (url: string): string|undefined => {
+		if (url.startsWith("#")) {
+			return url
+		}
+		let urlObject = parse(url.toLowerCase())
+		if (urlObject.pathname && !urlObject.protocol) {
+			urlObject = parse("https://" + url)
+		}
+		return urlObject.href
+}
 
 class Slack {
 	private buster: Buster
@@ -23,7 +35,7 @@ class Slack {
 	 */
 	public async login(page: Puppeteer.Page, url: string, dCookie: string): Promise<void> {
 		const _login = async () => {
-			const response = await page.goto(url, { timeout: 30000, waitUntil: "load" })
+			const response = await page.goto(adjustWorkspaceUrl(url) as string, { timeout: 30000, waitUntil: "load" })
 			if (response !== null && response.status() !== 200) {
 				return `Slack responsed with ${response.status()}`
 			}
@@ -43,7 +55,7 @@ class Slack {
 			process.exit(this.utils.ERROR_CODES.SLACK_BAD_COOKIE)
 		}
 
-		if (url.trim().length < 1 || !this.utils.isUrl(url)) {
+		if (url.trim().length < 1 || !this.utils.isUrl(adjustWorkspaceUrl(url) as string)) {
 			this.utils.log("Invalid Slack Workspace URL. Did you specify one?", "warning")
 			process.exit(this.utils.ERROR_CODES.SLACK_BAD_WORKSPACE)
 		}
