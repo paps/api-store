@@ -351,6 +351,7 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 		}
 	}
 	cleanUpEmojis(invitation)
+	const originalMessage = message
 	if (message) {
 		message = inflater.forgeMessage(message, invitation, invitation.firstName)
 	}

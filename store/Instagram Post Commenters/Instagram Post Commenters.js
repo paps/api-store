@@ -83,7 +83,7 @@ const onHttpRequest = (e) => {
 const forgeNewUrl = (url, endCursor) => {
 	let newUrl
 	if (endCursor) {
-		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent(`first":50,"after":"${endCursor.replace(/\"/g, "\\\"")}"}`).replace(/ /g, "+")
 	} else {
 		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50") + encodeURIComponent("}")
 	}
@@ -102,7 +102,12 @@ const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 }
 
 const extractDataFromJson = (json, query) => {
-	const commentData = json.shortcode_media.edge_media_to_comment
+	let commentData
+	if (json.shortcode_media.edge_media_to_comment) {
+		commentData = json.shortcode_media.edge_media_to_comment
+	} else {
+		commentData = json.shortcode_media.edge_media_to_parent_comment
+	}
 	let endCursor = commentData.page_info.end_cursor
 	const comments = commentData.edges
 	const results = []
@@ -134,7 +139,12 @@ const getCommentCountAndUsername = async (postUrl) => {
 	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
 	const postData = instagramJsonCode.graphql.shortcode_media
 	const username = postData.owner.username
-	const totalCommentCount = postData.edge_media_to_comment.count
+	let totalCommentCount = 0
+	if (postData.edge_media_to_comment) {
+		totalCommentCount = postData.edge_media_to_comment.count
+	} else if (postData.edge_media_to_parent_comment) {
+		totalCommentCount = postData.edge_media_to_parent_comment.count
+	}
 	const [ results ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
 	return [ totalCommentCount, username, results ]
 }
@@ -165,10 +175,10 @@ const tryOpeningVideo = async (tab, postUrl, username) => {
 const clickCommentButton = async (tab) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	if (!await tab.isVisible("article ul > li > button")) {
+	if (!await tab.isVisible("article ul > li button [class*=\"glyphsSpriteCircle\"]")) {
 		return true
 	}
-	await tab.click("article ul > li > button")
+	await tab.click("article ul > li button [class*=\"glyphsSpriteCircle\"]")
 	const initDate = new Date()
 	do {
 		if (graphqlUrl || rateLimited) {

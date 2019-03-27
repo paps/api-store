@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
+"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -83,13 +84,12 @@ const onHttpRequest = (e) => {
 const forgeNewUrl = (url, endCursor) => {
 	let newUrl
 	if (endCursor) {
-		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent(`first":50,"after":"${endCursor.replace(/\"/g, "\\\"")}"}`).replace(/ /g, "+")
 	} else {
 		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50") + encodeURIComponent("}")
 	}
 	return newUrl
 }
-
 
 const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
@@ -102,7 +102,13 @@ const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 }
 
 const extractDataFromJson = (json, query) => {
-	const commentData = json.shortcode_media.edge_media_to_comment
+	let commentData
+	console.log("json:", json)
+	if (json.shortcode_media.edge_media_to_comment) {
+		commentData = json.shortcode_media.edge_media_to_comment
+	} else {
+		commentData = json.shortcode_media.edge_media_to_parent_comment
+	}
 	let endCursor = commentData.page_info.end_cursor
 	const comments = commentData.edges
 	const results = []
@@ -134,7 +140,12 @@ const getCommentCountAndUsername = async (postUrl) => {
 	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
 	const postData = instagramJsonCode.graphql.shortcode_media
 	const username = postData.owner.username
-	const totalCommentCount = postData.edge_media_to_comment.count
+	let totalCommentCount = 0
+	if (postData.edge_media_to_comment) {
+		totalCommentCount = postData.edge_media_to_comment.count
+	} else if (postData.edge_media_to_parent_comment) {
+		totalCommentCount = postData.edge_media_to_parent_comment.count
+	}
 	const [ results ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
 	return [ totalCommentCount, username, results ]
 }
@@ -165,10 +176,13 @@ const tryOpeningVideo = async (tab, postUrl, username) => {
 const clickCommentButton = async (tab) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	if (!await tab.isVisible("article ul > li > button")) {
+	if (!await tab.isVisible("article ul > li button [class*=\"glyphsSpriteCircle\"]")) {
+		console.log("rz")
+		await tab.screenshot(`${Date.now()}sU1.png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}sU1.html`)
 		return true
 	}
-	await tab.click("article ul > li > button")
+	await tab.click("article ul > li button [class*=\"glyphsSpriteCircle\"]")
 	const initDate = new Date()
 	do {
 		if (graphqlUrl || rateLimited) {
@@ -197,6 +211,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 	try {
 		[ totalCommentCount, username, results ] = await getCommentCountAndUsername(postUrl)
 	} catch (err) {
+		console.log("err:", err)
 		return ({ query, error: "Couln't access first comments", timestamp: (new Date()).toISOString() })
 	}
 	if (totalCommentCount === 0) {
@@ -222,6 +237,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 			await tryOpeningVideo(tab, query, username)
 		}
 		if (!graphqlUrl) {
+			console.log("no graphql")
 			if (noButton) {
 				return results
 			}
@@ -230,6 +246,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 		}
 	}
 	let url = forgeNewUrl(graphqlUrl)
+	console.log("url:", url)
 	lastQuery = query
 	let displayLog = 0
 	do {
@@ -237,6 +254,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 		try {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
+			console.log("data:", interceptedData)
 			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData.data, query)
 			results = results.concat(tempResult)
 			commentCount = results.length
@@ -250,16 +268,22 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 			buster.progressHint((commentCount + alreadyScraped) / totalCommentCount, `${commentCount + alreadyScraped} comments scraped`)
 			url = forgeNewUrl(url, endCursor)
 		} catch (err) {
+			console.log("emo", err)
+			console.log("with url:", url)
 			await tab.open(url)
 			let instagramJsonCode = await tab.getContent()
 			const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 			instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+			console.log("instagramJsonCode", instagramJsonCode)
 			if (instagramJsonCode.message === "execution failure") {
 				rateLimited = true
 				break
 			}
 			if (instagramJsonCode.message === "rate limited") {
 				rateLimited = true
+				break
+			}
+			if (instagramJsonCode.status === "fail") {
 				break
 			}
 			const [ tempResult, endCursor ] = extractDataFromJson(instagramJsonCode.data, query)
