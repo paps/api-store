@@ -356,10 +356,16 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 	}
 	invitation.message = message
 	if (message && message.length > 300) {
-		utils.log(`Message to send: ${message}`, "info")
-		utils.log(`This message is over 300 characters (${message.length}) and can't be sent to LinkedIn.`, "error")
-		invitation.error = "Message over 300 characters"
-		return invitation
+		invitation.firstName = invitation.firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+		message = inflater.forgeMessage(originalMessage, invitation, invitation.firstName)
+		if (message.length > 300) {
+			utils.log(`Message to send: ${newMessage}`, "info")
+			utils.log(`This message is over 300 characters (${newMessage.length}) and can't be sent to LinkedIn.`, "error")
+			invitation.error = "Message over 300 characters"
+			return invitation
+		} else {
+			invitation.message = message
+		}
 	}
 	switch (selector) {
 		// Directly add a profile
