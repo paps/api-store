@@ -84,9 +84,11 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 const follow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string) => {
 	try {
 		await page.click(followSel)
-		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json", { timeout: 1000 })
+		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json", { timeout: 2500 })
 	} catch (err) {
-		return FollowStatus.API_ERROR
+		if (err.message.toLowerCase().indexOf("timeout") > -1) {
+			return FollowStatus.API_ERROR
+		}
 	}
 
 	try {
@@ -122,12 +124,13 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 		foundSel = await foundSel.jsonValue()
 		await page.click(foundSel)
 		const endpoint = foundSel === pendingSel ? "https://twitter.com/i/user/cancel" : "https://api.twitter.com/1.1/friendships/destroy.json"
-		await page.waitForResponse(endpoint, { timeout: 1000 })
+		await page.waitForResponse(endpoint, { timeout: 2500 })
 	} catch (err) {
 		return FollowStatus.API_ERROR
 	}
 	let found: puppeteer.JSHandle|string = ""
 	try {
+		await page.waitFor(1000)
 		found = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, ".alter-messages" ])
 		found = await (found as puppeteer.JSHandle).jsonValue()
 		if (found ===  ".alter-messages") {
