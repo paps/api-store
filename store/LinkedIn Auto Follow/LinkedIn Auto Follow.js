@@ -127,19 +127,27 @@ const addFollow = async (url, convertedUrl, tab, unfollowProfiles, disableScrapi
 
 // Main function to launch all the others in the good order and handle some errors
 nick.newTab().then(async (tab) => {
-	let { sessionCookie, spreadsheetUrl, numberOfFollowsPerLaunch, csvName, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, profileUrls, numberOfFollowsPerLaunch, csvName, columnName, hunterApiKey, disableScraping, unfollowProfiles } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DB_NAME
 	}
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey || null, nick)
-	db = await utils.getDb(csvName + ".csv")
-	let data = await utils.getDataFromCsv2(spreadsheetUrl.trim(), columnName)
-	data = data.filter(str => str) // removing empty lines
-	const urls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
+    db = await utils.getDb(csvName + ".csv")
+	if (spreadsheetUrl) {
+		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
+			profileUrls = [spreadsheetUrl]
+		} else {
+			let data = await utils.getDataFromCsv2(spreadsheetUrl.trim(), columnName)
+			data = data.filter(str => str) // removing empty lines
+			profileUrls = getUrlsToAdd(data.filter(str => checkDb(str, db)), numberOfFollowsPerLaunch)
+		}
+	} else if (typeof profileUrls === "string") {
+		profileUrls = [profileUrls]
+	}
 	await linkedIn.login(tab, sessionCookie)
-	utils.log(`Urls to ${unfollowProfiles ? "un" : ""}follow: ${JSON.stringify(urls, null, 2)}`, "done")
-	for (let url of urls) {
+	utils.log(`Urls to ${unfollowProfiles ? "un" : ""}follow: ${JSON.stringify(profileUrls, null, 2)}`, "done")
+	for (let url of profileUrls) {
 		try {
 			if (url) {
 				const convertedUrl = await linkedInScraper.salesNavigatorUrlConverter(url)
