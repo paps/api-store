@@ -8,7 +8,7 @@ Set up this API once and **fix the Uber bill issue once and for all**.
 
 # What will you need? ⚙️ 
 
-Your Uber session cookie: To get it, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
+**Your Uber session cookie**. To get it, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -44,9 +44,9 @@ Because the automation will manipulate Uber for you, it needs to be logged on yo
 
 If you're operating from another browser and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 5. Email address to receive your bills at.
+## 5. Specify an email address to receive your bills at.
 
-Specify here your email address. You will receive at the pace you chose a zipped folder with your bills as .pdf files.
+Specify here your email address. You will receive at the pace you chose a zipped folder with your bills in multiple .pdf format files.
 
 # Click on Launch & Enjoy!
 It’s done! Click on "launch" to extract your bills once.
