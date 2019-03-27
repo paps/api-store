@@ -9,6 +9,9 @@ const adjustWorkspaceUrl = (url: string): string|undefined => {
 			return url
 		}
 		let urlObject = parse(url.toLowerCase())
+		if (urlObject.pathname && urlObject.pathname.startsWith("www.")) {
+			return urlObject.pathname.replace("www.", "https://")
+		}
 		if (urlObject.pathname && !urlObject.protocol) {
 			urlObject = parse("https://" + url)
 		}
