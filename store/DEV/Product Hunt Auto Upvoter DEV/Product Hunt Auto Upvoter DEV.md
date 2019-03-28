@@ -26,6 +26,7 @@ In the 1st argument field **"`Product Hunt product or Spreadsheet URL`"** you ha
 * One at a time: Just fill the form with a Product Hunt product URL. For example: `https://www.producthunt.com/posts/product-hunt-4-0`
 
 * Several at a time: Paste the URL of a spreadsheet filled with Product Hunt products and/or Product Hunt products' URLs **on column A**
+
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 Now that your API is ready, you can launch manually the API. If you happen to have a lot of products to scrape, you might want to do it over multiple launches.

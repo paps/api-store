@@ -36,37 +36,36 @@ Hashtags and locations are differentiated by the presence of a # in front of the
 
 You can also enter a Google spreadsheet URL or a CSV with each line containing multiple hashtags or locations in a single cell, separated by commas (ex: 'New York, #selfie'). Each line will be treated as a single multi-hashtag search.
 
-## 5. Get your Instagram session cookie 
-The session cookie you'll need to make this API work is called "`sessionid`",
-Here's how you can get yours:
+## 4. Easy & safe authentication { argument }
 
-* Using Chrome, go to your Instagram homepage and open the inspector  
-→ Right click anywhere on the page and select “Inspect” ![](https://phantombuster.imgix.net/api-store/Inspect+browser.png)  
-→ <kbd>CMD</kbd>+<kbd>OPT</kbd>+<kbd>i</kbd> on macOS  
-or  
-→ <kbd>F12</kbd> or <kbd>CTRL</kbd>+<kbd>MAJ</kbd>+<kbd>i</kbd> on Windows
+This automation will connect to Instagram on your behalf. The **safest and most efficient** way for Phantombuster to authenticate as yourself is by using your session cookies.
 
-* Locate the “Application” tab
+To make that process as easy as possible you can use **Phantombuster's browser extension**. It's a 2-click installation.
 
-<center>![](https://phantombuster.imgix.net/api-store/li_at+1.png)</center>
+<div class="row" style="margin: 10px 0px;">
+	<div class="col-xs-5 col-xs-offset-1">
+		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" 
+		target="_blank">
+			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
+				<p style="margin-top: 0px;">
+				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
+				Get it for Chrome</p>
+			</div>
+		</a>
+	</div>
+	<div class="col-xs-5 col-xs-offset-1">
+		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" 
+		target="_blank">
+			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
+				<p style="margin-top: 0px;">
+				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
+				Get it for Firefox</p>
+			</div>
+		</a>
+	</div>	
+</div>
 
-* Select “Cookies” > “https://www.instagram.com” on the left menu.
-
-<center>![](https://phantombuster.imgix.net/api-store/Instagram_Hashtag_Collector/sessionid_1.png)</center>
-
-* Locate the “`sessionid`” cookie.
-
-<center>![](https://phantombuster.imgix.net/api-store/Instagram_Hashtag_Collector/sessionid_2.png)</center/>
-
-* Copy what’s under “Value” (**Double click** on it then <kbd>Ctrl</kbd>+<kbd>C</kbd>) and paste it into your script configuration
-
-_// How to access your cookies with <a href="https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector" target="_blank">Firefox</a> and <a href="https://www.macobserver.com/tmo/article/see_full_cookie_details_in_safari_5.1" target="_blank">Safari</a> //_
-
-
-# Click on Launch & Enjoy!
-It’s done! All that is left to do is to click on "launch" to try your script!
-<center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
+If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
 # Limits
 
