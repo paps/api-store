@@ -28,17 +28,17 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 ## 4. Instagram authentication 🔑 { argument }
 
-Because the automation will manipulate Instagram for you, it needs to be logged into your account. In order to get your session cookies, we've built a browser extension that makes it super easy. You can download it below for Chrome and Firefox.
+Because the automation will manipulate Instagram on your behalf, it needs to be logged into your account. In order to get your session cookies, we've built a browser extension that makes it super easy. You can download it below for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) and [Firefox]https://addons.mozilla.org/fr/firefox/addon/phantombuster/).
 
 <div class="row">
 	<div class="col-xs-6 text-center">
 		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" target="_blank">
-			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 100px;">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 130px; padding: 20px; box-shadow: 0px 0px 0px white;">
 		</a>
 	</div>
 	<div class="col-xs-6 text-center">
 		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" target="_blank">
-			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 100px;">
+			<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 130px; padding: 20px; box-shadow: 0px 0px 0px white;">
 		</a>
 	</div>
 </div>
