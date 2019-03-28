@@ -9,7 +9,7 @@ Like any auto-comment tool, you'll have the possibility of writing numerous comm
 # What will you need? ⚙️
 
 - **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in one column, a list of messages in another column.
-- **Comments**: A list of comments that will be published automatically at randon on the posts specified in the spreadsgeet above.
+- **Comments**: A list of comments that will be published automatically at randon on the posts specified in the spreadsgeet above. Don't use emojis as most of them aren't handled.
 
 # Which steps to follow?
 
