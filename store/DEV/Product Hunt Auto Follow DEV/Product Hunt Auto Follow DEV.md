@@ -28,6 +28,7 @@ In the 1st argument field **"`Product Hunt account or Spreadsheet URL`"** you ha
 * One at a time: Just fill the form with a Product Hunt username, example: `https://www.producthunt.com/@jack`
 
 * Several: Paste the URL of a spreadsheet filled with Product Hunt username and/or Product Hunt accounts URLs **on column A**
+
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 Now that your API is ready, you can launch manually the API. If you happen to have a lot of profiles to scrape, you might want to do it over multiple launches.
