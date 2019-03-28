@@ -120,9 +120,6 @@
 					},
 					"takeScreenshot": {
 						"rightLabel": "<b>Take a screenshot of the profile</b>"
-					},
-					"extractRegularUrl": {
-						"rightLabel": "<b>Extract LinkedIn regular profile URL</b>"
 					}
 				}
 			}
@@ -176,9 +173,6 @@
 				"type": "boolean"
 			},
 			"takeScreenshot": {
-				"type": "boolean"
-			},
-			"extractRegularUrl": {
 				"type": "boolean"
 			}
 		},

@@ -4,7 +4,7 @@ If you want to have more followers on Instagram, you need to know which crowd wo
 
 These interesting people are probably already following some influencers or brands. 
 
-This API does the hard job of going through a list of people you like and extracts all their followers. 
+This API does the hard job of going through a list of people you like and extracts all their followers (up to around 500k profiles per result file).
 
 This is the first step in building a follow/unfollow strategy and having more targeted, active, real followers on Instagram.
 
