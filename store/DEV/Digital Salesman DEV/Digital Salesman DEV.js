@@ -1,20 +1,58 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-Messaging.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Messaging.js"
 "phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
 const puppeteer = require("puppeteer")
-const StoreUtilities = require("./lib-StoreUtilities-DEV")
+const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(buster)
 const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
+
+const { parse } = require("url")
+
 const DB_NAME = "result"
 const LINES = 10
 const COLUMN = "0"
 // }
+
+const fixUrl = url => {
+	const tmp = parse(url)
+
+	if (!tmp.protocol && !tmp.slashes)
+		return `http://${url}`
+	return tmp.href
+}
+
+const _config = () => window.intercomSettings
+
+const getLinks = () => {
+	const tmp = [...document.querySelectorAll("a[href]")].map(el => el.href).filter(el => {
+		try {
+			const tmp = new URL(el)
+			// Prevent mailto: / tel:
+			if (!tmp.protocol.startsWith("http"))
+				return false
+			// Make unique URL slug / no qs allowed
+			if (tmp.search)
+				return false
+			// No anchor
+			if (tmp.hash)
+				return false
+			if (tmp.hostname !== document.location.host)
+				return false
+			if (tmp.pathname.length > 30)
+				return false
+		} catch (err) {
+			return false
+		}
+		return true
+	})
+	return [...new Set(tmp)]
+}
 
 const prepareIntercomMessage = message => {
 	/* global Intercom */
@@ -22,7 +60,68 @@ const prepareIntercomMessage = message => {
 	sdk("showNewMessage", message)
 }
 
-const setEmail = email => window.intercomSettings.email = email
+const setupIntercom = email => {
+	/* global Intercom, intercomSettings */
+	const sdk = Intercom
+	const config = intercomSettings
+
+	if (email) {
+		config.email = email
+	}
+	sdk("shutdown")
+	sdk("boot", Object.assign({}, intercomSettings, config))
+}
+
+/**
+ * @async
+ * @param {Puppeteer.Page} page
+ * @param {string} url
+ * @return {Promise<boolean>}
+ */
+const isIntercomVisible = async (page, url, email = null) => {
+	if (!utils.isUrl(url)) {
+		url = fixUrl(url)
+	}
+	try {
+		await page.goto(url)
+		await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true, timeout: 7500 })
+	} catch (err) {
+		return false
+	}
+	if (email) {
+		await page.evaluate(setupIntercom, email)
+	}
+	return true
+}
+
+const sendIntercomMessage = async (page, message) => {
+	utils.log(`Sending message: ${message}`, "info")
+	await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true })
+	await page.evaluate(prepareIntercomMessage, message)
+	await page.waitForSelector("iframe[name=\"intercom-messenger-frame\"]", { visible: true })
+	const frame = page.frames().find(frame => frame.name() === "intercom-messenger-frame")
+	if (frame) {
+		await frame.waitForSelector("button.intercom-composer-send-button")
+		await page.waitFor(5000)
+		console.log(await page.evaluate(_config))
+		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
+		// await frame.click("button.intercom-composer-send-button")
+		return true
+	}
+	return false
+}
+
+/**
+ * @return {boolean}
+ */
+const isUsingIntercom = () => !!window.Intercom
+
+const detectIntercom = async (page, url, email) => {
+	let canGo = await isIntercomVisible(page, url, email)
+	canGo = !!(canGo & await page.evaluate(isUsingIntercom))
+	await page.screenshot({ path: `loader-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
+	return canGo
+}
 
 // Main function to launch all the others in the good order and handle some errors
 ;(async () => {
@@ -30,7 +129,7 @@ const setEmail = email => window.intercomSettings.email = email
 	const res = []
 	let { spreadsheetUrl, columnName, message, email, profilesPerLaunch, csvName, queries } = utils.validateArguments()
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
-	const tab = await browser.newPage()
+	const page = await browser.newPage()
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -58,7 +157,7 @@ const setEmail = email => window.intercomSettings.email = email
 			let csvHeaders = raw[0].filter(cell => !utils.isUrl(cell))
 			let messagesTags = inflater.getMessageTags(message).filter(el => csvHeaders.includes(el))
 			let columns = [ columnName, ...messagesTags ]
-			rows = utils.extractRows(raw, columns)
+			rows = utils.extractCsvRows(raw, columns)
 		} catch (err) {
 			rows = [{ [columnName]: spreadsheetUrl }]
 		}
@@ -78,32 +177,48 @@ const setEmail = email => window.intercomSettings.email = email
 		}
 		try {
 			const toSend = inflater.forgeMessage(message, query)
-			await tab.goto(query[columnName])
-			if (email) {
-				await tab.evaluate(setEmail, email)
-			}
-			await tab.waitForSelector("iframe.intercom-launcher-frame", { visible: true })
-			utils.log(`Sending message: ${toSend}`, "info")
-			await tab.evaluate(prepareIntercomMessage, toSend)
-			await tab.waitForSelector("iframe[name=\"intercom-messenger-frame\"]", { visible: true })
-			const frame = tab.frames().find(frame => frame.name() === "intercom-messenger-frame")
-			if (frame) {
-				await frame.waitForSelector("button.intercom-composer-send-button")
-				await frame.click("button.intercom-composer-send-button")
-				utils.log(`Message sent at ${query[columnName]}`, "info")
-				res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
+			let canGo = await detectIntercom(page, query[columnName], email)
+			if (canGo) {
+				const hasSend = await sendIntercomMessage(page, toSend, email)
+				if (hasSend) {
+					utils.log(`Message sent at ${query[columnName]}`, "info")
+					res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
+				} else {
+					throw `Can't find a way to send a message on ${query[columnName]}`
+				}
 			} else {
-				throw `Can't find a way to send a message on ${query[columnName]}`
+				const alternativeLinks = await page.evaluate(getLinks)
+				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${alternativeLinks.length} alternative links`, "info")
+				if (alternativeLinks.length < 1) {
+					throw `Can't find a way to send a message on ${query[columnName]}`
+				}
+				canGo = false
+				for (const url of alternativeLinks) {
+					console.log("Trying:", url)
+					if (await detectIntercom(page, url, email)) {
+						break
+					}
+				}
+				if (canGo) {
+					const hasSend = await sendIntercomMessage(page, toSend, email)
+					if (hasSend) {
+						utils.log(`Message sent at ${page.url()}`, "info")
+						res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
+					} else {
+						throw `Can't find a way to send a message on ${page.url()}`
+					}
+				} else {
+					throw `Can't find a way to send a message on ${query[columnName]} even after ${alternativeLinks.length} tries`
+				}
 			}
 		} catch (err) {
-			await tab.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", quality: 100, fullPage: true })
+			await page.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", quality: 100, fullPage: true })
 			const error = err.message || err
 			res.push({ error, query: query[columnName], timestamp: (new Date()).toISOString() })
 			utils.log(error, "warning")
 		}
 	}
-	await tab.waitFor(2000)
-	await tab.close()
+	await page.close()
 	await browser.close()
 	db.push(...utils.filterRightOuter(db, res))
 	utils.saveResults(res, db, csvName, null, false)
