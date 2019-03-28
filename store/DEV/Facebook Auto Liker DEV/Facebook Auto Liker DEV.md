@@ -65,8 +65,6 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-
-
 ## 5. Add a Google Spreadsheet 📑
 Below your session cookies you’ll find Spreadsheet URL.
 
