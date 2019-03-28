@@ -27,11 +27,11 @@ const isCraigslistUrl = (url: string) => {
 }
 
 const scrapeProfile = (): IEvalAny => {
-	const profile = {} as IUnknownObject
+	const scrapedData = {} as IUnknownObject
 	const mapSelector = document.querySelector("#map")
 	if (mapSelector) {
-		profile.locationLatitude = mapSelector.getAttribute("data-latitude")
-		profile.locationLongitude = mapSelector.getAttribute("data-longitude")
+		scrapedData.locationLatitude = mapSelector.getAttribute("data-latitude")
+		scrapedData.locationLongitude = mapSelector.getAttribute("data-longitude")
 	}
 	const camelCaser = (str: string) => {
 		const stringArray = str.toLowerCase().split(" ")
@@ -51,13 +51,13 @@ const scrapeProfile = (): IEvalAny => {
 			valueSelector.parentElement.removeChild(valueSelector)
 			if (el.textContent) {
 				const property = camelCaser(el.textContent)
-				profile[property] = value
+				scrapedData[property] = value
 			}
 		}
 	})
-	const titleSelector = document.querySelector("#postingtitletext")
+	const titleSelector = document.querySelector("#titletextonly")
 	if (titleSelector) {
-		profile.title = titleSelector.textContent
+		scrapedData.title = titleSelector.textContent
 	}
 	const locationSelector = document.querySelector(".postingtitletext > small")
 	if (locationSelector && locationSelector.textContent) {
@@ -65,21 +65,41 @@ const scrapeProfile = (): IEvalAny => {
 		if (location.startsWith("(") && location.endsWith(")")) {
 			location = location.slice(1, -1)
 		}
-		profile.location = location
+		scrapedData.location = location
 	}
 	const timeSelector = document.querySelector("#display-date > time")
 	if (timeSelector) {
-		profile.postDate = timeSelector.getAttribute("datetime")
+		scrapedData.postDate = timeSelector.getAttribute("datetime")
 	}
 	const telSelector = document.querySelector(".reply-button-row .reply-tel p")
 	if (telSelector && telSelector.textContent) {
-		profile.phoneNumber = telSelector.textContent.trim()
+		scrapedData.phoneNumber = telSelector.textContent.trim()
 	}
 	const mailSelector = document.querySelector(".anonemail")
 	if (mailSelector && mailSelector.textContent) {
-		profile.email = mailSelector.textContent
+		scrapedData.email = mailSelector.textContent
 	}
-	return profile
+	const imagesSelector = document.querySelector(".gallery img")
+	if (imagesSelector) {
+		scrapedData.imgUrl = imagesSelector.getAttribute("src")
+	}
+	const contentSelector = document.querySelector("#postingbody")
+	if (contentSelector && contentSelector.textContent) {
+		const printInfoSelector = contentSelector.querySelector(".print-information")
+		if (printInfoSelector && printInfoSelector.parentElement) {
+			printInfoSelector.parentElement.removeChild(printInfoSelector)
+		}
+		scrapedData.content = contentSelector.textContent.trim()
+	}
+	const noticesSelector = document.querySelector(".notices")
+	if (noticesSelector && noticesSelector.textContent) {
+		scrapedData.notices = noticesSelector.textContent.trim()
+	}
+	const categorySelector = document.querySelector(".breadcrumbs")
+	if (categorySelector && categorySelector.textContent) {
+		scrapedData.category = categorySelector.textContent.split(">").map((el) => el.trim()).join(" > ")
+	}
+	return scrapedData
 }
 
 const openProfile = async (page: puppeteer.Page, url: string) => {
@@ -88,22 +108,20 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 	if (response && response.status() !== 200) {
 		throw new Error(`${url} responded with HTTP code ${response.status()}`)
 	}
-	if (page.url() !== "https://www.producthunt.com/") {
-		try {
-			await clickReplyButton(page)
-		} catch (err) {
-			console.log("err:", err)
-		}
-		return page.evaluate(scrapeProfile)
-	} else {
-		return { error: "Profile doesn't exist" }
+	try {
+		await clickReplyButton(page)
+	} catch (err) {
+		//
 	}
-
+	try {
+		await page.waitForSelector("#postingtitle")
+		return page.evaluate(scrapeProfile)
+	} catch (err) {
+		throw "Page couldn't be loaded"
+	}
 }
 
 const clickReplyButton = async (page: puppeteer.Page) => {
-	await page.screenshot({ path: `${Date.now()}privatet.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}privatet.html`)
 	try {
 		await page.waitForSelector("button.reply-button")
 		await page.click("button.reply-button")
@@ -113,7 +131,6 @@ const clickReplyButton = async (page: puppeteer.Page) => {
 			const initDate = new Date().getTime()
 			do {
 				if (await page.$("#g-recaptcha")) {
-					console.log("captcha")
 					const token = await page.evaluate(() => {
 						const captchaSelector = document.querySelector("#recaptcha-token")
 						if (captchaSelector) {
@@ -122,11 +139,8 @@ const clickReplyButton = async (page: puppeteer.Page) => {
 							return ""
 						}
 					}) as string
-					console.log("token:", token)
-
 					if (token) {
 						const solved = await buster.solveNoCaptcha(page.url(), token)
-						console.log("solved: ", solved)
 						await page.evaluate((captchaValue: string) => {
 							const captchaResponseSelector = document.querySelector("#g-recaptcha-response")
 							if (captchaResponseSelector) {
@@ -135,28 +149,22 @@ const clickReplyButton = async (page: puppeteer.Page) => {
 							return
 						}, solved)
 					}
-					await page.screenshot({ path: `${Date.now()}token.jpg`, type: "jpeg", quality: 50 })
-					await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}token.html`)
 				} else {
 					break
 				}
 				await page.waitFor(1000)
 			} while (new Date().getTime() - initDate < 30000)
 		}
-		await page.screenshot({ path: `${Date.now()}privatet.jpg`, type: "jpeg", quality: 50 })
-		await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}privatet.html`)
 	} catch (err) {
-		console.log("errbutton:", err)
-		await page.screenshot({ path: `${Date.now()}errbutton.jpg`, type: "jpeg", quality: 50 })
-		await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}errbutton.html`)
+		//
 	}
 }
 
 (async () => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, profileUrls } = utils.validateArguments()
-	let profileArray = profileUrls as string[]
+	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, queries } = utils.validateArguments()
+	let pageArray = queries as string[]
 	const inputUrl = spreadsheetUrl as string
 	let _csvName = csvName as string
 	const _columnName = columnName as string
@@ -166,56 +174,61 @@ const clickReplyButton = async (page: puppeteer.Page) => {
 	}
 	if (inputUrl) {
 		if (utils.isUrl(inputUrl)) {
-			profileArray = isCraigslistUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
+			pageArray = isCraigslistUrl(inputUrl) ? [ inputUrl ] : await utils.getDataFromCsv2(inputUrl, _columnName)
 		} else {
-			profileArray = [ inputUrl ]
+			pageArray = [ inputUrl ]
 		}
-	} else if (typeof profileUrls === "string") {
-		profileArray = [ profileUrls ]
+	} else if (typeof queries === "string") {
+		pageArray = [ queries ]
 	}
 
 	let result = await utils.getDb(_csvName + ".csv")
-	profileArray = profileArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
+	pageArray = pageArray.filter((el) => el && result.findIndex((line: IUnknownObject) => line.query === el) < 0)
 	if (numberOfLines) {
-		profileArray = profileArray.slice(0, numberOfLines)
+		pageArray = pageArray.slice(0, numberOfLines)
 	}
-	if (Array.isArray(profileArray)) {
-		if (profileArray.length < 1) {
-			utils.log("Input is empty OR every profiles are already scraped", "warning")
+	if (Array.isArray(pageArray)) {
+		if (pageArray.length < 1) {
+			utils.log("Input is empty OR every pages are already scraped", "warning")
 			process.exit()
 		}
-		console.log(`Profiles to scrape: ${JSON.stringify(profileArray.slice(0, 500), null, 4)}`)
+		console.log(`Pages to scrape: ${JSON.stringify(pageArray.slice(0, 500), null, 4)}`)
 		const currentResult = []
-		for (const query of profileArray) {
+		for (const query of pageArray) {
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
 				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 				break
 			}
-			utils.log(`Opening ${query}...`, "loading")
-			const url = utils.isUrl(query) ? query : `https://www.producthunt.com/${query}`
-			let res = null
-			try {
-				res = await openProfile(page, url) as ReturnType <typeof scrapeProfile>
-				if (res) {
-					if (!res.error) {
-						res.pageUrl = page.url()
-						utils.log(`${query} scraped.`, "done")
-					} else {
-						utils.log(`Profile ${query} doesn't exist!`, "warning")
+			if (isCraigslistUrl(query)) {
+				utils.log(`Opening ${query}...`, "loading")
+				let res = null
+				try {
+					res = await openProfile(page, query) as ReturnType <typeof scrapeProfile>
+					if (res) {
+						if (!res.error) {
+							res.pageUrl = page.url()
+							utils.log(`${query} scraped.`, "done")
+						} else {
+							utils.log(`Error scraping ${query}`, "warning")
+						}
+						res.query = query
+						res.timestamp = (new Date()).toISOString()
+						currentResult.push(res)
 					}
-					res.query = query
-					res.timestamp = (new Date()).toISOString()
-					currentResult.push(res)
+				} catch (err) {
+					const error = `Error while scraping ${query}: ${err.message || err}`
+					utils.log(error, "warning")
+					currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
 				}
-			} catch (err) {
-				const error = `Error while scraping ${url}: ${err.message || err}`
-				utils.log(error, "warning")
-				currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
+			} else {
+				utils.log(`${query} is not a Craiglist URL, skipping entry...`, "warning")
+				currentResult.push({ query, error: "Not a Craiglist URL", timestamp: (new Date()).toISOString() })
 			}
 		}
 		result = result.concat(currentResult)
-		utils.log(`Scraped ${result.length} profiles in total.`, "done")
+		const resultLength = result.length
+		utils.log(`Scraped ${resultLength} page${resultLength > 1 ? "s" : ""} in total.`, "done")
 		await utils.saveResults(currentResult, result, _csvName, null)
 	}
 	process.exit()

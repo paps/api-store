@@ -71,7 +71,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"queries": {
 						"required": true,
 						"type": "array",
 						"items": {
@@ -83,7 +83,7 @@
 			},
 			{
 				"properties": {
-					"profileUrls": {
+					"queries": {
 						"required": true,
 						"type": "string",
 						"minLength": 1
