@@ -74,7 +74,7 @@ const postComment = async (page: puppeteer.Page, query: string, messages: string
 	const message = pickMessage(messages)
 	await page.type("form > textarea", message, {delay: 100})
 	await page.waitFor(2000)
-	// await page.type("form > textarea", String.fromCharCode(13))
+	await page.type("form > textarea", String.fromCharCode(13))
 	await page.waitFor(2000)
 	utils.log(`Commented post of ${username} with message: ${message}`, "done")
 	return { query, message, timestamp }
