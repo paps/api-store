@@ -510,12 +510,12 @@ const craftCsv = (json) => {
 			if (salesNavigatorUrl) {
 				utils.log(`Opening Sales Navigator profile ${salesNavigatorUrl}...`, "loading")
 				const scrapedData = await loadAndScrapeProfile(tab, profileUrl, salesNavigatorUrl)
-				if (extractRegularUrl) {
-					if (!regularLinkedInUrl) {
-						regularLinkedInUrl = await linkedInScraper.salesNavigatorUrlConverter(salesNavigatorUrl)
-					}
-					scrapedData.linkedinProfileUrl = regularLinkedInUrl
-				}
+				// if (extractRegularUrl) { // not needed anymore
+				// 	if (!regularLinkedInUrl) {
+				// 		regularLinkedInUrl = await linkedInScraper.salesNavigatorUrlConverter(salesNavigatorUrl)
+				// 	}
+				// 	scrapedData.linkedinProfileUrl = regularLinkedInUrl
+				// }
 				if (saveImg || takeScreenshot) {
 					const slug = scrapedData.name
 					if (saveImg) {
