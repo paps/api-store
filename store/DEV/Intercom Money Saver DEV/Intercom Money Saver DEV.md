@@ -73,7 +73,24 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 5. Specify an email address to receive your summary at.
+## 5. (optional) Create an Intercom Segment
+
+Intercom segments are groups of users fulfilling specific criteria. Create the exact segment of users you want to archive and let Phantombuster know its ID. 
+
+![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Money+Saver/Intercom+Segment.png)
+
+[ 1 ] Go to the users sections
+
+[ 2 ] Specify your criteria
+
+[ 3 ] Create the filter
+
+[ 4 ] Save it as a segment
+
+Once created go to the segment and copy/paste its URL. It should look like some variant of this:
+`https://app.intercom.io/a/apps/iy3q5eio/users/segments/5a9e93163543373724f93c07`
+
+## 6. Specify an email address to receive your summary at.
 
 Specify here your email address. You will receive detailed informations such as how many people were achived and how much money you saved.
 
@@ -97,3 +114,9 @@ Then, select a frequency. Once a month for example:
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
 That's it!	
+
+# Knowledge 🤓
+
+## How to re-import your Intercom contacts
+
+When Phantombusters archives your users it also do an export of that users list and attaches it to the email we send.
