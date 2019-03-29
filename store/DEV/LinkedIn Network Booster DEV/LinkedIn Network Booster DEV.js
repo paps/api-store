@@ -208,7 +208,7 @@ const openProfile = async (tab, url, noScraping = true, libScraper) => {
 			await tab.waitUntilVisible("#profile-wrapper", 15000)
 		} catch (err) {
 			utils.log(`Couldn't open ${url}`, "error")
-			throw new Error("Couln't open")
+			throw new Error("Couldn't open")
 		}
 	} else {
 		const scrapedProfile = await libScraper.scrapeProfile(tab, url.replace(/.+linkedin\.com/, "linkedin.com"))
@@ -300,8 +300,8 @@ const addLinkedinFriend = async (bundle, url, tab, message, onlySecondCircle, di
 			invitation = Object.assign({}, profileScraping, invitation) // Custom tags aren't overwritten by the scraping result
 		}
 	} catch (err) {
-		if (err.message === "Couln't open") {
-			invitation.error = "Couln't open"
+		if (err.message === "Couldn't open") {
+			invitation.error = "Couldn't open"
 			return invitation
 		}
 		await tab.wait(5000)
