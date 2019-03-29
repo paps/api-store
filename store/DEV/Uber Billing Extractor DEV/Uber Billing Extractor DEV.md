@@ -57,8 +57,11 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
+## 5. Eventually spedify the dates of the bills you're interested in
 
-## 5. Specify an email address to receive your bills at.
+Some Uber users have *loads* of receipts. Choose to receive all of them or just those from a specific date range.
+
+## 6. Specify an email address to receive your bills at.
 
 Specify here your email address. You will receive at the pace you chose a zipped folder with your bills in multiple .pdf format files.
 
