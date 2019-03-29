@@ -145,8 +145,8 @@ const getCommentCountAndUsername = async (postUrl) => {
 	} else if (postData.edge_media_to_parent_comment) {
 		totalCommentCount = postData.edge_media_to_parent_comment.count
 	}
-	const [ results ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
-	return [ totalCommentCount, username, results ]
+	const [ results, endCursor ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
+	return [ totalCommentCount, username, results, endCursor ]
 }
 
 // check if we're scraping a video (non-clickable Like Count)
@@ -201,11 +201,12 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 	}
 	let username
 	let totalCommentCount
+	let endCursor
 	let results = []
 	const urlObject = new URL(query)
 	const postUrl = urlObject.hostname + urlObject.pathname
 	try {
-		[ totalCommentCount, username, results ] = await getCommentCountAndUsername(postUrl)
+		[ totalCommentCount, username, results, endCursor ] = await getCommentCountAndUsername(postUrl)
 	} catch (err) {
 		return ({ query, error: "Couln't access first comments", timestamp: (new Date()).toISOString() })
 	}
@@ -213,7 +214,10 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 		utils.log("No comments found for this post.", "warning")
 		return ({ query, error: "No comments found", timestamp: (new Date()).toISOString() })
 	}
-	utils.log(`${totalCommentCount} comments found for this post ${username ? "by " + username : ""}.`, "info")
+	if (!endCursor) {
+		return results
+	}
+	// utils.log(`${totalCommentCount} comments found for this post ${username ? "by " + username : ""}.`, "info")
 	let commentCount = 0
 	let noButton
 	if (!resuming) {
