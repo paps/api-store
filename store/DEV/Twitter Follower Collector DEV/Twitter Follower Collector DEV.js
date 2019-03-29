@@ -351,18 +351,21 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		let followers = await getTwitterFollowers(tab, url, followersPerAccount, resuming)
 		followers = removeDuplicatesSelf(followers)
 		if (followers.length) {
-			const followersLength = followers.length
-			for (let i = 0; i < followersLength; i++) {
-				if (!result.find(el => el.screenName === followers[i].screenName && el.query === followers[i].query)) {
-					result.push(followers[i])
-				}
-			}
+			// const followersLength = followers.length
+			// for (let i = 0; i < followersLength; i++) {
+			// 	if (!result.find(el => el.screenName === followers[i].screenName && el.query === followers[i].query)) {
+			// 		result.push(followers[i])
+			// 	}
+			// }
+			result = result.concat(followers)
 		}
 		if (interrupted) { break }
 	}
-	if (rateLimited) { utils.log("Rate limit reached, you should start again in around 2h.", "warning") }
+	if (rateLimited) {
+		utils.log("Rate limit reached, you should start again in around 2h.", "warning")
+	}
 	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result, csvName)
+		await utils.saveFlatResults(result, result, csvName)
 		if (agentObject) {
 			if (interrupted && twitterUrl) {
 				agentObject.nextUrl = twitterUrl

@@ -1,27 +1,29 @@
 {
 	"slug": "product-hunt-auto-follow",
 	"description": "Automatically follow a list of Product Hunt makers in one click",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Product+Hunt+Auto+Follow/Product+Hunt+Auto+Follow.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Money+Saver/Intercom+Money+Saver+(1).png",
 	"argumentDescription": "",
-	"gradientBegin": "#DD6948",
-	"gradientEnd": "#DA552F",
+	"gradientBegin": "#61B5FF",
+	"gradientEnd": "#BADFFF",
 	"hidden": true,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
 		"sessionCookie": "_intercom_session",
-		"spreadsheetUrl": "",
-		"numberOfLinesPerLaunch": 10
+		"filter": "lastSeen",
+		"lastSeen": 30,
+		"spreadsheetUrl": ""
+	},
+	"outputDescription": {
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
 			"schema": {
-				"properties": {
-					"sessionCookie": {
-						"required": true
-					}
+				"dependencies": {
+					"lastSeen": [ "filter" ],
+					"segmentUrl": [ "filter" ]
 				}
 			},
 			"options": {
@@ -30,21 +32,29 @@
 						"label": "Intercom session cookie <a href=\"/api-store/12214/product-hunt-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your '_intercom_session' session cookie here"
 					},
-					"columnName": {
-						"label": "Column name where Product Hunt profiles URLs are stored in the spreadsheet",
-						"helper": "If empty, the first column of your spreadsheet will be used"
+					"filter": {
+						"label": "Choose a filter",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "Last seen more than", "Segment" ],
+						"type": "select"
 					},
-					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (All of them if empty) <a href=\"/api-store/12214/product-hunt-auto-follow#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"helper": "If using a spreadsheet. By default the API will try to follow 10 profiles per launch",
-						"inputType": "number"
+					"lastSeen": {
+						"label": "Last seen more than X days",
+						"dependencies": {
+							"filter": "lastSeen"
+						}
+					},
+					"segmentUrl": {
+						"label": "Segment URL",
+						"dependencies": {
+							"filter": "segment"
+						}
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
-					},
-					"unfollow": {
-						"rightLabel": "<b>Unfollow profiles</b>"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
 					}
 				}
 			}
@@ -58,21 +68,22 @@
 				"required": true,
 				"minLength": 15
 			},
-			"columnName": {
-				"type": "string"
+			"filter": {
+				"enum": [ "lastSeen", "segment" ],
+				"default": "lastSeen"
 			},
-			"numberOfLinesPerLaunch": {
-				"type": "number",
-				"minimum": 1,
-				"maximum": 10,
-				"default": 1
+			"lastSeen": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"segmentUrl": {
+				"type": "string",
+				"maxLength": 50
 			},
 			"csvName": {
-				"type": "string"
-			},
-			"unfollow": {
-				"type": "boolean"
+				"type": "string",
+				"required": false
 			}
 		}
 	}
-}
+}	

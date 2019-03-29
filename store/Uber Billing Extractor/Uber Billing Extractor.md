@@ -8,7 +8,7 @@ Set up this API once and **fix the Uber bill issue once and for all**.
 
 # What will you need? ⚙️ 
 
-**Your Uber session cookie**. To get it, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
+**Your Uber session cookies**. To get these, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -57,7 +57,11 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 5. Specify an email address to receive your bills at.
+## 5. Eventually spedify the dates of the bills you're interested in
+
+Some Uber users have *loads* of receipts. Choose to receive all of them or just those from a specific date range.
+
+## 6. Specify an email address to receive your bills at.
 
 Specify here your email address. You will receive at the pace you chose a zipped folder with your bills in multiple .pdf format files.
 

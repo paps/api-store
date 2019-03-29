@@ -118,7 +118,7 @@ const openProfile = async (page: puppeteer.Page, url: string) => {
 		//
 	}
 	try {
-		await page.waitForSelector("#postingtitle")
+		await page.waitForSelector("#postingtitle, .postingtitle")
 		return page.evaluate(scrapeProfile)
 	} catch (err) {
 		throw "Page couldn't be loaded"

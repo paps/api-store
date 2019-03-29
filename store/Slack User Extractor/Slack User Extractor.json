@@ -55,6 +55,9 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"noDatabase": {
+						"rightLabel": "Scrape all channels <b>even</b> if they were scraped in past executions"
 					}
 				}
 			}
@@ -106,6 +109,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"noDatabase": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [

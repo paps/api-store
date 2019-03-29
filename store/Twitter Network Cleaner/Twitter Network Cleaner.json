@@ -2,7 +2,7 @@
 	"slug": "twitter-network-cleaner",
 	"description": "Unfollow every one in a list that isn't following you",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_network_cleaner/twitter_network_cleaner_v1.png",
-	"hidden": false,
+	"hidden": true,
 	"new": false,
 	"gradientBegin": "#E1F5C4",
 	"gradientEnd": "#2DAAE2",
