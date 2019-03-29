@@ -49,6 +49,8 @@ const ERROR_CODES = {
 
 // }
 
+const phantombusterServerUrl = process.argv[2]
+
 /**
  * @async
  * @internal
@@ -561,7 +563,7 @@ class StoreUtilities {
 		if (timeLeft === -1) {
 			return { timeLeft: false, message: "Script aborted by user." }
 		} else if (timeLeft <= this.minTimeBeforeExit) {
-			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left. You can check your execution time at https://phantombuster.com/usage` }
+			return { timeLeft: false, message: `Less than ${this.minTimeBeforeExit} seconds left. You can check your execution time at ${phantombusterServerUrl}usage` }
 		} else {
 			return { timeLeft: true, message: timeLeft, timeValue: timeLeft }
 		}
@@ -763,7 +765,7 @@ class StoreUtilities {
 	 */
 	async getDb(filename, parseContent = true) {
 		filename = _filterName(filename)
-		const res = await needle("get", `https://phantombuster.com/api/v1/agent/${this.buster.agentId}`, {},
+		const res = await needle("get", `${phantombusterServerUrl}api/v1/agent/${this.buster.agentId}`, {},
 			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } }
 		)
 		const fileMgmt = res.body.data.fileMgmt
@@ -956,13 +958,13 @@ class StoreUtilities {
 	async notifyByMail(){
 		const agentId = this.buster.agentId
 		try {
-			const agentData = await needle("get", `https://phantombuster.com/api/v1/agent/${agentId}`, {},
+			const agentData = await needle("get", `${phantombusterServerUrl}api/v1/agent/${agentId}`, {},
 			{ headers: { "X-Phantombuster-Key-1": this.buster.apiKey } })
 			const agentName = agentData.body.data.name
 			const subject = `${agentName}: Your spreadsheet has been fully processed`
 
 			const text = `Your last launch of ${agentName} has finished processing your input spreadsheet.\n
-						Link: https://phantombuster.com/console/${agentId}`
+						Link: ${phantombusterServerUrl}console/${agentId}`
 			this.log("Notifying by mail...", "loading")
 			await this.buster.mail(subject, text)
 		} catch (err) {

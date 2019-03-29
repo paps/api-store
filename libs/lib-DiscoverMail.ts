@@ -1,5 +1,7 @@
 const needle = require("needle")
 
+const phantombusterServerUrl = process.argv[2]
+
 class DiscoverMail {
 	private apiKey: string
 
@@ -15,7 +17,7 @@ class DiscoverMail {
 				"X-Phantombuster-Key-1": this.apiKey,
 			},
 		}
-		const res = await needle("post", "https://phantombuster.com/api/v1/discover-email", { payload: params }, options)
+		const res = await needle("post", `${phantombusterServerUrl}api/v1/discover-email`, { payload: params }, options)
 		if (res.statusCode === 200) {
 			if (res.body && typeof(res.body) === "object") {
 				return res.body
