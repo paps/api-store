@@ -126,16 +126,21 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		await tab.untilVisible(selectors, 15000, "or")
 		await tab.untilVisible(_selectors.pageWaitAnchor)
 		/**
-		 * Here we're waiting the end of the end of a loading animation
-		 * this animation is a way to wait a bit more to be sure of the end of page loading
+		 * Here we're waiting until the end of spinners loading animation
 		 */
 		try {
 			await tab.waitUntilPresent(_selectors.spinLoading)
 		} catch (e) {
 			//
 		}
-		if (Math.random() > 0.98) {
-			utils.log("Still working...", "info")
+
+		const currentPage = await tab.evaluate((arg, cb) => {
+			const el = $(".mn-invitation-pagination > li.selected")
+			cb(null, el ? el.text().trim() : null)
+		})
+
+		if (Math.random() > 0.5) {
+			utils.log(`Still loading (page ${currentPage})...`, "info")
 		}
 	}
 	try {
