@@ -22,7 +22,8 @@ declare interface IApiParams {
 	spreadsheetUrl: string,
 	columnName?: string,
 	numberOfLinesPerLaunch?: number,
-	maxUsersPerChan?: number
+	maxUsersPerChan?: number,
+	noDatabase?: boolean
 }
 
 declare interface IMutableApiParams {
@@ -36,7 +37,7 @@ declare interface IMutableApiParams {
 	const res = [] as IUnknownObject[]
 	let db: IUnknownObject[] = []
 	const args = utils.validateArguments()
-	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, maxUsersPerChan } = args as IApiParams
+	const { sessionCookie, slackWorkspaceUrl, spreadsheetUrl, columnName, numberOfLinesPerLaunch, maxUsersPerChan, noDatabase } = args as IApiParams
 	let { csvName, queries } = args as IMutableApiParams
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
@@ -46,7 +47,7 @@ declare interface IMutableApiParams {
 	}
 
 	await slack.login(page, slackWorkspaceUrl, sessionCookie)
-	db = await utils.getDb(csvName + ".csv")
+	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
 	if (typeof spreadsheetUrl === "string") {
 		queries = utils.isUrl(spreadsheetUrl) ? await utils.getDataFromCsv2(spreadsheetUrl, columnName) : [ spreadsheetUrl ]
@@ -100,7 +101,7 @@ declare interface IMutableApiParams {
 		utils.log(`${members.length} users scraped in ${query} channel`, "done")
 		res.push(...members)
 	}
-	db.push(...res)
+	db.push(...utils.filterRightOuter(db, res))
 	await page.close()
 	await browser.close()
 	await utils.saveResults(res, db, csvName)
