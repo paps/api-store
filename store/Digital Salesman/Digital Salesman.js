@@ -19,10 +19,6 @@ const LINES = 10
 const COLUMN = "0"
 // }
 
-/**
- * @param {string} url
- * @return {string}
- */
 const fixUrl = url => {
 	const tmp = parse(url)
 
@@ -33,10 +29,6 @@ const fixUrl = url => {
 
 const _config = () => window.intercomSettings
 
-/**
- * @description get the sitemap & exclude the external links
- * @return {string[]} All links
- */
 const getLinks = () => {
 	const tmp = [...document.querySelectorAll("a[href]")].map(el => el.href).filter(el => {
 		try {
@@ -68,10 +60,6 @@ const prepareIntercomMessage = message => {
 	sdk("showNewMessage", message)
 }
 
-/**
- * @param {string} email
- * @description restart the intercom instance with a specific email provided
- */
 const setupIntercom = email => {
 	/* global Intercom, intercomSettings */
 	const sdk = Intercom
@@ -106,13 +94,6 @@ const isIntercomVisible = async (page, url, email = null) => {
 	return true
 }
 
-/**
- * @async
- * @description wait until Intercom("boot") is called & send a message
- * @param {Puppeteer.Page} page
- * @param {string} message
- * @return {Promise<boolean>}
- */
 const sendIntercomMessage = async (page, message) => {
 	utils.log(`Sending message: ${message}`, "info")
 	await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true })
@@ -135,13 +116,6 @@ const sendIntercomMessage = async (page, message) => {
  */
 const isUsingIntercom = () => !!window.Intercom
 
-/**
- * @async
- * @param {Puppeteer.Page} page
- * @param {string} url
- * @param {string} email
- * @return {Promise<boolean>}
- */
 const detectIntercom = async (page, url, email) => {
 	let canGo = await isIntercomVisible(page, url, email)
 	canGo = !!(canGo & await page.evaluate(isUsingIntercom))
@@ -184,11 +158,11 @@ const detectIntercom = async (page, url, email) => {
 			let messagesTags = inflater.getMessageTags(message).filter(el => csvHeaders.includes(el))
 			let columns = [ columnName, ...messagesTags ]
 			rows = utils.extractCsvRows(raw, columns)
-			utils.log(`Got ${rows.length} lines from csv.`, "done")
 		} catch (err) {
 			rows = [{ [columnName]: spreadsheetUrl }]
 		}
 	}
+	utils.log(`Got ${rows.length} lines from csv.`, "done")
 	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.query) < 0).slice(0, profilesPerLaunch)
 	if (rows.length < 1) {
 		utils.log("Input is empty OR every message were send", "warning")
@@ -219,13 +193,8 @@ const detectIntercom = async (page, url, email) => {
 					throw `Can't find a way to send a message on ${query[columnName]}`
 				}
 				canGo = false
-				let i = 0
 				for (const url of alternativeLinks) {
-					const timeLeft = await utils.checkTimeLeft()
-					if (!timeLeft.timeLeft) {
-						break
-					}
-					console.log(`(${++i})`,"Trying:", url)
+					console.log("Trying:", url)
 					if (await detectIntercom(page, url, email)) {
 						break
 					}
@@ -239,7 +208,7 @@ const detectIntercom = async (page, url, email) => {
 						throw `Can't find a way to send a message on ${page.url()}`
 					}
 				} else {
-					throw `Can't find a way to send a message on ${query[columnName]} even after ${i} tries`
+					throw `Can't find a way to send a message on ${query[columnName]} even after ${alternativeLinks.length} tries`
 				}
 			}
 		} catch (err) {
@@ -252,7 +221,7 @@ const detectIntercom = async (page, url, email) => {
 	await page.close()
 	await browser.close()
 	db.push(...utils.filterRightOuter(db, res))
-	await utils.saveResults(res, db, csvName, null, false)
+	utils.saveResults(res, db, csvName, null, false)
 	process.exit()
 })()
 .catch(err => {
