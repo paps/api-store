@@ -432,7 +432,11 @@ const login = async (page: puppeteer.Page, csid: string, sid: string): Promise<v
 		}
 
 		const toSend = inflater.forgeMessage(message, bundle)
-		await buster.mail("Your Uber invoices are ready!", toSend, mail)
+		try {
+			await buster.mail("Your Uber invoices are ready!", toSend, mail)
+		} catch (err) {
+			utils.log(`Can't send email to ${mail} due to: ${err.message || err}`, "warning")
+		}
 	}
 	process.exit()
 })()
