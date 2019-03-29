@@ -25,6 +25,32 @@
 		'lib-WebSearch-DEV.js': 'libs/DEV/lib-WebSearch-DEV.js'
 
 
+		# Global libs
+		# -----------
+		'lib-api-store.js': 'libs/lib-api-store.js'
+		'lib-chrome-launcher.js': 'libs/lib-chrome-launcher.js'
+		'lib-DiscoverMail.js': 'libs/lib-DiscoverMail.js'
+		'lib-Dropcontact.js': 'libs/lib-Dropcontact.js'
+		'lib-Facebook.js': 'libs/lib-Facebook.js'
+		'lib-GitHub.js': 'libs/lib-GitHub.js'
+		'lib-Google.js': 'libs/lib-Google.js'
+		'lib-Hunter.js': 'libs/lib-Hunter.js'
+		'lib-Instagram.js': 'libs/lib-Instagram.js'
+		'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
+		'lib-LinkedInScraper.js': 'libs/lib-LinkedInScraper.js'
+		'lib-Medium.js': 'libs/lib-Medium.js'
+		'lib-Messaging.js': 'libs/lib-Messaging.js'
+		'lib-Nick-beta.coffee': 'libs/lib-Nick-beta.coffee'
+		'lib-PhongoLab-beta.coffee': 'libs/lib-PhongoLab-beta.coffee'
+		'lib-ProductHunt.js': 'libs/lib-ProductHunt.js'
+		'lib-request-beta.coffee': 'libs/lib-request-beta.coffee'
+		'lib-Slack.js': 'libs/lib-Slack.js'
+		'lib-StoreUtilities.js': 'libs/lib-StoreUtilities.js'
+		'lib-Twitter.js': 'libs/lib-Twitter.js'
+		'lib-WebSearch.js': 'libs/lib-WebSearch.js'
+		'lib-Youtube.js': 'libs/lib-Youtube.js'
+
+
 		# API store DEV
 		# -------------
 		'AngelList Market Companies Extractor DEV.js': 'store/DEV/AngelList Market Companies Extractor DEV/AngelList Market Companies Extractor DEV.js'
