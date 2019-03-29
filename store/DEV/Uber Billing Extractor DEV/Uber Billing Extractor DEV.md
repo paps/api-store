@@ -8,7 +8,7 @@ Set up this API once and **fix the Uber bill issue once and for all**.
 
 # What will you need? ⚙️ 
 
-**Your Uber session cookie**. To get it, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
+**Your Uber session cookies**. To get these, make sure our browser extension is loaded. You can get it for [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/).
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
