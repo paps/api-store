@@ -45,10 +45,17 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 }
 
 const getActivityUrl = (url, onlyScrapePosts) => {
-	if (!url.endsWith("/")) {
-		url += "/"
+	let returnedUrl = url
+	try {
+		const urlObject = new URL(url)
+		returnedUrl = urlObject.hostname + urlObject.pathname
+	} catch (err) {
+		//
 	}
-	let returnedUrl = url + "detail/recent-activity/"
+	if (!returnedUrl.endsWith("/")) {
+		returnedUrl += "/"
+	}
+	returnedUrl = returnedUrl += "detail/recent-activity/"
 	if (onlyScrapePosts) {
 		returnedUrl += "shares/"
 	}
@@ -214,6 +221,8 @@ const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, on
 	const selector = ".pv-recent-activity-detail__feed-container"
 
 	const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
+	console.log("converted:", activityUrl)
+
 	await tab.open(activityUrl)
 	await tab.waitUntilPresent(".pv-recent-activity-detail__outlet-container", 15000)
 	if (await tab.isPresent("div.no-content")) {

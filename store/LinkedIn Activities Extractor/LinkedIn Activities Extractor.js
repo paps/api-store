@@ -45,10 +45,17 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 }
 
 const getActivityUrl = (url, onlyScrapePosts) => {
-	if (!url.endsWith("/")) {
-		url += "/"
+	let returnedUrl = url
+	try {
+		const urlObject = new URL(url)
+		returnedUrl = urlObject.hostname + urlObject.pathname
+	} catch (err) {
+		//
 	}
-	let returnedUrl = url + "detail/recent-activity/"
+	if (!returnedUrl.endsWith("/")) {
+		returnedUrl += "/"
+	}
+	returnedUrl = returnedUrl += "detail/recent-activity/"
 	if (onlyScrapePosts) {
 		returnedUrl += "shares/"
 	}
