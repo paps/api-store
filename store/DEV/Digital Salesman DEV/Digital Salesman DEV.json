@@ -1,7 +1,7 @@
 {
 	"slug": "digital-salesman",
 	"description": "Automatically send messages to Facebook profiles",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Message+Sender/Facebook+Message+Sender.png",
+	"image": "",
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
 	"argumentDescription": "",
@@ -14,10 +14,8 @@
 		"csvName": "result"
 	},
 	"outputDescription": {
-		"name": "Full name",
-		"firstName": "",
-		"lastName": "",
-		"message": "The message you sent"
+		"message": "The message you sent",
+		"error": "Reported error while sending the a message"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -50,6 +48,10 @@
 						"label": "Number of lines to process per launch - Maximum 10  <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					},
+					"triesPerDomain": {
+						"label": "Max number of pages to visit per domains (default: all)",
+						"inputType": "number"
+					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
@@ -77,6 +79,10 @@
 				"type": "string"
 			},
 			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"triesPerDomain": {
 				"type": "number",
 				"minimum": 1
 			},

@@ -76,6 +76,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 		"withdrawElement": ".mn-invitation-list li:last-child input[type=checkbox]",
 		"withdrawBtn": ".mn-list-toolbar button",
 		"withdrawSuccess": "div.artdeco-toast.artdeco-toast--success",
+		"alternativeWidthrawSuccess": ".artdeco-toast-item.artdeco-toast-item--visible li-icon[type=\"success-pebble-icon\"]",
 		"pageWaitAnchor": ".mn-list-toolbar label",
 		"navigation": ".mn-invitation-pagination li:last-child a",
 		"spinLoading": "span.loader",
@@ -170,7 +171,7 @@ const hasReachedOldestInvitations = (arg, cb) => {
 				await tab.wait(200)
 				await tab.click(_selectors.withdrawBtn)
 				await tab.wait(1000)
-				await tab.untilVisible(_selectors.withdrawSuccess, 7500)
+				await tab.untilVisible([_selectors.withdrawSuccess, _selectors.alternativeWidthrawSuccess], 7500, "or")
 			} catch (err) {
 				utils.log("Can't select a invitation to withdraw / can't withdraw selected elements, abort", "warning")
 				break
