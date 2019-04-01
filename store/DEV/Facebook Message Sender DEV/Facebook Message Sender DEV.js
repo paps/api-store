@@ -59,6 +59,9 @@ const openChatPage = async (tab, profileUrl, message) => {
 	} else {
 		slug = urlObject.pathname
 	}
+	if (slug && slug.endsWith("/about/")) { // handling /about/ ending URLs
+		slug = slug.replace("/about/", "")
+	}
 	const chatUrl = `https://www.facebook.com/messages/t${slug}`
 	await tab.open(chatUrl)
 	await tab.waitUntilVisible("#content")
@@ -72,6 +75,7 @@ const openChatPage = async (tab, profileUrl, message) => {
 	try {
 		const name = await tab.evaluate(getNameFromChat)
 		if (!name) {
+			console.log("current:",await tab.getUrl())
 			throw "Name not accessible"
 		}
 		const names = facebook.getFirstAndLastName(name)
@@ -110,9 +114,9 @@ const sendMessage = async (tab, message) => {
 		await tab.sendKeys(".notranslate", line)
 	}
 	await tab.wait(3000)
-	utils.log(`Sending message : ${message}`, "done")
+	utils.log(`Not Sending message : ${message}`, "done")
 	try {
-		await tab.click("#content div[role=presentation] ul + a")
+		// await tab.click("#content div[role=presentation] ul + a")
 	} catch (err) {
 		throw "Send button not available!"
 	}

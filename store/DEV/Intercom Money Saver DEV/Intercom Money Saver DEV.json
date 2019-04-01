@@ -73,12 +73,10 @@
 				"default": "lastSeen"
 			},
 			"lastSeen": {
-				"type": "string",
-				"maxLength": 50
+				"type": "number"
 			},
 			"segmentUrl": {
-				"type": "string",
-				"maxLength": 50
+				"type": "string"
 			},
 			"csvName": {
 				"type": "string",

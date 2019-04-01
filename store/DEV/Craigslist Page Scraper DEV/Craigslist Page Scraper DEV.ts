@@ -37,9 +37,9 @@ const scrapeProfile = (): IEvalAny => {
 	const camelCaser = (str: string) => {
 		const stringArray = str.toLowerCase().split(" ")
 		for (let i = 1; i < stringArray.length; i++) {
-		if (stringArray[i]) {
-			stringArray[i] = stringArray[i].charAt(0).toUpperCase() + stringArray[i].substr(1)
-		}
+			if (stringArray[i]) {
+				stringArray[i] = stringArray[i].charAt(0).toUpperCase() + stringArray[i].substr(1)
+			}
 		}
 		str = stringArray.join("")
 		return str

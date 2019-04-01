@@ -63,7 +63,7 @@ const openProfile = async (page: puppeteer.Page, query: string, action: string) 
 			utils.log(`Error opening ${query}, it doesn't seem to be a Product Hunt post URL.`, "error")
 			payload.error = "Not a Product Hunt post URL"
 		} else {
-			if (page.$("img[alt=\"page not found\"]")) {
+			if (await page.$("img[alt=\"page not found\"]")) {
 				utils.log(`Error opening ${query}, this page doesn't exist.`, "error")
 				payload.error = "Page doesn't exist"
 			} else {

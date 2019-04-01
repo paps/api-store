@@ -310,7 +310,7 @@ class LinkedIn {
 			let sel
 			try {
 				await page.waitForSelector("#nav-tools-user, form#login")
-				if (page.$("#nav-tools-user")) {
+				if (await page.$("#nav-tools-user")) {
 					sel = "#nav-tools-user"
 				} else {
 					sel = "form#login"

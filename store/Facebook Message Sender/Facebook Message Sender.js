@@ -58,6 +58,9 @@ const openChatPage = async (tab, profileUrl, message) => {
 	} else {
 		slug = urlObject.pathname
 	}
+	if (slug && slug.endsWith("/about/")) { // handling /about/ ending URLs
+		slug = slug.replace("/about/", "")
+	}
 	const chatUrl = `https://www.facebook.com/messages/t${slug}`
 	await tab.open(chatUrl)
 	await tab.waitUntilVisible("#content")
