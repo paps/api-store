@@ -31,7 +31,7 @@ const fixUrl = url => {
 	return tmp.href
 }
 
-const _config = () => window.intercomSettings
+const hasSettings = () => !!window.intercomSettings
 
 /**
  * @description get the sitemap & exclude the external links
@@ -70,18 +70,21 @@ const prepareIntercomMessage = message => {
 
 /**
  * @param {string} email
- * @description restart the intercom instance with a specific email provided
+ * @description update the intercom instance with a specific email provided
  */
 const setupIntercom = email => {
-	/* global Intercom, intercomSettings */
+	/* global Intercom */
 	const sdk = Intercom
-	const config = intercomSettings
+	const config = window.intercomSettings
 
+	if (!config) {
+		return
+	}
 	if (email) {
 		config.email = email
 	}
-	sdk("shutdown")
-	sdk("boot", Object.assign({}, intercomSettings, config))
+	sdk("update", Object.assign({}, window.intercomSettings, config))
+	return
 }
 
 /**
@@ -122,7 +125,6 @@ const sendIntercomMessage = async (page, message) => {
 	if (frame) {
 		await frame.waitForSelector("button.intercom-composer-send-button")
 		await page.waitFor(5000)
-		console.log(await page.evaluate(_config))
 		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 		// await frame.click("button.intercom-composer-send-button")
 		return true
@@ -145,15 +147,55 @@ const isUsingIntercom = () => !!window.Intercom
 const detectIntercom = async (page, url, email) => {
 	let canGo = await isIntercomVisible(page, url, email)
 	canGo = !!(canGo & await page.evaluate(isUsingIntercom))
-	await page.screenshot({ path: `loader-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
+	// await page.screenshot({ path: `loader-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	return canGo
+}
+
+const crawl = async (page, urls, triesPerDomain, toSend, email) => {
+	if (urls.length < 1) {
+		throw "Can't find a way to send a message"
+	}
+	let canGo = false
+	let i = 0
+	let len = urls.length
+
+	if (typeof triesPerDomain === "number") {
+		urls = urls.slice(0, triesPerDomain)
+	}
+
+	for (i = 0, len = urls.length; i < len; i++) {
+		const url = urls[i]
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			break
+		}
+		console.log(`(${i + 1})`,"Trying:", url)
+		if ((canGo = await detectIntercom(page, url, email))) {
+			break
+		}
+	}
+	if (canGo) {
+		const isUser = await page.evaluate(hasSettings)
+		if (!isUser) {
+			toSend += ` (${email})`
+		}
+		const hasSend = await sendIntercomMessage(page, toSend, email)
+		if (hasSend) {
+			utils.log(`Message sent at ${page.url()} (after ${i} tries)`, "info")
+			return
+		} else {
+			throw `Can't find a way to send a message on ${page.url()}`
+		}
+	} else {
+		throw `Can't find a way to send a message even after ${i} tries`
+	}
 }
 
 // Main function to launch all the others in the good order and handle some errors
 ;(async () => {
 	let db = []
 	const res = []
-	let { spreadsheetUrl, columnName, message, email, profilesPerLaunch, csvName, queries } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, message, email, profilesPerLaunch, triesPerDomain, csvName, queries } = utils.validateArguments()
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
@@ -164,11 +206,9 @@ const detectIntercom = async (page, url, email) => {
 		utils.log("No message found!", "warning")
 		process.exit(1)
 	}
-
 	if (!columnName) {
 		columnName = COLUMN
 	}
-
 	if (typeof profilesPerLaunch !== "number") {
 		profilesPerLaunch = LINES
 	}
@@ -202,9 +242,13 @@ const detectIntercom = async (page, url, email) => {
 			break
 		}
 		try {
-			const toSend = inflater.forgeMessage(message, query)
+			let toSend = inflater.forgeMessage(message, query)
 			let canGo = await detectIntercom(page, query[columnName], email)
 			if (canGo) {
+				const isUser = await page.evaluate(hasSettings)
+				if (!isUser) {
+					toSend += ` (${email})`
+				}
 				const hasSend = await sendIntercomMessage(page, toSend, email)
 				if (hasSend) {
 					utils.log(`Message sent at ${query[columnName]}`, "info")
@@ -213,34 +257,11 @@ const detectIntercom = async (page, url, email) => {
 					throw `Can't find a way to send a message on ${query[columnName]}`
 				}
 			} else {
-				const alternativeLinks = await page.evaluate(getLinks)
-				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${alternativeLinks.length} alternative links`, "info")
-				if (alternativeLinks.length < 1) {
-					throw `Can't find a way to send a message on ${query[columnName]}`
-				}
-				canGo = false
-				let i = 0
-				for (const url of alternativeLinks) {
-					const timeLeft = await utils.checkTimeLeft()
-					if (!timeLeft.timeLeft) {
-						break
-					}
-					console.log(`(${++i})`,"Trying:", url)
-					if (await detectIntercom(page, url, email)) {
-						break
-					}
-				}
-				if (canGo) {
-					const hasSend = await sendIntercomMessage(page, toSend, email)
-					if (hasSend) {
-						utils.log(`Message sent at ${page.url()}`, "info")
-						res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
-					} else {
-						throw `Can't find a way to send a message on ${page.url()}`
-					}
-				} else {
-					throw `Can't find a way to send a message on ${query[columnName]} even after ${i} tries`
-				}
+				await buster.saveText(await page.content(), `err-${Date.now()}.html`)
+				const urls = await page.evaluate(getLinks)
+				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${triesPerDomain || urls.length} alternative links`, "info")
+				await crawl(page, urls, triesPerDomain, toSend, email)
+				res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
 			}
 		} catch (err) {
 			await page.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", quality: 100, fullPage: true })
