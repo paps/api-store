@@ -131,7 +131,7 @@ const extractDataFromJson = (json, query) => {
 }
 
 // get the like count and username of poster
-const getCommentCountAndUsername = async (postUrl) => {
+const getCommentCountAndUsername = async (postUrl, query) => {
 	const jsonTab = await nick.newTab()
 	const jsonUrl = `${postUrl}?__a=1`
 	await jsonTab.open(jsonUrl)
@@ -146,7 +146,7 @@ const getCommentCountAndUsername = async (postUrl) => {
 	} else if (postData.edge_media_to_parent_comment) {
 		totalCommentCount = postData.edge_media_to_parent_comment.count
 	}
-	const [ results, endCursor ] = extractDataFromJson(instagramJsonCode.graphql, postUrl)
+	const [ results, endCursor ] = extractDataFromJson(instagramJsonCode.graphql, query)
 	return [ totalCommentCount, username, results, endCursor ]
 }
 
@@ -207,7 +207,7 @@ const loadAndScrapeComments = async (tab, query, numberOfComments, resuming) => 
 	const postUrl = urlObject.hostname + urlObject.pathname
 	let endCursor
 	try {
-		[ totalCommentCount, username, results, endCursor ] = await getCommentCountAndUsername(postUrl)
+		[ totalCommentCount, username, results, endCursor ] = await getCommentCountAndUsername(postUrl, query)
 	} catch (err) {
 		return ({ query, error: "Couln't access first comments", timestamp: (new Date()).toISOString() })
 	}
