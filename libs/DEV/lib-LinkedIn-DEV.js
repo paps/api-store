@@ -39,7 +39,7 @@ class LinkedIn {
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_INVALID_COOKIE)
 		}
 		if (cookie === "your_session_cookie") {
-			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration.", "error")
+			this.utils.log("You didn't enter your LinkedIn session cookie into the API Configuration. Please check how to copy-paste your cookie at https://intercom.help/phantombuster/help-home/cookies-copy-pasting", "error")
 			this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_DEFAULT_COOKIE)
 		}
 		if (cookie.indexOf("from-global-object:") === 0) {

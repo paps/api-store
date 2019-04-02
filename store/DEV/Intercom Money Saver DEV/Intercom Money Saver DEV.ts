@@ -22,6 +22,31 @@ const intercom = new Intercom(buster, utils)
 const DB_NAME = "result"
 // }
 
+const craftCsv = (json: IUnknownObject) => {
+	let craftedCsv = {} as IUnknownObject
+	if (json) {
+		if (json.archivedUsers) {
+			craftedCsv.archivedUsers = json.archivedUsers
+		}
+		if (json.totalCount) {
+			craftedCsv.totalCount = json.totalCount
+		}
+		const subscription = json.subscription as IUnknownObject[]
+		if (subscription) {
+			for (let i = 0; i < subscription.length; i++) {
+				if (subscription[i].product) {
+					craftedCsv["product" + (i + 1)] = subscription[i].product
+					craftedCsv["price" + (i + 1)] = subscription[i].price
+				}
+				if (subscription[i].usage) {
+					craftedCsv["usage" + (i + 1)] = subscription[i].usage
+				}
+			}
+		}
+		craftedCsv.timestamp = json.timestamp
+	}
+	return craftedCsv
+}
 
 const getBilling = async (page: puppeteer.Page, id: string) => {
 	const billingUrl = `https://app.intercom.io/a/apps/${id}/billing/details`
@@ -34,11 +59,11 @@ const getBilling = async (page: puppeteer.Page, id: string) => {
 		console.log("bill", billingResult)
 		if (totalCount) {
 			utils.log(`Total count is ${totalCount}`, "done")
-			return totalCount
 		}
+		return billingResult
 	} else {
 		utils.log("It seems this account doesn't have access to the Billing Page.", "warning")
-		return null
+		return {}
 	}
 
 }
@@ -47,7 +72,7 @@ const scrapeBilling = () => {
 	const billingObject = {} as IUnknownObject
 	const tableSelector = document.querySelector("table.settings__billing__subscription__table")
 	if (tableSelector) {
-		billingObject.table = Array.from(tableSelector.querySelectorAll("tbody tr")).map(el => {
+		billingObject.subscription = Array.from(tableSelector.querySelectorAll("tbody tr")).map(el => {
 			const returnedObject = {} as IUnknownObject
 			// const camelCaser = (str: string) => {
 			// 	const stringArray = str.toLowerCase().split(" ")
@@ -63,7 +88,7 @@ const scrapeBilling = () => {
 			const usageSelector = el.querySelector("td .settings__billing__details-price-comparison .t__h4")
 			const priceSelector = el.querySelector("td.t__right span")
 			if (productSelector && productSelector.textContent && priceSelector && priceSelector.textContent) {
-				const product = productSelector.textContent
+				const product = productSelector.textContent.replace("  ", " ").trim()
 				const price = parseFloat(priceSelector.textContent.replace(/\$/g, ""))
 				returnedObject.product = product
 				returnedObject.price = price
@@ -78,9 +103,37 @@ const scrapeBilling = () => {
 	}
 	const totalSelector = document.querySelector(".settings__billing__total.t__right")
 	if (totalSelector && totalSelector.textContent) {
-		billingObject.totalCount = totalSelector.textContent.trim()
+		billingObject.totalCount = parseFloat(totalSelector.textContent.replace(/\$/g, ""))
 	}
+	billingObject.timestamp = (new Date()).toISOString()
 	return billingObject
+}
+
+const exportUsers = async (page: puppeteer.Page) => {
+	await page.click(".test__bulk-actions-dropdown")
+	await page.waitForSelector(".test__bulk-export-button")
+	await page.click(".test__bulk-export-button")
+	await page.waitForSelector("button.o__primary")
+	const buttonContent = await page.evaluate(() => {
+		const buttonSelector = document.querySelector("button.o__primary")
+		if (buttonSelector && buttonSelector.textContent) {
+			return buttonSelector.textContent.trim()
+		} else {
+			return null
+		}
+	})
+	if (buttonContent) {
+		utils.log(`Click to ${buttonContent}`, "done")
+	}
+	await page.click("button.o__primary")
+}
+
+const archiveUsers = async (page: puppeteer.Page) => {
+	await page.click(".test__bulk-actions-dropdown")
+	await page.waitForSelector(".test__bulk-delete-button")
+	await page.click(".test__bulk-delete-button")
+	await page.waitForSelector(".o__primary-destructive")
+	await page.click(".o__primary-destructive")
 }
 
 const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSeen: number, segmentUrl: string) => {
@@ -110,45 +163,26 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 			if (matchesSelector && matchesSelector.textContent) {
 				return matchesSelector.textContent.split(" ").map(el => el.replace(/\n/g, " ").trim()).filter(el => el).join(" ")
 			} else {
-				return null
+				return ""
 			}
-		})
+		}) as string
 		if (matches) {
 			utils.log(`Got ${matches}`, "done")
-		}
-		try {
-			await page.click(".test__bulk-actions-dropdown")
-			await page.waitForSelector(".test__bulk-export-button")
-			await page.click(".test__bulk-export-button")
-			await page.waitForSelector("button.o__primary")
-			const buttonContent = await page.evaluate(() => {
-				const buttonSelector = document.querySelector("button.o__primary")
-				if (buttonSelector && buttonSelector.textContent) {
-					return buttonSelector.textContent.trim()
-				} else {
-					return null
-				}
-			})
-			if (buttonContent) {
-				utils.log(`Click to ${buttonContent}`, "done")
-			}
-			await page.click("button.o__primary")
-			await page.waitFor(5000)
 			try {
-				await page.click(".test__bulk-actions-dropdown")
-				await page.waitForSelector(".test__bulk-delete-button")
-				await page.click(".test__bulk-delete-button")
-				await page.waitForSelector(".o__primary-destructive")
-				await page.click(".o__primary-destructive")
-				utils.log(`${matches} successfully archived.`)
+				// await exportUsers(page)
+				// await page.waitFor(5000)
+				try {
+					// await archiveUsers(page)
+					utils.log(`${matches} successfully archived.`, "done")
+					return parseInt(matches.replace(/[.,]/g, ""), 10)
+				} catch (err) {
+					utils.log(`Fail to archive: ${err}`)
+				}
 			} catch (err) {
-				utils.log(`Fail to archive: ${err}`)
+				utils.log(`Fail to export: ${err}`)
 			}
-		} catch (err) {
-			utils.log(`Fail to export: ${err}`)
 		}
-
-
+		return null
 	}
 }
 
@@ -165,22 +199,28 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		_csvName = DB_NAME
 	}
 	await intercom.login(page, _sessionCookie)
+	const results = await utils.getDb(_csvName + ".csv")
+	console.log("results:", results)
 	const currentUrl = page.url()
 	let id = ""
 	if (currentUrl.startsWith("https://app.intercom.io/a/apps/")) {
 		id = currentUrl.slice(31)
 		id = id.slice(0, id.indexOf("/"))
 	}
-	let billingCount
+	let billingCount = {} as IUnknownObject
 	try{
 		billingCount = await getBilling(page, id)
+		console.log("bC:", billingCount)
 	} catch (err) {
 		console.log("errBilling:", err)
 	}
 	await page.screenshot({ path: `${Date.now()}billing.jpg`, type: "jpeg", quality: 50 })
 	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}billing.html`)
 	try {
-		await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
+		const archivedUsers = await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
+		if(archiveUsers) {
+			billingCount.archivedUsers = archivedUsers
+		}
 	} catch (err) {
 		console.log("usererr:", err)
 	}
@@ -189,10 +229,11 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	// console.log("segment:", _segmentUrl)
 	await page.screenshot({ path: `0F.jpg`, type: "jpeg", quality: 50 })
 	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}users.html`)
-	process.exit()
-
-	let result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
-
+	if (billingCount) {
+		const craftedCsv = craftCsv(billingCount)
+		results.push(craftedCsv)
+		await utils.saveResults([billingCount], results, _csvName)
+	}
 	process.exit()
 })()
 .catch((err) => {
