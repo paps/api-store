@@ -72,7 +72,7 @@ const _downloadCsv = url => {
 
 			const parsedRequestURL = new URL(url)
 			if (parsedRequestURL.host.indexOf("docs.google.com") > -1 && hasRedirection) {
-				reject("Could not download csv, maybe csv is not public")
+				reject("Could not download csv, maybe csv is not public. Please check how to make it accessible at https://intercom.help/phantombuster/help-home/spreadsheet-not-accessible")
 			}
 			if (resp && resp.statusCode >= 400) {
 				reject(`${url} is not available, HTTP code: ${resp ? resp.statusCode : "can't get status code"}`)
