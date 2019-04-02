@@ -62,19 +62,19 @@ const checkGroup = async (tab, groupUrl) => {
 		const groupName = await tab.evaluate(getGroupName)
 		if (selector === selectors[2] || selector === selectors[5]) { // Case 2 - Valid group but the account isn't part of it
 			utils.log(`You are not part of ${groupName ? `group ${groupName}` : "this group"} -- Can't get members list`, "error")
-			nick.exit(1)
+			return false
 		}
 		if (selector === selectors[3]) { // Case 3 - Not a valid group
 			utils.log("This page doesn't exist, please check the url", "error")
-			nick.exit(1)
+			return false
 		}
 		if (selector === selectors[4]) { // Case 4 - Group request still not accepted
 			utils.log(`Group request ${groupName ? `for group ${groupName}` : ""} still not accepted -- Can't get members list`, "error")
-			nick.exit(1)
+			return false
 		}
 	} catch (error) { // Case 3 - Not a valid group
 		utils.log("This url isn't a valid group, please check the url", "error")
-		nick.exit(1)
+		return false
 	}
 
 }
@@ -264,7 +264,10 @@ const getGroupNameFromMemberPage = (arg, cb) => {
 		if (!timeLeft.timeLeft) {
 			break
 		}
-		await checkGroup(tab, query)
+		if (!await checkGroup(tab, query)) {
+			members.push({ query, error: "not a valid group URL", timestamp: (new Date()).toISOString() })
+			continue
+		}
 		try {
 			const res = await getMembers(tab, query, numberOfMembersPerGroup)
 			members.push(...res)

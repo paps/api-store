@@ -217,6 +217,10 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		csvName = DB_NAME
 	}
 
+	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
+	const page = await browser.newPage()
+	await twitter.login(page, sessionCookie)
+
 	if (typeof numberOfAddsPerLaunch !== "number") {
 		numberOfAddsPerLaunch = DEF_LINES
 	}
@@ -251,9 +255,6 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 	}
 	utils.log(`Adding ${queries.length} twitter profile${ queries.length === 1 ? "" : "s" }: ${JSON.stringify(queries, null, 2)}`, "info")
 
-	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
-	const page = await browser.newPage()
-	await twitter.login(page, sessionCookie)
 	let i = 0
 	for (const one of queries) {
 		let errMsg = null
