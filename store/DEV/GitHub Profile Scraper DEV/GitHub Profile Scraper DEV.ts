@@ -33,7 +33,7 @@ declare interface IMutableApiParams {
 
 const isGithubUrl = (url: string): boolean => {
 	try {
-		return (new URL(url)).hostname === "github.com"
+		return (new URL(url)).hostname.includes("github.com")
 	} catch (err) {
 		return false
 	}
