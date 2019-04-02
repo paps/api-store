@@ -466,7 +466,7 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			utils.log("Couldn't read total results count", "info")
 		}
 	} catch (err) {
-		await tab.wait(10000)
+		await tab.wait(15000)
 		const currentUrl = await tab.getUrl()
 		if (currentUrl === "https://www.linkedin.com/feed/") {
 			utils.log("It seems you don't have a Sales Navigator Account...", "error")
@@ -587,6 +587,7 @@ const isLinkedInSearchURL = (url) => {
 		}
 	}
 	utils.log(`Search : ${JSON.stringify(searches.slice(0, 100), null, 2)}`, "done")
+	let currentResult = []
 	for (const search of searches) {
 		if (search) {
 			let searchUrl = ""
@@ -618,18 +619,23 @@ const isLinkedInSearchURL = (url) => {
 					let somethingAdded = false
 					for (let i = 0; i < tempResult.length; i++) {
 						if ((tempResult[i].vmid && !result.find(el => el.vmid === tempResult[i].vmid)) || (tempResult[i].companyId && !result.find(el => el.companyId === tempResult[i].companyId))) {
+							currentResult.push(tempResult[i])
 							result.push(tempResult[i])
 							somethingAdded = true
 						}
 					}
 					if (!somethingAdded) {
 						if (tempResult[0] && tempResult[0].error === "No result found") {
+							currentResult = currentResult.concat(tempResult)
 							result = result.concat(tempResult)
 						} else {
-							result.push({ query: search, timestamp: (new Date()).toISOString(), error: "No new profile added" })
+							const noProfile = { query: search, timestamp: (new Date()).toISOString(), error: "No new profile added" }
+							currentResult.push(noProfile)
+							result.push(noProfile)
 						}
 					}
 				} else {
+					currentResult = currentResult.concat(tempResult)
 					result = result.concat(tempResult)
 				}
 			} catch (err) {
@@ -645,8 +651,8 @@ const isLinkedInSearchURL = (url) => {
 		}
 	}
 	const profilesFoundCount = result.filter(el => !el.error).length
-	utils.log(`${profilesFoundCount} profiles found.`, "done")
-	await utils.saveResults(result, result, csvName)
+	utils.log(`${profilesFoundCount} profiles found in total.`, "done")
+	await utils.saveResults(currentResult, result, csvName)
 	await linkedIn.updateCookie()
 	nick.exit(0)
 })()
