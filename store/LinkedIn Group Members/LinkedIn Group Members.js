@@ -246,6 +246,8 @@ const getGroupNameFromMemberPage = (arg, cb) => {
 
 	const isSingleURL = isLinkedInURL(groupUrl)
 	let queries = isSingleURL ? [ groupUrl ] : await utils.getDataFromCsv2(groupUrl, columnName)
+	queries = queries.filter(el => el)
+	queries = [...new Set(queries)]
 	const db = await utils.getDb(csvName + ".csv")
 
 	if (!isSingleURL) {
