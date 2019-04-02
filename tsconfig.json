@@ -45,6 +45,7 @@
 		"rootDirs": [
 			"libs/DEV",
 			"libs",
+			"store/Intercom Auto Archiver",
 			"store/Craigslist Page Scraper",
 			"store/Instagram Auto Commenter",
 			"store/Product Hunt Auto Follow",

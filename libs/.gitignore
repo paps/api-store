@@ -1,4 +1,5 @@
 lib-api-store.js
+lib-Intercom.js
 lib-DiscoverMail.js
 lib-Slack.js
 lib-ProductHunt.js

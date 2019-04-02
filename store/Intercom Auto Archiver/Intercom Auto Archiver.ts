@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js, lib-Intercom-DEV.js"
+"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js, lib-Intercom.js"
 "phantombuster flags: save-folder"
 
 const { URL } = require("url")
@@ -10,13 +10,12 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, IEvalAny } from "./lib-api-store"
 
-import StoreUtilities from "./lib-StoreUtilities-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
 
 const utils = new StoreUtilities(buster)
-import Intercom from "./lib-Intercom-DEV"
-import { privateDecrypt } from "crypto";
+import Intercom from "./lib-Intercom"
 const intercom = new Intercom(buster, utils)
 
 const DB_NAME = "result"

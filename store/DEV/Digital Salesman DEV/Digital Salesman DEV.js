@@ -31,7 +31,7 @@ const fixUrl = url => {
 	return tmp.href
 }
 
-const hasSettings = () => !!window.intercomSettings
+const hasSettings = () => !!window.intercomSettings && !!window.intercomSettings.email
 
 /**
  * @description get the sitemap & exclude the external links
@@ -39,6 +39,8 @@ const hasSettings = () => !!window.intercomSettings
  */
 const getLinks = () => {
 	const tmp = [...document.querySelectorAll("a[href]")].map(el => el.href).filter(el => {
+		if (el.endsWith("#"))
+			return false
 		try {
 			const tmp = new URL(el)
 			// Prevent mailto: / tel:
@@ -105,6 +107,13 @@ const isIntercomVisible = async (page, url, email = null) => {
 	}
 	if (email) {
 		await page.evaluate(setupIntercom, email)
+		await page.waitForResponse("https://api-iam.intercom.io/messenger/web/ping")
+		try {
+			await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true, timeout: 7500 })
+		} catch (err) {
+			// Don't set the email, if the intercom has identity verification
+			await isIntercomVisible(page, url)
+		}
 	}
 	return true
 }
@@ -243,6 +252,7 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		}
 		try {
 			let toSend = inflater.forgeMessage(message, query)
+			utils.log(`Opening ${query[columnName]}`, "info")
 			let canGo = await detectIntercom(page, query[columnName], email)
 			if (canGo) {
 				const isUser = await page.evaluate(hasSettings)
