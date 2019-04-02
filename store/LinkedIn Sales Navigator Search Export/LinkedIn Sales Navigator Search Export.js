@@ -425,6 +425,9 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 						throw "Couldn't access results page"
 					}
 				}
+				if (currentUrl === "https://www.linkedin.com/sales/contract-chooser") {
+					throw "LinkedIn asks to choose a Sales Navigator team"
+				}
 			}
 		} else if (selector === ".generic-error > p.error-message") {
 			throw "LinkedIn is experiencing technical difficulties."

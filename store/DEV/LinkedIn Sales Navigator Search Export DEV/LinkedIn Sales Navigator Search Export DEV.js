@@ -423,14 +423,33 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 					// await tab.evaluate((arg, cb) => {
 					// 	Array.from(document.querySelectorAll("article.contract-chooser ul > li")).filter(el => el.textContent.includes("Navigator Professional"))[0].querySelector("button").click()
 					// })
-					await tab.click("article.contract-chooser ul > li:last-of-type > button")
+					for (let i = 0; i < 1; i++) {
+						await tab.click("article.contract-chooser ul > li > button")
+						await tab.wait(5000)
+						const currentUrl = await tab.getUrl()
+						if (currentUrl.includes("/sales/contract-chooser")) {
+							console.log("still contracted")
+							await tab.screenshot(`${Date.now()}still.png`)
+							await buster.saveText(await tab.getContent(), `${Date.now()}still.html`)
+							// await tab.evaluate((arg, cb) => cb(null, document.querySelector("article.contract-chooser ul > li:last-of-type > button").click()))
+						} else {
+							break
+						}
+					}
 				} catch (err) {
 					console.log("erclki", err)
 					await tab.click("article.contract-chooser ul > li > button")
 				}
-				await tab.wait(10000)
+				await tab.wait(5000)
 				const currentUrl = await tab.getUrl()
 				console.log("current:", await tab.getUrl())
+				if (currentUrl.includes("/sales/contract-chooser")) {
+					await tab.open(searchUrl)
+					console.log("openon")
+					await tab.wait(10000)
+					await tab.screenshot(`${Date.now()}opnpon.png`)
+					await buster.saveText(await tab.getContent(), `${Date.now()}opnpon.html`)
+				}
 				await tab.screenshot(`${Date.now()}mino.png`)
 				await buster.saveText(await tab.getContent(), `${Date.now()}mino.html`)
 				if (currentUrl === "https://www.linkedin.com/sales/home" || await tab.isVisible(".usage-reporting-top-bar")) {
@@ -442,6 +461,9 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 					} catch (err) {
 						throw "Couldn't access results page"
 					}
+				}
+				if (currentUrl === "https://www.linkedin.com/sales/contract-chooser") {
+					throw "LinkedIn asks to choose a Sales Navigator team"
 				}
 			}
 		} else if (selector === ".generic-error > p.error-message") {

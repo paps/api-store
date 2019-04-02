@@ -73,8 +73,7 @@
 				"minLength": 15
 			},
 			"spreadsheetUrl": {
-				"type": "string",
-				"required": true
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"
