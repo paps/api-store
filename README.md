@@ -10,3 +10,4 @@ Useful links:
  - https://nickjs.org/ - our open source scraping library using Headless Chrome or CasperJS/PhantomJS
  - https://github.com/phantombuster/nickjs - the NickJS GitHub repo
  - https://hub.phantombuster.com/docs/scraping-quick-start - to get started very quickly with Web scraping
+ - https://github.com/phantombuster/web-browser-extension - Makes Phantombuster easier to use by automatically retrieving your session cookies
