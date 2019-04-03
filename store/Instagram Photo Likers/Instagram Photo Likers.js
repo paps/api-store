@@ -144,7 +144,8 @@ const getLikeCountAndUsername = async (postUrl) => {
 	const postData = instagramJsonCode.graphql.shortcode_media
 	const username = postData.owner.username
 	const likeCount = postData.edge_media_preview_like.count
-	return [ likeCount, username ]
+	const isVideo = postData.is_video
+	return [ likeCount, username, isVideo ]
 }
 
 // check if we're scraping a video (non-clickable Like Count)
@@ -197,11 +198,16 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 	}
 	let username
 	let likeCount
+	let isVideo
 	try {
-		[ likeCount, username ] = await getLikeCountAndUsername(photoUrl)
+		[ likeCount, username, isVideo ] = await getLikeCountAndUsername(photoUrl)
+		if (isVideo) {
+			utils.log("Instagram Photo Likers is for pictures, it can't extract likers from a video.", "warning")
+			return ({ postUrl, error: "Can't extract likers from a video", timestamp: (new Date()).toISOString() })
+		}
 		if (likeCount === 0) {
 			utils.log("No likers found for this post.", "warning")
-			return ({ photoUrl, error: "No likers found"})
+			return ({ photoUrl, error: "No likers found", timestamp: (new Date()).toISOString() })
 		}
 		utils.log(`${likeCount} likers found for this post ${username ? "by " + username : ""}.`, "info")
 	} catch (err) {
@@ -228,7 +234,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		}
 		if (!graphqlUrl) {
 			utils.log("Can't access likers list.", "warning")
-			return ({ photoUrl, timestamp: (new Date()).toISOString(), error: "Can't access likers list"})
+			return ({ photoUrl, error: "Can't access likers list", timestamp: (new Date()).toISOString() })
 		}
 	}
 	let results = []

@@ -1,15 +1,16 @@
-# Extract likers from Instagram posts
+# Extract likers from Instagram photos
 
 You noticed one or multiple Instagram pictures and felt that people liking those are your niche audience? Great!
 
 Our tool will scroll down for you those pictures and get each liker's information. Once it's done, you'll receive a list of all their profiles neatly arranged in one spreadsheet.
+Note that this API doesn't work on Instagram videos, only pictures.
 
 # What will you need? ⚙️
 
 - **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram posts URLs in it.
-- **Number of likers per post**: The number of likers you want to collect per post. If left empty, the API will scrape all likers.
-- **Number of posts per launch**: The number of posts to process per API launch.
+- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram photos URLs in it.
+- **Number of likers per post**: The number of likers you want to collect per photo. If left empty, the API will scrape all likers.
+- **Number of posts per launch**: The number of photos to process per API launch.
 
 _(**You already have all that?**  Click straight away on **"Use this API"**)_
 
@@ -60,12 +61,12 @@ Below your session cookie you’ll find _Spreadsheet URL_.
 Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
 <center>![](https://phantombuster.imgix.net/api-store/Instagram_Profile_Scrapper/inst_prfl_scrrpr_spreadsheet.png)</center>
 
-Your spreadsheet should contain a list of Instagram Posts URLs (**one link per row**).
-You can specify the name of the column that contains the post links. Simply enter the column name in the next text field.
+Your spreadsheet should contain a list of Instagram Photos URLs (**one link per row**).
+You can specify the name of the column that contains the photo links. Simply enter the column name in the next text field.
 
 **Please make sure your file is publicly accessible!**
 
-You can also enter a single Instagram post URL directly in the field.
+You can also enter a single Instagram photo URL directly in the field.
 
 
 
