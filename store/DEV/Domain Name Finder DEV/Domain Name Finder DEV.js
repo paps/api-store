@@ -152,6 +152,31 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	}
 }
 
+/**
+ * @param {string[]} csv
+ * @param {string[]} db
+ * @param {number} count
+ * @return {string[]}
+ */
+const getInputs = (csv, db, count) => {
+	const res = []
+	let rowCount = 0
+
+	const tmp = db.map(el => el.query ? el.query.toLowerCase() : "")
+	for (const line of csv) {
+		if (line) {
+			const found = tmp.indexOf(line.toLowerCase())
+			if (found < 0) {
+				res.push(line)
+				rowCount++
+				if (rowCount === count)
+					break
+			}
+		}
+	}
+	return res
+}
+
 // Main function to launch everything and handle errors
 ;(async () => {
 	let {spreadsheetUrl, companies, columnName, blacklist, numberOfLinesPerLaunch, csvName} = utils.validateArguments()
@@ -170,8 +195,7 @@ const getDomainName = async (webSearch, tab, query, blacklist) => {
 	 * We need to lowercase all inputs to check if there were already scraped,
 	 * since getDomainName return the query in lowercase
 	 */
-	companies = companies.filter(el => el && db.findIndex(line => line.query.toLowerCase() === el.toLowerCase()) < 0)
-							.slice(0, numberOfLinesPerLaunch)
+	companies = getInputs(companies, db, numberOfLinesPerLaunch)
 	if (companies.length < 1) {
 		utils.log("Input is empty OR all queries are already scraped", "warning")
 		nick.exit(0)
