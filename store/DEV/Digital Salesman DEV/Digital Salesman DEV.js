@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Messaging.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -133,9 +132,8 @@ const sendIntercomMessage = async (page, message) => {
 	const frame = page.frames().find(frame => frame.name() === "intercom-messenger-frame")
 	if (frame) {
 		await frame.waitForSelector("button.intercom-composer-send-button")
-		await page.waitFor(5000)
-		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
-		// await frame.click("button.intercom-composer-send-button")
+		await frame.click("button.intercom-composer-send-button")
+		await page.waitForResponse("https://api-iam.intercom.io/messenger/web/messages")
 		return true
 	}
 	return false
@@ -156,10 +154,18 @@ const isUsingIntercom = () => !!window.Intercom
 const detectIntercom = async (page, url, email) => {
 	let canGo = await isIntercomVisible(page, url, email)
 	canGo = !!(canGo & await page.evaluate(isUsingIntercom))
-	// await page.screenshot({ path: `loader-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	return canGo
 }
 
+/**
+ * @async
+ * @param {Puppeteer.Page} page
+ * @param {string[]} urls
+ * @param {number} triesPerDomain
+ * @param {string} toSend - message to send in chat
+ * @param {string|null} email
+ * @return {Promise<number>} 0 means successful setup / 1 Identity verification detected
+ */
 const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 	if (urls.length < 1) {
 		throw "Can't find a way to send a message"
@@ -186,12 +192,12 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 	if (canGo) {
 		const isUser = await page.evaluate(hasSettings)
 		if (!isUser) {
-			toSend += ` (${email})`
+			toSend += `\n(${email})`
 		}
 		const hasSend = await sendIntercomMessage(page, toSend, email)
 		if (hasSend) {
 			utils.log(`Message sent at ${page.url()} (after ${i} tries)`, "info")
-			return
+			return isUser
 		} else {
 			throw `Can't find a way to send a message on ${page.url()}`
 		}
@@ -257,24 +263,23 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 			if (canGo) {
 				const isUser = await page.evaluate(hasSettings)
 				if (!isUser) {
-					toSend += ` (${email})`
+					toSend += `\n(${email})`
 				}
 				const hasSend = await sendIntercomMessage(page, toSend, email)
 				if (hasSend) {
 					utils.log(`Message sent at ${query[columnName]}`, "info")
-					res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
+					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url() })
 				} else {
 					throw `Can't find a way to send a message on ${query[columnName]}`
 				}
 			} else {
-				await buster.saveText(await page.content(), `err-${Date.now()}.html`)
 				const urls = await page.evaluate(getLinks)
 				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${triesPerDomain || urls.length} alternative links`, "info")
-				await crawl(page, urls, triesPerDomain, toSend, email)
-				res.push(Object.assign({}, { message: toSend, query: query[columnName], timestamp: (new Date()).toISOString() }, query))
+				const fullySetup = await crawl(page, urls, triesPerDomain, toSend, email)
+				const status = fullySetup ? "success" : "email sent in the text message"
+				res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
 			}
 		} catch (err) {
-			await page.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", quality: 100, fullPage: true })
 			const error = err.message || err
 			res.push({ error, query: query[columnName], timestamp: (new Date()).toISOString() })
 			utils.log(error, "warning")
@@ -283,7 +288,7 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 	await page.close()
 	await browser.close()
 	db.push(...utils.filterRightOuter(db, res))
-	await utils.saveResults(res, db, csvName, null, false)
+	await utils.saveResults(res, db, csvName, null, true)
 	process.exit()
 })()
 .catch(err => {

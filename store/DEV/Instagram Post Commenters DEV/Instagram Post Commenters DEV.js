@@ -83,7 +83,7 @@ const onHttpRequest = (e) => {
 const forgeNewUrl = (url, endCursor) => {
 	let newUrl
 	if (endCursor) {
-		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent(`first":50,"after":"${endCursor.replace(/\"/g, "\\\"")}"}`).replace(/ /g, "+")
+		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent(`first":50,"after":"${endCursor.replace(/"/g, "\\\"")}"}`).replace(/ /g, "+")
 	} else {
 		newUrl = url.slice(0, url.indexOf("first")) + encodeURIComponent("first\":50") + encodeURIComponent("}")
 	}
