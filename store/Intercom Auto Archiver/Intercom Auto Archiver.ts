@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js, lib-Intercom.js"
-"phantombuster flags: save-folder"
 
 const { URL } = require("url")
 
@@ -16,9 +15,11 @@ import StoreUtilities from "./lib-StoreUtilities"
 
 const utils = new StoreUtilities(buster)
 import Intercom from "./lib-Intercom"
+import { privateDecrypt } from "crypto";
 const intercom = new Intercom(buster, utils)
 
 const DB_NAME = "result"
+let endWithError = 0
 // }
 
 const craftCsv = (json: IUnknownObject) => {
@@ -55,14 +56,13 @@ const getBilling = async (page: puppeteer.Page, id: string) => {
 	if (await page.$(".settings__billing__total")) {
 		const billingResult = await page.evaluate(scrapeBilling) as IUnknownObject
 		const totalCount = billingResult.totalCount
-		console.log("bill", billingResult)
 		if (totalCount) {
 			utils.log(`Total count is ${totalCount}`, "done")
 		}
 		return billingResult
 	} else {
 		utils.log("It seems this account doesn't have access to the Billing Page.", "warning")
-		return {}
+		return { subscription: "No access to Billing Page" }
 	}
 
 }
@@ -73,16 +73,6 @@ const scrapeBilling = () => {
 	if (tableSelector) {
 		billingObject.subscription = Array.from(tableSelector.querySelectorAll("tbody tr")).map(el => {
 			const returnedObject = {} as IUnknownObject
-			// const camelCaser = (str: string) => {
-			// 	const stringArray = str.toLowerCase().split(" ")
-			// 	for (let i = 1; i < stringArray.length; i++) {
-			// 		if (stringArray[i]) {
-			// 			stringArray[i] = stringArray[i].charAt(0).toUpperCase() + stringArray[i].substr(1)
-			// 		}
-			// 	}
-			// 	str = stringArray.join("")
-			// 	return str
-			// }
 			const productSelector = el.querySelector("[data-product-summary-row] .t__h4")
 			const usageSelector = el.querySelector("td .settings__billing__details-price-comparison .t__h4")
 			const priceSelector = el.querySelector("td.t__right span")
@@ -104,7 +94,6 @@ const scrapeBilling = () => {
 	if (totalSelector && totalSelector.textContent) {
 		billingObject.totalCount = parseFloat(totalSelector.textContent.replace(/\$/g, ""))
 	}
-	billingObject.timestamp = (new Date()).toISOString()
 	return billingObject
 }
 
@@ -125,6 +114,28 @@ const exportUsers = async (page: puppeteer.Page) => {
 		utils.log(`Click to ${buttonContent}`, "done")
 	}
 	await page.click("button.o__primary")
+	await checkConfirmation(page)
+}
+
+const checkConfirmation = async (page: puppeteer.Page) => {
+	try {
+		await page.waitForSelector(".notification__list .layout__media__ext")
+		const confirmationMessage = await page.evaluate(() => {
+			const confirmationSelector = document.querySelector(".notification__list .layout__media__ext")
+			if (confirmationSelector && confirmationSelector.textContent) {
+				return confirmationSelector.textContent.trim()
+			} else {
+				return null
+			}
+		})
+		if (confirmationMessage) {
+			utils.log(`Got Confirmation Message: ${confirmationMessage}`, "done")
+			return
+		}
+	} catch (err) {
+		//
+	}
+	utils.log("Couldn't get Confirmation Message!", "warning")
 }
 
 const archiveUsers = async (page: puppeteer.Page) => {
@@ -133,6 +144,7 @@ const archiveUsers = async (page: puppeteer.Page) => {
 	await page.click(".test__bulk-delete-button")
 	await page.waitForSelector(".o__primary-destructive")
 	await page.click(".o__primary-destructive")
+	await checkConfirmation(page)
 }
 
 const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSeen: number, segmentUrl: string) => {
@@ -140,10 +152,29 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		const segment = Buffer.from(`{"predicates":[{"attribute":"last_request_at","comparison":"lt","type":"date","value":"${lastSeen}"},{"attribute":"role","comparison":"eq","type":"role","value":"user_role"}]}`).toString("base64")
 		segmentUrl = `https://app.intercom.io/a/apps/${id}/users/segments/active:${segment}`
 	}
-	// console.log("userUrls:", segmentUrl)
-	// usersUrl = `https://app.intercom.io/a/apps/${id}/users/segments/active`
-	await page.goto(segmentUrl)
-	await page.waitForSelector(".user-list__header")
+	try {
+		await page.goto(segmentUrl)
+		await page.waitForSelector(".user-list__header, h1.boot-error__heading")
+		if (await page.$("h1.boot-error__heading")) {
+			if (filter === "segment") {
+				utils.log("Invalid segment URL!", "error")
+			}  else {
+				utils.log("Error loading Intercom page...", "error")				
+			}
+			endWithError = 1
+			return null
+		}
+	} catch (err) {
+		const currentUrl = page.url()
+		const urlObject = new URL(currentUrl)
+		if (urlObject.hostname.includes("intercom")) {
+			utils.log("Intercom isn't loading correctly...", "error")				
+		} else {
+			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")				
+		}
+		endWithError = 1
+		return null
+	}
 	const filters = await page.evaluate(() => Array.from(document.querySelectorAll(".filter-block__container")).map(el => {
 		if (el && el.textContent) {
 			return el.textContent.trim().split("\n").map(el => el.trim()).filter(el => el).join(" ")
@@ -168,10 +199,10 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		if (matches) {
 			utils.log(`Got ${matches}`, "done")
 			try {
-				// await exportUsers(page)
-				// await page.waitFor(5000)
+				await exportUsers(page)
+				await page.waitFor(5000)
 				try {
-					// await archiveUsers(page)
+					await archiveUsers(page)
 					utils.log(`${matches} successfully archived.`, "done")
 					return parseInt(matches.replace(/[.,]/g, ""), 10)
 				} catch (err) {
@@ -199,7 +230,6 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	}
 	await intercom.login(page, _sessionCookie)
 	const results = await utils.getDb(_csvName + ".csv")
-	console.log("results:", results)
 	const currentUrl = page.url()
 	let id = ""
 	if (currentUrl.startsWith("https://app.intercom.io/a/apps/")) {
@@ -209,31 +239,24 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	let billingCount = {} as IUnknownObject
 	try{
 		billingCount = await getBilling(page, id)
-		console.log("bC:", billingCount)
 	} catch (err) {
-		console.log("errBilling:", err)
+		//
 	}
-	await page.screenshot({ path: `${Date.now()}billing.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}billing.html`)
+	billingCount.timestamp = (new Date()).toISOString()
 	try {
 		const archivedUsers = await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
-		if(archiveUsers) {
+		if(archivedUsers) {
 			billingCount.archivedUsers = archivedUsers
 		}
 	} catch (err) {
-		console.log("usererr:", err)
+		//
 	}
-	// console.log("filter:", _filter)
-	// console.log("lastseen:", _lastSeen)
-	// console.log("segment:", _segmentUrl)
-	await page.screenshot({ path: `0F.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}users.html`)
 	if (billingCount) {
 		const craftedCsv = craftCsv(billingCount)
 		results.push(craftedCsv)
 		await utils.saveResults([billingCount], results, _csvName)
 	}
-	process.exit()
+	process.exit(endWithError)
 })()
 .catch((err) => {
 	utils.log(`API execution error: ${err.message || err}`, "error")

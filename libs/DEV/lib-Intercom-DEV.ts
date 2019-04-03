@@ -12,15 +12,14 @@ class Intercom {
 		this.utils = utils
 	}
 
-	// url is optional (will open Facebook feed by default)
 	public async login(page: Pupeppeteer.Page, sessionCookie: string) {
 		if ((typeof(sessionCookie) !== "string") || (sessionCookie.trim().length <= 0)) {
-			this.utils.log("Invalid ProductHunt session cookie. Did you specify one?", "error")
-			process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_BAD_COOKIE)
+			this.utils.log("Invalid Intercom session cookie. Did you specify one?", "error")
+			process.exit(this.utils.ERROR_CODES.INTERCOM_BAD_COOKIE)
 		}
-		if (sessionCookie === "your__producthunt_session_production_cookie") {
-			this.utils.log("You didn't enter your ProductHunt session cookie into the API Configuration.", "error")
-			process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_DEFAULT_COOKIE)
+		if (sessionCookie === "_intercom_session_cookie") {
+			this.utils.log("You didn't enter your Intercom session cookie into the API Configuration.", "error")
+			process.exit(this.utils.ERROR_CODES.INTERCOM_DEFAULT_COOKIE)
 		}
 
 		if (sessionCookie.indexOf("from-global-object:") === 0) {
@@ -47,31 +46,8 @@ class Intercom {
 				await page.goto("https://app.intercom.io", { timeout: 30000, waitUntil: "load" })
 			} catch (err) {
 				console.log("err:", err)
-				// await tab.screenshot(`timeout${new Date()}.png`)
-				// await this.buster.saveText(await tab.getContent(), `timeout${Date.now()}.html`)
-				// console.log("open2", err)
 				return "Timeout"
 			}
-			// const SELECTORS = {
-			// 	LOGGED: "a[data-test=\"user-menu\"]",
-			// 	UNLOGGED: "a[href=\"/login\"]",
-			// }
-			// let sel: Pupeppeteer.JSHandle
-			// try {
-			// 	sel = await Promise.race([ page.waitForSelector(SELECTORS.LOGGED), page.waitForSelector(SELECTORS.UNLOGGED)])
-			// 	console.log("sel:", sel)
-			// } catch (e) {
-			// 	return e.toString()
-			// }
-			// const name = await page.evaluate(() => {
-			// 	const el = document.querySelector("a[data-test=\"user-menu\"] > div > img")
-			// 	return el ? el.getAttribute("alt") : null
-			// })
-			// if ((typeof(name) === "string") && (name.length > 0)) {
-			// 	this.utils.log(`Connected successfully as ${name}`, "done")
-			// 	return null
-			// }
-			// }
 			await page.waitFor(5000)
 			await page.hover(".packaging__nav__person__image__avatar-wrapper")
 			await page.waitFor(2000)
@@ -131,7 +107,7 @@ class Intercom {
 			this.utils.log(`Can't connect to Intercom with these session cookies:${error}`, "error")
 			await page.screenshot({ path: `${Date.now()}err-login-.jpg`, type: "jpeg", quality: 50 })
 			await this.buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}scree.html`)
-			process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_BAD_COOKIE)
+			process.exit(this.utils.ERROR_CODES.INTERCOM_BAD_COOKIE)
 		}
 	}
 

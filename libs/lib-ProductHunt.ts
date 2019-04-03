@@ -18,7 +18,7 @@ class ProductHunt {
 			this.utils.log("Invalid ProductHunt session cookie. Did you specify one?", "error")
 			process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_BAD_COOKIE)
 		}
-		if (sessionCookie === "your__producthunt_session_production_cookie") {
+		if (sessionCookie === "_producthunt_session_production_cookie") {
 			this.utils.log("You didn't enter your ProductHunt session cookie into the API Configuration.", "error")
 			process.exit(this.utils.ERROR_CODES.PRODUCTHUNT_DEFAULT_COOKIE)
 		}

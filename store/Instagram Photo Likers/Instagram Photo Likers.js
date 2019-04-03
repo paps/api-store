@@ -203,7 +203,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		[ likeCount, username, isVideo ] = await getLikeCountAndUsername(photoUrl)
 		if (isVideo) {
 			utils.log("Instagram Photo Likers is for pictures, it can't extract likers from a video.", "warning")
-			return ({ postUrl, error: "Can't extract likers from a video", timestamp: (new Date()).toISOString() })
+			return ({ photoUrl, error: "Can't extract likers from a video", timestamp: (new Date()).toISOString() })
 		}
 		if (likeCount === 0) {
 			utils.log("No likers found for this post.", "warning")

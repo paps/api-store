@@ -1,7 +1,7 @@
 {
-	"slug": "product-hunt-auto-follow",
-	"description": "Automatically follow a list of Product Hunt makers in one click",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Money+Saver/Intercom+Money+Saver+(1).png",
+	"slug": "intercom-auto-archiver",
+	"description": "",
+	"image": "",
 	"argumentDescription": "",
 	"gradientBegin": "#61B5FF",
 	"gradientEnd": "#BADFFF",
@@ -9,7 +9,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "_intercom_session",
+		"sessionCookie": "_intercom_session_cookie",
 		"filter": "lastSeen",
 		"lastSeen": 30,
 		"spreadsheetUrl": ""
@@ -29,7 +29,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Intercom session cookie <a href=\"/api-store/12214/product-hunt-auto-follow#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_argument\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your '_intercom_session' session cookie here"
 					},
 					"filter": {
