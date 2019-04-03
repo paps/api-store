@@ -5,12 +5,25 @@
 	"argumentDescription": "",
 	"gradientBegin": "#562D87",
 	"gradientEnd": "#7846B4",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html",
 		"numberOfLinesPerLaunch": 10
+	},
+	"outputDescription": {
+		"title": "Ads title",
+		"postDate": "Publishing date",
+		"email": "Authors' email address",
+		"phoneNumber": "Authors' phone number",
+		"imgUrl": "Ads' images URL",
+		"content": "Text content of the ad",
+		"notices": "Additional notices",
+		"category": "Category",
+		"pageUrl": "URL of the Ad",
+		"query": "The URL you gave as an input",
+		"timestamp": "Date of extraction of the above info"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

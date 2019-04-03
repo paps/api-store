@@ -4,8 +4,8 @@ Craigslist is one of the oldest and biggest websites on the Internet. Despite ha
 
 This API will extract **every piece of public information** out of a list of Craigslist pages: From all the written data to potential email addresses and phone numbers.
 
-# What will you need? ⚙️
-- **"Craigslist page or Spreadsheet URL"**: Choose a specific Craigslist page profile such as `https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html` or choose an **open** spreadsheet url with a list of Product Hunt profile URL's.
+# What will you need? ☑️
+**"Craigslist page or Spreadsheet URL"**: Choose a specific Craigslist page profile such as `https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html` or choose an **open** spreadsheet url with a list of Product Hunt profile URL's.
 
 # Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
@@ -32,7 +32,7 @@ In the 1st argument field **"`Craigslist page or Spreadsheet URL`"** you have to
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+# Repetition setup ⚙️ { repetition_setup }
 
 You're all set! Launch the API manually by saving then clicking on `Launch`. 
 
