@@ -235,8 +235,16 @@ const scrapeCommenters = (arg, cb) => {
 	for (const url of postUrl) {
 		utils.log(`Opening ${url} ...`, "loading")
 		try {
+			const sels = [ ".comment", "div.initial-load-animation li-icon[type=\"linkedin-bug\"]" ]
 			await tab.open(url)
-			await tab.waitUntilVisible(".comment", 15000)
+			const sel = await tab.waitUntilVisible(sels, 15000, "or")
+			if (sel === sels[1]) {
+				const err = `Can't get comments, ${url} doesn't exist`
+				utils.log(err, "warning")
+				db.push({ postUrl: url, error: err, timestamp: (new Date()).toISOString() })
+				continue
+			}
+
 		} catch (err) {
 			const error = `Can't open properly ${url} due to : ${err.message || err}`
 			utils.log(error, "warning")
@@ -252,7 +260,6 @@ const scrapeCommenters = (arg, cb) => {
 			db.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: `No commenters found in at ${url}` })
 			continue
 		}
-
 		if (!gl.search || !gl.search.updateId) {
 			// This situation happens when there are less than 10 commenters in the post
 			if (triggered) {
@@ -281,7 +288,7 @@ const scrapeCommenters = (arg, cb) => {
 		voyagerHeadersFound = false
 		db.push(...utils.filterRightOuter(db, commenters))
 	}
-	await linkedIn.saveCookie()
+	await linkedIn.updateCookie()
 	await utils.saveResult(db, csvName)
 })()
 	.catch(err => {

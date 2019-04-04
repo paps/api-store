@@ -49,7 +49,6 @@ const callComments = (arg, callback) => {
  */
 const commentToCsv = element => {
 	const newComment = {}
-	console.log("element:", element)
 	if (element.commenter && element.commenter["com.linkedin.voyager.feed.MemberActor"] && element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile) {
 		newComment.profileLink = `https://linkedin.com/in/${element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.publicIdentifier}`
 		newComment.firstName = element.commenter["com.linkedin.voyager.feed.MemberActor"].miniProfile.firstName
@@ -70,7 +69,6 @@ const commentToCsv = element => {
 const linkedinObjectToResult = response => {
 	const res = []
 	if (response.elements) {
-		console.log("response.elements:", response.elements)
 		for (const element of response.elements) {
 			if (element.socialDetail && element.socialDetail.comments) {
 				if (Array.isArray(element.socialDetail.comments.elements)) {
@@ -237,8 +235,16 @@ const scrapeCommenters = (arg, cb) => {
 	for (const url of postUrl) {
 		utils.log(`Opening ${url} ...`, "loading")
 		try {
+			const sels = [ ".comment", "div.initial-load-animation li-icon[type=\"linkedin-bug\"]" ]
 			await tab.open(url)
-			await tab.waitUntilVisible(".comment", 15000)
+			const sel = await tab.waitUntilVisible(sels, 15000, "or")
+			if (sel === sels[1]) {
+				const err = `Can't get comments, ${url} doesn't exist`
+				utils.log(err, "warning")
+				db.push({ postUrl: url, error: err, timestamp: (new Date()).toISOString() })
+				continue
+			}
+
 		} catch (err) {
 			const error = `Can't open properly ${url} due to : ${err.message || err}`
 			utils.log(error, "warning")
@@ -254,7 +260,6 @@ const scrapeCommenters = (arg, cb) => {
 			db.push({ postUrl: url, timestamp: (new Date()).toISOString(), error: `No commenters found in at ${url}` })
 			continue
 		}
-		console.log("past")
 		if (!gl.search || !gl.search.updateId) {
 			// This situation happens when there are less than 10 commenters in the post
 			if (triggered) {
@@ -264,7 +269,6 @@ const scrapeCommenters = (arg, cb) => {
 					el.timestamp = (new Date()).toISOString()
 				})
 				utils.log(`Got ${commenters.length} comments.`, "done")
-				console.log("comment:", commenters)
 				db.push(...utils.filterRightOuter(db, commenters))
 				continue
 			} else {
@@ -275,7 +279,6 @@ const scrapeCommenters = (arg, cb) => {
 			}
 		}
 		const response = await tab.evaluate(callComments, {url: gl.url, search: gl.search, headers: gl.headers})
-		console.log("response", response)
 		let commenters = await getAllComments(tab, gl.headers, gl.search, parseInt(response.paging.total, 10))
 		commenters.map(el => {
 			el.postUrl = url
