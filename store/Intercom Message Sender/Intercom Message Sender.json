@@ -1,0 +1,123 @@
+{
+	"slug": "intercom-message-sender",
+	"description": "Automatically send messages to Facebook profiles",
+	"image": "",
+	"gradientBegin": "#32C1F1",
+	"gradientEnd": "#5477BC",
+	"argumentDescription": "",
+	"hidden": true,
+	"new": false,
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"spreadsheetUrl": "https://phantombuster.com",
+		"message": "Hey #firstName#,\n\nBest regards",
+		"csvName": "result"
+	},
+	"outputDescription": {
+		"message": "The message you sent",
+		"error": "Reported error while sending the a message"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"label": "Website URL / Spreadsheet <a href=\"/api-store/8852/facebook-message-sender#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either a website URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						]
+					},
+					"columnName": {
+						"label": "Column name from which to get websites URLs <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
+						"placeholder": "Website URLs",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"message": {
+						"label": "Message <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
+						"type": "textarea",
+						"helper": "Use #test# to insert the test value from your CSV file <a href=\"/api-store/\", target=\"_blank\">Other tags are available.</a>"
+					},
+					"email": {
+						"label": "Email",
+						"helper": "Your email to give to the website"
+					},
+					"profilesPerLaunch": {
+						"label": "Number of lines to process per launch - Maximum 10  <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					},
+					"triesPerDomain": {
+						"label": "Max number of pages to visit per domains (default: all)",
+						"inputType": "number"
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 1000,
+				"minLength": 1
+			},
+			"email": {
+				"type": "string"
+			},
+			"profilesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"triesPerDomain": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
