@@ -38,7 +38,8 @@ class GitHub {
 			const sel = "summary.HeaderNavlink img.avatar"
 			isNick ?  await _nickOpen(page as Nick.Tab, url) : await _pptrOpen(page as Puppeteer.Page, url)
 			isNick ? await (page as Nick.Tab).waitUntilVisible(sel, 15000) : await (page as Puppeteer.Page).waitForSelector(sel, { timeout: 15000 })
-			const name = await page.evaluate((arg: IEvalAny, cb: IEvalAny) => {
+			// @ts-ignore
+			const name = await page.evaluate((arg, cb) => {
 				const el = document.querySelector("summary div.select-menu-button-gravatar ~ span")
 				const val = el !== null && el.textContent ? el.textContent.trim() : null
 				return typeof cb === "function" ? cb(null, val) : val
