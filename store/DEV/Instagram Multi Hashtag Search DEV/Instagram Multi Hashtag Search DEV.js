@@ -1,10 +1,9 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js, lib-WebSearch.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
+"phantombuster flags: save-folder"
 
-const url = require("url")
-const { URL } = require("url")
 const Buster = require("phantombuster")
 const buster = new Buster()
 
@@ -21,94 +20,74 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
+
 const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
-const WebSearch = require("./lib-WebSearch")
+let graphqlUrl
+let headers
+let lastHashtag
+let allCollected
+let alreadyScraped
+let nextUrl
+let rateLimited
+let agentObject
+let totalHashtagsCount
+let isLocation = false
 
-let graphql = null
-let hashWasFound = false
-let rateLimited = false
 /* global $ */
+
 // }
 
-const ajaxCall = (arg, cb) => $.get({ type: "GET", url: arg.url, headers: arg.headers }).done(data => cb(null, data)).fail(err => cb(err.message || err))
 
-/**
- * @description Tiny function used to check if a given string represents an URL
- * @param {String} target
- * @return { Boolean } true if target represents an URL otherwise false
- */
-const isUrl = target => url.parse(target).hostname !== null
-
-
-/**
- * @description The function will return every posts that match one more search terms
- * @param {Array} results scraped posts
- * @param {Array} terms the search terms
- * @param {Array} leastTerm the search term of the scraped posts
- * @return {Array} Array containing only posts which matches with one or more search terms
- */
-const filterResults = (results, terms, leastTerm) => {
-	let filterResult = []
-	const regex = /#[a-zA-Z0-9\u00C0-\u024F]+/gu
-	for (const term of terms) {
-		if (term !== leastTerm) {
-			for (const result of results) {
-				if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
-					result.matches = `${leastTerm} AND ${term}`
-					filterResult.push(result)
-				}
-			}
-		}
+const ajaxCall = (arg, cb) => {
+	try {
+		$.ajax({
+			url: arg.url,
+			type: "GET",
+			headers: arg.headers
+		})
+		.done(res => {
+			cb(null, res)
+		})
+		.fail(err => {
+			cb(err.toString())
+		})
+	} catch (err) {
+		cb(err)
 	}
-	return filterResult
 }
 
-// get the post count from a given hashtag. If there's only few of them (<40), return 40
-const getPostCount = (arg, callback) => {
-	let postCount = 0
-	if (document.querySelector("header > div:last-of-type span")) {
-		postCount = document.querySelector("header > div:last-of-type span").textContent
-		postCount = parseInt(postCount.replace(/,/g, ""), 10)
-	} else {
-		if (document.querySelector("article header ~ div h2 ~ div")) {
-			postCount += document.querySelector("article header ~ div h2 ~ div").querySelectorAll("div > div > div > div > div[class]").length
-		}
-		if (document.querySelector("article header ~ h2 ~ div:not([class])")) {
-			postCount += document.querySelector("article header ~ h2 ~ div:not([class])").querySelectorAll("div > div > div > div").length
-		}
+const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
+	data = data.filter((item, pos) => data.indexOf(item) === pos)
+	const maxLength = data.length
+	if (!numberOfLinesPerLaunch) {
+		numberOfLinesPerLaunch = maxLength
 	}
-	callback(null, postCount)
+	if (maxLength === 0) {
+		utils.log("Input spreadsheet is empty OR we already scraped all the profiles from this spreadsheet.", "warning")
+		nick.exit()
+	}
+	return data.slice(0, Math.min(numberOfLinesPerLaunch, maxLength)) // return the first elements
 }
 
-const interceptGraphQLHash = e => {
-	if (e.request.url.indexOf("graphql/query/?query_hash") > -1 && e.request.url.includes("after") && !hashWasFound) {
-		graphql = {}
-		graphql.headers = e.request.headers
-		const parsedUrl = new URL(e.request.url)
-		graphql.hash = parsedUrl.searchParams.get("query_hash")
-		graphql.variables = JSON.parse(parsedUrl.searchParams.get("variables"))
-		hashWasFound = true
+const interceptInstagramApiCalls = e => {
+	if (e.response.url.includes("graphql/query/?query_hash") && e.response.status === 200 && e.response.url.includes("show_ranked")) {
+		graphqlUrl = e.response.url
 	}
-
+	if (isLocation && e.response.url.includes("graphql/query/?query_hash")) {
+		graphqlUrl = e.response.url
+	}
 }
 
-const forgeAjaxURL = () => {
-	const url = new URL("https://www.instagram.com/graphql/query/?query_hash&variables")
-	url.searchParams.set("query_hash", graphql.hash)
-	url.searchParams.set("variables", JSON.stringify(graphql.variables))
-	return url.toString()
+const onHttpRequest = (e) => {
+	if (e.request.url.indexOf("graphql/query/?query_hash") && e.request.url.includes("show_ranked")) {
+		headers = e.request.headers
+	}
 }
 
-// Removes any duplicate post
-const removeDuplicates = (arr) => {
-	let resultArray = []
-	for (let i = 0; i < arr.length ; i++) {
-		if (!resultArray.find(el => el.postUrl === arr[i].postUrl)) {
-			resultArray.push(arr[i])
-		}
-	}
-	return resultArray
+const forgeNewUrl = (endCursor) => {
+	const newUrl = graphqlUrl.slice(0, graphqlUrl.indexOf("first")) + encodeURIComponent("first\":50,\"after\":\"") + endCursor + encodeURIComponent("\"}")
+	return newUrl
 }
 
 const scrapeFirstResults = (arg, cb) => {
@@ -122,283 +101,383 @@ const scrapeFirstResults = (arg, cb) => {
 	cb(null, scrapedHashtags)
 }
 
-const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
-	for (let i = 0; i < firstResultsLength; i++) {
-		if (results[i].postUrl) {
-			try {
-				await tab.open(results[i].postUrl)
-				const scrapedData = await instagram.scrapePost2(tab, query)
-				results[i] = scrapedData
-			} catch (err) {
-				//
-			}
-		}
-		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
-	}
-	return results
-}
-
-
-const scrapeFirstPage = async (tab, query) => {
-	hashWasFound = false
-	const initDate = new Date()
-	do {
-		await tab.wait(1000)
-		await tab.scroll(0, - 1000)
-		await tab.scrollToBottom()
-		if (new Date() - initDate > 10000) {
-			break
-		}
-	} while (!graphql)
-	let data = await tab.evaluate(scrapeFirstResults, { query })
-	const newlyScraped = data.length
-	const postTab = await nick.newTab()
-	data = await extractFirstPosts(postTab, data, newlyScraped, query)
-	await postTab.close()
-	return data
-}
-
-/**
-	* @async
-	* @description
-	* @param {Object} tab - Nickjs Tab instance
-	* @param {Array<Object>} arr - Array holding scraping results
-	* @param {Number} maxPosts - Max posts to scrape
-	* @param {String} term - Scraped term
-	* @return {Promise<Boolean>} false is abort or rate limit
-	*/
-const scrapePosts = async (tab, arr, maxPosts, term) => {
-	let i = 0
-	graphql.variables.first = 50
+const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
-	while (i < maxPosts) {
-		const timeLeft = await utils.checkTimeLeft()
-		if (!timeLeft.timeLeft) {
-			utils.log(timeLeft.message, "warning")
-			return false
-		}
-		buster.progressHint(i / maxPosts, term)
-		let ajaxRes
-		const ajaxUrl = forgeAjaxURL()
+	let jsonData
+	try {
+		jsonData = await tab.evaluate(ajaxCall, { url: nextUrl, headers })
+	} catch (err) {
 		try {
-			ajaxRes = await tab.evaluate(ajaxCall, { url: ajaxUrl, headers: graphql.headers })
-		} catch (err) {
-			await tab.open(ajaxUrl)
+			await tab.open(nextUrl)
 			let instagramJsonCode = await tab.getContent()
 			instagramJsonCode = JSON.parse("{" + instagramJsonCode.split("{").pop().split("}").shift() + "}")
 			if (instagramJsonCode && instagramJsonCode.status === "fail") {
 				utils.log(`Error getting hashtags : ${instagramJsonCode.message}`, "warning")
 				rateLimited = true
 			}
-			return false
+		} catch (err3) {
+			//
 		}
-		const cursor = term.startsWith("#") ? ajaxRes.data.hashtag.edge_hashtag_to_media.page_info : ajaxRes.data.location.edge_location_to_media.page_info
-		const hashtags = term.startsWith("#") ? ajaxRes.data.hashtag.edge_hashtag_to_media.edges : ajaxRes.data.location.edge_location_to_media.edges
-		if (!cursor.has_next_page && !cursor.end_cursor) {
-			break
-		} else {
-			graphql.variables.after = cursor.end_cursor
-			let toPush
+		return [null, null, null, "rate limited"]
+	}
+	let edge
+	if (isLocation) {
+		edge = jsonData.data.location.edge_location_to_media
+	} else {
+		edge = jsonData.data.hashtag.edge_hashtag_to_media
+	}
+	totalHashtagsCount = edge.count
+	const results = edge.edges
+	const scrapedHashtags = []
+	for (const result of results) {
+		const node = result.node
+		const extractedData = {}
+		// extractedData.profileUrl = `https://www.instagram.com/web/friendships/${node.owner.id}/follow`
+		extractedData.postUrl = `https://www.instagram.com/p/${node.shortcode}/`
+		extractedData.commentCount = node.edge_media_to_comment.count
+		extractedData.likeCount = node.edge_liked_by.count
+		extractedData.pubDate = new Date(node.taken_at_timestamp * 1000).toISOString()
+		extractedData.ownerId = node.owner.id
+		extractedData.imgUrl = node.display_url
+		extractedData.postId = node.id
+		if (node.edge_media_to_caption.edges[0]) {
+			extractedData.description = node.edge_media_to_caption.edges[0].node.text
+		}
+		extractedData.query = query
+		extractedData.timestamp = (new Date()).toISOString()
+		scrapedHashtags.push(extractedData)
+	}
+	const endCursor = edge.page_info.end_cursor
+	const hasNextPage = edge.page_info.has_next_page
+	return [ scrapedHashtags, endCursor, hasNextPage ]
+}
+
+/**
+ * @description The function will return every posts that match one more search terms
+ * @param {Array} results scraped posts
+ * @param {Array} terms the search terms
+ * @param {Array} leastTerm the search term of the scraped posts
+ * @return {Array} Array containing only posts which matches with one or more search terms
+ */
+const filterResults = (results, query, terms) => {
+	let filterResult = []
+	const regex = /#[a-zA-Z0-9\u00C0-\u024F]+/gu
+	for (const result of results) {
+		let hasMatched = false
+		for (const term of terms) {
+			if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
+				// console.log(`Found Match between ${query} AND ${term}`)
+				result.matches = `${query} AND ${term}`
+				hasMatched = true
+			}
+		}
+		if (hasMatched) {
+			filterResult.push(result)
+		}
+	}
+	return filterResult
+}
+
+const extractFirstPosts = async (tab, results, query, terms) => {
+	const matches = []
+	for (let i = 0; i < results.length; i++) {
+		if (results[i].postUrl) {
 			try {
-				toPush = hashtags.map(el =>{ return { postUrl: `https://www.instagram.com/p/${el.node.shortcode}`, description: el.node.edge_media_to_caption.edges[0] ? el.node.edge_media_to_caption.edges[0].node.text : null } })
-				i += hashtags.length
-				arr.push(...toPush)
-				utils.log(`Got ${i} posts `, "info")
+				await tab.open(results[i].postUrl)
+				const scrapedData = await instagram.scrapePost2(tab, query)
+				results[i] = scrapedData
+				const match = filterResults([scrapedData], query, terms)
+				if (match[0]) {
+					matches.push(match[0])
+				}
 			} catch (err) {
 				//
 			}
 		}
+		buster.progressHint(i / results.length, `${i} first posts extracted`)
 	}
-	buster.progressHint(1, term)
-	return true
+	const matchesLength = matches.length
+	if (matchesLength) {
+		utils.log(`Extracted first ${results.length} posts, got ${matchesLength} match${matchesLength > 1 ? "es" : ""} so far.`, "done")
+	} else {
+		utils.log(`Extracted first ${results.length} posts, got no matches so far.`, "done")
+	}
+	return results
 }
 
+/**
+ * @async
+ * @description Function which scrape publications from the result page
+ * @param {Object} tab - Nickjs tab
+ * @param {Array} arr - Array to fill
+ * @param {Number} count - Amount of publications to scrape
+ * @param {String} hashtag - Hashtag name
+ * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
+ */
+const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
+	let newlyScraped = 0
+	let results = []
+	if (!resuming) {
+		results = await tab.evaluate(scrapeFirstResults, { query })
+		newlyScraped = results.length
+		const postTab = await nick.newTab()
+		results = await extractFirstPosts(postTab, results, query, terms)
+		await postTab.close()
+		const initDate = new Date()
+		graphqlUrl = ""
+		do {
+			await tab.wait(1000)
+			await tab.scroll(0, - 1000)
+			await tab.scrollToBottom()
+			if (new Date() - initDate > 10000) {
+				return results
+			}
+		} while (!graphqlUrl)
+		nextUrl = graphqlUrl
+	} else {
+		nextUrl = agentObject.nextUrl
+	}
+	let maxToScrape = maxPosts
+	let lastDate = new Date()
+	lastHashtag = query
+	let matches = []
+	do {
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			allCollected = false
+			break
+		}
+		try {
+			const [ tempResult, endCursor, hasNextPage, error ] = await extractDataFromGraphQl(tab, query, nextUrl)
+			if (!error) {
+				newlyScraped += tempResult.length
+				const currentMatches = filterResults(tempResult, query, terms)
+				if (currentMatches.length) {
+					matches = matches.concat(currentMatches)
+					utils.log(`Got ${matches.length} match${matches.length > 1 ? "es" : ""} out of ${results.length} posts.`, "done")
+				}
+				results = results.concat(tempResult)
+			} else {
+				allCollected = false
+				console.log("allCollected")
+				break
+			}
+			if (!maxToScrape) {
+				maxToScrape = totalHashtagsCount
+			}
+			// utils.log(`Got ${results.length} posts.`, "info")
+			buster.progressHint(newlyScraped / maxToScrape, `Loading ${results.length} posts...`)
+			if (hasNextPage && endCursor){
+				nextUrl = forgeNewUrl(endCursor)
+				lastDate = new Date()
+			} else {
+				allCollected = true
+				break
+			}
+		} catch (err) {
+			console.log("erll", err)
+			break
+		}
+		if (new Date() - lastDate > 7500) {
+			utils.log("Request took too long", "warning")
+			allCollected = false
+			break
+		}
+	} while (!maxPosts || newlyScraped < maxPosts)
+	return matches
+}
+
+/**
+ * @description Main function
+ */
 ;(async () => {
-	let { search, sessionCookie, columnName, csvName, maxPosts } = utils.validateArguments()
 	const tab = await nick.newTab()
-	await instagram.login(tab, sessionCookie)
-	const webSearch = new WebSearch(tab, buster, null, null, utils)
-	const scrapedData = []
-	if (!csvName) { csvName = "result" }
-	let hasSpreadsheet = false
-	let csvData = []
-	for (const el of search) {
-		if (isUrl(el) && !el.includes("instagram.com/explore")) {
-			csvData = await utils.getDataFromCsv2(el, columnName)
-			hasSpreadsheet = true
+	let { spreadsheetUrl, sessionCookie, columnName, numberOfLinesPerLaunch, csvName, hashtags, maxPosts } = utils.validateArguments()
+	if (!csvName) {
+		csvName = "result"
+	}
+	let results = await utils.getDb(csvName + ".csv")
+	const initialResultLength = results.length
+	if (results.length) {
+		try {
+			agentObject = await buster.getAgentObject()
+			alreadyScraped = results.filter(el => el.query === agentObject.lastHashtag).length
+		} catch (err) {
+			utils.log("Could not access agent Object.", "warning")
 		}
 	}
-	if (!hasSpreadsheet) { csvData = [ search.join(", ") ] }
 
-	for (const line of csvData) {
+	if (typeof hashtags === "string") {
+		hashtags = [ hashtags ]
+	}
+
+	if (spreadsheetUrl) {
+		if (utils.isUrl(spreadsheetUrl)) {
+			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+			hashtags = hashtags.filter(el => el).map(el => el.trim())
+			hashtags = getUrlsToScrape(hashtags.filter(el => utils.checkDb(el, results, "query")), numberOfLinesPerLaunch)
+		} else if (typeof spreadsheetUrl === "string") {
+			hashtags = [ spreadsheetUrl ]
+		}
+	}
+	await instagram.login(tab, sessionCookie)
+
+	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
+	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+	for (const line of hashtags) {
 		utils.log(`Searching for ${line}`, "done")
 		let terms = line.split(",")
-		terms = terms.filter((str => str)) // removing empty terms
-		for (let i = 0; i < terms.length; i++) { // forcing lowercase
-			terms[i] = terms[i].toLowerCase().trim();
-		}
+		terms = terms.map(el => el && el.toLowerCase().trim())
 		terms = Array.from(new Set(terms)) // removing duplicates
-
+		console.log("terms:", terms)
 		if (terms.length < 2) {
-			utils.log("Need at least two different hashtags.", "error")
-			nick.exit(1)
+			utils.log("Need at least two different terms.", "error")
+			continue
 		}
-		let scrapedResult = []
-		// looking for the term with least results
-		let leastTerm
-		let removeTerm = []
-		let sortArray = []
-		let resultCount
-		for (const term of terms) {
-			if (term.startsWith("#")) {
-				const targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
-				const [httpCode] = await tab.open(targetUrl)
-				if (httpCode === 404) {
-					utils.log(`No results found for ${term}`, "warning")
-					removeTerm.push(term)
-					continue
-				}
-
-				try {
-					await tab.waitUntilVisible("main", 30000)
-				} catch (err) {
-					utils.log(`Page is not opened: ${err.message || err}`, "error")
-					removeTerm.push(term)
-					continue
-				}
-				resultCount = await tab.evaluate(getPostCount)
-				utils.log(`There's ${resultCount} posts for ${term}...`, "loading")
-			} else {
-				resultCount = 1
-			}
-			sortArray.push({ term, resultCount })
-		}
-
-		if (removeTerm.length) { // we remove every term that gave no results
-			for (const term of removeTerm) {
-				terms.splice(terms.indexOf(term), 1)
-			}
-			if (terms.length < 2) {
-				utils.log("At least two terms with results needed.", "error")
-				nick.exit(1)
-			}
-		}
-		do {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
-				break
-			}
-			let minValue = sortArray[0].resultCount
-			let minPos = 0
-			for (let i = 1; i < sortArray.length; i++) { // finding the least popular term
-				if (sortArray[i].resultCount < minValue) {
-					minValue = sortArray[i].resultCount
-					minPos = i
-				}
-			}
-			if (!maxPosts) {
-				maxPosts = minValue
-			}
-			leastTerm = sortArray[minPos].term
-			const term = leastTerm
-			let targetUrl = ""
-			let inputType
-			if (term.startsWith("https://www.instagram.com/explore/locations/")) {
-				targetUrl = term
-				inputType = "locations"
-			} else {
-				inputType = term.startsWith("#") ? "tags" : "locations"
-				if (term.startsWith("#")) {
-					targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(term.substr(1))}`
-				} else {
-					await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-					try {
-						await tab.waitUntilVisible("nav input", 5000)
-					} catch (err) { // if the previous page had no result, there's no input field
-						await tab.open("https://www.instagram.com")
-						await tab.waitUntilVisible("nav input", 5000)
-					}
-					if (await tab.isVisible("nav input")) {
-						targetUrl = await instagram.searchLocation(tab, term)
-					}
-				}
-				if (!targetUrl) { // Using webSearch if we can't find location through instagram
-					let search = await webSearch.search(term + "location instagram")
-					let firstSearch
-					if (search && search.results[0] && search.results[0].link) {
-						firstSearch = search.results[0].link
-						if (firstSearch.startsWith("https://www.instagram.com/explore/locations/")) {
-							targetUrl = firstSearch
-						} else {
-							utils.log(`No search result page found for ${term}.`, "error")
-							terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
-							continue
-						}
-					}
-				}
-			}
-			await tab.evaluate((arg, cb) => cb(null, document.location = arg.targetUrl), { targetUrl })
-
+		const hashtag = terms.shift()
+		const otherTerms = terms.join(" ,")
+		/**
+		 * Simple process to check if we need to search an URL for hashtags or locations
+		 */
+		let targetUrl
+		let inputType
+		if (hashtag.startsWith("#")) {
+			inputType = "tags"
+			targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
+			isLocation = false
+		} else {
+			inputType = "locations"
+			isLocation = true
 			try {
-				await tab.waitUntilVisible("main", 30000)
+				console.log("searching targeturl")
+				targetUrl = await instagram.searchLocation(tab, hashtag)
+				console.log("targetUrl", targetUrl)
 			} catch (err) {
-				utils.log(`Page is not opened: ${err.message || err}`, "error")
-				terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1)
+				console.log("ha", err)
+				await tab.screenshot(`${Date.now()}checkUpcomingBirthdays.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}checkUpcomingBirthdays.html`)
+				if (await tab.isVisible("nav input")) {
+					console.log("is visible")
+				}
+				if (await tab.isPresent("nav input")) {
+					console.log("is present")
+				}
 				continue
 			}
-			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${term}...`, "loading")
+		}
+		if (!targetUrl) {
+			utils.log(`No search result page found for ${hashtag}`, "error")
+			continue
+		}
+		const [httpCode] = await tab.open(targetUrl)
+		if (httpCode === 404) {
+			utils.log(`No results found for ${hashtag}`, "error")
+			continue
+		}
 
-			//scraping the first page the usual way
-			tab.driver.client.on("Network.requestWillBeSent", interceptGraphQLHash)
-			scrapedResult = await scrapeFirstPage(tab, term)
-			tab.driver.client.removeListener("Network.requestWillBeSent", interceptGraphQLHash)
-
-			// we're graphql-scraping only if we didn't get all the results in the first page, or if it's a location term as we can't get the post count directly
-			if (graphql && (!term.startsWith("#") || (scrapedResult && scrapedResult.length < sortArray[minPos].resultCount))) {
-				try {
-					await scrapePosts(tab, scrapedResult, maxPosts, term)
-				} catch (err) {
-					//
+		try {
+			await tab.waitUntilVisible("main", 15000)
+		} catch (err) {
+			utils.log(`Page is not opened: ${err.message || err}`, "error")
+			continue
+		}
+		let resuming = false
+		if (alreadyScraped && hashtag === agentObject.lastHashtag) {
+			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
+			resuming = true
+		} else {
+			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} searching for match with ${otherTerms}...`, "loading")
+		}
+		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming, terms)
+		const oldResultLength = results.length
+		console.log("tempRL", tempResult.length)
+		let init = new Date()
+		if (results.length) {
+			for (const post of tempResult) {
+				if (!results.find(el => el.postUrl === post.postUrl)) {
+					results.push(post)
 				}
 			}
-
-			scrapedResult = scrapedResult.slice(0, maxPosts) // only getting maxPosts results
-			const filteredResults = removeDuplicates(filterResults(scrapedResult, terms, leastTerm))
-			utils.log(`Got ${filteredResults.length} matching posts.`, "done")
-			for (const post of filteredResults) {
-				const timeLeft = await utils.checkTimeLeft()
-				if (!timeLeft.timeLeft) {
-					utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+		} else {
+			results = results.concat(tempResult)
+		}
+		console.log("elapsedconcat:", new Date() - init)
+		const test1 = []
+		init = new Date()
+		for (const post of tempResult) {
+			if (!test1.find(el => el.postUrl === post.postUrl)) {
+				test1.push(post)
+			}
+		}
+		console.log("elapsedtest1:", new Date() - init)
+		const test2 = []
+		init = new Date()
+		for (const post of tempResult) {
+			let found = false
+			for (let i = 0; i < test2.length; i++) {
+				if (test2[i].postUrl === post.postUrl) {
+					found = true
 					break
 				}
-				try {
-					utils.log(`Scraping matching post ${post.postUrl}`, "info")
-					buster.progressHint(scrapedData.length / filteredResults.length, "Scraping matching posts")
-					await tab.open(post.postUrl)
-					let scrapingRes = await instagram.scrapePost(tab)
-					scrapingRes.timestamp = (new Date()).toISOString()
-					scrapingRes.postUrl = post.postUrl
-					scrapingRes.matches = post.matches
-					scrapedData.push(scrapingRes)
-				} catch (err) {
-					utils.log(`Could not scrape ${post.postUrl}`, "warning")
+			}
+			if (!found) {
+				test2.push(post)
+			}
+		}
+		console.log("elapsedtest2:", new Date() - init)
+		const test3 = []
+		init = new Date()
+		for (const tempPost of tempResult) {
+			let found = false
+			for (const post of test3) {
+				if (post.postUrl === tempPost.postUrl) {
+					found = true
+					break
 				}
 			}
-			terms.splice(terms.indexOf(sortArray.splice(minPos, 1)[0].term), 1) // removing least popular result from sortArray and terms
-			if (rateLimited) {
-				utils.log("Rate limited by Instagram, exiting...", "warning")
-				break
+			if (!found) {
+				test3.push(tempPost)
 			}
-		} while (sortArray.length >= 2)
-		utils.log(`${scrapedData.length} posts scraped.`, "done")
+		}
+		console.log("elapsedtest3:", new Date() - init)
+		console.log("test1Length", test1.length)
+		console.log("test2Length", test2.length)
+		console.log("test3Length", test3.length)
+		const newResultsLength = results.length - oldResultLength
+		utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
+		if (rateLimited) {
+			break
+		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 	}
-	if (scrapedData.length) {
-		await utils.saveResults(scrapedData, scrapedData, csvName)
+	if (rateLimited) {
+		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
-	nick.exit(0)
+	const init = new Date()
+	if (results.length !== initialResultLength) {
+		utils.log(`${results.length} posts scraped.`, "done")
+		await utils.saveFlatResults(results, results, csvName)
+		if (agentObject) {
+			if (!allCollected) {
+				agentObject.nextUrl = nextUrl
+				agentObject.lastQuery = lastHashtag
+			} else {
+				delete agentObject.nextUrl
+				delete agentObject.lastHashtag
+			}
+			await buster.setAgentObject(agentObject)
+		}
+	}
+	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
+	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
+	console.log("elapsed:", new Date() - init)
+	nick.exit()
 })()
 	.catch(err => {
-		utils.log(err, "error")
+		utils.log(`Error during execution: ${err}`, "error")
 		nick.exit(1)
 	})

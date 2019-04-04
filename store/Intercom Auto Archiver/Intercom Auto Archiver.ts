@@ -251,6 +251,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	} catch (err) {
 		//
 	}
+	billingCount.query = _filter === "lastSen" ? `Last seen more than ${_lastSeen} days` : _segmentUrl
 	if (billingCount) {
 		const craftedCsv = craftCsv(billingCount)
 		results.push(craftedCsv)

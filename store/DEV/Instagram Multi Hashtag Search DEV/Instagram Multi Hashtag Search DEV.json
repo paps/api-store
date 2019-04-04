@@ -1,7 +1,7 @@
 {
-	"slug": "instagram-multi-hashtag-search",
-	"description": "Find posts that match multiple hashtags or locations on Instagram",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Multi_Hashtag_Search/instagram_multi_hashtag_search.png",
+	"slug": "instagram-hashtag-collector",
+	"description": "Extract the most recent posts for any hashtags or locations on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
 	"hidden": false,
 	"new": false,
 	"gradientBegin": "#FCCF6B",
@@ -10,35 +10,51 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgumentAllowed": false,
 	"defaultArgument": {
-		"search": [ "#oreo", "#cookies" ],
+		"spreadsheetUrl": "#soloparking",
 		"sessionCookie": "your_session_cookie",
-		"maxPosts": 5000
+		"maxPosts": 5000,
+		"numberOfLinesPerLaunch": 10
 	},
 	"outputDescription": {
 		"profileUrl": "Profile URL of post author",
-		"profileName": "Instagram username of post author",
+		"profileName": "Username of post author (only if available)",
+		"ownerId": "Instagram unique ID of post author",
 		"postUrl": "Instagram post URL",
 		"description": "Post description",
 		"pubDate": "Post publication date",
-		"likes": "Number of likes the post received",
+		"likeCount": "Number of likes the post received",
+		"commentCount": "Number of comments the post received",
 		"views": "Number of views, if the post contains a video",
-		"location": "Where the photo was taken, if specified",
-		"matches": "Which hashtags or location lead to this post",
-		"postVideo": "Link to raw video file, can contains more than one link if the data is available",
-		"videoThumbnail": "Link to raw video thumbnail, if available"
+		"location": "Where the photo was taken (only if available)",
+		"query": "Hashtag (or location) that lead to the post",
+		"postVideo": "Link to raw video file, if available, can contains more than one link if the data is available",
+		"videoThumbnail": "Link to raw video thumbnail, can contains more than one link if the data is available",
+		"postImage": "Link to raw post image, can contains more than one link if the data is available"
 	},
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
 			"options": {
 				"fields": {
-					"sessionCookie": {
-						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
-						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
+					"spreadsheetUrl": {
+						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/5391/instagram-hashtag-collector#section_argument\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either an Instagram hashtag beginning with # (like <i>#iseefaces</i>)",
+							"<b>OR</b> an Instagram location (like <i>New York, New York</i>)",
+							"<b>OR</b> a Google Spreadsheet URL (make sure your file is publicly available)",
+							"<b>OR</b> a CSV URL (make sure your file is publicly available)"
+						]
 					},
-					"search": {
-						"label": "Hashtags / locations list <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_4enteratleasttwohashtagslocations\" target=\"_blank\">(?)</a>",
-						"helper": "You can also enter a public Google Spreadsheet URL or public CSV URL (each line containing multiple hashtags or locations in a single cell, separated by commas)"
+					"sessionCookie": {
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
 					},
 					"columnName": {
 						"label": "Spreadsheet column name for Instagram hashtags",
@@ -46,11 +62,16 @@
 						"default": "Hashtag",
 						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
 					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number",
+						"helper": "All of them if empty"
+					},
 					"maxPosts": {
 						"label": "Number of posts to scrape per hashtag",
 						"type": "number",
 						"inputType": "number",
-						"helper": "By default, the API will scrape 2000 posts per hashtag"
+						"helper": "All of them if empty (until hitting Instagram rate limit)"
 					},
 					"csvName": {
 						"label": "Output CSV name",
@@ -64,28 +85,54 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
+			"spreadsheetUrl": {
+				"type": "string"
+			},
 			"sessionCookie": {
 				"type": "string",
-				"required": true
-			},
-			"search": {
-				"type": "array",
-				"items": {
-					"type": "string",
-					"minLength": 1
-				},
 				"required": true
 			},
 			"columnName": {
 				"type": "string"
 			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
 			"csvName": {
 				"type": "string"
 			},
 			"maxPosts": {
-				"type": "number",
-				"minimum": 1
+				"type": "number"
 			}
-		}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"hashtags": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
 	}
 }

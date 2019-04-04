@@ -216,7 +216,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 				await exportUsers(page)
 				await page.waitFor(5000)
 				try {
-					await archiveUsers(page)
+					// await archiveUsers(page)
 					utils.log(`${matches} successfully archived.`, "done")
 					return parseInt(matches.replace(/[.,]/g, ""), 10)
 				} catch (err) {
@@ -269,6 +269,9 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	} catch (err) {
 		console.log("usererr:", err)
 	}
+
+	billingCount.query = _filter === "lastSen" ? `Last seen more than ${_lastSeen} days` : _segmentUrl
+
 	// console.log("filter:", _filter)
 	// console.log("lastseen:", _lastSeen)
 	// console.log("segment:", _segmentUrl)

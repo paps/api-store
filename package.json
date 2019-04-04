@@ -28,6 +28,7 @@
     "typescript": "^3.2.2"
   },
   "dependencies": {
-    "@types/jquery": "^3.3.29"
+    "@types/jquery": "^3.3.29",
+    "phantombuster-sdk": "^0.2.1"
   }
 }
