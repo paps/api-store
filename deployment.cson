@@ -71,6 +71,7 @@
 		'Instagram Profile Scraper.js': 'store/Instagram Profile Scraper/Instagram Profile Scraper.js'
 		'Instagram Multi Hashtag Search.js': 'store/Instagram Multi Hashtag Search/Instagram Multi Hashtag Search.js'
 		'Intercom Auto Archiver DEV.js': 'store/DEV/Intercom Auto Archiver DEV/Intercom Auto Archiver DEV.js'
+		'Intercom Message Sender.js': 'store/Intercom Message Sender/Intercom Message Sender.js'
 		'LinkedIn Accept Invitations.js': 'store/LinkedIn Accept Invitations/LinkedIn Accept Invitations.js'
 		'LinkedIn Activities Extractor.js': 'store/LinkedIn Activities Extractor/LinkedIn Activities Extractor.js'
 		'LinkedIn Auto Endorse.js': 'store/LinkedIn Auto Endorse/LinkedIn Auto Endorse.js'

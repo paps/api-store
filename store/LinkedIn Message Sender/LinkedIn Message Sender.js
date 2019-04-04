@@ -176,26 +176,23 @@ const sendMessage = async (tab, message, tags, profile) => {
 	let rows = []
 	let columns = []
 
+	columnName = columnName || "0"
 	if (spreadsheetUrl) {
 		if (isLinkedInProfile(spreadsheetUrl)) {
-			rows = [{ "0": spreadsheetUrl }]
-			columnName = "0"
+			rows = [{ [columnName]: spreadsheetUrl }]
 		} else {
 			rows = await utils.getRawCsv(spreadsheetUrl)
 			let csvHeader = rows[0].filter(cell => !isUrl(cell))
 			let msgTags = message ? inflater.getMessageTags(message).filter(el => csvHeader.includes(el)) : []
 			columns = [columnName, ...msgTags]
 			rows = utils.extractCsvRows(rows, columns)
-			if (!columnName) {
-				columnName = "0"
-			}
 		}
 	}
 
 	if (typeof profileUrls === "string") {
-		rows = [ { "0": profileUrls } ]
+		rows = [ { [columnName]: profileUrls } ]
 	} else if (Array.isArray(profileUrls)) {
-		rows = profileUrls.map(el => ({ "0": el }))
+		rows = profileUrls.map(el => ({ [columnName]: el }))
 	}
 
 	rows.forEach(el => {
