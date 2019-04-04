@@ -1,12 +1,12 @@
 # Is Intercom expensive? Save hundreds of dollars on your Intercom bill each month!
 
-Intercom is a great software, no doubts about it. But its pricing can make it really expensive. Particularly for startups getting some traction and having multiple thousands new 'active' users in the pipes.
+Intercom is a great software, no doubts about it. But its 'by active user' pricing can make it really expensive. Particularly for startups getting some traction and having multiple thousands new 'active' users in the pipes (we know what we're talking about).
 
-The good news is that when you archive active users, you can drastically decrease your monthly Intercom expenditures. Drastic like in several hundred dollars off your bill.
+**The good news is that by archiving active users, you can drastically decrease your Intercom bill**. Drastic like in *several hundred dollars* off.
 
 # How can I save on my Intercom bill?
 
-It's easy: At Phantombuster we build automations that do specific actions on your behalf on the web. In this case, we're connecting to your Intercom account, archive every user that's been inactive in the last 4 weeks and send you an email with the results.
+It's easy: At Phantombuster we build automations that do specific actions on your behalf on the web. In this case, we're connecting to your Intercom account, archiving every user that's been inactive in the last 4 weeks and send you an email with the results.
 
 That way, you're always paying for the lowest plan you need.
 
@@ -19,9 +19,9 @@ With our Free Forever Plan, it's free.
 ## Why are we doing it?
 To show you that automations doing the right actions at the right times have tremendous potential upsides. We hope this we'll be a gateway for you to use our other automations.
 
-#Tutorial
+# Tutorial
 
-# What will you need? ⚙️ 
+## What will you need? ⚙️ 
 
 To make this work, you need to fill in your Intercom session cookie. If you have our browser extension on your browser, simply click 'Get my cookies'. Otherwise pick it up for [Firefox](https://addons.mozilla.org/fr/firefox/addon/phantombuster/) or [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil)
 
