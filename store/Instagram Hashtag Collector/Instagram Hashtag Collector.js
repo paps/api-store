@@ -327,10 +327,14 @@ const isUrl = target => url.parse(target).hostname !== null
 		}
 		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming)
 		const oldResultLength = results.length
-		for (let i = 0; i < tempResult.length; i++) {
-			if (!results.find(el => el.postUrl === tempResult[i].postUrl)) {
-				results.push(tempResult[i])
+		if (results.length) {
+			for (const post of tempResult) {
+				if (!results.find(el => el.postUrl === post.postUrl)) {
+					results.push(post)
+				}
 			}
+		} else {
+			results = results.concat(tempResult)
 		}
 		const newResultsLength = results.length - oldResultLength
 		utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")

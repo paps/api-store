@@ -15,6 +15,9 @@
 		"spreadsheetUrl": ""
 	},
 	"outputDescription": {
+		"subscription": "Current subscription details",
+		"totalCount": "Current Total Monthly Price",
+		"archivedUsers": "Number of archived users"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {

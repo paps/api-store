@@ -131,7 +131,7 @@ class LinkedIn {
 					this.utils.log("It seems you didn't authorized your proxy. Check your ProxyMesh dashboard: https://proxymesh.com/account/edit_proxies", "error")
 					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
 				}
-				if (error.message && (error.message.startsWith("timeout: load event did not fire after")) || error.message.includes("ERR_PROXY_CONNECTION_FAILED")) {
+				if (error.message && (error.message.startsWith("timeout: load event did not fire after") || error.message.includes("ERR_PROXY_CONNECTION_FAILED"))) {
 					this.utils.log("Can't connect to LinkedIn, the proxy used may not be working.", "error")
 					this.nick.exit(this.utils.ERROR_CODES.PROXY_ERROR)
 				}

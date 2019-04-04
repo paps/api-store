@@ -115,6 +115,7 @@ const exportUsers = async (page: puppeteer.Page) => {
 	}
 	await page.click("button.o__primary")
 	await checkConfirmation(page)
+	await page.waitFor(5000)
 }
 
 const checkConfirmation = async (page: puppeteer.Page) => {
@@ -138,13 +139,14 @@ const checkConfirmation = async (page: puppeteer.Page) => {
 	utils.log("Couldn't get Confirmation Message!", "warning")
 }
 
-const archiveUsers = async (page: puppeteer.Page) => {
+const archiveUsers = async (page: puppeteer.Page, matches: string) => {
 	await page.click(".test__bulk-actions-dropdown")
 	await page.waitForSelector(".test__bulk-delete-button")
 	await page.click(".test__bulk-delete-button")
 	await page.waitForSelector(".o__primary-destructive")
 	await page.click(".o__primary-destructive")
 	await checkConfirmation(page)
+	utils.log(`${matches} successfully archived.`, "done")
 }
 
 const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSeen: number, segmentUrl: string) => {
@@ -200,10 +202,8 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 			utils.log(`Got ${matches}`, "done")
 			try {
 				await exportUsers(page)
-				await page.waitFor(5000)
 				try {
-					await archiveUsers(page)
-					utils.log(`${matches} successfully archived.`, "done")
+					await archiveUsers(page, matches)
 					return parseInt(matches.replace(/[.,]/g, ""), 10)
 				} catch (err) {
 					utils.log(`Fail to archive: ${err}`)
@@ -251,6 +251,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	} catch (err) {
 		//
 	}
+	billingCount.query = _filter === "lastSeen" ? `Last seen more than ${_lastSeen} days` : _segmentUrl
 	if (billingCount) {
 		const craftedCsv = craftCsv(billingCount)
 		results.push(craftedCsv)
