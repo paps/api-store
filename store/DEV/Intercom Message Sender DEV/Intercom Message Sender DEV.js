@@ -200,13 +200,13 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		}
 		const hasSend = await sendIntercomMessage(page, toSend)
 		if (hasSend) {
-			utils.log(`Message sent at ${page.url()} (after ${i} tries)`, "info")
+			utils.log(`Message sent at ${page.url()} (after ${i + 1} tries)`, "info")
 			return isUser
 		} else {
 			throw `Can't find a way to send a message on ${page.url()}`
 		}
 	} else {
-		throw `Can't find a way to send a message even after ${i} tries`
+		throw `Can't find a way to send a message even after ${i + 1} tries`
 	}
 }
 
