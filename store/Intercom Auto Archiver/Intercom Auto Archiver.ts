@@ -169,7 +169,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	} catch (err) {
 		const currentUrl = page.url()
 		const urlObject = new URL(currentUrl)
-		if (urlObject.hostname.includes("intercom")) {
+		if (utils.isUrl(segmentUrl) && urlObject.hostname.includes("intercom")) {
 			utils.log("Intercom isn't loading correctly...", "error")				
 		} else {
 			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")				
