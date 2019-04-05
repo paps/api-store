@@ -1,8 +1,7 @@
 {
 	"slug": "intercom-auto-archiver",
-	"description": "",
-	"image": "",
-	"argumentDescription": "",
+	"description": "Save hundreds of dollars on your Intercom bill by auto-archiving inactive users.",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Auto+Archiver.png",
 	"gradientBegin": "#61B5FF",
 	"gradientEnd": "#BADFFF",
 	"hidden": true,
@@ -32,15 +31,15 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_argument\" target=\"_blank\">(?)</a>",
-						"placeholder": "Paste your '_intercom_session' session cookie here"
+						"label": "Specify your Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_5aarchiveonlyusersinactiveonintercomsinceindays\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your '_intercom_session' cookie here"
 					},
 					"filter": {
-						"label": "Choose a filter",
+						"label": "Specify who to archive? <a href=\"/api-store/15580/intercom-auto-archiver#section_5borspecifyanintercomsegment\" target=\"_blank\">(?)</a>",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
 						"sort": false,
-						"optionLabels": [ "Last seen more than", "Segment" ],
+						"optionLabels": [ "User inactive since... (in days)", "Intercom Segment" ],
 						"type": "select"
 					},
 					"lastSeen": {
@@ -50,7 +49,7 @@
 						}
 					},
 					"segmentUrl": {
-						"label": "Segment URL",
+						"label": "Segment URL <a href=\"/api-store/15580/intercom-auto-archiver#section_5borspecifyanintercomsegment\" target=\"_blank\">(?)</a>",
 						"dependencies": {
 							"filter": "segment"
 						}
@@ -76,7 +75,8 @@
 				"default": "lastSeen"
 			},
 			"lastSeen": {
-				"type": "number"
+				"type": "number",
+				"minimum": 0
 			},
 			"segmentUrl": {
 				"type": "string"

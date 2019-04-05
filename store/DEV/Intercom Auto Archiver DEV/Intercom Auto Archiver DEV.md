@@ -1,12 +1,12 @@
 # Is Intercom expensive? Save hundreds of dollars on your Intercom bill each month!
 
-Intercom is a great software, no doubts about it. But its pricing can make it really expensive. Particularly for startups getting some traction and having multiple thousands new 'active' users in the pipes.
+Intercom is a great software, no doubts about it. But its 'by active user' pricing can make it really expensive. Particularly for startups getting some traction and having multiple thousands new 'active' users in the pipes (we know what we're talking about).
 
-The good news is that when you archive active users, you can drastically decrease your monthly Intercom expenditures. Drastic like in several hundred dollars off your bill.
+**The good news is that by archiving active users, you can drastically decrease your Intercom bill**. Drastic like in *several hundred dollars* off.
 
 # How can I save on my Intercom bill?
 
-It's easy: At Phantombuster we build automations that do specific actions on your behalf on the web. In this case, we're connecting to your Intercom account, archive every user that's been inactive in the last 4 weeks and send you an email with the results.
+It's easy: At Phantombuster we build automations that do specific actions on your behalf on the web. In this case, we're connecting to your Intercom account, archiving every user that's been inactive in the last 4 weeks and send you an email with the results.
 
 That way, you're always paying for the lowest plan you need.
 
@@ -73,11 +73,17 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 5. (optional) Create an Intercom Segment
+## 5A. Archive only users inactive on Intercom since... (in days)
+
+The goal of this section is to **specify who you're going to archive**. The criterion is usually days since last activity on Intercom and we recommend using 30 days by default.
+
+## 5B. ...or specify an Intercom Segment
+
+**But if you wish to specify a very specific segment,** you can do it by creating your Intercom segment.
 
 Intercom segments are groups of users fulfilling specific criteria. Create the exact segment of users you want to archive and let Phantombuster know its ID. 
 
-<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Segment.png)</center>
+![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Segment.png)
 
 [ 1 ] Go to the users sections
 
@@ -89,10 +95,6 @@ Intercom segments are groups of users fulfilling specific criteria. Create the e
 
 Once created go to the segment and copy/paste its URL. It should look like some variant of this:
 `https://app.intercom.io/a/apps/iy3q5eio/users/segments/5a9e93163543373724f93c07`
-
-## 6. Specify an email address to receive your summary at.
-
-Specify here your email address. You will receive detailed informations such as how many people were achived and how much money you saved.
 
 # Click on Launch & Enjoy!
 It’s done! Click on "launch" to extract your bills once.
@@ -117,6 +119,10 @@ That's it!
 
 # Knowledge 🤓
 
+## After each archive, you'll receive an export of your users
+
+This API will ask Intercom to export your archived users and send them to your inbox. That way, if you happen to need to reimport your users, you can!
+
 ## How to re-import your Intercom contacts
 
-When Phantombusters archives your users it also do an export of that users list and attaches it to the email we send.
+Go to your active user list and look for the import button above the list. Select the .csv you received by email

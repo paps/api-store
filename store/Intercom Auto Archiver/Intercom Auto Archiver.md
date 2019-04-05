@@ -73,7 +73,13 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 5. (optional) Create an Intercom Segment
+## 5A. Archive only users inactive on Intercom since... (in days)
+
+The goal of this section is to **specify who you're going to archive**. The criterion is usually days since last activity on Intercom and we recommend using 30 days by default.
+
+## 5B. ...or specify an Intercom Segment
+
+**But if you wish to specify a very specific segment,** you can do it by creating your Intercom segment.
 
 Intercom segments are groups of users fulfilling specific criteria. Create the exact segment of users you want to archive and let Phantombuster know its ID. 
 

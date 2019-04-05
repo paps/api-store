@@ -31,15 +31,15 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_argument\" target=\"_blank\">(?)</a>",
+						"label": "Specify your Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_5aarchiveonlyusersinactiveonintercomsinceindays\" target=\"_blank\">(?)</a>",
 						"placeholder": "Paste your '_intercom_session' cookie here"
 					},
 					"filter": {
-						"label": "Choose a filter",
+						"label": "Specify who to archive? <a href=\"/api-store/15580/intercom-auto-archiver#section_5borspecifyanintercomsegment\" target=\"_blank\">(?)</a>",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
 						"sort": false,
-						"optionLabels": [ "Last seen more than", "Segment" ],
+						"optionLabels": [ "User inactive since... (in days)", "Intercom Segment" ],
 						"type": "select"
 					},
 					"lastSeen": {
@@ -49,7 +49,7 @@
 						}
 					},
 					"segmentUrl": {
-						"label": "Segment URL <a href=\"/api-store/15580/intercom-auto-archiver#section_5optionalcreateanintercomsegment\" target=\"_blank\">(?)</a>",
+						"label": "Segment URL <a href=\"/api-store/15580/intercom-auto-archiver#section_5borspecifyanintercomsegment\" target=\"_blank\">(?)</a>",
 						"dependencies": {
 							"filter": "segment"
 						}
