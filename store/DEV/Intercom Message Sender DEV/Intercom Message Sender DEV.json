@@ -14,8 +14,11 @@
 		"csvName": "result"
 	},
 	"outputDescription": {
-		"message": "The message you sent",
-		"error": "Reported error while sending the a message"
+		"message": "Text delivered to the Intercome operator",
+		"query": "URL of your input",
+		"timestamp": "Time of delivery",
+		"sendAt": "Actual page the message was delivered on",
+		"status": "Whether the message's been delivered or not"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
