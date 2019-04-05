@@ -8,7 +8,7 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "_intercom_session",
+		"sessionCookie": "_intercom_session_cookie",
 		"filter": "lastSeen",
 		"lastSeen": 30,
 		"spreadsheetUrl": ""
@@ -32,7 +32,7 @@
 				"fields": {
 					"sessionCookie": {
 						"label": "Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_argument\" target=\"_blank\">(?)</a>",
-						"placeholder": "Paste your '_intercom_session' session cookie here"
+						"placeholder": "Paste your '_intercom_session' cookie here"
 					},
 					"filter": {
 						"label": "Choose a filter",
@@ -49,7 +49,7 @@
 						}
 					},
 					"segmentUrl": {
-						"label": "Segment URL",
+						"label": "Segment URL <a href=\"/api-store/15580/intercom-auto-archiver#section_5optionalcreateanintercomsegment\" target=\"_blank\">(?)</a>",
 						"dependencies": {
 							"filter": "segment"
 						}
@@ -75,7 +75,8 @@
 				"default": "lastSeen"
 			},
 			"lastSeen": {
-				"type": "number"
+				"type": "number",
+				"minimum": 0
 			},
 			"segmentUrl": {
 				"type": "string"

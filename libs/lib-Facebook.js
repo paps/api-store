@@ -368,6 +368,9 @@ class Facebook {
 			try {
 				await tab.open(url || "https://www.facebook.com")
 			} catch (err) {
+				// if (err.message && err.message.includes("ERR_TUNNEL_CONNECTION_FAILED") && this.nick._options.httpProxy) {
+				// 	return "Good proxy bad cookies"
+				// }
 				return "Timeout"
 			}
 			let sel
@@ -385,6 +388,9 @@ class Facebook {
 					this.utils.log(`Connected successfully as ${name}`, "done")
 					return null
 				}
+			}
+			if (this.nick._options.httpProxy) {
+				return "Good proxy bad cookies"
 			}
 			return "cookie not working"
 		}
@@ -436,6 +442,9 @@ class Facebook {
 				console.log("Debug:")
 				console.log(error)
 			}
+			if (error === "Good proxy bad cookies") {
+				this.utils.log("Proxy's working but can't connect to Facebook with these session cookies.", "error")
+			}
 			if (error === "Timeout") {
 				let errorMessage = "Connection has timed out."
 				const proxyUsed = this.nick._options.httpProxy
@@ -468,7 +477,7 @@ class Facebook {
 			if (await this.checkLock(tab)) {
 				this.utils.log("Cookies are correct but Facebook is asking for an account verification. We highly recommend using a proxy. Please check at https://intercom.help/phantombuster/help-home/setting-up-a-proxy-with-phantombuster", "error")
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BLOCKED_ACCOUNT)
-			} else {
+			} else if (error !== "Good proxy bad cookies") {
 				this.utils.log("Can't connect to Facebook with these session cookies.", "error")
 				this.nick.exit(this.utils.ERROR_CODES.FACEBOOK_BAD_COOKIE)
 			}

@@ -133,7 +133,11 @@ const sendIntercomMessage = async (page, message) => {
 	if (frame) {
 		await frame.waitForSelector("button.intercom-composer-send-button")
 		await frame.click("button.intercom-composer-send-button")
-		await page.waitForResponse("https://api-iam.intercom.io/messenger/web/messages")
+		try {
+			await page.waitForResponse("https://api-iam.intercom.io/messenger/web/messages")
+		} catch (err) {
+			console.log(err)
+		}
 		return true
 	}
 	return false
@@ -194,15 +198,15 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		if (!isUser) {
 			toSend += `\n(${email})`
 		}
-		const hasSend = await sendIntercomMessage(page, toSend, email)
+		const hasSend = await sendIntercomMessage(page, toSend)
 		if (hasSend) {
-			utils.log(`Message sent at ${page.url()} (after ${i} tries)`, "info")
+			utils.log(`Message sent at ${page.url()} (after ${i + 1} tries)`, "info")
 			return isUser
 		} else {
 			throw `Can't find a way to send a message on ${page.url()}`
 		}
 	} else {
-		throw `Can't find a way to send a message even after ${i} tries`
+		throw `Can't find a way to send a message even after ${i + 1} tries`
 	}
 }
 
@@ -265,10 +269,11 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				if (!isUser) {
 					toSend += `\n(${email})`
 				}
-				const hasSend = await sendIntercomMessage(page, toSend, email)
+				const hasSend = await sendIntercomMessage(page, toSend)
 				if (hasSend) {
 					utils.log(`Message sent at ${query[columnName]}`, "info")
-					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url() })
+					const status = isUser ? "success" : "email sent in the text message"
+					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
 				} else {
 					throw `Can't find a way to send a message on ${query[columnName]}`
 				}
@@ -277,6 +282,7 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${triesPerDomain || urls.length} alternative links`, "info")
 				const fullySetup = await crawl(page, urls, triesPerDomain, toSend, email)
 				const status = fullySetup ? "success" : "email sent in the text message"
+				console.log("Status: ", status, "|", message)
 				res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
 			}
 		} catch (err) {

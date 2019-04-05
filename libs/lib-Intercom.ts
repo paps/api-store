@@ -1,5 +1,5 @@
-import StoreUtilities from "./lib-StoreUtilities-DEV"
-import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
+import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 import Buster from "phantombuster"
 import * as Pupeppeteer from "puppeteer"
 
@@ -60,9 +60,6 @@ class Intercom {
 				return el ? el.textContent : null
 			}) as string
 			this.utils.log(`Connected successfully as ${name} from ${company}.`, "done")
-
-			await page.screenshot({ path: `${Date.now()}login.jpg`, type: "jpeg", quality: 50 })
-			await this.buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}login.html`)
 			return null
 		}
 
