@@ -227,7 +227,7 @@ nick.newTab().then(async (tab) => {
 		hasMutualConnections = false
 	}
 
-	const selectors = [ ".js-invitation-card__invite-details-container", "section.mn-invitation-manager__no-invites" ]
+	const selectors = [ ".js-invitation-card__invite-details-container", "section.mn-invitation-manager__no-invites", ".invitation-card.invitation-card--selectable" ]
 
 	await linkedIn.login(tab, sessionCookie, "https://www.linkedin.com/mynetwork/invitation-manager/?filterCriteria=null")
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
