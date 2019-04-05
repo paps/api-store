@@ -35,17 +35,23 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 
-## 4. Which domains are you interested in?
+## 4. Specify which domains you're targeting
 
-You can here specify one domain or a Google Spreadsheet URL with a list of domains.
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Message+Sender/websites_list.png)</center>
 
-## 5. (optional) Create an Intercom Segment
+In the **target field** you'll be prompted for your targets. This can be either *one* domain. Or a Google Spreadsheet URL containing *many* domains.
 
-Specificy your sales pitch
+These domains don't need to necessarily have Intercom. The tool will detect if Intercom is present and if not, go to the next site.
 
-## 6. Specify an email address to receive answers at.
+Your spreadsheet should contain a list of URLs (one link per row). You can specify the name of the column that contains the links. Simply enter the column name in the field below.
 
-Specify here your email address. Once a discussion starts on Intercom, you'll receive an email notifying you and can take the discussion from there.
+Please make sure your file is publicly accessible!
+
+## 5. Specify your message and the email address you want to receive answers at.
+
+Try to make your message look like you want to start a discussion. Starting by not saying "Hello" and start selling feels really unnatural to the operator and will definitely lower your response rate.
+
+**Don't forget to fill in your email address**. Once a discussion starts on Intercom, you'll receive an email notifying you and can take the discussion from there.
 
 # Click on Launch & Enjoy!
 It’s done! Click on "launch" to extract your bills once.

@@ -77,7 +77,7 @@ If you're operating from **another browser** and/or want to do it manually, [her
 
 Intercom segments are groups of users fulfilling specific criteria. Create the exact segment of users you want to archive and let Phantombuster know its ID. 
 
-![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Money+Saver/Intercom+Segment.png)
+![](hhttps://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Segment.png)
 
 [ 1 ] Go to the users sections
 

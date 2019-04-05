@@ -77,7 +77,7 @@ If you're operating from **another browser** and/or want to do it manually, [her
 
 Intercom segments are groups of users fulfilling specific criteria. Create the exact segment of users you want to archive and let Phantombuster know its ID. 
 
-![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Money+Saver/Intercom+Segment.png)
+![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Segment.png)
 
 [ 1 ] Go to the users sections
 
@@ -89,10 +89,6 @@ Intercom segments are groups of users fulfilling specific criteria. Create the e
 
 Once created go to the segment and copy/paste its URL. It should look like some variant of this:
 `https://app.intercom.io/a/apps/iy3q5eio/users/segments/5a9e93163543373724f93c07`
-
-## 6. Specify an email address to receive your summary at.
-
-Specify here your email address. You will receive detailed informations such as how many people were achived and how much money you saved.
 
 # Click on Launch & Enjoy!
 It’s done! Click on "launch" to extract your bills once.
@@ -117,6 +113,10 @@ That's it!
 
 # Knowledge 🤓
 
+## After each archive, you'll receive an export of your users
+
+This API will ask Intercom to export your archived users and send them to your inbox. That way, if you happen to need to reimport your users, you can!
+
 ## How to re-import your Intercom contacts
 
-When Phantombusters archives your users it also do an export of that users list and attaches it to the email we send.
+Go to your active user list and look for the import button above the list. Select the .csv you received by email

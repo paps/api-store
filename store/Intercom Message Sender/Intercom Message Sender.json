@@ -6,11 +6,11 @@
 	"gradientEnd": "#BADFFF",
 	"argumentDescription": "",
 	"hidden": true,
-	"new": false,
+	"new": true,
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://phantombuster.com",
-		"message": "Hey #firstName#,\n\nBest regards",
+		"message": "Hello! I stumbled on your site and was wondering if...",
 		"csvName": "result"
 	},
 	"outputDescription": {
@@ -24,36 +24,38 @@
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
-						"label": "Website URL / Spreadsheet <a href=\"/api-store/8852/facebook-message-sender#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>",
+						"label": "Which domains do you wish to target? <a href=\"/api-store/15637/intercom-message-sender#section_4specifywhichdomainsyouretargeting\" target=\"_blank\">(?)</a>",
 						"helpers": [
-							"Enter either a website URL <b>OR</b> a Google Spreadsheet URL <b>OR</b> a CSV URL",
-							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+							"Enter either the URL of 1 website that's using Intercom. <b>OR</b> the URL of a Google Spreadsheet URL filled with websites' URLs",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available so Phantombuster can connect to it."
 						]
 					},
 					"columnName": {
-						"label": "Column name from which to get websites URLs <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
-						"placeholder": "Website URLs",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						"label": "[optional] Name of the column containing your URLs <a href=\"/api-store/15637/intercom-message-sender#section_4specifywhichdomainsyouretargeting\" target=\"_blank\">(?)</a>",
+						"placeholder": "websiteUrl",
+						"helper": "By default, we'll use the first column of your spreadsheet."
 					},
 					"message": {
-						"label": "Message <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
+						"label": "Specify here the message you want to deliver to the person behind Intercom <a href=\"/api-store/15637/intercom-message-sender#section_5specifyyourmessageandtheemailaddressyouwanttoreceiveanswersat\" target=\"_blank\">(?)</a>",
 						"type": "textarea",
 						"helper": "Use #test# to insert the test value from your CSV file <a href=\"/api-store/\", target=\"_blank\">Other tags are available.</a>"
 					},
 					"email": {
-						"label": "Email",
-						"helper": "Your email to give to the website"
+						"label": "Specify here the email you want the operator to contact you back on <a href=\"/api-store/15637/intercom-message-sender#section_5specifyyourmessageandtheemailaddressyouwanttoreceiveanswersat\" target=\"_blank\">(?)</a>",
+						"helper": "This email will be filled into Intercom and as soon as the operator send you an answer you'll be notified by email."
 					},
 					"profilesPerLaunch": {
-						"label": "Number of lines to process per launch - Maximum 10  <a href=\"/api-store/\" target=\"_blank\">(?)</a>",
-						"inputType": "number"
+						"label": "How many websites do you want to process per launch? (Maximum 10)",
+						"inputType": "number",
+						"helper": "Make sure that you can handle the flow of responses!"
 					},
 					"triesPerDomain": {
-						"label": "Max number of pages to visit per domains (default: all)",
-						"inputType": "number"
+						"label": "If Intercom doesn't open on the main domain, how many other pages do you wish to visit?",
+						"inputType": "number",
+						"helper": "Sometimes the root page won't show Intercom but browsing to /pricing or /help will give you an entry point into Intercom."
 					},
 					"csvName": {
-						"label": "Name of resulting CSV file",
+						"label": "Specify here the name of the files containing launches' results",
 						"placeholder": "result"
 					}
 				}

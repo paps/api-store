@@ -35,44 +35,23 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 
-## 4. Easy & safe authentication { argument }
+## 4. Specify which domains you're targeting
 
-This automation will connect to Intercom on your behalf. The **safest and most efficient** way for Phantombuster to authenticate as yourself is by using your session cookies.
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Message+Sender/websites_list.png)</center>
 
-To make that process as easy as possible you can use **Phantombuster's browser extension**. It's a 2-click installation.
+In the **target field** you'll be prompted for your targets. This can be either *one* domain. Or a Google Spreadsheet URL containing *many* domains.
 
-<div class="row" style="margin: 10px 0px;">
-	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" 
-		target="_blank">
-			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
-				<p style="margin-top: 0px;">
-				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
-				Get it for Chrome</p>
-			</div>
-		</a>
-	</div>
-	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" 
-		target="_blank">
-			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
-				<p style="margin-top: 0px;">
-				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
-				Get it for Firefox</p>
-			</div>
-		</a>
-	</div>	
-</div>
+These domains don't need to necessarily have Intercom. The tool will detect if Intercom is present and if not, go to the next site.
 
-If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
+Your spreadsheet should contain a list of URLs (one link per row). You can specify the name of the column that contains the links. Simply enter the column name in the field below.
 
-## 5. (optional) Create an Intercom Segment
+Please make sure your file is publicly accessible!
 
-Specificy your sales pitch
+## 5. Specify your message and the email address you want to receive answers at.
 
-## 6. Specify an email address to receive answers at.
+Try to make your message look like you want to start a discussion. Starting by not saying "Hello" and start selling feels really unnatural to the operator and will definitely lower your response rate.
 
-Specify here your email address. Once a discussion starts on Intercom, you'll receive an email notifying you and can take the discussion from there.
+**Don't forget to fill in your email address**. Once a discussion starts on Intercom, you'll receive an email notifying you and can take the discussion from there.
 
 # Click on Launch & Enjoy!
 It’s done! Click on "launch" to extract your bills once.
