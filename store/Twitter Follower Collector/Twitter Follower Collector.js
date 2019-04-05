@@ -358,6 +358,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 		utils.log("Rate limit reached, you should start again in around 2h.", "warning")
 	}
 	if (result.length !== initialResultLength) {
+		utils.log(`Got ${result.length} profiles in total.`, "done")
 		await utils.saveFlatResults(result, result, csvName)
 		if (agentObject) {
 			if (interrupted && twitterUrl) {

@@ -63,6 +63,8 @@ const checkFollowCount = async () => {
 
 // function to follow a profile
 const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction, scrapedData) => {
+	console.log("onfrien")
+	return
 	let action = conditionalAction
 	if (action.startsWith("Unfollow")) {
 		action = "Unfollow"
@@ -103,7 +105,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 	await tab.wait(4000)
 	const checkFollowData = await instagram.scrapeProfile(tabJson, query, profileUrl)
 	if (action === "Follow") {
-		if (checkFollowData.status === "Following" && 1 === 2) {
+		if (checkFollowData.status === "Following") {
 			utils.log(`Successfully followed ${checkFollowData.profileName}.`, "done")
 			checkFollowData.followAction = "Success"
 			followSuccessCount++
@@ -249,7 +251,8 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
-				result.push({ query: url, error: "Broken link or page has been removed" })
+				result.push({ query: url, error: "Broken link or page has been removed", timestamp: (new Date()).toISOString() })
+				await buster.saveText(await tab.getContent(), `${Date.now()}_broken_link.html`)
 				continue
 			}
 			const profileUrl = await tab.getUrl()
