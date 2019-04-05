@@ -10,7 +10,7 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"spreadsheetUrl": "https://phantombuster.com",
-		"message": "Hey #firstName#,\n\nBest regards",
+		"message": "Hi,\n\nBest regards",
 		"csvName": "result"
 	},
 	"outputDescription": {
