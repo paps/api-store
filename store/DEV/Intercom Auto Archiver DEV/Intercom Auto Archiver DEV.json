@@ -1,0 +1,90 @@
+{
+	"slug": "intercom-auto-archiver",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#61B5FF",
+	"gradientEnd": "#BADFFF",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "_intercom_session_cookie",
+		"filter": "lastSeen",
+		"lastSeen": 30,
+		"spreadsheetUrl": ""
+	},
+	"outputDescription": {
+		"subscription": "Current subscription details",
+		"totalCount": "Current Total Monthly Price",
+		"archivedUsers": "Number of archived users"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"lastSeen": [ "filter" ],
+					"segmentUrl": [ "filter" ]
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Intercom session cookie <a href=\"/api-store/15580/intercom-auto-archiver#section_argument\" target=\"_blank\">(?)</a>",
+						"placeholder": "Paste your '_intercom_session' session cookie here"
+					},
+					"filter": {
+						"label": "Choose a filter",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "Last seen more than", "Segment" ],
+						"type": "select"
+					},
+					"lastSeen": {
+						"label": "Last seen more than X days",
+						"dependencies": {
+							"filter": "lastSeen"
+						}
+					},
+					"segmentUrl": {
+						"label": "Segment URL",
+						"dependencies": {
+							"filter": "segment"
+						}
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true,
+				"minLength": 15
+			},
+			"filter": {
+				"enum": [ "lastSeen", "segment" ],
+				"default": "lastSeen"
+			},
+			"lastSeen": {
+				"type": "number"
+			},
+			"segmentUrl": {
+				"type": "string"
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}	
