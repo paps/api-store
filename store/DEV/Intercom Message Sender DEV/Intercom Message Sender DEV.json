@@ -1,9 +1,9 @@
 {
 	"slug": "intercom-message-sender",
-	"description": "Automatically send messages to Facebook profiles",
-	"image": "",
-	"gradientBegin": "#32C1F1",
-	"gradientEnd": "#5477BC",
+	"description": "Visit websites and leave a message on their Intercom chat",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Message+Sender/Intercom+Message+Sender.png",
+	"gradientBegin": "#61B5FF",
+	"gradientEnd": "#BADFFF",
 	"argumentDescription": "",
 	"hidden": true,
 	"new": false,

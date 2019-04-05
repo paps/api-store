@@ -1,14 +1,15 @@
 {
 	"slug": "intercom-auto-archiver",
-	"description": "Save hundreds of dollars on your Intercom bill by auto-archiving inactive users.",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Auto+Archiver.png",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
 	"gradientBegin": "#61B5FF",
 	"gradientEnd": "#BADFFF",
 	"hidden": true,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "_intercom_session",
+		"sessionCookie": "_intercom_session_cookie",
 		"filter": "lastSeen",
 		"lastSeen": 30,
 		"spreadsheetUrl": ""

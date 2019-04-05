@@ -164,14 +164,16 @@ const filterResults = (results, query, terms) => {
 	const regex = /#[a-zA-Z0-9\u00C0-\u024F]+/gu
 	for (const result of results) {
 		let hasMatched = false
+		let matches = query
 		for (const term of terms) {
 			if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
 				// console.log(`Found Match between ${query} AND ${term}`)
-				result.matches = `${query} AND ${term}`
 				hasMatched = true
+				matches += ` AND ${term}`
 			}
 		}
 		if (hasMatched) {
+			result.matches = matches
 			filterResult.push(result)
 		}
 	}
@@ -335,7 +337,7 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 			continue
 		}
 		const hashtag = terms.shift()
-		const otherTerms = terms.join(" ,")
+		const otherTerms = terms.join(", ")
 		/**
 		 * Simple process to check if we need to search an URL for hashtags or locations
 		 */
