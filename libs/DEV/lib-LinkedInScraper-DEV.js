@@ -910,6 +910,7 @@ class LinkedInScraper {
 								status = "Not found"
 							}
 						} catch (err) {
+							console.log("errorDC:", err)
 							status = err.message
 						}
 						try {
@@ -924,7 +925,8 @@ class LinkedInScraper {
 							const user_id = `dropcontact_${hostname}`
 							const event_type = "email_request"
 							const apiKey = "5f442f063c9d596a7157f248f1010e1a"
-							const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
+							const currentUrl = await tab.getUrl()
+							const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}", "url": "${currentUrl}"}}]`, JSON.stringify(options))
 							console.log("res:", res.body)
 						} catch (err) {
 							console.log("amplitude error: ", err)
