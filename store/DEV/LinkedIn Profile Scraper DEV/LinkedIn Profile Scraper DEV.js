@@ -108,11 +108,13 @@ const removeLinkedinSubdomains = url => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let {sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot} = utils.validateArguments()
+	let { sessionCookie, profileUrls, spreadsheetUrl, columnName, emailChooser, hunterApiKey, dropcontactApiKey, numberOfAddsPerLaunch, csvName, noDatabase, saveImg, takeScreenshot, takePartialScreenshot, onlyCurrentJson } = utils.validateArguments()
 	let urls = profileUrls
+	let singleProfile = false
 	if (spreadsheetUrl) {
 		if (linkedIn.isLinkedInProfile(spreadsheetUrl)) {
 			urls = [spreadsheetUrl]
+			singleProfile = true
 		} else {
 			if (spreadsheetUrl.includes("linkedin.com/sales/search/") || spreadsheetUrl.includes("linkedin.com/search/results/")) {
 				utils.log("Input is a Search URL and not a Spreadsheet or Profile URL. Please use our Search Export API to extract results from that URL.", "error")
@@ -135,7 +137,9 @@ const removeLinkedinSubdomains = url => {
 	if (typeof jsonDb === "string") {
 		jsonDb = JSON.parse(jsonDb)
 	}
-	urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+	if (!singleProfile) {
+		urls = getUrlsToScrape(urls.filter(el => filterRows(el, db)), numberOfAddsPerLaunch)
+	}
 	console.log(`URLs to scrape: ${JSON.stringify(urls, null, 4)}`)
 
 	const linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick, buster, dropcontactApiKey, emailChooser)
@@ -193,8 +197,13 @@ const removeLinkedinSubdomains = url => {
 	if (noDatabase) {
 		nick.exit()
 	} else {
-		jsonDb.push(...result)
-		await utils.saveResults(jsonDb, db, csvName, null, true)
+		console.log("onlyCurrentJson", onlyCurrentJson)
+		if (onlyCurrentJson) {
+			await utils.saveResults(result, db, csvName, null, true)
+		} else {
+			jsonDb.push(...result)
+			await utils.saveResults(jsonDb, db, csvName, null, true)
+		}
 		await linkedIn.updateCookie()
 		nick.exit(0)
 	}

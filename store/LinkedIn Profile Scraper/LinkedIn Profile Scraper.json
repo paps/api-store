@@ -18,9 +18,7 @@
 	"outputDescription": {
 		"imgUrl": "",
 		"headline": "",
-		"company": "",
 		"school": "",
-		"location": "",
 		"connections": "connections count",
 		"profileUrl": "",
 		"connectionDegree": "",
@@ -125,6 +123,9 @@
 					},
 					"takePartialScreenshot": {
 						"rightLabel": "<b>Take a partial size screenshot of the profile</b>"
+					},
+					"onlyCurrentJson": {
+						"rightLabel": "<b>Keep only current results in JSON</b>"
 					}
 				}
 			}
@@ -172,6 +173,9 @@
 				"type": "boolean"
 			},
 			"takePartialScreenshot": {
+				"type": "boolean"
+			},
+			"onlyCurrentJson": {
 				"type": "boolean"
 			}
 		},

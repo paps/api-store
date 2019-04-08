@@ -57,7 +57,7 @@ const getBilling = async (page: puppeteer.Page, id: string) => {
 		const billingResult = await page.evaluate(scrapeBilling) as IUnknownObject
 		const totalCount = billingResult.totalCount
 		if (totalCount) {
-			utils.log(`Total count is ${totalCount}`, "done")
+			utils.log(`Total count is $${totalCount}`, "done")
 		}
 		return billingResult
 	} else {
