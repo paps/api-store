@@ -179,6 +179,24 @@ class LinkedIn {
 			process.exit(this.utils.ERROR_CODES.LINKEDIN_BAD_COOKIE)
 		}
 	}
+
+	public async updateCookie(page: puppeteer.Page): Promise<void> {
+		try {
+			const cookie = (await page.cookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
+			if (cookie.length === 1) {
+				if (cookie[0].value !== this.originalSessionCookie) {
+					const ao: IUnknownObject = await this.buster.getAgentObject() as IUnknownObject
+					ao[".modifiedSessionCookie"] = cookie[0].value
+					ao[".cookieTimestamp"] = (new Date()).toISOString()
+					await this.buster.setAgentObject(ao)
+				}
+			} else {
+				throw new Error(`${cookie.length} cookies match filtering, cannot know which one to save`)
+			}
+		} catch (err) {
+			this.utils.log("Caught exception when saving session cookie: " + err.toString(), "warning")
+		}
+	}
 }
 
 export = LinkedIn
