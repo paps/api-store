@@ -188,10 +188,11 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		if (line) {
 			let seek = false
 			for (const dbLine of db) {
-				const tmp = line.toLowerCase()
+				let tmp = line.toLowerCase()
 				const handle = dbLine.handle ? dbLine.handle.toLowerCase() : ""
+				tmp = !handle.startsWith("@") ? tmp.startsWith("@") ? tmp.replace("@", "") : tmp : tmp
 				const pattern = new RegExp(`twitter.com/${handle}$`)
-				if (handle && tmp === removeNonPrintableChars(handle) || tmp === dbLine.url || tmp.match(pattern) || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/")) === dbLine.url) {
+				if (handle && tmp === removeNonPrintableChars(handle) || tmp === dbLine.url || tmp.match(pattern) || (tmp.includes("twitter.com/@") && tmp.replace(".com/@", ".com/") === dbLine.url)) {
 					seek = true
 					break
 				}
