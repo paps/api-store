@@ -150,14 +150,22 @@ const archiveUsers = async (page: puppeteer.Page, matches: string) => {
 }
 
 const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSeen: number, segmentUrl: string) => {
+	let validSegment = false
 	if (filter === "lastSeen") {
 		const segment = Buffer.from(`{"predicates":[{"attribute":"last_request_at","comparison":"lt","type":"date","value":"${lastSeen}"},{"attribute":"role","comparison":"eq","type":"role","value":"user_role"}]}`).toString("base64")
 		segmentUrl = `https://app.intercom.io/a/apps/${id}/users/segments/active:${segment}`
+		validSegment = true
+	} else if (segmentUrl.includes("segments/active:")) {
+		const segmentCode = segmentUrl.slice(segmentUrl.indexOf("segments/active:") + 16)
+		const decodedSegment = Buffer.from(segmentCode, "base64").toString("ascii")
+		validSegment = decodedSegment.endsWith("}]}")
 	}
 	try {
-		await page.goto(segmentUrl)
-		await page.waitForSelector(".user-list__header, h1.boot-error__heading")
-		if (await page.$("h1.boot-error__heading")) {
+		if (validSegment) {
+			await page.goto(segmentUrl)
+			await page.waitForSelector(".user-list__header, h1.boot-error__heading")
+		}
+		if (await page.$("h1.boot-error__heading") || !validSegment) {
 			if (filter === "segment") {
 				utils.log("Invalid segment URL!", "error")
 			}  else {

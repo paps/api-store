@@ -1,8 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-api-store-DEV.js, lib-StoreUtilities-DEV.js, lib-Intercom.js"
-"phantombuster flags: save-folder"
+"phantombuster dependencies: lib-api-store.js, lib-StoreUtilities.js, lib-Intercom.js"
 
 const { URL } = require("url")
 
@@ -10,9 +9,9 @@ import Buster from "phantombuster"
 const buster = new Buster()
 
 import puppeteer from "puppeteer"
-import { IUnknownObject, IEvalAny } from "./lib-api-store-DEV"
+import { IUnknownObject, IEvalAny } from "./lib-api-store"
 
-import StoreUtilities from "./lib-StoreUtilities-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
 
 const utils = new StoreUtilities(buster)
 import Intercom from "./lib-Intercom"
@@ -57,9 +56,8 @@ const getBilling = async (page: puppeteer.Page, id: string) => {
 	if (await page.$(".settings__billing__total")) {
 		const billingResult = await page.evaluate(scrapeBilling) as IUnknownObject
 		const totalCount = billingResult.totalCount
-		console.log("bill", billingResult)
 		if (totalCount) {
-			utils.log(`Total count is ${totalCount}`, "done")
+			utils.log(`Total count is $${totalCount}`, "done")
 		}
 		return billingResult
 	} else {
@@ -75,16 +73,6 @@ const scrapeBilling = () => {
 	if (tableSelector) {
 		billingObject.subscription = Array.from(tableSelector.querySelectorAll("tbody tr")).map(el => {
 			const returnedObject = {} as IUnknownObject
-			// const camelCaser = (str: string) => {
-			// 	const stringArray = str.toLowerCase().split(" ")
-			// 	for (let i = 1; i < stringArray.length; i++) {
-			// 		if (stringArray[i]) {
-			// 			stringArray[i] = stringArray[i].charAt(0).toUpperCase() + stringArray[i].substr(1)
-			// 		}
-			// 	}
-			// 	str = stringArray.join("")
-			// 	return str
-			// }
 			const productSelector = el.querySelector("[data-product-summary-row] .t__h4")
 			const usageSelector = el.querySelector("td .settings__billing__details-price-comparison .t__h4")
 			const priceSelector = el.querySelector("td.t__right span")
@@ -162,16 +150,22 @@ const archiveUsers = async (page: puppeteer.Page, matches: string) => {
 }
 
 const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSeen: number, segmentUrl: string) => {
+	let validSegment = false
 	if (filter === "lastSeen") {
 		const segment = Buffer.from(`{"predicates":[{"attribute":"last_request_at","comparison":"lt","type":"date","value":"${lastSeen}"},{"attribute":"role","comparison":"eq","type":"role","value":"user_role"}]}`).toString("base64")
 		segmentUrl = `https://app.intercom.io/a/apps/${id}/users/segments/active:${segment}`
+		validSegment = true
+	} else if (segmentUrl.includes("segments/active:")) {
+		const segmentCode = segmentUrl.slice(segmentUrl.indexOf("segments/active:") + 16)
+		const decodedSegment = Buffer.from(segmentCode, "base64").toString("ascii")
+		validSegment = decodedSegment.endsWith("}]}")
 	}
-	// console.log("userUrls:", segmentUrl)
-	// usersUrl = `https://app.intercom.io/a/apps/${id}/users/segments/active`
 	try {
-		await page.goto(segmentUrl)
-		await page.waitForSelector(".user-list__header, h1.boot-error__heading")
-		if (await page.$("h1.boot-error__heading")) {
+		if (validSegment) {
+			await page.goto(segmentUrl)
+			await page.waitForSelector(".user-list__header, h1.boot-error__heading")
+		}
+		if (await page.$("h1.boot-error__heading") || !validSegment) {
 			if (filter === "segment") {
 				utils.log("Invalid segment URL!", "error")
 			}  else {
@@ -183,7 +177,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	} catch (err) {
 		const currentUrl = page.url()
 		const urlObject = new URL(currentUrl)
-		if (urlObject.hostname.includes("intercom")) {
+		if (utils.isUrl(segmentUrl) && urlObject.hostname.includes("intercom")) {
 			utils.log("Intercom isn't loading correctly...", "error")				
 		} else {
 			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")				
@@ -215,9 +209,9 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		if (matches) {
 			utils.log(`Got ${matches}`, "done")
 			try {
-				// await exportUsers(page)
+				await exportUsers(page)
 				try {
-					// await archiveUsers(page, matches)
+					await archiveUsers(page, matches)
 					return parseInt(matches.replace(/[.,]/g, ""), 10)
 				} catch (err) {
 					utils.log(`Fail to archive: ${err}`)
@@ -244,7 +238,6 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	}
 	await intercom.login(page, _sessionCookie)
 	const results = await utils.getDb(_csvName + ".csv")
-	console.log("results:", results)
 	const currentUrl = page.url()
 	let id = ""
 	if (currentUrl.startsWith("https://app.intercom.io/a/apps/")) {
@@ -254,29 +247,19 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	let billingCount = {} as IUnknownObject
 	try{
 		billingCount = await getBilling(page, id)
-		console.log("bC:", billingCount)
 	} catch (err) {
-		console.log("errBilling:", err)
+		//
 	}
 	billingCount.timestamp = (new Date()).toISOString()
-	await page.screenshot({ path: `${Date.now()}billing.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}billing.html`)
 	try {
 		const archivedUsers = await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
 		if(archivedUsers) {
 			billingCount.archivedUsers = archivedUsers
 		}
 	} catch (err) {
-		console.log("usererr:", err)
+		//
 	}
-
 	billingCount.query = _filter === "lastSeen" ? `Last seen more than ${_lastSeen} days` : _segmentUrl
-
-	// console.log("filter:", _filter)
-	// console.log("lastseen:", _lastSeen)
-	// console.log("segment:", _segmentUrl)
-	await page.screenshot({ path: `0F.jpg`, type: "jpeg", quality: 50 })
-	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}users.html`)
 	if (billingCount) {
 		const craftedCsv = craftCsv(billingCount)
 		results.push(craftedCsv)
