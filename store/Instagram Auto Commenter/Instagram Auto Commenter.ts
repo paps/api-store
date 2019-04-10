@@ -119,7 +119,6 @@ const postComment = async (page: puppeteer.Page, query: string, messages: string
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
 	const tempResult = []
 	for (const query of postUrls) {
-
 		utils.log(`Processing ${query}`, "loading")
 
 		const timeLeft = await utils.checkTimeLeft()
@@ -140,6 +139,7 @@ const postComment = async (page: puppeteer.Page, query: string, messages: string
 			utils.log(`Can't process post at ${query} due to: ${err.message || err}`, "warning")
 			result.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
+		await page.waitFor(3500 + Math.random() * 3000)
 	}
 	result = result.concat(tempResult)
 	const messageCount = result.filter((el) => el.message).length
