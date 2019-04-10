@@ -288,8 +288,8 @@ const scrapeAndRemove = (arg, cb) => {
 		if (results[i].querySelector(".feed-shared-actor__name")) {
 			scrapedObject.name = results[i].querySelector(".feed-shared-actor__name").innerText
 		}
-		if (results[i].querySelector(".feed-shared-actor__meta a")) {
-			const url = results[i].querySelector(".feed-shared-actor__meta a").href
+		if (results[i].querySelector(".feed-shared-actor__meta a, a.feed-shared-actor__container-link")) {
+			const url = results[i].querySelector(".feed-shared-actor__meta a, a.feed-shared-actor__container-link").href
 			const urlObject = new URL(url)
 			scrapedObject.profileUrl = urlObject.hostname + urlObject.pathname
 		}
@@ -412,6 +412,8 @@ const loadContentAndScrape = async (tab, numberOfPost, query, onlyGetFirstResult
 		}
 		await tab.wait(1000)
 	} while (scrapeCount < numberOfPost)
+	await tab.screenshot(`${Date.now()}andRemv.png`)
+	await buster.saveText(await tab.getContent(), `${Date.now()}andRemv.html`)
 	result = result.concat(await tab.evaluate(scrapeAndRemove, { query, limiter: 0, onlyGetFirstResult })) // scraping the last ones when out of the loop then slicing
 	result = result.slice(0, numberOfPost)
 	if (result.length && scrapeCount === 0) { // if we scraped posts without more loading

@@ -287,8 +287,8 @@ const scrapeAndRemove = (arg, cb) => {
 		if (results[i].querySelector(".feed-shared-actor__name")) {
 			scrapedObject.name = results[i].querySelector(".feed-shared-actor__name").innerText
 		}
-		if (results[i].querySelector(".feed-shared-actor__meta a")) {
-			const url = results[i].querySelector(".feed-shared-actor__meta a").href
+		if (results[i].querySelector(".feed-shared-actor__meta a, a.feed-shared-actor__container-link")) {
+			const url = results[i].querySelector(".feed-shared-actor__meta a, a.feed-shared-actor__container-link").href
 			const urlObject = new URL(url)
 			scrapedObject.profileUrl = urlObject.hostname + urlObject.pathname
 		}
