@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer"
 import Buster from "phantombuster"
+import { URL } from "url"
 import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject } from "./lib-api-store"
 
@@ -195,6 +196,18 @@ class LinkedIn {
 			}
 		} catch (err) {
 			this.utils.log("Caught exception when saving session cookie: " + err.toString(), "warning")
+		}
+	}
+
+	public isLinkedInUrl(url: string): boolean {
+		try {
+			if (url.startsWith("linkedin") || url.startsWith("www.")) {
+				url = `https://${url}`
+			}
+			const urlObj = new URL(url)
+			return ((urlObj.hostname.indexOf("linkedin.com") > -1) && (urlObj.pathname.startsWith("/in/") || urlObj.pathname.startsWith("/comm/in/") || urlObj.pathname.startsWith("/profile/view") || urlObj.pathname.startsWith("/sales/people/") || urlObj.pathname.startsWith("/sales/gmail/profile/") || urlObj.pathname.startsWith("/pub/") || urlObj.pathname.startsWith("/feed/update/urn:li:activity") || urlObj.pathname.startsWith("/pulse/")))
+		} catch (err) {
+			return false
 		}
 	}
 }
