@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer"
 import Buster from "phantombuster"
+import { URL } from "url"
 import StoreUtilities from "./lib-StoreUtilities"
 import { IUnknownObject } from "./lib-api-store"
 
@@ -112,7 +113,6 @@ class LinkedIn {
 					this.utils.log(`Connected successfully as ${name}`, "done")
 					try {
 						const isPresent = await page.$eval(".nav-item__profile-member-photo.nav-item__icon.ghost-person", (el) => !!el && (window.getComputedStyle(el).getPropertyValue("display") !== "none" && (el as HTMLElement).offsetHeight))
-					// const isPresent = await page.$eval(".nav-item__profile-member-photo.nav-item__icon.ghost-person", (elem) => window.getComputedStyle(elem).getPropertyValue("display") !== "none" && (elem as HTMLElement).offsetHeight)
 						if (isPresent) {
 							console.log("")
 							this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
@@ -195,6 +195,18 @@ class LinkedIn {
 			}
 		} catch (err) {
 			this.utils.log("Caught exception when saving session cookie: " + err.toString(), "warning")
+		}
+	}
+
+	public isLinkedInUrl(url: string): boolean {
+		try {
+			if (url.startsWith("linkedin") || url.startsWith("www.")) {
+				url = `https://${url}`
+			}
+			const urlObj = new URL(url)
+			return ((urlObj.hostname.indexOf("linkedin.com") > -1) && (urlObj.pathname.startsWith("/in/") || urlObj.pathname.startsWith("/comm/in/") || urlObj.pathname.startsWith("/profile/view") || urlObj.pathname.startsWith("/sales/people/") || urlObj.pathname.startsWith("/sales/gmail/profile/") || urlObj.pathname.startsWith("/pub/") || urlObj.pathname.startsWith("/feed/update/urn:li:activity") || urlObj.pathname.startsWith("/pulse/")))
+		} catch (err) {
+			return false
 		}
 	}
 }
