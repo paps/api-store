@@ -4,7 +4,7 @@
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Auto+Archiver/Intercom+Auto+Archiver.png",
 	"gradientBegin": "#61B5FF",
 	"gradientEnd": "#BADFFF",
-	"hidden": true,
+	"hidden": false,
 	"new": true,
 	"update": false,
 	"defaultArgument": {
