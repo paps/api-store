@@ -245,9 +245,18 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 			await tab.open(url)
 			const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 			if (selected === ".error-container") {
+				const errorMessage = await tab.evaluate((arg, cb) => {
+					if (document.querySelector(".error-container h2")) {
+						cb(null, document.querySelector(".error-container h2").textContent)
+					} else {
+						cb(null, null)
+					}
+				})
+				if (errorMessage) {
+					utils.log(`Got error message: ${errorMessage}`, "warning")
+				}
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
 				result.push({ query: url, error: "Broken link or page has been removed", timestamp: (new Date()).toISOString() })
-				await buster.saveText(await tab.getContent(), `${Date.now()}_broken_link.html`)
 				continue
 			}
 			const profileUrl = await tab.getUrl()
@@ -295,6 +304,10 @@ const blockProfile = async (tab, tabJson, query, profileUrl, action, scrapedData
 				}
 			}
 		} catch (err) {
+			if (err.message && err.message.includes("this tab has crashed")) {
+				utils.log("The current tab has crashed (probably because too many profiles were opened in a row. Exiting...", "error")
+				break
+			}
 			utils.log(`Can't open the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
