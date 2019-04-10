@@ -59,7 +59,10 @@ const findProfile = async (tab, email, keepGoingRateLimited) => {
 			if (profileUrl.startsWith("https://www.linkedin.com/premium/sales?upsellOrderOrigin")) {
 				throw "RateLimited"
 			}
-			await tab.waitUntilVisible(["#profile-content", "#content-main"], "or", 15000)
+			const selector = await tab.waitUntilVisible(["#profile-content", "#content-main", "span.twitter a[href=\"https://twitter.com/LinkedInHelp\"]"], "or", 15000)
+			if (selector === "span.twitter a[href=\"https://twitter.com/LinkedInHelp\"]") { // when a profile's found but LinkedIn can't show it
+				profile.error = "Couldn't access profile"
+			}
 			if (profileUrl.includes("linkedin.com/in/")) {
 				profile.profileUrl = profileUrl
 			} else if (profileUrl.includes("linkedin.com/sales/people")) {
