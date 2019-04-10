@@ -1,9 +1,10 @@
 import Nick from "nickjs"
 import Buster from "phantombuster"
-
+import * as Puppeteer from "puppeteer"
 import { IUnknownObject, isUnknownObject } from "./lib-api-store-DEV"
 
 declare class StoreUtilities {
+	public test: boolean
 	public ERROR_CODES: { [error in keyof typeof ERRORS]: number }
 	public constructor(nick: Nick, buster: Buster)
 	public constructor(buster: Buster)
@@ -17,6 +18,7 @@ declare class StoreUtilities {
 	public checkTimeLeft(): Promise<{ timeLeft: boolean, message: string|number }>
 	public getIP(): Promise<string>
 	public saveResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string , schema?: string[]|null, saveJson?: boolean): Promise<{ csvUrl: string, jsonUrl?: string }>
+	public saveFlatResults(jsonResult: IUnknownObject[], csvResult: IUnknownObject[], name?: "result"|null|string): Promise<void>
 	public getDb(filename: string, parseContent?: boolean): Promise<IUnknownObject[]>
 	public saveResult(result: IUnknownObject[], csvName?: "result"|null|string, schema?: string[]): Promise<void>
 	public checkArguments(args: IUnknownObject[]): IUnknownObject[]
@@ -25,6 +27,7 @@ declare class StoreUtilities {
 	public filterRightOuter(left: IUnknownObject[], right: IUnknownObject[]): IUnknownObject[]
 	public notifyByMail(): Promise<void>
 	public saveImg(tab: Nick.Tab, imgUrl: string, fileName: string, errorMessage: string): Promise<string[]>
+	public detectProxymeshError(tab: Nick.Tab|Puppeteer.Page): Promise<boolean>
 }
 
 declare const enum ERRORS {

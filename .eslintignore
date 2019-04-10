@@ -40,3 +40,7 @@ store/Craigslist Page Scraper/Craigslist Page Scraper.js
 store/Twitter Auto Follow/Twitter Auto Follow.js
 store/DEV/Intercom Money Saver DEV/Intercom Money Saver DEV.js
 store/Intercom Auto Archiver/Intercom Auto Archiver.js
+libs/lib-GitHub.js
+libs/DEV/lib-Github-DEV.js
+store/DEV/Intercom Auto Archiver DEV/Intercom Auto Archiver DEV.js
+store/DEV/LinkedIn Auto Liker DEV/LinkedIn Auto Liker DEV.js

@@ -137,10 +137,10 @@ class LinkedIn {
 				}
 			}
 			if (agentObject[".originalSessionCookie"] === this.originalSessionCookie) {
-				this.utils.log(`Session cookie not valid anymore. Please log in to LinkedIn to get a new one.`, "error")
+				this.utils.log("Session cookie not valid anymore. Please log in to LinkedIn to get a new one.", "error")
 				this.nick.exit(this.utils.ERROR_CODES.LINKEDIN_EXPIRED_COOKIE)
 			} else {
-				this.utils.log(`Can't connect to LinkedIn with this session cookie.`, "error")
+				this.utils.log("Can't connect to LinkedIn with this session cookie.", "error")
 			}
 			if (this.originalSessionCookie.length !== 152) {
 				this.utils.log(`The LinkedIn li_at session cookie has usually 152 characters, yours has ${this.originalSessionCookie.length} characters, make sure you correctly copy-pasted the cookie.`, "error")

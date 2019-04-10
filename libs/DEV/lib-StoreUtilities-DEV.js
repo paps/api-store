@@ -210,6 +210,12 @@ const _filterName = (csvName) => {
 	return csvName.replace(/[%#+\\,|]+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
+/**
+ * @param {Nick.Tab|Puppeteer.Page}
+ * @return {boolean}
+ */
+const isNickTab = tab => !!tab.driver
+
 class StoreUtilities {
 
 	constructor(nick, buster) {
@@ -457,7 +463,7 @@ class StoreUtilities {
 		 */
 		const pattern = "<!doctype html>"
 		const doctypeCheck = httpContent.substring(0, pattern.length).toLowerCase()
-		if (doctypeCheck === pattern) {
+		if (doctypeCheck === pattern || doctypeCheck.match(/(<([^>]+)>)/ig)) {
 			throw `${url} doesn't represent a CSV file`
 		}
 
@@ -1003,19 +1009,22 @@ class StoreUtilities {
 
 	/**
 	 * @description detects if ProxyMesh proxy isn't authorized
-	 * @param {Object} tab
+	 * @param {Nick.Tab|Puppeteer.Page} tab
 	 * @return {Boolean} True if proxy isn't authorized, otherwise false
 	 */
 	async detectProxymeshError(tab) {
+		const isNick = isNickTab(tab)
+		const url = "www.google.com"
+		const sel = "body"
 		try {
-			await tab.open("www.google.com")
-			await tab.waitUntilVisible("body")
+			isNick ? await tab.open(url) : await tab.goto(url)
+			isNick ? await tab.waitUntilVisible(sel) : await tab.waitForSelector(sel, { timeout: 5000, visible: true })
 			const bodyText = await tab.evaluate((arg, cb) => {
+				let val = null
 				if (document.querySelector("body")) {
-					cb(null, document.querySelector("body").textContent)
-				} else {
-					cb(null, null)
+					val = document.querySelector("body").textContent
 				}
+				return cb ? cb(null, val) : val
 			})
 			if (bodyText && bodyText.endsWith("proxy not authorized")) {
 				return true
