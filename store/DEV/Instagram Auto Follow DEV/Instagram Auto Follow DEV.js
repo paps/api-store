@@ -63,8 +63,6 @@ const checkFollowCount = async () => {
 
 // function to follow a profile
 const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction, scrapedData) => {
-	console.log("onfrien")
-	return
 	let action = conditionalAction
 	if (action.startsWith("Unfollow")) {
 		action = "Unfollow"
@@ -116,7 +114,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 			followRequestCount++
 			return checkFollowData
 		} else {
-			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			utils.log(`Fail to follow ${checkFollowData.profileName}, you may follow too many profiles (7500 max)`, "warning")
 			try {
 				const followCount = await checkFollowCount()
 				if (followCount === 7500) {

@@ -1,0 +1,114 @@
+{
+	"slug": "reddit-posts-extractor",
+	"description": "Automatically comment a list of specific Instagram posts",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Auto+Commenter/Instagram+Auto+Commenter+(2).png",
+	"hidden": false,
+	"new": true,
+	"gradientBegin": "#FCCF6B",
+	"gradientEnd": "#DA2E82",
+	"argumentHelpAnchor": "#section_argument",
+	"defaultArgument": {
+		"spreadsheetUrl": "reddit_subreddit_urls",
+		"numberOfPostsPerLaunch": 10,
+		"numberOfPostsPerSubreddit": 50
+	},
+	"outputDescription": {
+		"message": "Message sent"
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
+							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/14303/instagram-auto-commenter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						},
+						"columnNameProfiles": {
+							"label": "Column name from which to get subreddit URLs",
+							"placeholder": "Subreddit",
+							"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+						},
+						"columnNameMessages": {
+							"label": "Column name from which to get messages",
+							"placeholder": "Messages",
+							"helper": "By default, we'll use the second column of your spreadsheet (column B)"
+						},
+						"numberOfLinesPerLaunch": {
+							"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/14303/instagram-auto-commenter#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"inputType": "number",
+							"helper": "All of them if empty"
+						},
+						"numberOfPostsPerSubreddit": {
+							"label": "Number of posts to scrape per subreddit <a href=\"/api-store/14303/instagram-auto-commenter#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"inputType": "number"
+						},
+						"csvName": {
+							"label": "Name of resulting CSV file",
+							"placeholder": "result"
+						}
+					}
+				}
+			}
+		},
+		"argumentSchema": {
+			"type": "object",
+			"properties": {
+				"spreadsheetUrl": {
+					"type": "string",
+					"required": true
+				},
+				"columnNameProfiles": {
+					"type": "string"
+				},
+				"columnNameMessages": {
+					"type": "string"
+				},
+				"numberOfLinesPerLaunch": {
+					"type": "number",
+					"minimum": 1
+				},
+				"numberOfPostsPerSubreddit": {
+					"type": "number",
+					"minimum": 1,
+					"required": true
+				},
+				"csvName": {
+					"type": "string",
+					"required": false
+				}
+			},
+			"oneOf": [
+				{
+					"required": [
+						"spreadsheetUrl"
+					]
+				},
+				{
+					"properties": {
+						"queries": {
+							"required": true,
+							"type": "array",
+							"minItems": 1,
+							"items": {
+								"type": "string",
+								"minLength": 1
+							}
+						}
+					}
+				},
+				{
+					"properties": {
+						"queries": {
+							"required": true,
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			]
+		}
+	}

@@ -113,7 +113,7 @@ const followProfile = async (tab, tabJson, query, profileUrl, conditionalAction,
 			followRequestCount++
 			return checkFollowData
 		} else {
-			utils.log(`Fail to follow ${checkFollowData.profileName}!`, "warning")
+			utils.log(`Fail to follow ${checkFollowData.profileName}, you may follow too many profiles (7500 max)`, "warning")
 			try {
 				const followCount = await checkFollowCount()
 				if (followCount === 7500) {
