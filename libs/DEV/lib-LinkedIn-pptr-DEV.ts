@@ -113,7 +113,6 @@ class LinkedIn {
 					this.utils.log(`Connected successfully as ${name}`, "done")
 					try {
 						const isPresent = await page.$eval(".nav-item__profile-member-photo.nav-item__icon.ghost-person", (el) => !!el && (window.getComputedStyle(el).getPropertyValue("display") !== "none" && (el as HTMLElement).offsetHeight))
-					// const isPresent = await page.$eval(".nav-item__profile-member-photo.nav-item__icon.ghost-person", (elem) => window.getComputedStyle(elem).getPropertyValue("display") !== "none" && (elem as HTMLElement).offsetHeight)
 						if (isPresent) {
 							console.log("")
 							this.utils.log("This LinkedIn account does not have a profile picture. Are you using a fake/new account? New accounts have limited scraping abilities.", "warning")
