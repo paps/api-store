@@ -19,6 +19,17 @@ const DEF_LINES = 10
 const DEF_LIKES = 1
 // }
 
+enum OpenStatus {
+	BAD_FEED = -7,
+	BAD_HTTP,
+	ERR_LOADING,
+	SCRAPE_ERR,
+	INV_ARTICLE,
+	INV_PROFILE,
+	EMPTY_FEED,
+	SUCCESS,
+}
+
 interface IApiParams {
 	sessionCookie: string,
 	spreadsheetUrl?: string,
@@ -32,6 +43,25 @@ interface IMutableApiParams {
 	numberOfLikesPerProfile?: number,
 	csvName?: string,
 	queries?: string|string[]
+}
+
+const _waitVisible = (selectors: string[]): boolean|string => {
+	for (const sel of selectors) {
+		const el = document.querySelector(sel)
+		if (el) {
+			const elStyle = getComputedStyle(el)
+			const isVisible = (elStyle.visibility !== "hidden" && elStyle.display !== "none")
+			if (isVisible) {
+				return sel.toString()
+			}
+		}
+	}
+	return false
+}
+
+const waitForVisibleSelector = async (page: puppeteer.Page, sels: string[], options: IUnknownObject): Promise<string> => {
+	const res = await page.waitForFunction(_waitVisible, options, sels)
+	return res.jsonValue()
 }
 
 const isLinkedInProfile = (url: string): boolean => {
@@ -51,12 +81,102 @@ const isLinkedArticle = (url: string): boolean => {
 	}
 }
 
-const openArticle = async (page: puppeteer.Page, url: string): Promise<boolean> => {
-	return false
+const updateUrlPath = (url: string, slug: string): string => {
+	try {
+		const tmp = new URL(url)
+
+		if (tmp.pathname.endsWith("/")) {
+			tmp.pathname += slug.startsWith("/") ? slug.substring(1) : slug
+		} else {
+			tmp.pathname += slug.startsWith("/") ? slug : `/${slug}`
+		}
+		return tmp.toString()
+	} catch (err) {
+		return url
+	}
 }
 
-const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: string): Promise<boolean> => {
-	return false
+const isLinkedInProfileFeed = (url: string): boolean => {
+	try {
+		return (new URL(url)).pathname.split("/").includes("detail")
+	} catch (err) {
+		return false
+	}
+}
+
+// TODO: handle pulse article
+const openArticle = async (page: puppeteer.Page, url: string): Promise<number> => {
+	const res = await page.goto(url)
+	if (res && res.status() !== 200) {
+		utils.log(`Excepting HTTP code 200 while opening ${url} but go ${res.status()}`, "warning")
+		return OpenStatus.BAD_HTTP
+	}
+	try {
+		const sels = [ "div.error-container", "div.feed-shared-social-actions", "li.reader-social-bar__social-action button.like-button" ]
+		const found = await waitForVisibleSelector(page, sels, { timeout: 15000, visible: true })
+		if (found === sels[0]) {
+			utils.log(`Can't load an article at ${url}`, "warning")
+			return OpenStatus.INV_ARTICLE
+		}
+	} catch (err) {
+		utils.log(err.message || err, "warning")
+		return OpenStatus.SCRAPE_ERR
+	}
+	return OpenStatus.SUCCESS
+}
+
+const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: string): Promise<number> => {
+	// Open the profile first
+	const res = await page.goto(url)
+	if (res && res.status() !== 200) {
+		utils.log(`Excepting HTTP code 200 while opening ${url} but go ${res.status()}`, "warning")
+		return OpenStatus.BAD_HTTP
+	}
+	try {
+		await page.waitForSelector("#profile-wrapper", { timeout: 15000, visible: true })
+	} catch (err) {
+		const _url = page.url()
+		utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`)
+		return OpenStatus.INV_PROFILE
+	}
+	if (!isLinkedInProfileFeed(url)) {
+		let slug = ""
+		switch (feedType) {
+			case "all":
+				slug = "/detail/recent-activity/"
+				break
+			case "articles":
+				slug = "/detail/recent-activity/posts/"
+				break
+			case "posts":
+				slug = "/detail/recent-activity/shares"
+				break
+		}
+		if (slug) {
+			url = updateUrlPath(url, slug)
+		}
+		try {
+			await page.goto(url)
+			await page.waitForSelector("#profile-wrapper", { timeout: 15000, visible: true })
+		} catch (err) {
+			utils.log(`Can't find ${feedType} from ${url} due to: ${err.message || err}`, "warning")
+			return OpenStatus.BAD_FEED
+		}
+	}
+	// Assuming to be on activity URL so far
+	const sels = [ "div.pv-recent-activity-detail__no-content", "div.feed-shared-update-v2" ]
+	try {
+		const found = await waitForVisibleSelector(page, sels, { timeout: 15000, visible: true })
+		if (found === sels[0]) {
+			utils.log(`No content to like for the category ${feedType}`, "warning")
+			return OpenStatus.EMPTY_FEED
+		}
+	} catch (err) {
+		utils.log(err.message || err, "warning")
+		return OpenStatus.SCRAPE_ERR
+	}
+	utils.log(`${url} loaded`, "info")
+	return OpenStatus.SUCCESS
 }
 
 (async () => {
