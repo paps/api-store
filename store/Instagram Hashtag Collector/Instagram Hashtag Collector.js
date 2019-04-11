@@ -264,7 +264,7 @@ const isUrl = target => url.parse(target).hostname !== null
 	if (results.length) {
 		try {
 			agentObject = await buster.getAgentObject()
-			alreadyScraped = results.filter(el => el.query === agentObject.lastHashtag).length
+			alreadyScraped = results.filter(el => el.query === agentObject.lastQuery).length
 		} catch (err) {
 			utils.log("Could not access agent Object.", "warning")
 		}
@@ -319,7 +319,7 @@ const isUrl = target => url.parse(target).hostname !== null
 			continue
 		}
 		let resuming = false
-		if (alreadyScraped && hashtag === agentObject.lastHashtag) {
+		if (alreadyScraped && hashtag === agentObject.lastQuery) {
 			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 			resuming = true
 		} else {
@@ -358,7 +358,7 @@ const isUrl = target => url.parse(target).hostname !== null
 				agentObject.lastQuery = lastHashtag
 			} else {
 				delete agentObject.nextUrl
-				delete agentObject.lastHashtag
+				delete agentObject.lastQuery
 			}
 			await buster.setAgentObject(agentObject)
 		}
