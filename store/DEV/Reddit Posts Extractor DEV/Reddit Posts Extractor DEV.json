@@ -24,8 +24,8 @@
 					"spreadsheetUrl": {
 						"type": "url",
 						"helpers": [
-							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
-							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/14303/instagram-auto-commenter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available), a subreddit URL/name" ],
+							"label": "Spreadsheet URL of subreddits to scrape <a href=\"/api-store/14303/instagram-auto-commenter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 						},
 						"columnNameProfiles": {
 							"label": "Column name from which to get subreddit URLs",
@@ -49,6 +49,9 @@
 						"csvName": {
 							"label": "Name of resulting CSV file",
 							"placeholder": "result"
+						},
+						"reprocessAll": {
+							"rightLabel": "<b>Process your whole spreadsheet every launch</b>"
 						}
 					}
 				}
@@ -79,6 +82,9 @@
 				"csvName": {
 					"type": "string",
 					"required": false
+				},
+				"reprocessAll": {
+					"type": "boolean"
 				}
 			},
 			"oneOf": [

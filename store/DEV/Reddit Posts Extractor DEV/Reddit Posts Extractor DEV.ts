@@ -55,11 +55,23 @@ const forgeUrl = (url: string, after: string) => {
 	return urlObject.href
 }
 
-const extractPostsData = (json: IUnknownObject) => {
+const extractPostsData = (json: IUnknownObject, query: string) => {
 	const scrapedData = []
+	let postIds = json.postIds as string[]
+	if (postIds.length === 0) {
+		if (!json.subredditAboutInfo) {
+			utils.log("This subreddit is empty!", "warning")
+			console.log("json", json)
+			return { query, error: "Empty subreddit", timestamp: (new Date().toISOString()) }
+		} else {
+			utils.log("Post limit reached.", "info")
+		}
+
+	}
 	const posts = json.posts as IUnknownObject
-	const keys = Object.keys(posts)
-	for (const key of keys) {
+	postIds = postIds.filter((el) => !el.startsWith("t3_q="))
+	// const keys = Object.keys(posts)
+	for (const key of postIds) {
 		const postData = {} as IUnknownObject
 		const post = posts[key] as IUnknownObject
 		if (post) {
@@ -77,7 +89,7 @@ const extractPostsData = (json: IUnknownObject) => {
 				postData.author = post.author
 			}
 			if (post.score) {
-				postData.upvoteCount = post.score
+				postData.score = post.score
 			}
 			if (post.numComments) {
 				postData.commentCount = post.numComments
@@ -86,13 +98,14 @@ const extractPostsData = (json: IUnknownObject) => {
 				const createdDate = post.created as string
 				postData.createdDate = new Date(parseInt(createdDate, 10)).toISOString()
 			}
+			postData.query = query
+			postData.timestamp = (new Date()).toISOString()
 		}
 		scrapedData.push(postData)
 	}
-	const postIds = json.postIds as string[]
 	const lastPost = postIds.pop()
-	console.log("lastPost", lastPost)
-	console.log("scrapeddata", scrapedData)
+	// console.log("lastPost", lastPost)
+	// console.log("scrapeddata", scrapedData)
 	return { scrapedData, lastPost }
 }
 
@@ -101,15 +114,17 @@ const getSubreddit = (url: string) => {
 	let pathname = urlObject.pathname
 	if (pathname && pathname.startsWith("/r/")) {
 		pathname = pathname.slice(3)
-		pathname = pathname.slice(0, pathname.indexOf("/"))
+		if (pathname.indexOf("/") > -1) {
+			pathname = pathname.slice(0, pathname.indexOf("/"))
+		}
 		return pathname
 	}
 	return ""
 }
 
-const loadAndExtractData = async (page: puppeteer.Page, apiUrl: string) => {
+const loadAndExtractData = async (page: puppeteer.Page, apiUrl: string, query: string) => {
 	await page.goto(apiUrl)
-	console.log("apiUrl:", apiUrl)
+	// console.log("apiUrl:", apiUrl)
 	const jsonData = await page.evaluate(() => document.body.innerHTML) as string
 	if (jsonData) {
 		// console.log("jsonData", jsonData)
@@ -120,14 +135,14 @@ const loadAndExtractData = async (page: puppeteer.Page, apiUrl: string) => {
 		resplitted.pop()
 		const rejoined = resplitted.join("}")
 		const jsonCode = JSON.parse("{" + rejoined + "}")
-		const extractedData = extractPostsData(jsonCode) as IUnknownObject
+		const extractedData = extractPostsData(jsonCode, query) as IUnknownObject
 		return extractedData
 	}
 	return null
 }
 
-const loadSubreddit = async (page: puppeteer.Page, query: string, numberOfPostsPerSubreddit: number) => {
-	await page.goto(query)
+const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: string, numberOfPostsPerSubreddit: number) => {
+	await page.goto(subreddit)
 	await page.waitForSelector("div[class*=\"SubredditVars\"]")
 	const currentUrl = page.url()
 	const subredditName = getSubreddit(currentUrl)
@@ -139,56 +154,51 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, numberOfPostsP
 	// } while (!interceptedUrl)
 	const apiUrl = `https://gateway.reddit.com/desktopapi/v1/subreddits/${subredditName}?rtj=only&redditWebClient=web2x&app=web2x-client-production&after=&dist=13&layout=card&sort=hot&allow_over18=&include=prefsSubreddit`
 	const firstUrl = forgeUrl(apiUrl, "")
+	console.log("apiUR", apiUrl)
 	let results = [] as IUnknownObject[]
 	let lastPost = ""
-	let extractedData = await loadAndExtractData(page, apiUrl)
+	let extractedData = await loadAndExtractData(page, apiUrl, query)
 	if (extractedData) {
+		if (extractedData.error) {
+			return [ extractedData ]
+		}
 		results = extractedData.scrapedData as IUnknownObject[]
 		lastPost = extractedData.lastPost as string
 	}
-	console.log("firstRes", results)
+	// console.log("firstRes", results)
 	let postCount = results.length
 	while (postCount < numberOfPostsPerSubreddit) {
 		const nextURl = forgeUrl(apiUrl, lastPost)
-		extractedData = await loadAndExtractData(page, nextURl)
+		extractedData = await loadAndExtractData(page, nextURl, query)
 		if (extractedData) {
 			const tempResult = extractedData.scrapedData as IUnknownObject[]
-			results = results.concat(tempResult)
-			postCount = results.length
-			utils.log(`Got ${postCount} posts`, "done")
+			if (tempResult.length) {
+				results = results.concat(tempResult)
+				postCount = results.length
+				utils.log(`Got ${postCount} posts.`, "done")
+	
+			}
 			lastPost = extractedData.lastPost as string
+			if (!lastPost) {
+				break
+			}
+			console.log("lastpost=", lastPost)
 		} else {
 			console.log("no data")
 			break
 		}
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
+			break
+		}
 	}
 	return results
-	// await page.screenshot({ path: `${Date.now()}loaded.jpg`, type: "jpeg", quality: 50, fullPage: true })
-	// await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}loaded.html`)
-	// let postCount = 0
-	// let lastDate = new Date().getTime()
-	// do {
-	// 	if (new Date().getTime() - lastDate > 20000) {
-	// 		utils.log("Took too long!", "warning")
-	// 		break
-	// 	}
-	// 	const newPostCount = await page.evaluate(getPostsCount) as number
-	// 	if (newPostCount > postCount) {
-	// 		console.log("postCount:", newPostCount)
-	// 		postCount = newPostCount
-	// 		lastDate = new Date().getTime()
-	// 		await scrollToBottom(page)
-	// 	}
-	// 	await page.waitFor(1000)
-	// } while (postCount < numberOfPostsPerSubreddit)
-	// await page.screenshot({ path: `${Date.now()}afterload.jpg`, type: "jpeg", quality: 50, fullPage: true })
-	// await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}afterload.html`)
-	// const postResults = await page.evaluate(scrapePosts)
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 (async () => {
-	const { spreadsheetUrl, queries, columnName, numberOfLinesPerLaunch, numberOfPostsPerSubreddit, csvName } = utils.validateArguments()
+	const { spreadsheetUrl, queries, columnName, numberOfLinesPerLaunch, numberOfPostsPerSubreddit, csvName, reprocessAll } = utils.validateArguments()
 	let _csvName = csvName as string
 	if (!_csvName) {
 		_csvName = "result"
@@ -198,41 +208,55 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, numberOfPostsP
 	let _columnName = columnName as string
 	let _numberOfLinesPerLaunch = numberOfLinesPerLaunch as number
 	const _numberOfPostsPerSubreddit = numberOfPostsPerSubreddit as number
+	const _reprocessAll = reprocessAll as boolean
 	browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 
 
 	let result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 	if (_spreadsheetUrl) {
-		if (_spreadsheetUrl.toLowerCase().includes("reddit.com/")) {
+		if (utils.isUrl(_spreadsheetUrl)) {
+			if (_spreadsheetUrl.toLowerCase().includes("reddit.com/")) {
+				_queries = [ _spreadsheetUrl ]
+			} else { // CSV
+				_queries = await utils.getDataFromCsv2(_spreadsheetUrl, _columnName)
+			}
+		} else {
 			_queries = [ _spreadsheetUrl ]
-		} else { // CSV
-			_queries = await utils.getDataFromCsv2(_spreadsheetUrl, _columnName)
 		}
 	} else if (typeof _queries === "string") {
 		_queries = [_queries]
 	}
 	_queries = _queries.filter((str) => str) // removing empty lines
-	if (!_numberOfLinesPerLaunch) {
-		_numberOfLinesPerLaunch = _queries.length
+	if (!_reprocessAll) {
+		if (!_numberOfLinesPerLaunch) {
+			_numberOfLinesPerLaunch = _queries.length
+		}
+		_queries = getpostUrlsToScrape(_queries.filter((el) => utils.checkDb(el, result, "query")), _numberOfLinesPerLaunch)
 	}
-	_queries = getpostUrlsToScrape(_queries.filter((el) => utils.checkDb(el, result, "query")), _numberOfLinesPerLaunch)
 	console.log(`Lines to process: ${JSON.stringify(_queries, null, 4)}`)
 	let currentResult = [] as IUnknownObject[]
 	for (const query of _queries) {
+		let subreddit = ""
+		if (utils.isUrl(query)) {
+			utils.log(`Opening ${query}`, "loading")
+			subreddit = query
+		} else {
+			utils.log(`Opening Subreddit ${query}...`, "loading")
+			subreddit =  `https://reddit.com/r/${query.toLowerCase()}`
+		}
 
-		utils.log(`Opening ${query}`, "loading")
-
+		try {
+			const tempResult = await loadSubreddit(page, query, subreddit, _numberOfPostsPerSubreddit)
+			currentResult = currentResult.concat(tempResult)
+		} catch (err) {
+			utils.log(`Error scraping ${subreddit}: ${err}`, "error")
+			currentResult.push({ query, error: "Couldn't scrape", timestamp: (new Date()).toISOString() })
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
-		}
-		try {
-			const tempResult = await loadSubreddit(page, query, _numberOfPostsPerSubreddit)
-			currentResult = currentResult.concat(tempResult)
-		} catch (err) {
-			console.log("err1", err)
 		}
 		
 	}
