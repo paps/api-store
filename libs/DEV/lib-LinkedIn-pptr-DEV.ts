@@ -180,6 +180,22 @@ class LinkedIn {
 		}
 	}
 
+	public async saveCookie(page: puppeteer.Page): Promise<void> {
+		try {
+			const _cookie = (await page.cookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
+			if (_cookie.length === 1) {
+				await this.buster.setAgentObject({
+					".modifiedSessionCookie": _cookie[0].value,
+					".originalSessionCookie": this.originalSessionCookie,
+				})
+			} else {
+				throw new Error(`Got ${_cookie.length} cookies from filter matching, can't determine which one to save`)
+			}
+		} catch (err) {
+			this.utils.log(`Caught exception while saving cookie: ${err.toString()}`, "warning")
+		}
+	}
+
 	public async updateCookie(page: puppeteer.Page): Promise<void> {
 		try {
 			const cookie = (await page.cookies()).filter((c) => (c.name === "li_at" && c.domain === "www.linkedin.com"))
@@ -208,6 +224,22 @@ class LinkedIn {
 		} catch (err) {
 			return false
 		}
+	}
+
+	public async hasReachedCommercialLimit(page: puppeteer.Page): Promise<string|null> {
+		const CM_LIMIT_SEL = ".search-paywall__info"
+		let errToRet = null
+
+		if (await page.$(CM_LIMIT_SEL)) {
+			errToRet = await page.evaluate((sel: string): string|null => {
+				const headSel = document.querySelector(`${sel} h2`)
+				const subSel = document.querySelector(`${sel} p:first-of-type`)
+				const headLine = headSel && headSel.textContent ? headSel.textContent.trim() : null
+				const subText = subSel && subSel.textContent ? subSel.textContent.trim() : null
+				return (!headLine || !subText) ? null : `${headLine}\n${subText}`
+			}, CM_LIMIT_SEL)
+		}
+		return errToRet as string|null
 	}
 }
 
