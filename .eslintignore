@@ -44,3 +44,5 @@ libs/lib-GitHub.js
 libs/DEV/lib-Github-DEV.js
 store/DEV/Intercom Auto Archiver DEV/Intercom Auto Archiver DEV.js
 store/DEV/LinkedIn Auto Liker DEV/LinkedIn Auto Liker DEV.js
+store/DEV/LinkedIn Auto Commenter DEV/LinkedIn Auto Commenter DEV.js
+store/DEV/Reddit Posts Extractor DEV/Reddit Posts Extractor DEV.js
