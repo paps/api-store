@@ -104,7 +104,6 @@ const isLinkedInProfileFeed = (url: string): boolean => {
 	}
 }
 
-// TODO: handle pulse article
 const openArticle = async (page: puppeteer.Page, url: string): Promise<number> => {
 	const res = await page.goto(url)
 	if (res && res.status() !== 200) {
@@ -179,6 +178,20 @@ const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: stri
 	return OpenStatus.SUCCESS
 }
 
+const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promise<string[]> => {
+	const res: string[] = []
+	try {
+		// TODO: no clipboard to retrieve the link, find another solution
+		const tmp = await page.evaluate(() => {
+			document.querySelector("li.option-share-via div span").click()
+		})
+		console.log(tmp)
+	} catch (err) {
+		console.log(err.message || err)
+	}
+	return res
+}
+
 (async () => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
@@ -217,7 +230,16 @@ const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: stri
 	utils.log(`Posts to like: ${JSON.stringify(queries, null, 2)}`, "info")
 	let i = 0
 	for (const post of queries) {
+		let _res = 0
 		buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`)
+		if (isLinkedArticle(post)) {
+			_res = await openArticle(page, post)
+		} else {
+			_res = await openProfileFeed(page, post, articleType)
+			await getPostsFromProfile(page, numberOfLikesPerProfile)
+		}
+		console.log("Open status:", _res)
+		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
 	}
 	await page.close()
 	await browser.close()
