@@ -157,6 +157,7 @@ const waitWhileEnable = (arg, cb) => {
 const sendChatMessage = async (tab, message, invite) => {
 	const SELECTORS = {
 		chatWidget: "aside#msg-overlay div.msg-overlay-conversation-bubble--is-active.msg-overlay-conversation-bubble--petite",
+		messageComposer: "artdeco-modal.msg-compose-modal",
 		closeChatButton: "button[data-control-name=\"overlay.close_conversation_window\"]",
 		spinners: "li-icon > .artdeco-spinner",
 		messageEditor: "div.msg-form__contenteditable",
@@ -176,20 +177,36 @@ const sendChatMessage = async (tab, message, invite) => {
 	message = inflater.forgeMessage(message, invite)
 	try {
 		await tab.click(`#${invite.chatMessageIndex} button.message-anywhere-button`)
-		await tab.waitUntilVisible(SELECTORS.chatWidget, 30000)
-		await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 30000)
-		await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
-		await tab.wait(2500)
-		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
-		await tab.evaluate(waitWhileEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
-		// Wait until the combobox dispear
-		// Waiting for this selector gives enough time to send the message & not triggering discard message popup
-		// This will prevent to send remaining invitations messages on the same profile
-		await tab.waitWhileVisible(SELECTORS.sendTrigger, 30000)
-		if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.sendError}`)) {
-			utils.log("message is not sent", "warning")
+		const found = await tab.waitUntilVisible([SELECTORS.chatWidget, SELECTORS.messageComposer], 30000, "or")
+		if (found === SELECTORS.chatWidget) {
+			await tab.waitUntilVisible(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, 30000)
+			await tab.sendKeys(`${SELECTORS.chatWidget} ${SELECTORS.messageEditor}`, message.replace(/\n/g, "\r\n"))
+			await tab.wait(2500)
+			await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.sendButton}`)
+			await tab.evaluate(waitWhileEnable, { sel: `${SELECTORS.chatWidget} ${SELECTORS.sendButton}` })
+			// Wait until the combobox dispear
+			// Waiting for this selector gives enough time to send the message & not triggering discard message popup
+			// This will prevent to send remaining invitations messages on the same profile
+			await tab.waitWhileVisible(SELECTORS.sendTrigger, 30000)
+			if (await tab.isVisible(`${SELECTORS.chatWidget} ${SELECTORS.sendError}`)) {
+				utils.log("message is not sent", "warning")
+			}
+			await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
+		} else if (found === SELECTORS.messageComposer) {
+			await tab.evaluate((arg, cb) => {
+				if (document.querySelector("textarea.msg-messaging-form__message")) {
+					document.querySelector("textarea.msg-messaging-form__message").value = arg.message
+					cb(null, true)
+				}
+				cb("Can't send message")
+			}, { message })
+			await tab.sendKeys("textarea.msg-messaging-form__message", " ")
+			await tab.wait(2500)
+			await tab.click("button.msg-messaging-form__send-button")
+			await tab.waitWhileVisible(SELECTORS.messageComposer, 30000)
+		} else {
+			throw "Can't find a way to send a message"
 		}
-		await tab.click(`${SELECTORS.chatWidget} ${SELECTORS.closeChatButton}`)
 	} catch (err) {
 		utils.log(`Error while sending message: ${err.message || err}`, "warning")
 		// Need to close the chat conversation, even when a failure occurs
@@ -202,7 +219,9 @@ const sendChatMessage = async (tab, message, invite) => {
 				// ... can't do anything
 			}
 		}
+		return
 	}
+	utils.log(`Message sent to ${invite.url}`, "done")
 }
 
 nick.newTab().then(async (tab) => {

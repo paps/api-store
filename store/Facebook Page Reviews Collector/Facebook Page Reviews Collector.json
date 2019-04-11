@@ -3,7 +3,7 @@
 	"description": "Extract Reviews from a list of Facebook pages",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Facebook+Page+Reviews+Collector/Facebook+Page+Reviews.png",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"gradientBegin": "#32C1F1",
 	"gradientEnd": "#5477BC",
 	"argumentHelpAnchor": "#section_argument",
