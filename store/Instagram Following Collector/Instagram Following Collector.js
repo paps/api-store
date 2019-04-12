@@ -299,7 +299,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 				followingCount = await tab.evaluate(scrapeFollowingCount)
 				if (followingCount === 0) {
 					utils.log("Profile follows no one.", "warning")
-					result.push({ query: url, error: "Profile follows no one" })
+					result.push({ query: url, error: "Profile follows no one", timestamp: (new Date().toISOString()) })
 					continue
 				} else {
 					utils.log(`Profile follows around ${followingCount} accounts.`, "info")
@@ -310,11 +310,11 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			const selected = await tab.waitUntilVisible(["main ul li:nth-child(3) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
-				result.push({ query: url, error: "Broken link or page has been removed" })
+				result.push({ query: url, error: "Broken link or page has been removed", timestamp: (new Date().toISOString()) })
 				continue
 			} else if (selected === "article h2") {
 				utils.log("Private account, cannot access follower list.", "warning")
-				result.push({ query: url, error: "Can't access private account list" })
+				result.push({ query: url, error: "Can't access private account list", timestamp: (new Date().toISOString()) })
 				continue
 			}
 			let numberToScrape = numberMaxOfFollowing
@@ -345,7 +345,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	result = removeDuplicates(result)
-	await utils.saveResults(result, result, csvName, null, false)
+	await utils.saveResults(result, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {

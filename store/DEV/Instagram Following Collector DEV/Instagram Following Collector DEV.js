@@ -282,7 +282,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 
 	let urlCount = 0
-
+	let currentResult = []
 	for (let url of urls) {
 		try {
 			let resuming = false
@@ -301,7 +301,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 				followingCount = await tab.evaluate(scrapeFollowingCount)
 				if (followingCount === 0) {
 					utils.log("Profile follows no one.", "warning")
-					result.push({ query: url, error: "Profile follows no one" })
+					currentResult.push({ query: url, error: "Profile follows no one", timestamp: (new Date().toISOString()) })
 					continue
 				} else {
 					utils.log(`Profile follows around ${followingCount} accounts.`, "info")
@@ -312,18 +312,18 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 			const selected = await tab.waitUntilVisible(["main ul li:nth-child(3) a", ".error-container", "article h2"], 10000, "or")
 			if (selected === ".error-container") {
 				utils.log(`Couldn't open ${url}, broken link or page has been removed.`, "warning")
-				result.push({ query: url, error: "Broken link or page has been removed" })
+				currentResult.push({ query: url, error: "Broken link or page has been removed",  timestamp: (new Date().toISOString()) })
 				continue
 			} else if (selected === "article h2") {
 				utils.log("Private account, cannot access follower list.", "warning")
-				result.push({ query: url, error: "Can't access private account list" })
+				currentResult.push({ query: url, error: "Can't access private account list",  timestamp: (new Date().toISOString()) })
 				continue
 			}
 			let numberToScrape = numberMaxOfFollowing
 			if (!numberToScrape) {
 				numberToScrape = followingCount
 			}
-			result = result.concat(await getFollowing(tab, url, numberToScrape, resuming))
+			currentResult = currentResult.concat(await getFollowing(tab, url, numberToScrape, resuming))
 			if (interrupted) { break }
 		} catch (err) {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
@@ -334,6 +334,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	if (rateLimited) {
 		utils.log("Stopping the agent. You should retry in 15min.", "warning")
 	}
+	result = result.concat(currentResult)
 	if (result.length !== initialResultLength && agentObject) {
 		if (interrupted) {
 			agentObject.nextUrl = nextUrl
@@ -347,7 +348,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 	result = removeDuplicates(result)
-	await utils.saveResults(result, result, csvName, null, false)
+	await utils.saveResults(currentResult, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {
