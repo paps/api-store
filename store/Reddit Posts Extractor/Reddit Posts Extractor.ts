@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-api-store.js"
-"phantombuster flags: save-folder" // TODO: Remove when released
 
 import Buster from "phantombuster"
 const buster = new Buster()
@@ -38,7 +37,6 @@ const extractPostsData = (json: IUnknownObject, query: string) => {
 	if (postIds.length === 0) {
 		if (!json.subredditAboutInfo) {
 			utils.log("This subreddit is empty!", "warning")
-			console.log("json", json)
 			return { query, error: "Empty subreddit", timestamp: (new Date().toISOString()) }
 		} else {
 			utils.log("Post limit reached.", "info")
@@ -47,7 +45,6 @@ const extractPostsData = (json: IUnknownObject, query: string) => {
 	}
 	const posts = json.posts as IUnknownObject
 	postIds = postIds.filter((el) => !el.startsWith("t3_q="))
-	// const keys = Object.keys(posts)
 	for (const postId of postIds) {
 		const postData = {} as IUnknownObject
 		const post = posts[postId] as IUnknownObject
@@ -93,8 +90,6 @@ const extractPostsData = (json: IUnknownObject, query: string) => {
 		scrapedData.push(postData)
 	}
 	const lastPost = postIds.pop()
-	// console.log("lastPost", lastPost)
-	// console.log("scrapeddata", scrapedData)
 	return { scrapedData, lastPost }
 }
 
@@ -112,10 +107,8 @@ const getSubreddit = (url: string) => {
 
 const loadAndExtractData = async (page: puppeteer.Page, apiUrl: string, query: string) => {
 	await page.goto(apiUrl)
-	// console.log("apiUrl:", apiUrl)
 	const jsonData = await page.evaluate(() => document.body.innerHTML) as string
 	if (jsonData) {
-		// console.log("jsonData", jsonData)
 		let splitted = jsonData.split("{")
 		splitted.shift()
 		const joined = splitted.join("{")
@@ -160,28 +153,16 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 	const currentUrl = page.url()
 	const subredditName = getSubreddit(currentUrl)
 	const sortObject = getSortType(currentUrl, subredditName)
-	console.log("sO", sortObject)
 	if (sortObject.sortBy) {
 		sortBy = sortObject.sortBy
 	}
 	if (sortObject.sortTime) {
 		sortTime = sortObject.sortTime
 	}
-	console.log("subredditName", subredditName)
-	// page.on("response", interceptRedditResponse)
-	// do {
-	// 	await scrollToBottom(page)
-	// 	await page.waitFor(1000)
-	// } while (!interceptedUrl)
 	if (sortBy === "hot" || sortBy === "new" || sortBy === "rising") {
-		console.log("on annule le sortTime")
 		sortTime = ""
 	}
-	console.log("sortTime", sortTime)
-	console.log("sortBy", sortBy)
 	const apiUrl = `https://gateway.reddit.com/desktopapi/v1/subreddits/${subredditName}?rtj=only&redditWebClient=web2x&app=web2x-client-production&after=&dist=13&layout=card&sort=${sortBy}${sortTime ? `&t=${sortTime}` : ""}&allow_over18=&include=prefsSubreddit`
-	// const firstUrl = forgeUrl(apiUrl, "")
-	console.log("apiUR", apiUrl)
 	let results = [] as IUnknownObject[]
 	let lastPost = ""
 	let extractedData = await loadAndExtractData(page, apiUrl, query)
@@ -193,7 +174,6 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 
 		lastPost = extractedData.lastPost as string
 	}
-	// console.log("firstRes", results)
 	let postCount = results.length
 	utils.log(`Got ${postCount} posts.`, "done")
 	while (postCount < numberOfPostsPerSubreddit) {
@@ -211,9 +191,7 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 			if (!lastPost) {
 				break
 			}
-			// console.log("lastpost=", lastPost)
 		} else {
-			console.log("no data")
 			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
@@ -234,7 +212,6 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 	const _spreadsheetUrl = spreadsheetUrl as string
 	let _queries = queries as string|string[]
 	let _columnName = columnName as string
-	console.log("_co", _columnName)
 	let _numberOfLinesPerLaunch = numberOfLinesPerLaunch as number
 	const _numberOfPostsPerSubreddit = numberOfPostsPerSubreddit as number
 	const _sortBy = sortBy as string
