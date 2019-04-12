@@ -58,16 +58,17 @@ const getReviews = (arg, cb) => {
 	const toRet = reviews.map(el => {
 		const review = {}
 		const profileImgSel = el.querySelector("img")
-		const dateSel = el.querySelector("a.comment-thread-displayname ~ span")
-		const reviewer = el.querySelector("a.comment-thread-displayname")
-		const _commentSel = el.querySelector("a.comment-thread-displayname ~ div[dir=auto]")
+		let dateSel
+		const reviewer = el.querySelector(".comment-thread-displayname")
+		const _commentSel = el.querySelector(".comment-thread-displayname ~ div[dir=auto]")
 		if (reviewer) {
 			review.name = reviewer.textContent.trim()
-			review.profileLink = reviewer.href
+			// review.profileLink = reviewer.href
+			dateSel = el.querySelector(".comment-thread-displayname").nextElementSibling
 		}
 		review.profileImg = profileImgSel.src
 		review.date = dateSel ? dateSel.textContent.trim() : ""
-		review.mark = el.querySelectorAll("div.rsw-stars > div.rws-starred").length
+		review.mark = el.querySelectorAll("div.rsw-stars > div.rsw-starred").length
 		review.review = _commentSel ? _commentSel.textContent.trim() : ""
 		review.url = arg.url
 		review.timestamp = (new Date()).toISOString()
