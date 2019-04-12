@@ -40,16 +40,6 @@
 							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available), a subreddit URL/name" ],
 						"label": "Spreadsheet URL of subreddits to scrape <a href=\"/api-store/16099/reddit-posts-extractor#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
-					"columnName": {
-						"label": "Column name from which to get subreddit URLs",
-						"placeholder": "Subreddit",
-						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
-					},
-					"numberOfLinesPerLaunch": {
-						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/16099/reddit-posts-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
-						"inputType": "number",
-						"helper": "All of them if empty"
-					},
 					"sortBy": {
 						"label": "Sort by",
 						"removeDefaultNone": true,
@@ -68,6 +58,16 @@
 						"dependencies": {
 							"sortBy": [ "controversial", "top" ]
 						}
+					},
+					"columnName": {
+						"label": "Column name from which to get subreddit URLs",
+						"placeholder": "Subreddit",
+						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/16099/reddit-posts-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number",
+						"helper": "All of them if empty"
 					},
 					"numberOfPostsPerSubreddit": {
 						"label": "Number of posts to scrape per subreddit <a href=\"/api-store/16099/reddit-posts-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
@@ -91,6 +91,14 @@
 				"type": "string",
 				"required": true
 			},
+			"sortBy": {
+				"enum": [ "hot", "new", "controversial", "top", "rising" ],
+				"default": "hot"
+			},
+			"sortTime": {
+				"enum": [ "hour", "day", "week", "month", "year", "all" ],
+				"default": "past24Hours"
+			},
 			"columnName": {
 				"type": "string"
 			},
@@ -102,14 +110,6 @@
 				"type": "number",
 				"minimum": 1,
 				"required": true
-			},
-			"sortBy": {
-				"enum": [ "hot", "new", "controversial", "top", "rising" ],
-				"default": "hot"
-			},
-			"sortTime": {
-				"enum": [ "hour", "day", "week", "month", "year", "all" ],
-				"default": "past24Hours"
 			},
 			"csvName": {
 				"type": "string",

@@ -61,12 +61,19 @@ const extractPostsData = (json: IUnknownObject, query: string) => {
 			}
 			if (post.author) {
 				postData.author = post.author
+				if (post.author !== "[deleted]") {
+					postData.authorUrl = `https://www.reddit.com/u/${post.author}`
+				}
 			}
 			if (post.score) {
 				postData.score = post.score
+			} else {
+				postData.score = 0
 			}
 			if (post.numComments) {
 				postData.commentCount = post.numComments
+			} else {
+				postData.commentCount = 0
 			}
 			interface IGildings {
 				gid1: number,
