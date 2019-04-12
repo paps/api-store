@@ -108,6 +108,7 @@
 		'Product Hunt Profile Scraper.js': 'store/Product Hunt Profile Scraper/Product Hunt Profile Scraper.js'
 		'Product Hunt Upvoter Extractor.js': 'store/Product Hunt Upvoter Extractor/Product Hunt Upvoter Extractor.js'
 		'Quora Topics Influencers.js': 'store/Quora Topics Influencers/Quora Topics Influencers.js'
+		'Reddit Posts Extractor.js': 'store/Reddit Posts Extractor/Reddit Posts Extractor.js'
 		'Slack Channel User Extractor.js': 'store/Slack User Extractor/Slack User Extractor.js'
 		'Slack Message Sender.js': 'store/Slack Message Sender/Slack Message Sender.js'
 		'Twitter Auto Follow.js': 'store/Twitter Auto Follow/Twitter Auto Follow.js'
