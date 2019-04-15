@@ -48,10 +48,6 @@ const getTwitterHandle = str => isTwitterUrl(str) ? url.parse(str).pathname.subs
 
 const getProfilesToLike = (data, numberOfProfilesPerLaunch) => {
 	const maxLength = data.length
-	if (maxLength === 0) {
-		utils.log("Input is empty OR we already liked tweets for all profiles provided in input.", "warning")
-		nick.exit()
-	}
 
 	return data.slice(0, Math.min(numberOfProfilesPerLaunch, maxLength)) // return the first elements
 }
@@ -336,7 +332,13 @@ const isTweetUrl = target => {
 	}
 
 	const result = []
+	const oldQueries = queries
 	queries = getProfilesToLike(queries.filter(el => filterUrls(el.query, db)), numberOfProfilesPerLaunch)
+	if (queries.length === 0) {
+		utils.log(`All ${queries.length} lines have been processed. Restarting from line 1.`, "info")
+		db = []
+		queries = oldQueries.slice(0, numberOfProfilesPerLaunch)
+	}
 	await twitter.login(tab, sessionCookie)
 
 	for (const profile of queries) {
