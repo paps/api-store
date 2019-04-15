@@ -48,7 +48,7 @@
 						"helper": "This email will be filled into Intercom and as soon as the operator send you an answer you'll be notified by email."
 					},
 					"profilesPerLaunch": {
-						"label": "How many websites do you want to process per launch? (Maximum 10)",
+						"label": "How many websites do you want to process per launch? (All of them if empty)",
 						"inputType": "number",
 						"helper": "Make sure that you can handle the flow of responses!"
 					},
