@@ -14,7 +14,6 @@ const inflater = new Messaging(utils)
 const { parse } = require("url")
 
 const DB_NAME = "result"
-const LINES = 10
 const COLUMN = "0"
 // }
 
@@ -228,9 +227,6 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 	if (!columnName) {
 		columnName = COLUMN
 	}
-	if (typeof profilesPerLaunch !== "number") {
-		profilesPerLaunch = LINES
-	}
 
 	db = await utils.getDb(csvName + ".csv")
 	let rows = []
@@ -248,7 +244,10 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 			rows = [{ [columnName]: spreadsheetUrl }]
 		}
 	}
-	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.query) < 0).slice(0, profilesPerLaunch)
+	rows = rows.filter(el => db.findIndex(line => el[columnName] === line.query) < 0)
+	if (typeof profilesPerLaunch === "number") {
+		rows = rows.slice(0, profilesPerLaunch)
+	}
 	if (rows.length < 1) {
 		utils.log("Input is empty OR every message were send", "warning")
 		process.exit()
