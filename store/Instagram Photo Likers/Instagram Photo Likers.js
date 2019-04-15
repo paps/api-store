@@ -175,7 +175,8 @@ const tryOpeningVideo = async (tab, photoUrl, username) => {
 const clickLikeButton = async (tab) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	await tab.click("article header ~ div section > div span")
+	const selector = await tab.waitUntilVisible(["article header ~ div section > div span", "article a[href*=\"liked_by\"]"], "or", 15000)
+	await tab.click(selector)
 	const initDate = new Date()
 	do {
 		if (graphqlUrl || rateLimited) {
@@ -209,14 +210,19 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 			utils.log("No likers found for this post.", "warning")
 			return ({ photoUrl, error: "No likers found", timestamp: (new Date()).toISOString() })
 		}
-		utils.log(`${likeCount} likers found for this post ${username ? "by " + username : ""}.`, "info")
+		utils.log(`${likeCount} liker${likeCount > 1 ? "s" : ""} found for this post ${username ? "by " + username : ""}.`, "info")
 	} catch (err) {
 		//
 	}
 	let likerCount = 0
 	if (!resuming) {
 		graphqlUrl = null
-		await clickLikeButton(tab)
+		try {
+			await clickLikeButton(tab)
+		} catch (err) {
+			utils.log("Couldn't click on Like button!", "error")
+			return []
+		}
 	} else {
 		graphqlUrl = agentObject.nextUrl
 		likerCount = alreadyScraped
@@ -335,7 +341,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 			}
 			const tempResult = await loadAndScrapeLikers(tab, photoUrl, numberOfLikers, resuming)
 			if (!tempResult.error) {
-				utils.log(`Got ${tempResult.length} likers for ${photoUrl}`, "done")
+				utils.log(`Got ${tempResult.length} liker${tempResult.length > 1 ? "s" : ""} for ${photoUrl}`, "done")
 			}
 			currentResult = currentResult.concat(tempResult)
 			if (rateLimited) {
@@ -362,7 +368,7 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 		}
 		result.push(...currentResult)
 		const finalLikersCount = result.filter(el => !el.error).length
-		utils.log(`Got ${finalLikersCount} likers in total.`, "done")
+		utils.log(`Got ${finalLikersCount} liker${finalLikersCount > 1 ? "s" : ""} in total.`, "done")
 		await utils.saveResults(currentResult, result, csvName)
 	}
 	nick.exit(0)
