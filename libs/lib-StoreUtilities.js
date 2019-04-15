@@ -445,7 +445,7 @@ class StoreUtilities {
 		 */
 		const pattern = "<!doctype html>"
 		const doctypeCheck = httpContent.substring(0, pattern.length).toLowerCase()
-		if (doctypeCheck === pattern) {
+		if (doctypeCheck === pattern || doctypeCheck.match(/(<([^>]+)>)/ig)) {
 			throw `${url} doesn't represent a CSV file`
 		}
 
