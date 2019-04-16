@@ -1,26 +1,40 @@
-# Expand your Instagram network by auto following
+# Auto follow on Instagram and grow your Instagram network
 
-Your perfect audience is somewhere on Instagram. Don't waste time following interesting profiles 1 by 1, our automation tool will do the (hard) work for you.
-
-# Our Solution
+Your perfect audience is somewhere on Instagram. Don't waste time following interesting profiles 1 by 1. This automation tool will do the (hard) work for you of auto following on Instagram.
 
 In order to get the attention of your niche audience, the most powerful way is to follow each person one-by-one. Following the basic psychology principle of Reciprocity, people you follow have a strong probability to follow you back.
 
 Instagram is a great platform for building an audience, whether you're starting a business, aim at becoming an influencer or simply want to grow your follower count.
 
-Start getting more followers today by setting up our tool in a few easy steps.
+Start getting more followers today by setting up the Instagram auto follower in a few easy steps.
 
-# What will you need? ⚙️ 
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-- **Session cookie**: Your session cookie from Instagram.
-- **Spreadsheet URL**: The link of a Google Spreadsheet with Instagram profile URLs in it.
-- **Number of profiles per launch**: The number of profiles to follow per launch.
-- **Action**: Choose between Follow / Unfollow / Unfollow only if they don't follow you / Block / Unblock
+<div id="section_related_articles" class="row">
+	<div class="col-xs-12">
+		<h3 id="section_relatedapis"> People who use Instagram auto follow also used those automations</h3>
+	</div>
+	<div class="col-xs-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Liker/Instagram+Auto+Liker+BG.png" /> 
+		<a href="https://phantombuster.com/api-store/10506/instagram-auto-liker">
+			Instagram Auto-Liker</a><br />
+		<small>Automatically like a list of Instagram Profiles and/or of Instagram Posts</small>
+	</div>
+	<div class="col-xs-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram+Auto+Commenter/Instagram+Auto+Commenter+(4).png" /> 
+		<a href="https://phantombuster.com/api-store/14303/instagram-auto-commenter">
+			Instagram Auto Commenter</a><br />
+		<small>Automatically comment a list of Instagram posts</small>
+	</div>
+	<div class="col-xs-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/Instagram+Hashtag+Extractor(1).png" /> 
+		<a href="https://phantombuster.com/api-store/5391/instagram-hashtag-collector">
+			Instagram Hashtag Collector</a><br />
+		<small>Extract the most recent posts for any hashtags or locations on Instagram</small>
+	</div>
+</div>
 
-_(**You already have all that?**  Click straight away on **"Use this API"**)_
-
-
-# Which steps to follow?
+# Tutorial 🚀
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
