@@ -1,0 +1,139 @@
+{
+	"slug": "linkedin-auto-commenter",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35CDBF",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "LinkedIn session cookie <a target=\"_blank\" href=\"\">(?)</a>"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet URL or a LinkedIn post URL <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name where XXX ZZZ URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "XXX"
+					},
+					"message": {
+						"label": "Comment message",
+						"inputType": "textarea",
+						"required": true
+					},
+					"articleType": {
+						"label": "Choose which type of articles to like from a LinkedIn profile ",
+						"inputType": "select",
+						"optionLabels": [ "All categories", "Articles", "Feed" ],
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false
+					},
+					"numberOfCommentsPerProfile": {
+						"label": "Number of comments to post per profiles (1 comment if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"message": {
+				"type": "string",
+				"minimum": 1,
+				"maximum": 300
+			},
+			"articleType": {
+				"type": "string",
+				"enum": [ "all", "articles", "posts" ],
+				"default": "all"
+			},
+			"numberOfCommentsPerProfile": {
+				"type": "number",
+				"minimum": 1
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
