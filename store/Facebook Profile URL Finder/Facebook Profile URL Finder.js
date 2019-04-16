@@ -31,7 +31,7 @@ let db
 	if (!csvName) { csvName = "result" }
 	let queries
 	if (utils.isUrl(spreadsheetUrl)) {
-		queries = await utils.getDataFromCsv(spreadsheetUrl, columnName)
+		queries = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	} else {
 		queries = [ spreadsheetUrl ]
 	}
