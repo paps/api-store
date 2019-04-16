@@ -104,8 +104,12 @@ const getphotoUrlsToScrape = (data, numberOfPhotosPerLaunch) => {
 
 const extractDataFromJson = (json) => {
 	const jsonData = json.data.shortcode_media.edge_liked_by
+	console.log("json:", jsonData)
+
 	let endCursor = jsonData.page_info.end_cursor
 	const likers = jsonData.edges
+	console.log("likers", likers)
+
 	const results = []
 	for (const liker of likers) {
 		const scrapedData = { photoUrl: lastQuery }
@@ -253,6 +257,11 @@ const loadAndScrapeLikers = async (tab, photoUrl, numberOfLikers, resuming) => {
 			await tab.inject("../injectables/jquery-3.0.0.min.js")
 			const interceptedData = await tab.evaluate(ajaxCall, { url, headers })
 			const [ tempResult, endCursor ] = extractDataFromJson(interceptedData)
+			console.log("tempr:", tempResult)
+			if (tempResult.length === 0) {
+				utils.log("No liker can be found for this post.", "warning")
+				return { photoUrl, error: "No liker found", timestamp: (new Date()).toISOString() }
+			}
 			results = results.concat(tempResult)
 			likerCount = results.length
 			if (!endCursor) {

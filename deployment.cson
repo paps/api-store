@@ -76,6 +76,8 @@
 		'LinkedIn Activities Extractor.js': 'store/LinkedIn Activities Extractor/LinkedIn Activities Extractor.js'
 		'LinkedIn Auto Endorse.js': 'store/LinkedIn Auto Endorse/LinkedIn Auto Endorse.js'
 		'LinkedIn Auto Follow.js': 'store/LinkedIn Auto Follow/LinkedIn Auto Follow.js'
+		'LinkedIn Auto Liker.js': 'store/LinkedIn Auto Liker/LinkedIn Auto Liker.js'
+		'LinkedIn Auto Commenter.js': 'store/LinkedIn Auto Commenter/LinkedIn Auto Commenter.js'
 		'LinkedIn Auto Withdraw.js': 'store/LinkedIn Auto Withdraw/LinkedIn Auto Withdraw.js'
 		'LinkedIn Chat Extractor.js': 'store/LinkedIn Chat Extractor/LinkedIn Chat Extractor.js'
 		'LinkedIn Chat Send Message.js': 'store/LinkedIn Chat Send Message/LinkedIn Chat Send Message.js'

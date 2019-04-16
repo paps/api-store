@@ -1,0 +1,138 @@
+{
+	"slug": "linkedin-auto-liker",
+	"description": "",
+	"image": "",
+	"argumentDescription": "",
+	"gradientBegin": "#35C2DB",
+	"gradientEnd": "#35CDBF",
+	"hidden": true,
+	"new": true,
+	"update": false,
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie"
+	},
+	"outputDescription": {
+
+	},
+	"defaultArgumentAllowed": false,
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"properties": {
+					"spreadsheetUrl": {
+						"required": true
+					}
+				}
+			},
+			"options": {
+				"fields": {
+					"sessionCookie": {
+						"label": "Session cookie <a target=\"_blank\" href=\"\">(?)</a>"
+					},
+					"spreadsheetUrl": {
+						"label": "Spreadsheet of LinkedIn profiles / articles OR LinkedIn profile / post URL to like <a target=\"_blank\" href=\"\">(?)</a>",
+						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
+					},
+					"columnName": {
+						"label": "Column name where LinkedIn post URLs are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "posts"
+					},
+					"articleType": {
+						"label": "Choose which type of articles to like from a LinkedIn profile",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "All categories", "Articles", "Feed" ],
+						"type": "select"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (10 if empty) <a target=\"_blank\" href=\"\">(?)</a>",
+						"inputType": "number",
+						"placeholder": 10
+					},
+					"numberOfLikesPerProfile": {
+						"label": "Number of articles to like per profiles (1 if empty)",
+						"inputType":" number",
+						"placeholder": 1
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"undoLikes": {
+						"rightLabel": "Cancel likes"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"sessionCookie": {
+				"type": "string",
+				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"articleType": {
+				"enum": [ "all", "articles", "posts" ],
+				"type": "string",
+				"default": "all"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"numberOfLikesPerProfile": {
+				"type": "number",
+				"minimum": 1,
+				"maximum": 10,
+				"default": 1
+			},
+			"csvName": {
+				"type": "string"
+			},
+			"undoLikes": {
+				"type": "boolean",
+				"default": false
+			}
+		},
+		"oneOf": [
+			{
+				"required": [
+					"spreadsheetUrl"
+				]
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}
+			},
+			{
+				"properties": {
+					"queries": {
+						"required": true,
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		]
+	}
+}
