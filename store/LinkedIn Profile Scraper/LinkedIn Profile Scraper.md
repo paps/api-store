@@ -2,7 +2,7 @@
 
 <hr/>
 
-# Get the most out of LinkedIn
+# The best LinkedIn Scraper out there: <br> Fast and efficient LinkedIn Scraping available for all!
 
 Salesman, recruiters, CEOs use it daily. But are you getting the most out of **your** LinkedIn account? 
 
@@ -11,7 +11,7 @@ Are you able to **efficiently** build **qualitative** and **instantly actionable
 LinkedIn Profile Scraper is *the* tool to have the **best return to time spent** on LinkedIn **for you and your team**. 
 
 
-# Turn LinkedIn Profile URLs into detailed data.
+# Scrape LinkedIn Profiles and turn Profiles URLs into detailed data.
 
 LinkedIn Profile Scraper takes as an **input a list of LinkedIn Profile URLs**. 
 
@@ -19,7 +19,7 @@ It will visit on your behalf each profile and **extract every single publicly av
 
 It's all done **in the cloud** so you can close your laptop and focus on other tasks.
 
-# Get real, verified, email addresses.
+# Scrape LinkedIn visible information as well as hidden real, verified, email addresses with Email Discovery.
 
 For most 1st degree connection, you will obtain their **email addresses** and **phone number**. 
 
@@ -42,7 +42,7 @@ If you haven't already, create a **FREE** account on [Phantombuster](https://pha
 
 
 ## 2. Use this API on your account.👌
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
+Now that you're connected to Phantombuster, Click on the following button to add this LinkedIn Scraper to your dashboard.
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 

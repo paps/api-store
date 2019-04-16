@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-profile-scraper",
-	"description": "Collect valuable information you need from LinkedIn profiles, including emails",
+	"description": "This LinkedIn scraper will collect every data from a list LinkedIn profiles, including emails! Start scraping LinkedIn now!",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_profile_scrapper/LinkedIn+Profile+Scraper+2+(4).png",
 	"hidden": false,
 	"updated": false,
@@ -18,7 +18,9 @@
 	"outputDescription": {
 		"imgUrl": "",
 		"headline": "",
+		"company": "",
 		"school": "",
+		"location": "",
 		"connections": "connections count",
 		"profileUrl": "",
 		"connectionDegree": "",
