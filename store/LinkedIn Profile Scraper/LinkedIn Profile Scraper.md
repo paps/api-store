@@ -25,18 +25,14 @@ For most 1st degree connection, you will obtain their **email addresses** and **
 
 For people you're not connected to, Phantombuster Email Discovery mode will take over and provide you with **verified professional email addresses** that do **not** bounce. *Quality first*.
 
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
 # Tutorial
 
 <div class="text-center" style="margin-top: 50px;">
 	<iframe width="100%" height="420px" src="https://www.youtube.com/embed/WxPvAtbCeOE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-# What will you need? ⚙️ 
-
-- **Session cookie**: Your session cookie from LinkedIn. (Download our browser extension for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/phantombuster/) or [Chrome](https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil))
-- **Spreadsheet URL**: The link of a Google Spreadsheet with LinkedIn profile URLs in it.
-
-# Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
@@ -97,15 +93,13 @@ You can also enter a CSV file URL, it will work the same :)
 
 ## 6. Email discovery (optional) { email_discovery }
 
-LinkedIn allows its users access to the email addresses of their 1st degree connections. 
+LinkedIn allows its users access to the **email addresses** of their 1st degree connections. However, if you’re looking for the email addresses of people you’re not connected to, picking an email discovery services is paramount.
 
-However, if you’re looking for the email addresses of people you’re not connected to, picking an email discovery services is paramount.
-
-As a Phantombuster user, you have a daily limit of email requests. (You can see that figure down below next to your execution time).
+As a Phantombuster premium user, you have a daily credit of email requests. (You can see that figure down below next to your execution time).
 
 Use your credit by selecting "Phantombuster" as your email discovery service.
 
-Already have a subscription with another data enrichment service such as [Dropcontact.io](https://dropcontact.io) or [Hunter.io](https://hunter.io)? Select a service and past your API key in the field below.
+**Already have a subscription with another data enrichment service** such as [Dropcontact.io](https://dropcontact.io) or [Hunter.io](https://hunter.io)? Select a service and past your API key in the field below.
 
 **Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your scraping to **40 profiles per day** if you're using it from a free LinkedIn account.
 
@@ -145,3 +139,27 @@ Visiting too many profiles often results in LinkedIn invalidating your session c
 If you have a Premium, Sales Navigator or Recruiter LinkedIn account, those rates are much higher. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
 
 Last thing: When [email discovery](#section_email_discovery) is enabled, we recommend you divide any limit by 2 since the discovery service needs 2 requests to do its job (that is, **40 profiles per day**).
+
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_related_apis" class="row">
+	<div class="col-xs-12">
+		<h2 id="section_relatedapis"> Related APIs</h2>  
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/LinkedIn+Network+Booster.png" /> 
+		<a href="https://phantombuster.com/api-store/2818/linkedin-network-booster">
+			LinkedIn Network Booster</a><br />
+		<small>Add profiles to your network and get in touch using a personalized message</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/LinkedIn+Search+Extractor.png" /> 
+		<a href="https://phantombuster.com/api-store/3149/linkedin-search-export">
+			LinkedIn Search Export</a><br />
+		<small>Collect every single profile out of a LinkedIn search</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Message+Sender/LinkedIn+Message+Sender.png" /> 
+		<a href="https://phantombuster.com/api-store/9227/linkedin-message-sender">
+			LinkedIn Message Sender</a><br />
+		<small>Automatically send personalized messages to your LinkedIn connections</small>
+	</div>
+</div>
