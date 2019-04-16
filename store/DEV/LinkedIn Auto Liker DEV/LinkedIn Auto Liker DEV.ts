@@ -179,13 +179,37 @@ const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: stri
 }
 
 const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promise<string[]> => {
-	const res: string[] = []
+	let res: string[] = []
+	let step = 0
+
 	try {
-		// TODO: no clipboard to retrieve the link, find another solution
-		const tmp = await page.evaluate(() => {
-			document.querySelector("li.option-share-via div span").click()
-		})
-		console.log(tmp)
+		for (; step < atMost; step++) {
+			const status = await page.evaluate((_step: number) => {
+				let _res = false
+				const links = document.querySelectorAll("li.option-share-via div span:first-of-type")
+				if (links[_step]) {
+					(links[_step] as HTMLAnchorElement).click()
+					_res = true
+				}
+				return _res
+			}, step)
+			if (status) {
+				await page.waitForSelector("div#artdeco-toasts__wormhole a.artdeco-toast-item__cta", { visible: true, timeout: 15000 })
+				const link = await page.evaluate((): string|null => {
+					const el = document.querySelector("div#artdeco-toasts__wormhole a.artdeco-toast-item__cta") as HTMLAnchorElement
+					if (el) {
+						return el.href
+					}
+					return null
+				})
+				if (link) {
+					// @ts-ignore
+					res = res.concat(Array.from(utils.filterRightOuter(res, [ link ])))
+					await page.click("button.artdeco-toast-item__dismiss.artdeco-button")
+					await page.waitForSelector("div#artdeco-toasts__wormhole a.artdeco-toast-item__cta", { hidden: true, timeout: 15000 })
+				}
+			}
+		}
 	} catch (err) {
 		console.log(err.message || err)
 	}
@@ -236,7 +260,13 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 			_res = await openArticle(page, post)
 		} else {
 			_res = await openProfileFeed(page, post, articleType)
-			await getPostsFromProfile(page, numberOfLikesPerProfile)
+			const links = await getPostsFromProfile(page, numberOfLikesPerProfile)
+			for (const link of links) {
+				console.log("Liking :", link)
+				if (await openArticle(page, link) === OpenStatus.SUCCESS) {
+					// TODO: like post
+				}
+			}
 		}
 		console.log("Open status:", _res)
 		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })

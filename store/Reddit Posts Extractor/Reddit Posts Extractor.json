@@ -1,6 +1,6 @@
 {
 	"slug": "reddit-posts-extractor",
-	"description": "How to get every posts out of one or many subreddits",
+	"description": "How to get every Reddit posts out of one or many subreddits",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Reddit+Posts+Extractor/Reddit+Posts+Extractor+(2).png",
 	"hidden": true,
 	"new": true,
