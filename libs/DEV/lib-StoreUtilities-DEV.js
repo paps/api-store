@@ -782,10 +782,9 @@ class StoreUtilities {
 			this.log(`Your "File Storage" setting is currently on "${settings}", this API may not be able to continue its job where it left off next launch. Consider changing it to "Mix new and old files".`, "info")
 		}
 		if (res.body && res.body.status === "success" && res.body.data.awsFolder && res.body.data.userAwsFolder) {
-			const url = `https://phantombuster.s3.amazonaws.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
-			// const url = `https://phantombuster.s3.amazonaws.com/bfF2udGAeUg/CwMEoAv928kOGjS7atvSAw/${filename}`
+			const url = `https://storage.phantombuster.com/${res.body.data.userAwsFolder}/${res.body.data.awsFolder}/${filename}`
 			try {
-				const httpRes = await needle("get", url)
+				const httpRes = await needle("get", url, { compressed: true })
 				// Trying to access an unknown file in s3 will make an 403 HTTP status code for the response
 				if (httpRes.raw && httpRes.statusCode === 200) {
 					const data = parseContent ? Papa.parse(httpRes.raw.toString(), { header: true }).data : httpRes.raw.toString()
