@@ -2,29 +2,20 @@
 
 <hr/>
 
-# You have to grow your LinkedIn network for 3 reasons
-1. LinkedIn is a highly competitive network. **Get higher in search results** by increasing your 1st and 2nd degree connection network.
+# Auto send invitations to be more connected on LinkedIn
 
-2. Reaching out to someone you don’t know on LinkedIn is really restricted. Grow your network and **maximize your chances** to have acquaintances with your target.
+1. LinkedIn is a highly competitive network. **Get higher in search results** by automatically connecting with people on a daily basis, thus increasing your 1st and 2nd degree connection network.
 
-3. You want to get attention and be visible? More connections = **wider reach and larger audience** (Yeaaah size does matter sometimes…)  
+2. Connect to people will grow your network and **give your content reach** and exponentially grow your 2nd-degree connections' network.
 
-_Bonus: It looks really cool to have a lot of connections!_
+3. LinkedIn automation done right is incredibly powerful. Setup this LinkedIn automation tool once and let it grow your LinkedIn connections from the cloud. You don't even need to have your computer on.
 
-# Our solution: Automatically add a list of valuable new connections to your LinkedIn account.
-Starting from a Google spreadsheet filled with a list of LinkedIn profiles, Phantombuster will send **automatically**, in addition to a **private message**, an invitation to all those profiles.
+# LinkedIn automation done right: Customization.
+Maximize your chances to connect by automating LinkedIn *the right way*. That means reasonable, daily amounts, well picked new connections and personalized messages
 
-<center>![](https://phantombuster.imgix.net/api-store/1-Spreadsheet.png)</center>
-
-# What will you need? ⚙️ 
-
-- **Spreadsheet URL**: The link of a Google Spreadsheet (or CSV) with LinkedIn profile URLs in it.
-- **Message**: The message you want to send.
-
-# What you need to do.
+# Tutorial
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
-
 
 ## 2. Use this API on your account.👌
 We cooked up in our lab a script with first-class attention.
@@ -80,7 +71,7 @@ Your spreadsheet should contain a list of profile URLs to add (**one link per ro
 
 You can also specify the name of the column that contains the profile links. Simply enter the column name in the next text field.
 
-## 6. Add a private personalized message 🆕 💬
+## 6. (Optional) Add a private personalized message 🆕 💬
 Below the column name you'll find the **message** configuration. This step isn’t mandatory but highly recommended.
 
 In the message textbox you can write a private note (**Total: 300 characters MAX**) which will be sent to the profile included in your Google spreadsheet list in addition to the invitation to join your network.
@@ -147,3 +138,26 @@ We have noticed that adding more than 80 connections per day will almost always 
 **Note:** When [email discovery](#section_email_discovery) is enabled, we recommend you divide this limit by 2 (that is, **40 profiles per day**).
 
 Having a LinkedIn Premium subscription might raise this limit. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
+
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_related_apis" class="row">
+	<div class="col-xs-12">
+		<h2 id="section_relatedapis"> Related APIs</h2>  
+	</div>
+	<div class="col-xs-12 col-md-4 text-center"> 
+		<a href="https://phantombuster.com/api-store/3112/linkedin-profile-scraper">
+			LinkedIn Profile Scraper</a><br />
+		<small>LinkedIn Profile Scraper will collect every data from a list LinkedIn profiles, including emails!</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/LinkedIn+Search+Extractor.png" /> 
+		<a href="https://phantombuster.com/api-store/3149/linkedin-search-export">
+			LinkedIn Search Export</a><br />
+		<small>Collect every single profile out of a LinkedIn search</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Message+Sender/LinkedIn+Message+Sender.png" /> 
+		<a href="https://phantombuster.com/api-store/9227/linkedin-message-sender">
+			LinkedIn Message Sender</a><br />
+		<small>Automatically send personalized messages to your LinkedIn connections</small>
+	</div>
+</div>
