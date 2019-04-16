@@ -144,7 +144,15 @@ const getMembersCount = (arg, cb) => {
  */
 const getDomElementsCount = (arg, cb) => cb(null, document.querySelectorAll(arg.sel).length)
 
-const isStillLoading = (arg, cb) => cb(null, document.querySelector("div.artdeco-spinner") !== null)
+const isStillLoading = (arg, cb) => {
+	// Check if a spinner still visible on screen
+	const el = document.querySelector("div.artdeco-spinner")
+	if (!el)
+		return cb(null, false)
+	if (el.parentNode && el.parentNode.parentNode)
+		return cb(null, el.parentNode.parentNode.classList.contains("hidden"))
+	return cb(true)
+}
 
 /**
  * @async
@@ -184,7 +192,7 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 		// Removing duplicated scraped elements
 		members.push(...utils.filterRightOuter(members, res))
 		if ((members.length - lastCount) >= 100) {
-			utils.log(`Got ${members.length + 1} members from the list.`, "info")
+			utils.log(`Got ${members.length} members from the list.`, "info")
 			lastCount = members.length
 		}
 		const elementsCount = await tab.evaluate(getDomElementsCount, { sel })
@@ -196,18 +204,16 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 		// Load new members...
 		try {
 			await tab.scrollToBottom()
-			await tab.waitUntilVisible("div.artdeco-spinner", 30000)
-			await tab.waitWhileVisible("div.artdeco-spinner", 30000)
+			await tab.waitUntilVisible("div.artdeco-spinner", 15000)
+			await tab.waitWhileVisible("div.artdeco-spinner", 15000)
 		} catch (err) {
 			const isLoading = await tab.evaluate(isStillLoading)
 			if (isLoading) {
 				try {
-					await tab.waitWhilePresent("div.artdeco-spinner", 30000)
+					await tab.waitWhileVisible("div.artdeco-spinner", 30000)
 				} catch (err) {
 					break
 				}
-			} else {
-				break
 			}
 		}
 	}
