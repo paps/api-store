@@ -2,7 +2,7 @@
 
 <hr/>
 
-# The best LinkedIn Scraper out there: <br> Fast and efficient LinkedIn Scraping available for all!
+# Fast and efficient LinkedIn Scraping available for all
 
 Salesman, recruiters, CEOs use it daily. But are you getting the most out of **your** LinkedIn account? 
 
@@ -11,7 +11,7 @@ Are you able to **efficiently** build **qualitative** and **instantly actionable
 LinkedIn Profile Scraper is *the* tool to have the **best return to time spent** on LinkedIn **for you and your team**. 
 
 
-# Scrape LinkedIn Profiles and turn Profiles URLs into detailed data.
+# Scrape LinkedIn profiles and turn them into detailed data.
 
 LinkedIn Profile Scraper takes as an **input a list of LinkedIn Profile URLs**. 
 
@@ -19,13 +19,37 @@ It will visit on your behalf each profile and **extract every single publicly av
 
 It's all done **in the cloud** so you can close your laptop and focus on other tasks.
 
-# Scrape LinkedIn visible information as well as hidden real, verified, email addresses with Email Discovery.
+# Scrape LinkedIn visible information and verified, email addresses with Email Discovery.
 
 For most 1st degree connection, you will obtain their **email addresses** and **phone number**. 
 
 For people you're not connected to, Phantombuster Email Discovery mode will take over and provide you with **verified professional email addresses** that do **not** bounce. *Quality first*.
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_related_apis" class="row">
+	<div class="col-xs-12">
+		<h2 id="section_relatedapis"> Related APIs</h2>  
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/LinkedIn+Network+Booster.png" /> 
+		<a href="https://phantombuster.com/api-store/2818/linkedin-network-booster">
+			LinkedIn Network Booster</a><br />
+		<small>Add profiles to your network and get in touch using a personalized message</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/LinkedIn+Search+Extractor.png" /> 
+		<a href="https://phantombuster.com/api-store/3149/linkedin-search-export">
+			LinkedIn Search Export</a><br />
+		<small>Collect every single profile out of a LinkedIn search</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Message+Sender/LinkedIn+Message+Sender.png" /> 
+		<a href="https://phantombuster.com/api-store/9227/linkedin-message-sender">
+			LinkedIn Message Sender</a><br />
+		<small>Automatically send personalized messages to your LinkedIn connections</small>
+	</div>
+</div>
 
 # Tutorial
 
@@ -111,7 +135,7 @@ It’s done! Click on "launch" to start the extraction.
 
 Phantombuster will do the busy work for you and visit LinkedIn on your behalf. After a while you will find yourself with all the data neatly organized in a .csv file. Feel free to import it in your CRM or use it as is.
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+# Repetition setup { repetition_setup }
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months.
 
@@ -139,27 +163,3 @@ Visiting too many profiles often results in LinkedIn invalidating your session c
 If you have a Premium, Sales Navigator or Recruiter LinkedIn account, those rates are much higher. Please see these official LinkedIn help pages: [Commercial Use Limit](https://www.linkedin.com/help/linkedin/answer/52950) and [Finding People on LinkedIn](https://premium.linkedin.com/professional/faq).
 
 Last thing: When [email discovery](#section_email_discovery) is enabled, we recommend you divide any limit by 2 since the discovery service needs 2 requests to do its job (that is, **40 profiles per day**).
-
-<div xmlns="http://www.w3.org/1999/xhtml" id="section_related_apis" class="row">
-	<div class="col-xs-12">
-		<h2 id="section_relatedapis"> Related APIs</h2>  
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn_Network_Booster/LinkedIn+Network+Booster.png" /> 
-		<a href="https://phantombuster.com/api-store/2818/linkedin-network-booster">
-			LinkedIn Network Booster</a><br />
-		<small>Add profiles to your network and get in touch using a personalized message</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/LinkedIn+Search+Extractor.png" /> 
-		<a href="https://phantombuster.com/api-store/3149/linkedin-search-export">
-			LinkedIn Search Export</a><br />
-		<small>Collect every single profile out of a LinkedIn search</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Message+Sender/LinkedIn+Message+Sender.png" /> 
-		<a href="https://phantombuster.com/api-store/9227/linkedin-message-sender">
-			LinkedIn Message Sender</a><br />
-		<small>Automatically send personalized messages to your LinkedIn connections</small>
-	</div>
-</div>

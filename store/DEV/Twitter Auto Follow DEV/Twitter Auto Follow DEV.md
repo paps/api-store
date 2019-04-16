@@ -6,12 +6,33 @@ Your perfect audience is somewhere on Twitter. They are all following the same k
 
 This API will do the repetitive work or Following & Unfollowing a list of contacts you're interested in **so you can focus on quality content creation** and **building significant connections**.
 
-## 📚 Related tutorials & strategies
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-[📜 How to find the _right_ people to follow on Twitter: ](https://blog.phantombuster.com/recipe-3-what-you-want-is-a-targeted-audience-how-to-find-it-on-twitter-54ee61a6ac30) In this tutorial, you learn how to make a list of people that would be interested in your content. Probably the followers of competitors of yours, or influencers.
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_relatedapis" class="row">
+	<div class="col-xs-12">
+		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_Auto_Retweeter/Twitter+Auto+Retweet(2).png" /> 
+		<a href="https://phantombuster.com/api-store/11057/twitter-auto-retweeter">
+			Twitter Auto Retweeter</a><br />
+		<small>Automatically Retweet a selection of Tweets</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
+		<a href="https://phantombuster.com/api-store/10678/twitter-message-sender">
+			Twitter Message Sender</a><br />
+		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
+		<a href="https://phantombuster.com/api-store/5770/twitter-auto-liker">
+			Twitter Auto Liker</a><br />
+		<small>Automatically like a list of Tweets</small>
+	</div>
+</div>
 
-[📜 Why & How to set up a follow/unfollow strategy on Twitter: ](https://blog.phantombuster.com/recipe-2-growing-your-twitter-audience-101-easily-build-your-following-machine-in-5-minutes-84efffc0bc) Learn how to set up _the_ best strategy to grow your following count with real, engaged, targeted followers.
-
+# Tutorial 🚀️ 
 
 ## ℹ️ Recommendations 
 
@@ -24,15 +45,6 @@ This API will do the repetitive work or Following & Unfollowing a list of contac
 ## ⏳ Execution speed
 
 This API is capable of adding about **25 profiles per minute**.
-
-# How to set up your Twitter Autofollower 🚀️ 
-
-## 0. Necessary information 
-
-In order to get started, you'll need to fill out 2 mandatory information:
-- **"Spreadsheet URL"**: In order to know **_who_** to follow, Phantombuster needs an _input_. This input file takes the form of spreadsheet hosted online. We recommend using Google Spreadsheet to build this input file and click on Share the URL to make it publicly accessible to Phantombuster.
-
-- **"Session Cookie auth_token"**: This is your Twitter `auth_token` session cookie. You'll have more details in Step 5 of this tutorial.
 
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). We browse the web for you and automate actions so you can focus on what's important.
@@ -87,9 +99,9 @@ If you're operating from **another browser** and/or want to do it manually, [her
 
 ## 6. Choose what the API should do 
 The API can perform 3 specifics actions:
-- Follow
-- Unfollow
-- Unfollow back (Unfollow only if the profile hasn't followed back)
+- Follow: Will auto follow a list of Twitter accounts.
+- Unfollow: Will auto unfollow a list of Twitter accounts.
+- Unfollow back (Unfollow only if the profile hasn't followed back): Will auto unfollow the accounts that do not follow your Twitter account.
 
 ## 7. Configure repetitive launches
 

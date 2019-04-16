@@ -82,7 +82,7 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 This will launch the API and, if you didn't already change the spreadsheet URL, send Phantombuster's team LinkedIn connection requests.
 
-# ⚙️️Repetition setup ⚙️
+# Repetition setup
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
