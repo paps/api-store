@@ -87,7 +87,9 @@
 			"store/DEV/Twitter Auto Follow DEV",
 			"store/Twitter Auto Follow",
 			"store/DEV/LinkedIn Auto Liker DEV",
-			"store/DEV/LinkedIn Auto Commenter DEV"
+			"store/DEV/LinkedIn Auto Commenter DEV",
+			"store/LinkedIn Auto Liker",
+			"store/LinkedIn Auto Commenter"
 		],
 
 		// "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */

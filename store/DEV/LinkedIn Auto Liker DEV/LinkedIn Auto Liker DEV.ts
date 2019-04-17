@@ -17,6 +17,7 @@ const linkedin: LinkedIn = new LinkedIn(buster, utils)
 const DB_NAME = "result"
 const DEF_LINES = 10
 const DEF_LIKES = 1
+const DEF_CAT = "all"
 // }
 
 enum OpenStatus {
@@ -30,18 +31,24 @@ enum OpenStatus {
 	SUCCESS,
 }
 
+enum ActionStatus {
+	ACT_ALRD_DONE = -2,
+	SCRAPE_ERR,
+	SUCCESS,
+}
+
 interface IApiParams {
 	sessionCookie: string,
 	spreadsheetUrl?: string,
 	columnName?: string,
-	articleType: string,
-	undoLikes: boolean
+	undoLikes: boolean,
 }
 
 interface IMutableApiParams {
 	numberOfLinesPerLaunch?: number,
 	numberOfLikesPerProfile?: number,
 	csvName?: string,
+	articleType?: string,
 	queries?: string|string[]
 }
 
@@ -216,12 +223,30 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 	return res
 }
 
+const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
+	const sel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-filled-icon" : "like-icon" }\"]`
+	const waitSel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
+	const isLiked = await page.evaluate(() => !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]"))
+
+	if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
+		return ActionStatus.ACT_ALRD_DONE
+	}
+	try {
+		await page.click(sel)
+		await page.waitForSelector(waitSel, { visible: true })
+	} catch (err) {
+		console.log(err.message || err)
+		return ActionStatus.SCRAPE_ERR
+	}
+	return ActionStatus.SUCCESS
+}
+
 (async () => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { sessionCookie, spreadsheetUrl, columnName, articleType, undoLikes } = args as IApiParams
-	let { csvName, queries, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args as IMutableApiParams
+	const { sessionCookie, spreadsheetUrl, columnName, undoLikes } = args as IApiParams
+	let { csvName, queries, articleType, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args as IMutableApiParams
 	const res: IUnknownObject[] = []
 
 	if (!csvName) {
@@ -230,6 +255,10 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 
 	if (spreadsheetUrl) {
 		queries = linkedin.isLinkedInUrl(spreadsheetUrl) ? spreadsheetUrl : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+	}
+
+	if (!articleType) {
+		articleType = DEF_CAT
 	}
 
 	if (typeof numberOfLikesPerProfile !== "number") {
@@ -254,25 +283,77 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 	utils.log(`Posts to like: ${JSON.stringify(queries, null, 2)}`, "info")
 	let i = 0
 	for (const post of queries) {
+		let links: string[] = []
 		let _res = 0
+		const result: IUnknownObject = { query: post }
 		buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`)
 		if (isLinkedArticle(post)) {
-			_res = await openArticle(page, post)
+			links.push(post)
 		} else {
 			_res = await openProfileFeed(page, post, articleType)
-			const links = await getPostsFromProfile(page, numberOfLikesPerProfile)
-			for (const link of links) {
-				console.log("Liking :", link)
-				if (await openArticle(page, link) === OpenStatus.SUCCESS) {
-					// TODO: like post
+			if (_res === OpenStatus.SUCCESS) {
+				const tmp = await getPostsFromProfile(page, numberOfLikesPerProfile)
+				links = links.concat(tmp)
+			} else {
+				let errMsg = null
+				switch (_res) {
+					case OpenStatus.BAD_FEED:
+						errMsg = "Selected feed type doesn't exists"
+						break
+					case OpenStatus.BAD_HTTP:
+						errMsg = `Can't open ${page}`
+						break
+					case OpenStatus.SCRAPE_ERR:
+						errMsg = `Internal error while scraping ${page}`
+						break
+					case OpenStatus.INV_ARTICLE:
+						errMsg = `${page} isn't a LinkedIn article`
+						break
+					case OpenStatus.INV_PROFILE:
+						errMsg = `${page} isn't a LinkedIn profile`
+						break
+					case OpenStatus.EMPTY_FEED:
+						errMsg = `${page} doesn't have any activities`
+						break
 				}
+				utils.log(errMsg, "warning")
+				result.error = errMsg
+				result.timestamp = (new Date()).toISOString()
+				res.push(result)
+				continue
 			}
 		}
-		console.log("Open status:", _res)
-		await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
+		for (const article of links) {
+			let errMsg = null
+			let successMsg = null
+			const openStatus = await openArticle(page, article)
+			if (openStatus === OpenStatus.SUCCESS) {
+				utils.log(`${undoLikes ? "Unl" : "L"}iking ${article}`, "info")
+				const cmdStatus = await likeArticle(page, undoLikes)
+				switch (cmdStatus) {
+					case ActionStatus.SUCCESS:
+						successMsg = `${post} ${undoLikes ? "un" : ""}liked`
+						break
+					case ActionStatus.ACT_ALRD_DONE:
+						errMsg = `${post} is already ${undoLikes ? "un" : ""}liked`
+						break
+					case ActionStatus.SCRAPE_ERR:
+						errMsg = `Internal error while scraping ${page}`
+						break
+				}
+				if (typeof errMsg === "string") {
+					result.error = errMsg
+				}
+				utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "done")
+			}
+		}
+		result.links = links
+		result.timestamp = (new Date()).toISOString()
+		res.push(result)
 	}
 	await page.close()
 	await browser.close()
+	await utils.saveResults(res, res, csvName, null, true)
 	process.exit()
 })()
 .catch((err) => {
