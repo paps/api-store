@@ -42,6 +42,7 @@ interface IApiParams {
 	spreadsheetUrl?: string,
 	columnName?: string,
 	undoLikes: boolean,
+	noDatabase?: boolean
 }
 
 interface IMutableApiParams {
@@ -82,7 +83,7 @@ const _pulseArticleLoader = (cssPath: string) => {
 	return el.textContent ? el.textContent.trim().length > 0 : false
 }
 
-const _isArticleLiked = (pulse: boolean) => {
+const _isArticleLiked = (pulse: boolean): boolean => {
 	if (pulse) {
 		const el = document.querySelector("button[data-control-name=\"like\"] li-icon[type=\"like-filled-icon\"]")
 		return el ? !(getComputedStyle(el).display === "none") : !el
@@ -252,16 +253,17 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const waitSel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
 	const pulseSel = `button[data-control-name=\"${ cancelLikes ? "unlike" : "like" }\"]`
 	const pulseWaitSel = `button[data-control-name=\"${ cancelLikes ? "like" : "unlike" }\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
+	let isLiked: boolean = false
 	const isPulse = await page.evaluate(_isPulse)
-	const isLiked = await page.evaluate(_isArticleLiked, isPulse)
 
-	if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
-		return ActionStatus.ACT_ALRD_DONE
-	}
 	try {
 		if (isPulse) {
 			// Wait until like count is present in the DOM
 			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, "button.reader-social-bar__like-count")
+		}
+		isLiked = await page.evaluate(_isArticleLiked, isPulse) as boolean
+		if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
+			return ActionStatus.ACT_ALRD_DONE
 		}
 		await page.click(isPulse ? pulseSel : sel)
 		await page.waitForSelector(isPulse ? pulseWaitSel : waitSel, { visible: true, timeout: 15000 })
@@ -276,7 +278,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { sessionCookie, spreadsheetUrl, columnName, undoLikes } = args as IApiParams
+	const { sessionCookie, spreadsheetUrl, columnName, undoLikes, noDatabase } = args as IApiParams
 	let { csvName, queries, articleType, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args as IMutableApiParams
 	const res: IUnknownObject[] = []
 
@@ -304,7 +306,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		queries = [ queries ]
 	}
 	await linkedin.login(page, sessionCookie)
-	const db = await utils.getDb(csvName + ".csv")
+	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
 	queries = queries.slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
@@ -314,17 +316,17 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	utils.log(`Posts to like: ${JSON.stringify(queries, null, 2)}`, "info")
 	let i = 0
 	for (const post of queries) {
-		let links: string[] = []
+		let urls: string[] = []
 		let _res = 0
 		const result: IUnknownObject = { query: post }
 		buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`)
 		if (isLinkedArticle(post)) {
-			links.push(post)
+			urls.push(post)
 		} else {
 			_res = await openProfileFeed(page, post, articleType)
 			if (_res === OpenStatus.SUCCESS) {
 				const tmp = await getPostsFromProfile(page, numberOfLikesPerProfile)
-				links = links.concat(tmp)
+				urls = urls.concat(tmp)
 			} else {
 				let errMsg = null
 				switch (_res) {
@@ -354,7 +356,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 				continue
 			}
 		}
-		for (const article of links) {
+		for (const article of urls) {
 			let errMsg = null
 			let successMsg = null
 			const openStatus = await openArticle(page, article)
@@ -374,11 +376,13 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 				}
 				if (typeof errMsg === "string") {
 					result.error = errMsg
+					urls.splice(urls.indexOf(article), 1)
 				}
 				utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "done")
 			}
 		}
-		result.links = links
+		result.urls = urls
+		result.likeCount = urls.length
 		result.timestamp = (new Date()).toISOString()
 		res.push(result)
 	}
