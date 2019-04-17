@@ -6,7 +6,7 @@
 	"gradientBegin": "#562D87",
 	"gradientEnd": "#7846B4",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html",

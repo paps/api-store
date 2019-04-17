@@ -6,7 +6,7 @@
 	"gradientBegin": "#DD6948",
 	"gradientEnd": "#DA552F",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"spreadsheetUrl": "https://www.producthunt.com/posts/phantombuster-2",

@@ -6,7 +6,7 @@
 	"gradientBegin": "#029E74",
 	"gradientEnd": "#516395",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"uid": "uid_cookie",

@@ -5,7 +5,7 @@
 	"gradientBegin": "#61B5FF",
 	"gradientEnd": "#BADFFF",
 	"hidden": false,
-	"new": true,
+	"new": false,
 	"update": false,
 	"defaultArgument": {
 		"sessionCookie": "_intercom_session_cookie",
