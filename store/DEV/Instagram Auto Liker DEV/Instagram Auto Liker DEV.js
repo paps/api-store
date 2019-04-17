@@ -70,7 +70,7 @@ const getPostUsername = (arg, cb) => {
 
 const likePost = async (tab, postUrl, query, action) => {
 	await tab.open(postUrl)
-	const selector = await tab.waitUntilVisible([".coreSpriteHeartOpen", ".p-error"], "or")
+	const selector = await tab.waitUntilVisible([".coreSpriteHeartOpen", "button [class*=\"glyphsSpriteHeart\"]", ".p-error"], "or", 15000)
 	if (selector === ".p-error") {
 		utils.log(`Can't open post ${postUrl}`, "warning")
 		return { query, timestamp: (new Date()).toISOString(), postUrl, error: "Can't open post" }
@@ -84,16 +84,16 @@ const likePost = async (tab, postUrl, query, action) => {
 	const postUsername = await tab.evaluate(getPostUsername)
 	const profileUrl = `https://www.instagram.com/${postUsername}`
 	if (await tab.isPresent(selectorAfter)) {
-		return { query, postUrl, postUsername, error: `Aready ${action === "Unlike" ? "un" : ""}liked` }
+		return { query, postUrl, postUsername, error: `Aready ${action === "Unlike" ? "un" : ""}liked`, timestamp: (new Date()).toISOString() }
 	}
-	await tab.click(".coreSpriteHeartOpen")
+	await tab.click(selector)
 	try {
 		await tab.wait(7000)
 		await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-		await tab.waitUntilVisible(".coreSpriteHeartOpen")
+		await tab.waitUntilVisible([".coreSpriteHeartOpen", "button [class*=\"glyphsSpriteHeart\"]"], "or", 15000)
 		// if (await tab.isPresent(selectorAfter)) {
 		utils.log(`${action === "Like" ? "Liked" : "Unliked"} post ${postUrl} ${postUsername ? `by ${postUsername}.` : ""}`, "done")
-		return { query, postUrl, postUsername, profileUrl, newLikeCount: 1 }
+		return { query, postUrl, postUsername, profileUrl, newLikeCount: 1, timestamp: (new Date()).toISOString() }
 		// } else if (action === "Like") {
 		// 	utils.log(`Couldn't like post ${postUrl}: rate limited by Instagram.`, "warning")
 		// 	rateLimited = true
@@ -114,7 +114,7 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	const selected = await tab.waitUntilVisible(["main", ".error-container"], 15000, "or")
 	if (selected === ".error-container") {
 		utils.log(`Couldn't open ${pageUrl}, broken link or page has been removed.`, "warning")
-		return { query: pageUrl, error: "Broken link or page has been removed" }
+		return { query: pageUrl, error: "Broken link or page has been removed", timestamp: (new Date().toISOString()) }
 	}
 	const profileUrl = await tab.getUrl()
 	const jsonUrl = `${profileUrl}?__a=1`
@@ -122,10 +122,15 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 	let instagramJsonCode = await tab.getContent()
 	const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
 	instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
-	const userData = instagramJsonCode.graphql.user
+	const graphql = instagramJsonCode.graphql
+	if (!graphql) {
+		utils.log("Not an Instagram profile!", "error")
+		return { query: pageUrl, error: "Not an Instagram profile", timestamp: (new Date().toISOString()) }
+	}
+	const userData = graphql.user
 	if (userData.is_private && !userData.followed_by_viewer) {
 		utils.log(`Profile of ${userData.username} is private, can't access their posts.`, "warning")
-		return { query: pageUrl, error: "Private profile" }
+		return { query: pageUrl, error: "Private profile", timestamp: (new Date().toISOString()) }
 	}
 	let posts = userData.edge_owner_to_timeline_media.edges
 	posts = posts.slice(0, numberOfPostsPerProfile)
@@ -138,7 +143,9 @@ const openProfile = async (tab, pageUrl, numberOfPostsPerProfile, action) => {
 				result.push(tempResult)
 			}
 		} catch (err) {
-			//
+			await tab.screenshot(`${Date.now()}err.png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}err.html`)
+			console.log("err:", err)
 		}
 		await tab.wait(2500 + Math.random() * 2000)
 		const timeLeft = await utils.checkTimeLeft()
