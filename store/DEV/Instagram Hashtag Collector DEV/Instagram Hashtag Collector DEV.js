@@ -152,8 +152,9 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 	return [ scrapedHashtags, endCursor, hasNextPage ]
 }
 
-const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
+const extractFirstPosts = async (tab, results, firstResultsLength, query, maxPosts) => {
 	for (let i = 0; i < firstResultsLength; i++) {
+		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
 		if (results[i].postUrl) {
 			try {
 				await tab.open(results[i].postUrl)
@@ -163,7 +164,6 @@ const extractFirstPosts = async (tab, results, firstResultsLength, query) => {
 				//
 			}
 		}
-		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
 	}
 	return results
 }
@@ -182,10 +182,16 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 	let results = []
 	if (!resuming) {
 		results = await tab.evaluate(scrapeFirstResults, { query })
+		if (maxPosts && results.length > maxPosts) {
+			results = results.slice(0, maxPosts)
+		}
 		newlyScraped = results.length
 		const postTab = await nick.newTab()
-		results = await extractFirstPosts(postTab, results, newlyScraped, query)
+		results = await extractFirstPosts(postTab, results, newlyScraped, query, maxPosts)
 		await postTab.close()
+		if (maxPosts && results.length >= maxPosts) {
+			return results
+		}
 		const initDate = new Date()
 		graphqlUrl = ""
 		do {
