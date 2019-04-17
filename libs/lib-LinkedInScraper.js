@@ -902,6 +902,7 @@ class LinkedInScraper {
 								status = "Email Not found"
 							}
 						} catch (err) {
+							this.utils.log(`Phantombuster via Dropcontact didn't find anything for ${result.general.fullName} working at ${result.jobs[0].companyName || companyUrl }`, "info")
 							status = err.message
 						}
 						try {
