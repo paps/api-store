@@ -20,6 +20,12 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"hunterApiKey": [ "emailChooser" ],
+					"dropcontactApiKey": [ "emailChooser" ]
+				}
+			},
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
