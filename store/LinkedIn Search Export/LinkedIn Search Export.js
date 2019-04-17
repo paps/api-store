@@ -720,13 +720,13 @@ const getSearchResults = async (tab, searchUrl, numberOfPage, query, isSearchURL
 					} else {
 						break
 					}
-					let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
-					if (hasReachedLimit) {
-						utils.log(hasReachedLimit, "warning")
-						break
-					} else {
+					// let hasReachedLimit = await linkedIn.hasReachedCommercialLimit(tab)
+					// if (hasReachedLimit) {
+					// 	utils.log(hasReachedLimit, "warning")
+					// 	break
+					// } else {
 						utils.log(`Got URLs for page ${pageNumber}.`, "done")
-					}
+					// }
 				}
 				const timeLeft = await utils.checkTimeLeft()
 				if (!timeLeft.timeLeft) {
