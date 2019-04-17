@@ -66,6 +66,30 @@ const _waitVisible = (selectors: string[]): boolean|string => {
 	return false
 }
 
+const _isPulse = () => {
+	try {
+		return (new window.URL(location.href)).pathname.startsWith("/pulse")
+	} catch (err) {
+		return false
+	}
+}
+
+const _pulseArticleLoader = (cssPath: string) => {
+	const el = document.querySelector(cssPath)
+	if (!el) {
+		return false
+	}
+	return el.textContent ? el.textContent.trim().length > 0 : false
+}
+
+const _isArticleLiked = (pulse: boolean) => {
+	if (pulse) {
+		const el = document.querySelector("button[data-control-name=\"like\"] li-icon[type=\"like-filled-icon\"]")
+		return el ? !(getComputedStyle(el).display === "none") : !el
+	}
+	return !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]")
+}
+
 const waitForVisibleSelector = async (page: puppeteer.Page, sels: string[], options: IUnknownObject): Promise<string> => {
 	const res = await page.waitForFunction(_waitVisible, options, sels)
 	return res.jsonValue()
@@ -226,14 +250,21 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const sel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-filled-icon" : "like-icon" }\"]`
 	const waitSel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
-	const isLiked = await page.evaluate(() => !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]"))
+	const pulseSel = `button[data-control-name=\"${ cancelLikes ? "unlike" : "like" }\"]`
+	const pulseWaitSel = `button[data-control-name=\"${ cancelLikes ? "like" : "unlike" }\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
+	const isPulse = await page.evaluate(_isPulse)
+	const isLiked = await page.evaluate(_isArticleLiked, isPulse)
 
 	if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
 		return ActionStatus.ACT_ALRD_DONE
 	}
 	try {
-		await page.click(sel)
-		await page.waitForSelector(waitSel, { visible: true })
+		if (isPulse) {
+			// Wait until like count is present in the DOM
+			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, "button.reader-social-bar__like-count")
+		}
+		await page.click(isPulse ? pulseSel : sel)
+		await page.waitForSelector(isPulse ? pulseWaitSel : waitSel, { visible: true, timeout: 15000 })
 	} catch (err) {
 		console.log(err.message || err)
 		return ActionStatus.SCRAPE_ERR
@@ -301,19 +332,19 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 						errMsg = "Selected feed type doesn't exists"
 						break
 					case OpenStatus.BAD_HTTP:
-						errMsg = `Can't open ${page}`
+						errMsg = `Can't open ${post}`
 						break
 					case OpenStatus.SCRAPE_ERR:
-						errMsg = `Internal error while scraping ${page}`
+						errMsg = `Internal error while scraping ${post}`
 						break
 					case OpenStatus.INV_ARTICLE:
-						errMsg = `${page} isn't a LinkedIn article`
+						errMsg = `${post} isn't a LinkedIn article`
 						break
 					case OpenStatus.INV_PROFILE:
-						errMsg = `${page} isn't a LinkedIn profile`
+						errMsg = `${post} isn't a LinkedIn profile`
 						break
 					case OpenStatus.EMPTY_FEED:
-						errMsg = `${page} doesn't have any activities`
+						errMsg = `${post} doesn't have any activities`
 						break
 				}
 				utils.log(errMsg, "warning")
@@ -338,7 +369,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 						errMsg = `${post} is already ${undoLikes ? "un" : ""}liked`
 						break
 					case ActionStatus.SCRAPE_ERR:
-						errMsg = `Internal error while scraping ${page}`
+						errMsg = `Internal error while scraping ${post}`
 						break
 				}
 				if (typeof errMsg === "string") {
