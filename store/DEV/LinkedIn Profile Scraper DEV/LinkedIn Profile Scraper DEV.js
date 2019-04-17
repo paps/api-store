@@ -189,12 +189,12 @@ const removeLinkedinSubdomains = url => {
 		await tab.wait(2500 + Math.random() * 2000)
 	}
 
-	try {
-		await buster.setResultObject(result)
-	} catch (e) {
-		utils.log(`Could not save result object: ${e.message || e}`, "warning")
-	}
 	if (noDatabase) {
+		try {
+			await buster.setResultObject(result)
+		} catch (e) {
+			//
+		}
 		nick.exit()
 	} else {
 		console.log("onlyCurrentJson", onlyCurrentJson)
