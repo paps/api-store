@@ -25,7 +25,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session cookie auth_token <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_5getyourtwittersessioncookie\">(?)</a>"
+						"label": "Session cookie auth_token <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_argument\">(?)</a>"
 					},
 					"spreadsheetUrl": {
 						"label": "Twitter account or Spreadsheet URL <a target=\"_blank\" href=\"/api-store/4127/twitter-auto-follow#section_4createanicespreadsheet\">(?)</a>",
