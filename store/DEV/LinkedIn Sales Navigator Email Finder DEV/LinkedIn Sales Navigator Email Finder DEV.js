@@ -11,6 +11,16 @@ const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(buster)
 // }
 
+const cleanObject = (obj) => {
+	for (const key of Object.keys(obj)) {
+		if (obj[key] === null) {
+			delete obj[key]
+		} else if (obj[key].length === 0) {
+			delete obj[key]
+		}
+	}
+}
+
 
 ;(async () => {
 	let { spreadsheetUrl, emailChooser, hunterApiKey, dropcontactApiKey, columnName, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
@@ -34,15 +44,17 @@ const utils = new StoreUtilities(buster)
 		require("coffee-script/register")
 		dropcontact = new (require("./lib-Dropcontact"))(dropcontactApiKey.trim())
 	}
-	let csvObject, csv
-	let firstNameIndex, lastNameIndex, fullNameIndex, companyNameIndex, domainIndex
+	let csv, header
+	let queries = []
+	let firstNameIndex = -1
+	let lastNameIndex = -1
+	let fullNameIndex = -1
+	let companyNameIndex = -1
+	let domainIndex = -1
 	try {
 		csv = await utils.getRawCsv(spreadsheetUrl)
-		if (numberOfLinesPerLaunch) {
-			csv = csv.slice(0, numberOfLinesPerLaunch)
-		}
-		let header = csv[0]
-		if (((header.includes("firstName") && header.includes("lastName")) || header.includes("name") || header.includes("lastName")) && (header.includes("companyName") || header.includes("company") || header.includes("website"))) {
+		header = csv[0]
+		if (((header.includes("firstName") && header.includes("lastName")) || header.includes("name") || header.includes("fullName")) && (header.includes("companyName") || header.includes("company") || header.includes("website"))) {
 			if (header.includes("firstName")) {
 				firstNameHeader = "firstName"
 				firstNameIndex = header.indexOf("firstName")
@@ -71,6 +83,44 @@ const utils = new StoreUtilities(buster)
 				domainHeader = "website"
 				domainIndex = header.indexOf("website")
 			}
+			console.log("csv:", csv)
+			console.log("fullNameIndex", fullNameIndex)
+			for (let i = 1; i < csv.length; i++) {
+				const csvObject = csv[i]
+				console.log("csvObject:", csvObject[0])
+				let fullName = fullNameIndex > -1 ? csvObject[fullNameIndex] : null
+				const firstName = firstNameIndex > -1 ? csvObject[firstNameIndex] : null
+				const lastName = lastNameIndex > -1 ? csvObject[lastNameIndex] : null
+				const companyName = companyNameIndex > -1 ? csvObject[companyNameIndex] : null
+				const domain = domainIndex > -1 ? csvObject[domainIndex] : null
+				console.log("fullName:", fullName)
+				if (!fullName) {
+					fullName = firstName + lastName
+				}
+				console.log("fn:", fullName)
+				const queryCheck = `${fullName} | ${companyName ? companyName : ""} | ${domain ? domain : ""}`
+				console.log("queryCheck:", queryCheck)
+				let found = false
+				for (const line of result) {
+					if (line.query === queryCheck) {
+						found = true
+						break
+					}
+				}
+				if (!found) {
+					queries.push(csvObject)
+					console.log("on push")
+				}
+				if (numberOfLinesPerLaunch && queries.length === numberOfLinesPerLaunch) {
+					console.log("on break")
+					break
+				}
+			}
+			if (queries.length === 0) {
+				utils.log("Input spreadsheet is empty OR we already processed all the profiles from this spreadsheet.", "warning")
+				process.exit(1)
+			}
+			console.log("on a break")
 		} else {
 			utils.log("Spreadsheet non valid, please manually specify which columns to get the data from.", "error")
 			process.exit(1)
@@ -79,17 +129,19 @@ const utils = new StoreUtilities(buster)
 		utils.log(`Couldn't access the spreadsheet: ${err}`, "error")
 		process.exit(1)
 	}
-
-	let i
 	const currentResult = []
-	for (i = 1; i < csv.length; i++) {
-		const csvObject = csv[i]
+	for (const csvObject of queries) {
+		let resultObject = {}
+		const finalObject = {}
+		for (let i = 0; i < header.length; i++) {
+			finalObject[header[i]] = csvObject[i]
+		}
 		// console.log("csvObject", csvObject)
-		const fullName = fullNameIndex ? csvObject[fullNameIndex] : null
-		const firstName = firstNameIndex ? csvObject[firstNameIndex] : null
-		const lastName = lastNameIndex ? csvObject[lastNameIndex] : null
-		const companyName = companyNameIndex ? csvObject[companyNameIndex] : null
-		const domain = domainIndex ? csvObject[domainIndex] : null
+		let fullName = fullNameIndex > -1 ? csvObject[fullNameIndex] : null
+		const firstName = firstNameIndex > -1 ? csvObject[firstNameIndex] : null
+		const lastName = lastNameIndex > -1 ? csvObject[lastNameIndex] : null
+		const companyName = companyNameIndex > -1 ? csvObject[companyNameIndex] : null
+		const domain = domainIndex > -1 ? csvObject[domainIndex] : null
 		const mailPayload = {}
 		if (firstName && lastName) {
 			mailPayload.first_name = firstName
@@ -97,6 +149,10 @@ const utils = new StoreUtilities(buster)
 		} else {
 			full_name = fullName
 		}
+		if (!fullName) {
+			fullName = firstName + lastName
+		}
+		const query = `${fullName} | ${companyName ? companyName : ""} | ${domain ? domain : ""}`
 		if (domain) {
 			mailPayload.domain = domain
 		}
@@ -105,22 +161,53 @@ const utils = new StoreUtilities(buster)
 		}
 		console.log("mailPayload:", mailPayload)
 		if (mailPayload.domain || mailPayload.company) {
-			if (!fullName) {
-				fullName = firstName + lastName
-			}
 			if (hunter) {
-				const hunterSearch = await hunter.find(mailPayload)
-				utils.log(`Hunter found ${hunterSearch.email || "nothing"} for ${fullName} working at ${companyName || domain}`, "info")
-				if (hunterSearch.email) {
-					currentResult.push(hunterSearch)
-				}
+				try {
+					if (!mailPayload.first_name && !mailPayload.last_name) {
+						console.log("fj", fullName)
+						const nameArray = fullName.split(" ")
+						mailPayload.first_name = nameArray.shift()
+						const last_name = nameArray.join(" ")
+						if (last_name) {
+							mailPayload.last_name = last_name
+						}
+					}
+					resultObject = await hunter.find(mailPayload)
+					utils.log(`Hunter found ${resultObject.email || "nothing"} for ${fullName} working at ${companyName || domain}`, "info")
+					if (!resultObject.email) {
+						resultObject.error = "No mail found"
+					} else {
+						resultObject.emailFromHunter = resultObject.email
+						delete resultObject.email
+					}
+					if (dropcontact) {
+						cleanObject(resultObject)
+						Object.assign(finalObject, resultObject)
+					}
+				} catch (err) {
+					utils.log(err, "error")
+					if (err.message === "Hunter.io: got HTTP 401 - No user found for the API key supplied") {
+						break
+					}
+				}		
 			}
 			if (dropcontact) {
-				const dropcontactSearch = await dropcontact.clean(mailPayload)
-				utils.log(`Dropcontact found ${dropcontactSearch.email || "nothing"} for ${fullName} working at ${companyName || domain}`, "info")
-				if (dropcontactSearch.email) {
-					currentResult.push(dropcontactSearch)
-				}
+				try {
+					resultObject = await dropcontact.clean(mailPayload)
+					console.log("drp", resultObject)
+					utils.log(`Dropcontact found ${resultObject.email || "nothing"} for ${fullName} working at ${companyName || domain}`, "info")
+					if (!resultObject.email) {
+						resultObject.error = "No mail found"
+					} else {
+						resultObject.emailFromDropcontact = resultObject.email
+						delete resultObject.email
+					}
+				} catch (err) {
+					utils.log(err, "error")
+					if (err.message = "Dropcontact returned HTTP 401") {
+						break
+					}
+				}				
 			}
 			if (phantombusterMail) {
 				mailPayload.siren = true
@@ -128,21 +215,20 @@ const utils = new StoreUtilities(buster)
 				let status = ""
 				try {
 					const dropcontactSearch = await phantombusterMail.find(mailPayload)
-					const foundData = dropcontactSearch.data
-					utils.log(`Phantombuster via Dropcontact found ${foundData.email || "nothing"} for ${fullName} working at ${companyName || domain }`, "info")
-					if (foundData.email) {
-						foundData.query = fullName
-						foundData.timestamp = (new Date().toISOString())
-						currentResult.push(foundData)
-						const qualification = foundData["email qualification"]
+					resultObject = dropcontactSearch.data
+					utils.log(`Phantombuster via Dropcontact found ${resultObject.email || "nothing"} for ${fullName} working at ${companyName || domain }`, "info")
+					if (resultObject.email) {
+						const qualification = resultObject["email qualification"]
 						status = `Found ${qualification}`
 					} else {
-						currentResult.push({ query: fullName, error: "No mail found", timestamp: (new Date().toISOString()) })
+						resultObject.error = "No mail found"
+						// currentResult.push({ query, error: "No mail found", timestamp: (new Date().toISOString()) })
 						status = "Not found"
 					}
 				} catch (err) {
 					utils.log(`Phantombuster via Dropcontact didn't find anything for ${fullName} working at ${companyName || domain }`, "info")
 					console.log("err:", err)
+					resultObject.error = "No mail found"
 					status = err.message
 				}
 				try {
@@ -157,20 +243,27 @@ const utils = new StoreUtilities(buster)
 					const user_id = `dropcontact_${hostname}`
 					const event_type = "email_request"
 					const apiKey = "5f442f063c9d596a7157f248f1010e1a"
-					const res = await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
+					await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
 				} catch (err) {
 					console.log("err:", err)
 				}
 			}
 		} else {
 			utils.log("Can't search for emails as no current company's been found!", "warning")
+			resultObject.error = "No company found"
 		}
+		cleanObject(resultObject)
+		console.log("resultO", resultObject)
+		Object.assign(finalObject, resultObject)
+		finalObject.query = query
+		finalObject.timestamp = (new Date().toISOString())
+		currentResult.push(finalObject)
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(timeLeft.message, "warning")
 			break
 		}
-		buster.progressHint(i / csvObject.length, `${i} mail requests done`)
+		buster.progressHint(i / queries.length, `${i} mail requests done`)
 	}
 	result = result.concat(currentResult)
 	await utils.saveResults(currentResult, result, csvName)
