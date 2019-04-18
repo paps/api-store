@@ -9,7 +9,8 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "://docs.google.com/spreadsheets/d/(...)"
 	},
 	"outputDescription": {
 
@@ -35,7 +36,7 @@
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
-						"label": "Column name where XXX ZZZ URLs are stored in the spreadsheet",
+						"label": "Column name where LinkedIn post URLs are stored in the spreadsheet",
 						"helper": "If empty, the first column of your spreadsheet will be used",
 						"placeholder": "XXX"
 					},
