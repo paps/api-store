@@ -163,6 +163,8 @@ const isStillLoading = (arg, cb) => {
  */
 const getMembers = async (tab, url, scrapeCount = 0) => {
 	let members = []
+	const maxErrors = 10
+	let errors = 0
 	const sel = "artdeco-typeahead-results-list.groups-members-list__results-list artdeco-typeahead-result"
 	let lastCount = 0
 	// Wait until the result list is visible
@@ -182,6 +184,10 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 	}
 	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < scrapeCount) {
+		if (errors >= maxErrors) {
+			utils.log("Too many errors while scraping", "warning")
+			break
+		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
 			utils.log(`Stopped getting group members: ${timeLeft.message}`, "warning")
@@ -193,6 +199,7 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 		// Removing duplicated scraped elements
 		members.push(...utils.filterRightOuter(members, res))
 		if ((members.length - lastCount) >= 100) {
+			errors = 0
 			utils.log(`Got ${members.length} members from the list.`, "info")
 			lastCount = members.length
 		}
@@ -208,10 +215,11 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 			await tab.waitUntilVisible("div.artdeco-spinner", 15000)
 			await tab.waitWhileVisible("div.artdeco-spinner", 15000)
 		} catch (err) {
+			errors++
 			const isLoading = await tab.evaluate(isStillLoading)
 			if (isLoading) {
 				try {
-					await tab.waitWhileVisible("div.artdeco-spinner", 30000)
+					await tab.waitWhileVisible("div.artdeco-spinner", 15000)
 				} catch (err) {
 					break
 				}
