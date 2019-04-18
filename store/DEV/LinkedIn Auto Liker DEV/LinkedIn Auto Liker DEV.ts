@@ -96,23 +96,6 @@ const waitForVisibleSelector = async (page: puppeteer.Page, sels: string[], opti
 	return res.jsonValue()
 }
 
-const isLinkedInProfile = (url: string): boolean => {
-	try {
-		return (new URL(url)).pathname.startsWith("/in")
-	} catch (err) {
-		return false
-	}
-}
-
-const isLinkedArticle = (url: string): boolean => {
-	try {
-		const tmp = new URL(url)
-		return tmp.pathname.startsWith("/feed/update/urn:li:activity") || tmp.pathname.startsWith("/pulse/")
-	} catch (err) {
-		return false
-	}
-}
-
 const updateUrlPath = (url: string, slug: string): string => {
 	try {
 		const tmp = new URL(url)
@@ -125,14 +108,6 @@ const updateUrlPath = (url: string, slug: string): string => {
 		return tmp.toString()
 	} catch (err) {
 		return url
-	}
-}
-
-const isLinkedInProfileFeed = (url: string): boolean => {
-	try {
-		return (new URL(url)).pathname.split("/").includes("detail")
-	} catch (err) {
-		return false
 	}
 }
 
@@ -170,7 +145,7 @@ const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: stri
 		utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`)
 		return OpenStatus.INV_PROFILE
 	}
-	if (!isLinkedInProfileFeed(url)) {
+	if (!linkedin.isLinkedInProfileFeed(url)) {
 		let slug = ""
 		switch (feedType) {
 			case "all":
@@ -320,7 +295,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		let _res = 0
 		const result: IUnknownObject = { query: post }
 		buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`)
-		if (isLinkedArticle(post)) {
+		if (linkedin.isLinkedInArticle(post)) {
 			urls.push(post)
 		} else {
 			_res = await openProfileFeed(page, post, articleType)

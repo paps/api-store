@@ -226,6 +226,29 @@ class LinkedIn {
 		}
 	}
 
+	public isLinkedInProfileFeed(url: string): boolean {
+		if (!this.isLinkedInUrl(url)) {
+			return false
+		}
+		try {
+			return (new URL(url)).pathname.split("/").includes("detail")
+		} catch (err) {
+			return false
+		}
+	}
+
+	public isLinkedInArticle(url: string): boolean {
+		if (!this.isLinkedInUrl(url)) {
+			return false
+		}
+		try {
+			const tmp = new URL(url)
+			return tmp.pathname.startsWith("/feed/activity/urn:li:activity") || tmp.pathname.startsWith("/pulse/")
+		} catch (err) {
+			return false
+		}
+	}
+
 	public async hasReachedCommercialLimit(page: puppeteer.Page): Promise<string|null> {
 		const CM_LIMIT_SEL = ".search-paywall__info"
 		let errToRet = null
