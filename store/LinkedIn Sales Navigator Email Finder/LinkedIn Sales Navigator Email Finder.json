@@ -1,0 +1,100 @@
+{
+	"slug": "linkedin-sales-navigator-email-finder",
+	"description": "Find Emails from Sales Navigator searches",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
+	"hidden": false,
+	"new": false,
+	"gradientBegin": "#4CA1AF",
+	"gradientEnd": "#28485B",
+	"argumentHelpAnchor": "#section_argument",
+	"argumentDescription": "",
+	"defaultArgument": {
+		"sessionCookie": "your_session_cookie",
+		"numberOfLinesPerLaunch": 10
+	},
+	"defaultArgumentAllowed": false,
+	"outputDescription": {
+		"url": "LinkedIn Sales Navigator profile URL",
+		"defaultUrl": "LinkedIn default Profile URL"
+	},
+	"argumentForm": {
+		"enabled": true,
+		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"hunterApiKey": [ "emailChooser" ],
+					"dropcontactApiKey": [ "emailChooser" ]
+				}
+			},
+			"options": {
+				"fields": {
+					"spreadsheetUrl": {
+						"helpers": [
+							"Enter either a LinkedIn Sales Navigator Profile URL, a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
+						],
+						"label": "Sales Navigator URL / Spreadsheet URL <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"emailChooser": {
+						"label": "Choose an email discovery service",
+						"removeDefaultNone": true,
+						"emptySelectFirst": true,
+						"sort": false,
+						"optionLabels": [ "None", "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
+						"type": "select"
+					},
+					"hunterApiKey": {
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Hunter.io",
+						"dependencies": {
+							"emailChooser": [ "hunter", "hunter and dropcontact" ]
+						}
+					},
+					"dropcontactApiKey": {
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
+						"dependencies": {
+							"emailChooser": [ "dropcontact", "hunter and dropcontact" ]
+						}
+					},
+					"csvName": {
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"inputType": "number"
+					}
+				}
+			}
+		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"emailChooser": {
+				"enum": [ "none", "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
+				"default": "none"
+			},
+			"hunterApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"dropcontactApiKey": {
+				"type": "string",
+				"maxLength": 50
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number"
+			}
+		}
+	}
+}
