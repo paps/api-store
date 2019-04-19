@@ -2,7 +2,7 @@
 
 Craigslist is one of the oldest and biggest websites on the Internet. Despite having passed its prime since the rise of web 2.0, it still is a reference for many people.
 
-This API will extract **every piece of public information** out of a list of Craigslist pages: From all the written data to potential email addresses and phone numbers.
+This API will extract **every piece of public information** out of a list of Craigslist pages: From all the written data to potential email addresses.
 
 # What will you need? ☑️
 **"Craigslist page or Spreadsheet URL"**: Choose a specific Craigslist page profile such as `https://miami.craigslist.org/reo/d/haunted-house-for-sell/13371337.html` or choose an **open** spreadsheet url with a list of Product Hunt profile URL's.

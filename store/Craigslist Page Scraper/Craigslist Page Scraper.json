@@ -16,7 +16,6 @@
 		"title": "Ads title",
 		"postDate": "Publishing date",
 		"email": "Authors' email address",
-		"phoneNumber": "Authors' phone number",
 		"imgUrl": "Ads' images URL",
 		"content": "Text content of the ad",
 		"notices": "Additional notices",
