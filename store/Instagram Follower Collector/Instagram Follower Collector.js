@@ -241,18 +241,22 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowers, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberMaxOfFollowers, numberofProfilesperLaunch, csvName, splitFiles } = utils.validateArguments()
 	const tab = await nick.newTab()
 	await instagram.login(tab, sessionCookie)
 	if (!csvName) { csvName = "result" }
 	let urls, result = []
-	result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length
 	try {
 		agentObject = await buster.getAgentObject()
 	} catch (err) {
 		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
 	}
+	let _csvName = csvName
+	if (splitFiles && agentObject.split > 1) {
+		_csvName = `${csvName} part${agentObject.split}`
+	}
+	result = await utils.getDb(_csvName + ".csv")
+	const initialResultLength = result.length
 	if (initialResultLength && agentObject.nextUrl) {
 		alreadyScraped = result.filter(el => el.query === agentObject.lastQuery).length
 	}
@@ -288,7 +292,10 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 	for (let url of urls) {
 		try {
 			let resuming = false
-			if (agentObject && url === agentObject.lastQuery) {
+			if (agentObject && url === agentObject.lastQuery && alreadyScraped) {
+				if (splitFiles && agentObject.splitCount) {
+					alreadyScraped += agentObject.splitCount
+				}
 				utils.log(`Resuming scraping for ${url}...`, "info")
 				resuming = true
 			} else {
@@ -345,8 +352,20 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 		utils.log("Stopping the agent. You should retry in 15min.", "warning")
 	}
 	if (currentResult.length) {
+		if (splitFiles && result.length > 400000) {
+			let fileCount = agentObject.split ? agentObject.split : 1
+			fileCount++
+			_csvName = `${csvName} part${fileCount}`
+			agentObject.split = fileCount
+			if (agentObject.splitCount) {
+				agentObject.splitCount += result.length
+			} else {
+				agentObject.splitCount = result.length
+			}
+			result = []
+		}
 		result = result.concat(currentResult)
-		await utils.saveFlatResults(currentResult, result, csvName)
+		await utils.saveFlatResults(currentResult, result, _csvName)
 		if (agentObject) {
 			if (interrupted) {
 				agentObject.nextUrl = nextUrl
@@ -354,6 +373,8 @@ const getFollowers = async (tab, url, numberMaxOfFollowers, resuming) => {
 			} else {
 				delete agentObject.nextUrl
 				delete agentObject.lastQuery
+				delete agentObject.split
+				delete agentObject.splitCount
 			}
 			await buster.setAgentObject(agentObject)
 		}

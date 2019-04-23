@@ -21,7 +21,7 @@ const getpostUrlsToScrape = (data: string[], numberOfPostsPerLaunch: number) => 
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
 	if (maxLength === 0) {
-		utils.log("Input spreadsheet is empty OR we already scraped from all the posts of this spreadsheet.", "warning")
+		utils.log("Input spreadsheet is empty OR we already processed from all the posts of this spreadsheet.", "warning")
 		process.exit()
 	}
 	return data.slice(0, Math.min(numberOfPostsPerLaunch, maxLength)) // return the first elements

@@ -13,7 +13,8 @@ const nick = new Nick({
 	printPageErrors: false,
 	printResourceErrors: false,
 	printNavigation: false,
-	printAborts: false
+	printAborts: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
