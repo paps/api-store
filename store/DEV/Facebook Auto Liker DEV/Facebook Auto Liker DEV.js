@@ -2,6 +2,7 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Facebook.js"
+"phantombuster flags: save-folder" // TODO: Remove when released
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -15,6 +16,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
@@ -121,6 +123,8 @@ const loadProfileAndLike = async (tab, profile, likesCountPerProfile, postLimit)
 			await tab.scrollToBottom()
 			await tab.wait(1000)
 			if (new Date() - lastDate > 15000) {
+				await tab.screenshot(`${Date.now()}no new.png`)
+				await buster.saveText(await tab.getContent(), `${Date.now()}no new.html`)
 				utils.log("No new post to load.", "warning")
 				break
 			}
@@ -215,7 +219,6 @@ const isUrl = target => url.parse(target).hostname !== null
 	const tab = await nick.newTab()
 	let {sessionCookieCUser, sessionCookieXs, spreadsheetUrl, columnName, queries, likesCountPerProfile, numberOfProfilesPerLaunch, postLimit, csvName} = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-
 	if (spreadsheetUrl) {
 		if (isUrl(spreadsheetUrl)) {
 			if (facebook.isFacebookUrl(spreadsheetUrl)) {

@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -19,7 +19,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Instagram = require("./lib-Instagram-DEV")
+const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 // }
 
@@ -119,7 +119,7 @@ const checkRateLimit = (arg, cb) => {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
-		await tab.wait(2500 + Math.random() * 2000)
+		await tab.wait(1500 + Math.random() * 1000)
 	}
 	for (let i = 0; i < tempResult.length; i++) {
 		if (!result.find(el => el.instagramID === tempResult[i].instagramID && el.query === tempResult[i].query)) {

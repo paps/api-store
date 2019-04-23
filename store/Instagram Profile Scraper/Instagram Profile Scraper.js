@@ -119,7 +119,7 @@ const checkRateLimit = (arg, cb) => {
 			utils.log(`Can't scrape the profile at ${url} due to: ${err.message || err}`, "warning")
 			continue
 		}
-		await tab.wait(2500 + Math.random() * 2000)
+		await tab.wait(1500 + Math.random() * 1000)
 	}
 	for (let i = 0; i < tempResult.length; i++) {
 		if (!result.find(el => el.instagramID === tempResult[i].instagramID && el.query === tempResult[i].query)) {
