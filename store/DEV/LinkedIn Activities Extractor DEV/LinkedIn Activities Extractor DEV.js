@@ -45,7 +45,7 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 }
 
 const getActivityUrl = async (url, onlyScrapePosts, tab) => {
-	if (url.includes("/profile/view")) {
+	if (url.includes("/profile/view") || url.includes(".com/pub/")) {
 		await tab.open(url)
 		await tab.wait(5000)
 		url = await tab.getUrl()
