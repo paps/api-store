@@ -137,23 +137,17 @@ const cleanObject = (obj: IUnknownObject) => {
 				}
 			}
 		}
-		console.log("csv:", csv)
-		console.log("fullNameIndex", fullNameIndex)
 		for (let i = 1; i < csv.length; i++) {
 			const csvObject = csv[i]
-			console.log("csvObject:", csvObject[0])
 			let fullName = fullNameIndex > -1 ? csvObject[fullNameIndex] : null
 			const firstName = firstNameIndex > -1 ? csvObject[firstNameIndex] : null
 			const lastName = lastNameIndex > -1 ? csvObject[lastNameIndex] : null
 			const companyName = companyNameIndex > -1 ? csvObject[companyNameIndex] : null
 			const domain = domainIndex > -1 ? csvObject[domainIndex] : null
-			console.log("fullName:", fullName)
 			if (!fullName) {
 				fullName = firstName + lastName
 			}
-			console.log("fn:", fullName)
 			const queryCheck = `${fullName} | ${companyName ? companyName : ""} | ${domain ? domain : ""}`
-			console.log("queryCheck:", queryCheck)
 			let found = false
 			for (const line of result) {
 				if (line.mailQuery === queryCheck) {
@@ -163,10 +157,8 @@ const cleanObject = (obj: IUnknownObject) => {
 			}
 			if (!found) {
 				queries.push(csvObject)
-				console.log("on push")
 			}
 			if (numberOfLinesPerLaunch && queries.length === numberOfLinesPerLaunch) {
-				console.log("on break")
 				break
 			}
 		}
@@ -174,7 +166,6 @@ const cleanObject = (obj: IUnknownObject) => {
 			utils.log("Input spreadsheet is empty OR we already processed all the profiles from this spreadsheet.", "warning")
 			process.exit(1)
 		}
-		console.log("on a break")
 	} catch (err) {
 		utils.log(`Couldn't access the spreadsheet: ${err}`, "error")
 		process.exit(1)
@@ -187,7 +178,6 @@ const cleanObject = (obj: IUnknownObject) => {
 		for (let i = 0; i < header.length; i++) {
 			finalObject[header[i]] = csvObject[i]
 		}
-		// console.log("csvObject", csvObject)
 		let fullName = fullNameIndex > -1 ? csvObject[fullNameIndex] : null
 		const firstName = firstNameIndex > -1 ? csvObject[firstNameIndex] : null
 		const lastName = lastNameIndex > -1 ? csvObject[lastNameIndex] : null
@@ -210,12 +200,10 @@ const cleanObject = (obj: IUnknownObject) => {
 		if (companyName) {
 			mailPayload.company = companyName
 		}
-		console.log("mailPayload:", mailPayload)
 		if (mailPayload.domain || mailPayload.company) {
 			if (hunter) {
 				try {
 					if (!mailPayload.first_name && !mailPayload.last_name) {
-						console.log("fj", fullName)
 						const nameArray = fullName.split(" ")
 						mailPayload.first_name = nameArray.shift()
 						const last_name = nameArray.join(" ")
@@ -245,7 +233,6 @@ const cleanObject = (obj: IUnknownObject) => {
 			if (dropcontact) {
 				try {
 					resultObject = await dropcontact.clean(mailPayload)
-					console.log("drp", resultObject)
 					utils.log(`Dropcontact found ${resultObject.email || "nothing"} for ${fullName} working at ${companyName || domain}`, "info")
 					if (!resultObject.email) {
 						resultObject.error = "No mail found"
@@ -278,7 +265,6 @@ const cleanObject = (obj: IUnknownObject) => {
 					}
 				} catch (err) {
 					utils.log(`Phantombuster via Dropcontact didn't find anything for ${fullName} working at ${companyName || domain }`, "info")
-					console.log("err:", err)
 					resultObject.error = "No mail found"
 					status = err.message
 				}
@@ -296,7 +282,7 @@ const cleanObject = (obj: IUnknownObject) => {
 					const apiKey = "5f442f063c9d596a7157f248f1010e1a"
 					await needle("post", "https://api.amplitude.com/httpapi",`api_key=${apiKey}&event=[{"user_id":"${user_id}", "event_type":"${event_type}", "event_properties":{"status": "${status}"}}]`, JSON.stringify(options))
 				} catch (err) {
-					console.log("err:", err)
+					//
 				}
 			}
 		} else {
@@ -304,7 +290,6 @@ const cleanObject = (obj: IUnknownObject) => {
 			resultObject.error = "No company found"
 		}
 		cleanObject(resultObject)
-		console.log("resultO", resultObject)
 		Object.assign(finalObject, resultObject)
 		finalObject.mailQuery = query
 		finalObject.mailTimestamp = (new Date().toISOString())

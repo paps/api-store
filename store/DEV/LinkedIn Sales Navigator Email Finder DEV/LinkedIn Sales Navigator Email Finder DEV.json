@@ -2,14 +2,14 @@
 	"slug": "linkedin-sales-navigator-email-finder",
 	"description": "Find Emails from Sales Navigator searches",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
-	"hidden": false,
-	"new": false,
+	"hidden": true,
+	"new": true,
 	"gradientBegin": "#4CA1AF",
 	"gradientEnd": "#28485B",
 	"argumentHelpAnchor": "#section_argument",
 	"argumentDescription": "",
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "https://docs.google.com/spreadsheets/d/(...)",
 		"numberOfLinesPerLaunch": 10
 	},
 	"defaultArgumentAllowed": false,
@@ -23,7 +23,12 @@
 			"schema": {
 				"dependencies": {
 					"hunterApiKey": [ "emailChooser" ],
-					"dropcontactApiKey": [ "emailChooser" ]
+					"dropcontactApiKey": [ "emailChooser" ],
+					"fullNameColumn": ["customSpreadsheet"],
+					"firstNameColumn": ["customSpreadsheet"],
+					"lastNameColumn": ["customSpreadsheet"],
+					"companyNameColumn": ["customSpreadsheet"],
+					"domainNameColumn": ["customSpreadsheet"]
 				}
 			},
 			"options": {
@@ -33,25 +38,59 @@
 							"Enter either a LinkedIn Sales Navigator Profile URL, a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Sales Navigator URL / Spreadsheet URL <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Sales Navigator URL / Spreadsheet URL <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"customSpreadsheet": {
+						"rightLabel": "<b>Use a custom spreadsheet instead of a Sales Navigator Search Export spreadsheet</b>",
+						"helper": "The custom spreadsheet must contain either a Full Name column or both First and Last name column, and either a Company name or a Domain name column"
+					},
+					"fullNameColumn": {
+						"label": "Enter the column containing Full Names (optionnal)",
+						"dependencies": {
+							"customSpreadsheet": [ "true" ]
+						}
+					},
+					"firstNameColumn": {
+						"label": "Enter the column containing First Names (optionnal)",
+						"dependencies": {
+							"customSpreadsheet": [ "true" ]
+						}
+					},
+					"lastNameColumn": {
+						"label": "Enter the column containing Last Names (optionnal)",
+						"dependencies": {
+							"customSpreadsheet": [ "true" ]
+						}
+					},
+					"companyNameColumn": {
+						"label": "Enter the column containing Company Names (optionnal)",
+						"dependencies": {
+							"customSpreadsheet": [ "true" ]
+						}
+					},
+					"domainNameColumn": {
+						"label": "Enter the column containing Domain Names (optionnal)",
+						"dependencies": {
+							"customSpreadsheet": [ "true" ]
+						}
 					},
 					"emailChooser": {
 						"label": "Choose an email discovery service",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
 						"sort": false,
-						"optionLabels": [ "None", "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
+						"optionLabels": [ "Phantombuster", "Hunter.io", "Dropcontact.io", "Hunter.io and Dropcontact.io" ],
 						"type": "select"
 					},
 					"hunterApiKey": {
-						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"label": "Email discovery: Hunter.io API key (optional) <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Hunter.io",
 						"dependencies": {
 							"emailChooser": [ "hunter", "hunter and dropcontact" ]
 						}
 					},
 					"dropcontactApiKey": {
-						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/3112/linkedin-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
+						"label": "Email discovery and Data Validation: Dropcontact.io API key (optional) <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"helper": "Leave this field empty if you don't want to use Dropcontact.io",
 						"dependencies": {
 							"emailChooser": [ "dropcontact", "hunter and dropcontact" ]
@@ -62,7 +101,7 @@
 						"placeholder": "result"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/9068/linkedin-sales-navigator-url-converter#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of lines to process per launch (all of them if empty) <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
 					}
 				}
@@ -76,9 +115,33 @@
 				"type": "string",
 				"required": true
 			},
+			"customSpreadsheet": {
+				"type": "boolean",
+				"default": "false"
+			},
+			"fullNameColumn": {
+				"type": "string",
+				"dependencies": ["customSpreadsheet"]
+			},
+			"firstNameColumn": {
+				"type": "string",
+				"dependencies": ["customSpreadsheet"]
+			},
+			"lastNameColumn": {
+				"type": "string",
+				"dependencies": ["customSpreadsheet"]
+			},
+			"companyNameColumn": {
+				"type": "string",
+				"dependencies": ["customSpreadsheet"]
+			},
+			"domainNameColumn": {
+				"type": "string",
+				"dependencies": ["customSpreadsheet"]
+			},
 			"emailChooser": {
-				"enum": [ "none", "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
-				"default": "none"
+				"enum": [ "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
+				"default": "phantombuster"
 			},
 			"hunterApiKey": {
 				"type": "string",
