@@ -44,7 +44,13 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 	return data.slice(0, Math.min(numberOfLinesPerLaunch, maxLength)) // return the first elements
 }
 
-const getActivityUrl = (url, onlyScrapePosts) => {
+const getActivityUrl = async (url, onlyScrapePosts, tab) => {
+	if (url.includes("/profile/view")) {
+		await tab.open(url)
+		await tab.wait(5000)
+		url = await tab.getUrl()
+		utils.log(`Converting profile to ${url}...`, "loading")
+	}
 	let returnedUrl = url
 	try {
 		const urlObject = new URL(url)
@@ -219,15 +225,25 @@ const getActityIdFromLikes = async (tab, activityResults, postCount, selector) =
 const getActivities = async (tab, profileUrl, convertedUrl, numberMaxOfPosts, onlyScrapePosts) => {
 	utils.log(`Loading ${onlyScrapePosts ? "posts" : "activities"} of ${convertedUrl}...`, "loading")
 	const selector = ".pv-recent-activity-detail__feed-container"
-
-	const activityUrl = getActivityUrl(convertedUrl, onlyScrapePosts)
+	console.log("realconverted:", convertedUrl)
+	const activityUrl = await getActivityUrl(convertedUrl, onlyScrapePosts, tab)
 	console.log("converted:", activityUrl)
 
 	await tab.open(activityUrl)
-	await tab.waitUntilPresent(".pv-recent-activity-detail__outlet-container", 15000)
+	try {
+		await tab.waitUntilPresent(".pv-recent-activity-detail__outlet-container", 15000)
+	} catch (err) {
+		const currentUrl = await tab.getUrl()
+		if (currentUrl === "https://www.linkedin.com/in/unavailable/") {
+			utils.log("Profile is unavailable!", "warning")
+			return [{ profileUrl, error: "Profile unavailable", timestamp: (new Date().toISOString()) }]
+		}
+		utils.log("Error opening profile!", "error")
+		return [{ profileUrl, error: "Error opening profile", timestamp: (new Date().toISOString()) }]
+	}
 	if (await tab.isPresent("div.no-content")) {
 		utils.log(`${profileUrl} has no activity!`, "info")
-		return [{ profileUrl, timestamp: (new Date()).toISOString(), error: "No activity" }]
+		return [{ profileUrl, error: "No activity", timestamp: (new Date()).toISOString() }]
 	}
 	let postCount = 0
 	let lastDate = new Date()
@@ -366,11 +382,11 @@ const getCompanyActivities = async (tab, companyUrl, convertedUrl, numberMaxOfPo
 		}
 	}
 	for (let i = 0; i < currentResult.length; i++) {
-		if (!result.find(el => el.postUrl === currentResult[i].postUrl && el.query === currentResult[i].query)) {
+		if (!result.find(el => el.postUrl === currentResult[i].postUrl && el.profileUrl === currentResult[i].profileUrl)) {
 			result.push(currentResult[i])
 		}
 	}
-	await utils.saveResults(result, result, csvName)
+	await utils.saveResults(currentResult, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {
