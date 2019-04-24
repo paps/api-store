@@ -107,7 +107,12 @@ class Twitter {
 		const isNick = isUsingNick(tab)
 		const _scrapeTwitterUsername = (arg, cb) => {
 			const sel = document.querySelector(".DashboardProfileCard-name a")
-			const val = sel ? sel.textContent.trim() : null
+			let val = null
+			if (sel) {
+				val = sel.textContent.trim()
+			} else if (document.querySelector("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) { // new interface selector
+				val = document.querySelector("div[data-testid=\"DashButton_ProfileIcon_Link\"]").textContent.trim()
+			}
 			return cb ? cb(null, val) : val
 		}
 
@@ -136,7 +141,8 @@ class Twitter {
 		try {
 			const _cookie = { name: "auth_token", value: cookie, domain: ".twitter.com", httpOnly: true, secure: true }
 			const url = "https://twitter.com"
-			const initialSelector = ".DashboardProfileCard"
+			const initialSelector = ".DashboardProfileCard, div[data-testid=\"DashButton_ProfileIcon_Link\"]"
+			let newinterface = false
 			if (isNick) {
 				if (!this.nick) {
 					this.utils.log("You can't use the library without providing a NickJS object", "error")
@@ -145,12 +151,21 @@ class Twitter {
 				await this.nick.setCookie(_cookie)
 				await tab.open(url)
 				await tab.waitUntilVisible(initialSelector)
+				if (await tab.isVisible("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) {
+					newinterface = true
+				}
 			} else {
 				await tab.setCookie(_cookie)
 				await tab.goto(url)
 				await tab.waitForSelector(initialSelector, { visible: true })
+				if (await tab.$("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) {
+					newinterface = true
+				}
 			}
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
+			if (newinterface) {
+				this.utils.log("You're using the new Twitter Interface, some of the Twitter APIs may not work correctly.", "warning")
+			}
 		} catch (error) {
 			if (isNick && this.nick._options.httpProxy) {
 				this.utils.log("Can't connect to Twitter with a proxy, please remove it.", "error")
