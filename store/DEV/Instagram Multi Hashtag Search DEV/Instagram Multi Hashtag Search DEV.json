@@ -68,10 +68,10 @@
 						"helper": "All of them if empty"
 					},
 					"maxPosts": {
-						"label": "Number of posts to scrape per hashtag",
+						"label": "Number of matches to find per hashtag",
 						"type": "number",
 						"inputType": "number",
-						"helper": "All of them if empty (until hitting Instagram rate limit)"
+						"helper": "Until hitting Instagram rate limit if empty"
 					},
 					"csvName": {
 						"label": "Output CSV name",

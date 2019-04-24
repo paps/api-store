@@ -25,7 +25,7 @@ const Instagram = require("./lib-Instagram")
 const instagram = new Instagram(nick, buster, utils)
 let graphqlUrl
 let headers
-let lastHashtag
+let lastQuery
 let allCollected
 let alreadyScraped
 let nextUrl
@@ -216,14 +216,14 @@ const extractFirstPosts = async (tab, results, query, terms) => {
  * @param {String} hashtag - Hashtag name
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
-const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
+const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 	let newlyScraped = 0
 	let results = []
 	if (!resuming) {
-		results = await tab.evaluate(scrapeFirstResults, { query })
+		results = await tab.evaluate(scrapeFirstResults, { hashtag })
 		newlyScraped = results.length
 		const postTab = await nick.newTab()
-		results = await extractFirstPosts(postTab, results, query, terms)
+		results = await extractFirstPosts(postTab, results, hashtag, terms)
 		await postTab.close()
 		const initDate = new Date()
 		graphqlUrl = ""
@@ -241,7 +241,7 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 	}
 	let maxToScrape = maxPosts
 	let lastDate = new Date()
-	lastHashtag = query
+	lastQuery = query
 	let matches = []
 	do {
 		const timeLeft = await utils.checkTimeLeft()
@@ -252,13 +252,15 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 		try {
 			const [ tempResult, endCursor, hasNextPage, error ] = await extractDataFromGraphQl(tab, query, nextUrl)
 			if (!error) {
-				newlyScraped += tempResult.length
-				const currentMatches = filterResults(tempResult, query, terms)
+				const currentMatches = filterResults(tempResult, hashtag, terms)
+				results = results.concat(tempResult)
+
 				if (currentMatches.length) {
 					matches = matches.concat(currentMatches)
 					utils.log(`Got ${matches.length} match${matches.length > 1 ? "es" : ""} out of ${results.length} posts.`, "done")
 				}
-				results = results.concat(tempResult)
+				newlyScraped = matches.length
+
 			} else {
 				allCollected = false
 				console.log("allCollected")
@@ -299,14 +301,11 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 		csvName = "result"
 	}
 	let results = await utils.getDb(csvName + ".csv")
-	const initialResultLength = results.length
-	if (results.length) {
-		try {
-			agentObject = await buster.getAgentObject()
-			alreadyScraped = results.filter(el => el.query === agentObject.lastHashtag).length
-		} catch (err) {
-			utils.log("Could not access agent Object.", "warning")
-		}
+	try {
+		agentObject = await buster.getAgentObject()
+		alreadyScraped = results.filter(el => el.query === agentObject.lastQuery).length
+	} catch (err) {
+		utils.log("Could not access Agent Object.", "warning")
 	}
 
 	if (typeof hashtags === "string") {
@@ -326,9 +325,10 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
-	for (const line of hashtags) {
-		utils.log(`Searching for ${line}`, "done")
-		let terms = line.split(",")
+	let currentResult = []
+	for (const query of hashtags) {
+		utils.log(`Searching for ${query}`, "done")
+		let terms = query.split(",")
 		terms = terms.map(el => el && el.toLowerCase().trim())
 		terms = Array.from(new Set(terms)) // removing duplicates
 		console.log("terms:", terms)
@@ -384,69 +384,14 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 			continue
 		}
 		let resuming = false
-		if (alreadyScraped && hashtag === agentObject.lastHashtag) {
+		if (alreadyScraped && query === agentObject.lastQuery) {
 			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 			resuming = true
 		} else {
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} searching for match with ${otherTerms}...`, "loading")
 		}
-		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming, terms)
-		const oldResultLength = results.length
-		console.log("tempRL", tempResult.length)
-		let init = new Date()
-		if (results.length) {
-			for (const post of tempResult) {
-				if (!results.find(el => el.postUrl === post.postUrl)) {
-					results.push(post)
-				}
-			}
-		} else {
-			results = results.concat(tempResult)
-		}
-		console.log("elapsedconcat:", new Date() - init)
-		const test1 = []
-		init = new Date()
-		for (const post of tempResult) {
-			if (!test1.find(el => el.postUrl === post.postUrl)) {
-				test1.push(post)
-			}
-		}
-		console.log("elapsedtest1:", new Date() - init)
-		const test2 = []
-		init = new Date()
-		for (const post of tempResult) {
-			let found = false
-			for (let i = 0; i < test2.length; i++) {
-				if (test2[i].postUrl === post.postUrl) {
-					found = true
-					break
-				}
-			}
-			if (!found) {
-				test2.push(post)
-			}
-		}
-		console.log("elapsedtest2:", new Date() - init)
-		const test3 = []
-		init = new Date()
-		for (const tempPost of tempResult) {
-			let found = false
-			for (const post of test3) {
-				if (post.postUrl === tempPost.postUrl) {
-					found = true
-					break
-				}
-			}
-			if (!found) {
-				test3.push(tempPost)
-			}
-		}
-		console.log("elapsedtest3:", new Date() - init)
-		console.log("test1Length", test1.length)
-		console.log("test2Length", test2.length)
-		console.log("test3Length", test3.length)
-		const newResultsLength = results.length - oldResultLength
-		utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
+		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming, terms, query)
+		currentResult = currentResult.concat(tempResult)
 		if (rateLimited) {
 			break
 		}
@@ -459,17 +404,38 @@ const loadPosts = async (tab, maxPosts, query, resuming, terms) => {
 	if (rateLimited) {
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
+	const oldResultLength = results.length
+	if (results.length) {
+		for (const post of currentResult) {
+			let found = false
+			for (let i = 0; i < results.length; i++) {
+				if (results[i].postUrl === post.postUrl) {
+					found = true
+					break
+				}
+			}
+			if (!found) {
+				results.push(post)
+			}
+		}
+	} else {
+		results = results.concat(currentResult)
+	}
+	
+	
+	const newResultsLength = results.length - oldResultLength
+	utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
+
 	const init = new Date()
-	if (results.length !== initialResultLength) {
-		utils.log(`${results.length} posts scraped.`, "done")
-		await utils.saveFlatResults(results, results, csvName)
+	if (currentResult.length) {
+		await utils.saveFlatResults(currentResult, results, csvName)
 		if (agentObject) {
 			if (!allCollected) {
 				agentObject.nextUrl = nextUrl
-				agentObject.lastQuery = lastHashtag
+				agentObject.lastQuery = lastQuery
 			} else {
 				delete agentObject.nextUrl
-				delete agentObject.lastHashtag
+				delete agentObject.lastQuery
 			}
 			await buster.setAgentObject(agentObject)
 		}
