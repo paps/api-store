@@ -18,6 +18,7 @@ const nick = new Nick({
 	printNavigation: false,
 	printAborts: false,
 	debug: false,
+	timeout: 30000
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -37,7 +38,6 @@ let lastSavedQuery
 let alreadyScraped
 let twitterUrl
 let isProtected
-
 
 const ajaxCall = (arg, cb) => {
 	cb(null, $.get(arg.url, arg.headers))
@@ -279,15 +279,19 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName, splitFiles } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let result = await utils.getDb(csvName + ".csv")
-	const initialResultLength = result.length
 	try {
 		agentObject = await buster.getAgentObject()
 	} catch (err) {
 		utils.log(`Could not access agent Object. ${err.message || err}`, "warning")
 	}
+	let _csvName = csvName
+	if (splitFiles && agentObject.split > 1) {
+		_csvName = `${csvName} part${agentObject.split}`
+	}
+	let result = await utils.getDb(_csvName + ".csv")
+	const initialResultLength = result.length
 	if (initialResultLength && agentObject.nextUrl) {
 		lastSavedQuery = "https://" + agentObject.nextUrl.match(/twitter\.com\/(@?[A-z0-9_]+)/)[0]
 		alreadyScraped = result.filter(el => el.query === lastSavedQuery).length
@@ -326,9 +330,13 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	twitterUrls = twitterUrls.map(el => require("url").parse(el).hostname ? el : removeNonPrintableChars(el))
 	let urlCount = 0
+	let currentResult = []
 	for (const url of twitterUrls) {
 		let resuming = false
 		if (alreadyScraped && agentObject && url === lastSavedQuery) {
+			if (splitFiles && agentObject.splitCount) {
+				alreadyScraped += agentObject.splitCount
+			}
 			// if (agentObject.timestamp && new Date() - new Date(agentObject.timestamp) < 5700000) {
 			// 	utils.log("Still rate limited, try later.", "info")
 			// 	nick.exit()
@@ -351,16 +359,29 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			// 		result.push(followers[i])
 			// 	}
 			// }
-			result = result.concat(followers)
+			currentResult = currentResult.concat(followers)
 		}
 		if (interrupted) { break }
 	}
 	if (rateLimited) {
 		utils.log("Rate limit reached, you should start again in around 2h.", "warning")
 	}
-	if (result.length !== initialResultLength) {
+	if (currentResult.length) {
+		if (splitFiles && result.length > 400000) {
+			let fileCount = agentObject.split ? agentObject.split : 1
+			fileCount++
+			_csvName = `${csvName} part${fileCount}`
+			agentObject.split = fileCount
+			if (agentObject.splitCount) {
+				agentObject.splitCount += result.length
+			} else {
+				agentObject.splitCount = result.length
+			}
+			result = []
+		}
+		result = result.concat(currentResult)
 		utils.log(`Got ${result.length} profiles in total.`, "done")
-		await utils.saveFlatResults(result, result, csvName)
+		await utils.saveFlatResults(currentResult, result, _csvName)
 		if (agentObject) {
 			if (interrupted && twitterUrl) {
 				agentObject.nextUrl = twitterUrl
@@ -368,6 +389,8 @@ const extractProfiles = (htmlContent, profileUrl) => {
 			} else {
 				delete agentObject.nextUrl
 				delete agentObject.timestamp
+				delete agentObject.split
+				delete agentObject.splitCount
 			}
 			await buster.setAgentObject(agentObject)
 		}

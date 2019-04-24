@@ -46,6 +46,9 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"splitFiles": {
+						"rightLabel": "<b>Split the result file to scrape large (400k+) numbers of followers - only works when scraping from one single profile</b>"
 					}
 				}
 			}
@@ -78,6 +81,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"splitFiles": {
+				"type": "boolean"
 			}
 		}
 	}

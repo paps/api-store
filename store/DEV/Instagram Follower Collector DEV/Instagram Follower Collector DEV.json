@@ -55,7 +55,7 @@
 						"placeholder": "result"
 					},
 					"splitFiles": {
-						"rightLabel": "<b>Split the result file to scrape large (400k+) numbers of followers - only work when scraping for one single profile</b>"
+						"rightLabel": "<b>Split the result file to scrape large (400k+) numbers of followers - only works when scraping from one single profile</b>"
 					}
 				}
 			}
