@@ -85,7 +85,7 @@ const _pulseArticleLoader = (cssPath: string) => {
 
 const _isArticleLiked = (pulse: boolean): boolean => {
 	if (pulse) {
-		const el = document.querySelector("button[aria-pressed=true].react-button__trigger, button[data-control-name=\"like\"] li-icon[type=\"like-filled-icon\"]")
+		const el = document.querySelector("button[aria-pressed=true].react-button__trigger, button[data-control-name=\"unlike\"] li-icon[type=\"like-filled-icon\"]")
 		return el ? !(getComputedStyle(el).display === "none") : !!el
 	}
 	return !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]")
@@ -218,7 +218,7 @@ const getPostsFromProfile = async (page: puppeteer.Page, atMost: number): Promis
 			}
 		}
 	} catch (err) {
-		console.log(err.message || err)
+		// ...
 	}
 	return res
 }
@@ -241,7 +241,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 			const selFound = await page.waitForFunction(_waitVisible, { }, [ "button.reader-social-bar__like-count", "button[data-control-name=\"likes_count\"]" ])
 			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, selFound)
 		} else {
-			let tmp = await page.waitForFunction(_waitVisible, { }, [ sel, "button[aria-pressed].react-button__trigger" ])
+			let tmp = await page.waitForFunction(_waitVisible, { }, [ "button[data-control-name=\"like_toggle\"]", "button[aria-pressed].react-button__trigger" ])
 			tmp = await tmp.jsonValue()
 			if (tmp === "button[aria-pressed].react-button__trigger") {
 				// we'll use the same logic for pulse articles using the reaction button
@@ -263,9 +263,8 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		await page.click(clickSel)
 		await page.waitForSelector(waitElement, { visible: true, timeout: 15000 })
 	} catch (err) {
-		await page.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
-		await buster.saveText(await page.content(), `err-${Date.now()}.html`)
 		console.log(err)
+		await buster.saveText(await page.content(), `err-${Date.now()}.html`)
 		return ActionStatus.SCRAPE_ERR
 	}
 	return ActionStatus.SUCCESS
@@ -310,7 +309,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		utils.log("Input is empty OR all URLs provided are already scraped", "warning")
 		process.exit()
 	}
-	utils.log(`Posts to like: ${JSON.stringify(queries, null, 2)}`, "info")
+	utils.log(`Posts or (Posts from profiles feed) to like: ${JSON.stringify(queries, null, 2)}`, "info")
 	let i = 0
 	for (const post of queries) {
 		let urls: string[] = []
@@ -383,9 +382,10 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		result.timestamp = (new Date()).toISOString()
 		res.push(result)
 	}
+	await utils.saveResults(res, res, csvName, null, true)
+	await linkedin.updateCookie(page)
 	await page.close()
 	await browser.close()
-	await utils.saveResults(res, res, csvName, null, true)
 	process.exit()
 })()
 .catch((err) => {
