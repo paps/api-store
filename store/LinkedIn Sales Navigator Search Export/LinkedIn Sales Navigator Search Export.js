@@ -25,6 +25,7 @@ const linkedIn = new LinkedIn(nick, buster, utils)
 const LinkedInScraper = require("./lib-LinkedInScraper")
 const linkedInScraper = new LinkedInScraper(utils, null, nick)
 let notSalesNav
+let disconnected = false
 // }
 
 const createUrl = (search) => {
@@ -479,6 +480,12 @@ const getSearchResults = async (tab, searchUrl, numberOfProfiles, query) => {
 			utils.log("Search is not working, got redirected to LinkedIn Home Page.", "warning")
 			return [{ query, timestamp: (new Date()).toISOString(), error: "Redirected to home page" }]
 		} else {
+			const errorMessage = err.message || err
+			if (errorMessage && errorMessage.includes("ERR_TOO_MANY_REDIRECTS")) {
+				utils.log("Disconnected by LinkedIn, exiting...", "warning")
+				disconnected = true
+				return []
+			}
 			utils.log(`Could not get total results count. ${err}`, "warning")
 		}
 	}
@@ -643,6 +650,9 @@ const isLinkedInSearchURL = (url) => {
 			}
 		} else {
 			utils.log("Empty line... skipping entry", "warning")
+		}
+		if (disconnected) {
+			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
