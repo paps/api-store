@@ -1,6 +1,6 @@
 {
 	"slug": "linkedin-auto-liker",
-	"description": "The best automation to auto like LinkedIn publications, articles and posts of your connections and other LinkedIn users.",
+	"description": "The best automation to Auto Like LinkedIn publications, articles and posts of your connections and other LinkedIn users.",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Auto+Liker/LinkedIn+Auto+Liker.png",
 	"argumentDescription": "",
 	"gradientBegin": "#4CA1AF",
@@ -9,10 +9,12 @@
 	"new": true,
 	"update": false,
 	"defaultArgument": {
-		"sessionCookie": "your_session_cookie"
+		"sessionCookie": "your_session_cookie",
+		"spreadsheetUrl": "://docs.google.com/spreadsheets/d/(...)"
 	},
 	"outputDescription": {
-
+		"likeCount": "",
+		"urls": "Liked/Unliked articles URLs"
 	},
 	"defaultArgumentAllowed": false,
 	"argumentForm": {
@@ -31,7 +33,7 @@
 						"label": "Session cookie <a target=\"_blank\" href=\"\">(?)</a>"
 					},
 					"spreadsheetUrl": {
-						"label": "Spreadsheet of LinkedIn profiles / articles OR LinkedIn profile / post URL to like <a target=\"_blank\" href=\"\">(?)</a>",
+						"label": "Spreadsheet of LinkedIn profiles OR LinkedIn post URL to like <a target=\"_blank\" href=\"\">(?)</a>",
 						"helper": "Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)"
 					},
 					"columnName": {
@@ -54,7 +56,7 @@
 					},
 					"numberOfLikesPerProfile": {
 						"label": "Number of articles to like per profiles (1 if empty)",
-						"inputType":" number",
+						"inputType": "number",
 						"placeholder": 1
 					},
 					"csvName": {
@@ -62,7 +64,7 @@
 						"placeholder": "result"
 					},
 					"undoLikes": {
-						"rightLabel": "Cancel likes"
+						"rightLabel": "Unlike articles"
 					}
 				}
 			}
