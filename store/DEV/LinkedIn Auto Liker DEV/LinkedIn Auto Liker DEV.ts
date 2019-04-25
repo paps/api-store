@@ -85,8 +85,8 @@ const _pulseArticleLoader = (cssPath: string) => {
 
 const _isArticleLiked = (pulse: boolean): boolean => {
 	if (pulse) {
-		const el = document.querySelector("button[data-control-name=\"like\"] li-icon[type=\"like-filled-icon\"]")
-		return el ? !(getComputedStyle(el).display === "none") : !el
+		const el = document.querySelector("button[aria-pressed=true].react-button__trigger, button[data-control-name=\"like\"] li-icon[type=\"like-filled-icon\"]")
+		return el ? !(getComputedStyle(el).display === "none") : !!el
 	}
 	return !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]")
 }
@@ -227,23 +227,38 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const sel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-filled-icon" : "like-icon" }\"]`
 	const waitSel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
 	const pulseSel = `button[data-control-name=\"${ cancelLikes ? "unlike" : "like" }\"]`
+	const alternativePulseSel = `button[aria-pressed=${cancelLikes}].react-button__trigger`
 	const pulseWaitSel = `button[data-control-name=\"${ cancelLikes ? "like" : "unlike" }\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
+	const alternativeWaitPulseSel = `button[aria-pressed=${!cancelLikes}].react-button__trigger`
 	let isLiked: boolean = false
 	const isPulse = await page.evaluate(_isPulse)
+	let clickSel = ""
+	let waitElement = ""
 
 	try {
 		if (isPulse) {
 			// Wait until like count is present in the DOM
-			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, "button.reader-social-bar__like-count")
+			const selFound = await page.waitForFunction(_waitVisible, { }, [ "button.reader-social-bar__like-count", "button[data-control-name=\"likes_count\"]" ])
+			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, selFound)
 		}
 		isLiked = await page.evaluate(_isArticleLiked, isPulse) as boolean
 		if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
 			return ActionStatus.ACT_ALRD_DONE
 		}
-		await page.click(isPulse ? pulseSel : sel)
-		await page.waitForSelector(isPulse ? pulseWaitSel : waitSel, { visible: true, timeout: 15000 })
+		clickSel = isPulse ? pulseSel : sel
+		waitElement = isPulse ? pulseWaitSel : waitSel
+		if (isPulse) {
+			let found = await page.waitForFunction(_waitVisible, { }, [ pulseSel, alternativePulseSel ])
+			found = await found.jsonValue()
+			clickSel = found
+			waitElement = found === alternativePulseSel ? alternativeWaitPulseSel : pulseWaitSel
+		}
+		await page.click(clickSel)
+		await page.waitForSelector(waitElement, { visible: true, timeout: 15000 })
 	} catch (err) {
-		console.log(err.message || err)
+		await page.screenshot({ path: `err-${Date.now()}.jpg`, type: "jpeg", fullPage: true })
+		await buster.saveText(await page.content(), `err-${Date.now()}.html`)
+		console.log(err)
 		return ActionStatus.SCRAPE_ERR
 	}
 	return ActionStatus.SUCCESS
@@ -262,7 +277,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	}
 
 	if (spreadsheetUrl) {
-		queries = linkedin.isLinkedInUrl(spreadsheetUrl) ? spreadsheetUrl : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
+		queries = linkedin.isLinkedInUrl(spreadsheetUrl) ? [ spreadsheetUrl ] : await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 	}
 
 	if (!articleType) {
