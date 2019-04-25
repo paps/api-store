@@ -1,14 +1,14 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-pptr-DEV.js, lib-api-store.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-pptr.js, lib-api-store.js"
 "phantombuster flags: save-folder"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
 import { URL } from "url"
-import StoreUtilities from "./lib-StoreUtilities-DEV"
-import LinkedIn from "./lib-LinkedIn-pptr-DEV"
+import StoreUtilities from "./lib-StoreUtilities"
+import LinkedIn from "./lib-LinkedIn-pptr"
 import { IUnknownObject } from "./lib-api-store"
 
 const buster: Buster = new Buster()

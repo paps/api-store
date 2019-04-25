@@ -16,6 +16,7 @@
 		'lib-Instagram.js': 'libs/lib-Instagram.js'
 		'lib-Intercom.js': 'libs/lib-Intercom.js'
 		'lib-LinkedIn.js': 'libs/lib-LinkedIn.js'
+		'lib-LinkedIn-pptr.js': 'libs/lib-LinkedIn-pptr.js'
 		'lib-LinkedInScraper.js': 'libs/lib-LinkedInScraper.js'
 		'lib-Medium.js': 'libs/lib-Medium.js'
 		'lib-Messaging.js': 'libs/lib-Messaging.js'
