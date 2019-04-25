@@ -252,6 +252,11 @@ const getIdFromUrl = async (url, tab) => {
 			console.log("res:", res)
 			currentResult = currentResult.concat(res)
 		} catch (error) {
+			const errorMessage = error.message || error
+			if (errorMessage && errorMessage.includes("ERR_TOO_MANY_REDIRECTS")) {
+				utils.log("Disconnected by LinkedIn, exiting...", "warning")
+				break
+			}
 			utils.log(`Could not scrape company ${query} because ${error}`, "error")
 			// Saving bad entries in order to not retry on next launch
 			currentResult.push({ query, error, timestamp: (new Date()).toISOString() })
