@@ -57,6 +57,16 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
+// Checks if a url is already in the csv
+const checkDb = (str, db) => {
+	for (const line of db) {
+		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {
+			return false
+		}
+	}
+	return true
+}
+
 const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 	data = data.filter((item, pos) => data.indexOf(item) === pos)
 	const maxLength = data.length
@@ -216,7 +226,7 @@ const extractFirstPosts = async (tab, results, query, terms) => {
  * @param {String} hashtag - Hashtag name
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
-const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
+const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, query) => {
 	let newlyScraped = 0
 	let results = []
 	if (!resuming) {
@@ -243,6 +253,7 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 	let lastDate = new Date()
 	lastQuery = query
 	let matches = []
+	let displayPosts = 1
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -254,7 +265,10 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 			if (!error) {
 				const currentMatches = filterResults(tempResult, hashtag, terms)
 				results = results.concat(tempResult)
-
+				if (results.length > 2500 * displayPosts) {
+					displayPosts++
+					utils.log(`Loaded ${results.length} posts.`, "info")
+				}
 				if (currentMatches.length) {
 					matches = matches.concat(currentMatches)
 					utils.log(`Got ${matches.length} match${matches.length > 1 ? "es" : ""} out of ${results.length} posts.`, "done")
@@ -287,7 +301,13 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 			allCollected = false
 			break
 		}
-	} while (!maxPosts || newlyScraped < maxPosts)
+		if (maxPosts && results.length >= maxPosts) {
+			break
+		}
+	} while (!maxMatches || newlyScraped < maxMatches)
+	if (matches.length === 0) {
+		return [{ query, error: "No match found", timestamp: (new Date().toISOString()) }]
+	}
 	return matches
 }
 
@@ -296,7 +316,7 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
  */
 ;(async () => {
 	const tab = await nick.newTab()
-	let { spreadsheetUrl, sessionCookie, columnName, numberOfLinesPerLaunch, csvName, hashtags, maxPosts } = utils.validateArguments()
+	let { spreadsheetUrl, sessionCookie, columnName, numberOfLinesPerLaunch, csvName, hashtags, maxMatches, maxPosts } = utils.validateArguments()
 	if (!csvName) {
 		csvName = "result"
 	}
@@ -316,7 +336,8 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 		if (utils.isUrl(spreadsheetUrl)) {
 			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 			hashtags = hashtags.filter(el => el).map(el => el.trim())
-			hashtags = getUrlsToScrape(hashtags.filter(el => utils.checkDb(el, results, "query")), numberOfLinesPerLaunch)
+			console.log("spreads", hashtags)
+			hashtags = getUrlsToScrape(hashtags.filter(el => checkDb(el, results, "query")), numberOfLinesPerLaunch)
 		} else if (typeof spreadsheetUrl === "string") {
 			hashtags = [ spreadsheetUrl ]
 		}
@@ -326,6 +347,7 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	let currentResult = []
+	console.log("hashtags:", hashtags)
 	for (const query of hashtags) {
 		utils.log(`Searching for ${query}`, "done")
 		let terms = query.split(",")
@@ -347,6 +369,10 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 			inputType = "tags"
 			targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
 			isLocation = false
+		} else if (hashtag.includes("instagram.com/explore/locations/")) {
+			inputType = "locations"
+			isLocation = true
+			targetUrl = hashtag
 		} else {
 			inputType = "locations"
 			isLocation = true
@@ -390,7 +416,7 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 		} else {
 			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} searching for match with ${otherTerms}...`, "loading")
 		}
-		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming, terms, query)
+		const tempResult = await loadPosts(tab, maxMatches, maxPosts, hashtag, resuming, terms, query)
 		currentResult = currentResult.concat(tempResult)
 		if (rateLimited) {
 			break
@@ -404,14 +430,17 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 	if (rateLimited) {
 		utils.log("Rate limit hit: stopping the agent. You should retry in a few minutes.", "warning")
 	}
-	const oldResultLength = results.length
+	const resLength = (arr) => arr.filter((el) => !el.error).length
+	const oldResultLength = resLength(results)
 	if (results.length) {
 		for (const post of currentResult) {
 			let found = false
-			for (let i = 0; i < results.length; i++) {
-				if (results[i].postUrl === post.postUrl) {
-					found = true
-					break
+			if (!post.error) {
+				for (let i = 0; i < results.length; i++) {
+					if (results[i].postUrl === post.postUrl) {
+						found = true
+						break
+					}
 				}
 			}
 			if (!found) {
@@ -422,9 +451,10 @@ const loadPosts = async (tab, maxPosts, hashtag, resuming, terms, query) => {
 		results = results.concat(currentResult)
 	}
 	
-	
-	const newResultsLength = results.length - oldResultLength
-	utils.log(`Got ${results.length} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
+	const totalResultsLength = resLength(results)
+
+	const newResultsLength = totalResultsLength - oldResultLength
+	utils.log(`Got ${totalResultsLength} posts in total. ${newResultsLength ? `${newResultsLength} new posts.` : "No new post found."}`, "done")
 
 	const init = new Date()
 	if (currentResult.length) {
