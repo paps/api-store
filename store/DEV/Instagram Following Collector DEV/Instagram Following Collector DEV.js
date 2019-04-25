@@ -76,9 +76,16 @@ const checkDb = (str, db) => {
 // Removes any duplicate profile
 const removeDuplicates = (arr) => {
 	let resultArray = []
-	for (let i = 0; i < arr.length ; i++) {
-		if (!resultArray.find(el => el.profileUrl === arr[i].profileUrl && el.query === arr[i].query)) {
-			resultArray.push(arr[i])
+	for (const profile of arr) {
+		let found = false
+		for (let i = 0; i < resultArray.length; i++) {
+			if (resultArray[i].profileUrl === profile.profileUrl && resultArray[i].query === profile.query) {
+				found = true
+				break
+			}
+		}
+		if (!found) {
+			resultArray.push(profile)
 		}
 	}
 	return resultArray
