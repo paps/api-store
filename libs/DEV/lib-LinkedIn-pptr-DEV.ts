@@ -29,7 +29,6 @@ const waitForVisibleSelector = async (page: puppeteer.Page, selectors: string[],
 }
 
 class LinkedIn {
-
 	private buster: Buster
 	private utils: StoreUtilities
 	private originalSessionCookie: string|null
@@ -243,7 +242,7 @@ class LinkedIn {
 		}
 		try {
 			const tmp = new URL(url)
-			return tmp.pathname.startsWith("/feed/activity/urn:li:activity") || tmp.pathname.startsWith("/pulse/")
+			return tmp.pathname.startsWith("/feed/update/urn:li:activity") || tmp.pathname.startsWith("/pulse/")
 		} catch (err) {
 			return false
 		}
