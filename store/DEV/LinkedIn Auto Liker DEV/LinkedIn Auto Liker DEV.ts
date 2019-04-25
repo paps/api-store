@@ -142,7 +142,7 @@ const openProfileFeed = async (page: puppeteer.Page, url: string, feedType: stri
 		await page.waitForSelector("#profile-wrapper", { timeout: 15000, visible: true })
 	} catch (err) {
 		const _url = page.url()
-		utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`)
+		utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`, "warning")
 		return OpenStatus.INV_PROFILE
 	}
 	if (!linkedin.isLinkedInProfileFeed(url)) {
@@ -231,7 +231,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const pulseWaitSel = `button[data-control-name=\"${ cancelLikes ? "like" : "unlike" }\"] li-icon[type=\"${ cancelLikes ? "like-icon" : "like-filled-icon" }\"]`
 	const alternativeWaitPulseSel = `button[aria-pressed=${!cancelLikes}].react-button__trigger`
 	let isLiked: boolean = false
-	const isPulse = await page.evaluate(_isPulse)
+	let isPulse = await page.evaluate(_isPulse)
 	let clickSel = ""
 	let waitElement = ""
 
@@ -240,6 +240,13 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 			// Wait until like count is present in the DOM
 			const selFound = await page.waitForFunction(_waitVisible, { }, [ "button.reader-social-bar__like-count", "button[data-control-name=\"likes_count\"]" ])
 			const tmp = await page.waitForFunction(_pulseArticleLoader, { }, selFound)
+		} else {
+			let tmp = await page.waitForFunction(_waitVisible, { }, [ sel, "button[aria-pressed].react-button__trigger" ])
+			tmp = await tmp.jsonValue()
+			if (tmp === "button[aria-pressed].react-button__trigger") {
+				// we'll use the same logic for pulse articles using the reaction button
+				isPulse = true
+			}
 		}
 		isLiked = await page.evaluate(_isArticleLiked, isPulse) as boolean
 		if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
