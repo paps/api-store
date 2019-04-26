@@ -55,6 +55,9 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"removeDuplicate": {
+						"rightLabel": "<b>Remove duplicate profiles</b>"
 					}
 				}
 			}
@@ -87,6 +90,9 @@
 			"csvName": {
 				"type": "string",
 				"required": false
+			},
+			"removeDuplicate": {
+				"type": "boolean"
 			}
 		}
 	}
