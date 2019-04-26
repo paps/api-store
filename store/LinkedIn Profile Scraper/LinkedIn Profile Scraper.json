@@ -118,7 +118,8 @@
 						"placeholder": "result"
 					},
 					"saveImg": {
-						"rightLabel": "<b>Save the profile picture as a jpeg</b>"
+						"rightLabel": "<b>Save the profile picture as a jpeg</b>",
+						"helper": "Note that you won't be able to download all the files as a zip if you have more than 1000 files."
 					},
 					"takeScreenshot": {
 						"rightLabel": "<b>Take a full size screenshot of the profile</b>"

@@ -67,8 +67,14 @@
 						"inputType": "number",
 						"helper": "All of them if empty"
 					},
+					"maxMatches": {
+						"label": "Number of matches to find",
+						"type": "number",
+						"inputType": "number",
+						"helper": "Until hitting Instagram rate limit if empty"
+					},
 					"maxPosts": {
-						"label": "Number of matches to find per hashtag",
+						"label": "Number of posts to extract",
 						"type": "number",
 						"inputType": "number",
 						"helper": "Until hitting Instagram rate limit if empty"
@@ -101,6 +107,9 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"maxMatches": {
+				"type": "number"
 			},
 			"maxPosts": {
 				"type": "number"

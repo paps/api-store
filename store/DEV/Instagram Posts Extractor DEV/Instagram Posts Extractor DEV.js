@@ -114,7 +114,7 @@ const getPosts = async (tab, profileUrl, query, numberOfPostsPerProfile) => {
 }
 
 const extractPostData = (post, profileUrl, query) => {
-	console.log("postData", post)
+	// console.log("postData", post)
 	const postData = {}
 	postData.postUrl = `https://www.instagram.com/p/${post.shortcode}/`
 	if (post.edge_media_to_caption.edges[0]) {
@@ -141,6 +141,19 @@ const extractPostData = (post, profileUrl, query) => {
 	}
 	if (post.accessibility_caption) {
 		postData.caption = post.accessibility_caption
+	}
+	if (post.edge_media_to_tagged_user && post.edge_media_to_tagged_user.edges) {
+		const tags = post.edge_media_to_tagged_user.edges
+		for (let i = 0; i < tags.length; i++) {
+			const tag = tags[i]
+			if (tag && tag.node && tag.node.user) {
+				const user = tag.node.user
+				const tagFullName = user.full_name
+				const tagUsername = user.username
+				postData["taggedFullName" + (i + 1)] = tagFullName
+				postData["taggedUsername" + (i + 1)] = tagUsername
+			}
+		}
 	}
 	postData.imgUrl = post.display_url
 	postData.id = post.id

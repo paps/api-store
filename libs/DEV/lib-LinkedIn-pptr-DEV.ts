@@ -242,7 +242,7 @@ class LinkedIn {
 		}
 		try {
 			const tmp = new URL(url)
-			return tmp.pathname.startsWith("/feed/update/urn:li:activity") || tmp.pathname.startsWith("/pulse/")
+			return tmp.pathname.startsWith("/feed/update/urn:li") || tmp.pathname.startsWith("/pulse/")
 		} catch (err) {
 			return false
 		}

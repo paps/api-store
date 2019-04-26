@@ -16,7 +16,7 @@ const nick = new Nick({
 	printResourceErrors: false,
 	printNavigation: false,
 	printAborts: false,
-	timeout: 30000
+	timeout: 30000,
 })
 
 const StoreUtilities = require("./lib-StoreUtilities")
@@ -117,10 +117,13 @@ const scrapeMembers = (arg, cb) => {
  */
 const removeElements = (arg, cb) => {
 	const elements = document.querySelectorAll(arg.sel)
-
+	// const spinner = document.querySelector("div.artdeco-spinner")
 	for (let i = 0, len = arg.count || 20; i < len; i++) {
 		elements[i].parentNode.removeChild(elements[i])
 	}
+	/*if (spinner) {
+		spinner.parentNode.removeChild(spinner)
+		}*/
 	cb(null)
 }
 
@@ -143,6 +146,7 @@ const getMembersCount = (arg, cb) => {
  * @param {*} cb
  * @return {Promise<Number>}
  */
+/* eslint-disable-next-line no-unused-vars */
 const getDomElementsCount = (arg, cb) => cb(null, document.querySelectorAll(arg.sel).length)
 
 const isStillLoading = (arg, cb) => {
@@ -164,7 +168,10 @@ const isStillLoading = (arg, cb) => {
 const getMembers = async (tab, url, scrapeCount = 0) => {
 	let members = []
 	const maxErrors = 10
+	const maxLoadFails = 100
 	let errors = 0
+	let loadError = 0
+	let lastLoad = 0
 	const sel = "artdeco-typeahead-results-list.groups-members-list__results-list artdeco-typeahead-result"
 	let lastCount = 0
 	// Wait until the result list is visible
@@ -184,8 +191,8 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 	}
 	utils.log(`Scraping ${count} members`, "info")
 	while (members.length + 1 < scrapeCount) {
-		if (errors >= maxErrors) {
-			utils.log("Too many errors while scraping", "warning")
+		if ((errors >= maxErrors) || (loadError >= maxLoadFails)) {
+			// utils.log("Too many errors while scraping", "warning")
 			break
 		}
 		const timeLeft = await utils.checkTimeLeft()
@@ -197,23 +204,43 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 		// Get members profile
 		const res = await tab.evaluate(scrapeMembers, { sel })
 		// Removing duplicated scraped elements
-		members.push(...utils.filterRightOuter(members, res))
-		if ((members.length - lastCount) >= 100) {
+		if (members.push(...utils.filterRightOuter(members, res)) === lastLoad) {
+			loadError++
+		} else {
+			loadError = 0
+		}
+		lastLoad = members.length
+		if (((members.length - lastCount) >= 100)) {
 			errors = 0
+			loadError = 0
 			utils.log(`Got ${members.length} members from the list.`, "info")
 			lastCount = members.length
 		}
-		const elementsCount = await tab.evaluate(getDomElementsCount, { sel })
+		// const elementsCount = await tab.evaluate(getDomElementsCount, { sel })
 
 		// Clean the DOM if to many elements are loaded
-		if (elementsCount >= 50) {
-			await tab.evaluate(removeElements, { sel, count: 40 })
-		}
+		/*if (elementsCount >= 50) {
+			await tab.evaluate(removeElements, { sel, count: elementsCount - 10 })
+		}*/
+
 		// Load new members...
 		try {
+			await tab.evaluate((arg, cb) => cb(null, window.scrollTo(0, window.pageYOffset - 250)))
 			await tab.scrollToBottom()
-			await tab.waitUntilVisible("div.artdeco-spinner", 15000)
-			await tab.waitWhileVisible("div.artdeco-spinner", 15000)
+			await tab.evaluate((arg, cb) => {
+				const _time = Date.now()
+				const idle = () => {
+					const el = document.querySelector(arg.sel)
+					if (el && getComputedStyle(el).visibility !== "block") {
+						return cb(null)
+					}
+					if (Date.now() - _time < 60000) {
+						return cb("Spinner not loaded after 60s")
+					}
+					setTimeout(idle, 100)
+				}
+				idle()
+			}, { sel: "div.artdeco-spinner" })
 		} catch (err) {
 			errors++
 			const isLoading = await tab.evaluate(isStillLoading)

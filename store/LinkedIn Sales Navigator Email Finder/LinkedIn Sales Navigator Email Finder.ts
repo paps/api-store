@@ -219,13 +219,9 @@ const cleanObject = (obj: IUnknownObject) => {
 						resultObject.emailFromHunter = resultObject.email
 						delete resultObject.email
 					}
-					if (dropcontact) {
-						cleanObject(resultObject)
-						Object.assign(finalObject, resultObject)
-					}
 				} catch (err) {
 					utils.log(err, "error")
-					if (err.message === "Hunter.io: got HTTP 401 - No user found for the API key supplied") {
+					if (err.message && (err.message === "Hunter.io: got HTTP 401 - No user found for the API key supplied" || err.message.includes("HTTP 429"))) {
 						break
 					}
 				}		
@@ -242,14 +238,13 @@ const cleanObject = (obj: IUnknownObject) => {
 					}
 				} catch (err) {
 					utils.log(err, "error")
-					if (err.message = "Dropcontact returned HTTP 401") {
+					if (err.message && (err.message = "Dropcontact returned HTTP 401") || err.message.includes("HTTP 403") || err.message.includes("HTTP 429")) {
 						break
 					}
 				}				
 			}
 			if (phantombusterMail) {
 				mailPayload.siren = true
-				let init = new Date()
 				let status = ""
 				try {
 					const dropcontactSearch = await phantombusterMail.find(mailPayload)
@@ -264,6 +259,10 @@ const cleanObject = (obj: IUnknownObject) => {
 						status = "Not found"
 					}
 				} catch (err) {
+					if (err.message === "You have no remaining emails!") {
+						utils.log(err, "error")
+						break
+					}
 					utils.log(`Phantombuster via Dropcontact didn't find anything for ${fullName} working at ${companyName || domain }`, "info")
 					resultObject.error = "No mail found"
 					status = err.message
