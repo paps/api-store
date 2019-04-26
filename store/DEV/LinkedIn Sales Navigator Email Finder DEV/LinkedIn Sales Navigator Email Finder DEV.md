@@ -1,20 +1,19 @@
-# Convert your Sales Navigator URLs to default LinkedIn profile URLs
+# Find Email of People on LinkedIn at Scale
 
-Got a list of Sales Navigator profile URLs and want to their regular profile URLs? 
-Well that's all that API does :) And you don't even need a Sales Navigator account for it to work!
-Note that for converting the Sales Navigator URL, the API needs to visit the profile for that URL.
+This API is for sales team looking into building leads files with LinkedIn at scale.
 
-# What will you need? ⚙️ 
+Make super-targeted lead files from LinkedIn in 3 steps: 
+- Extract the people you're after with LinkedIn Sales Navigator Search Export.
+- Feed the resulting pairs of `full_name` + `company` to this API.
 
-- **Session cookie**: Your session Cookie from LinkedIn
-- **Spreadsheet URL**: Your spreadsheet URL as input
-- **Number of lines to process per launch**: How many URLs to convert from your spreadsheet (all of them if empty)
+Either use Phantombuster's Email Discovery credits or fill in one of our partner's email enrichment services: [Dropcontact](dropcontact.io) or [Hunter](hunter.io).
 
+## Want to enrich data that's *not* from Sales Navigator?
 
-_(**You already have all that?**  Click straight away on **"Use this API"**)_
+This tool works with any pair of `full_name` + `company`. For more ideas on how to generate tons of lead, check out our [blog](blog.phantombuster.com).
 
+# Tutorial 🚀
 
-# Which steps to follow?
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
