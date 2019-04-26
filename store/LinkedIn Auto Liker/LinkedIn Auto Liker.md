@@ -1,8 +1,8 @@
-# Automatically Comment on your Connections' Posts and Articles on LinkedIn
+# Automatically Like your Connections' Posts and Articles on LinkedIn
 
 One of the main ways to show appreciation on social networks is to like other peoples' content. Obvious. But as most of us also know, scrolling through feeds can be really time consuming. 
 
-So how to get the best of both worlds? Set up this LinkedIn Auto Liker automation! LinkedIn Auto Liekr will automatically like a list of posts or the content created by a list of people even when you're focused on something else.
+So how to get the best of both worlds? **Set up this LinkedIn Auto Liker automation!** LinkedIn Auto Liker will automatically like a list of posts or the content created by a list of people while you're focused on something else.
 
 Give visibility and reach to your LinkedIn connections or users and influencers you find interesting and auto like their LinkedIn publications. Or use our [LinkedIn Search Export](https://phantombuster.com/api-store/3149/linkedin-search-export) tool that which will create a flow of LinkedIn posts, articles and publications on a theme of your choice, and give that list as an input to this automation so you automatically like each one of those posts and get noticed on LinkedIn.
 
