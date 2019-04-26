@@ -42,11 +42,11 @@
 						"placeholder": "posts"
 					},
 					"articleType": {
-						"label": "Choose which type of articles to like from a LinkedIn profile",
+						"label": "Choose which kind of activity to like from a LinkedIn profile",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
 						"sort": false,
-						"optionLabels": [ "All categories", "Articles", "Feed" ],
+						"optionLabels": [ "All categories", "Articles", "Posts" ],
 						"type": "select"
 					},
 					"numberOfLinesPerLaunch": {

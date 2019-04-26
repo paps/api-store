@@ -303,7 +303,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	}
 	await linkedin.login(page, sessionCookie)
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
+	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0).filter((el) => el)
 	queries = queries.slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all URLs provided are already scraped", "warning")
