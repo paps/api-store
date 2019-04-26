@@ -10,6 +10,8 @@ This automation has been thought for and developed with sales teams of SaaS prod
 
 Basically, this automated tool will visit on your behalf a list of websites. Give it your best sales pitch and your email address. For each website it will open the Intercom speech bubble, deliver your pitch and fill in your email address. As soon as the operator answers, you'll be notified by email and can start selling from there.
 
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Message+Sender/MultiBubbles.gif)</center>
+
 # Tutorial
 
 ## What will you need? ⚙️ 
@@ -50,6 +52,10 @@ Please make sure your file is publicly accessible!
 ## 5. Specify your message and the email address you want to receive answers at.
 
 Try to make your message look like you want to start a discussion. Starting by not saying "Hello" and start selling feels really unnatural to the operator and will definitely lower your response rate.
+
+💬 Multi-bubble feature. In order to separate message, add a double 'Enter' between your sentences as follow:
+
+<center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Intercom+Message+Sender/Digital+Salesman.png)</center>
 
 **Don't forget to fill in your email address**. Once a discussion starts on Intercom, you'll receive an email notifying you and can take the discussion from there.
 
