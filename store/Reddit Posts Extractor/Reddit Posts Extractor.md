@@ -8,13 +8,15 @@ This data can be extremely useful for monitoring trending topics or curating con
 
 Use-cases are endless but one thing is for sure: This is the easiest way to extract a list of posts from many Reddit subreddits. Enjoy!
 
-# Which steps to follow?
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+# Tutorial 🚀
 
 ## 1. Create an account on Phantombuster.com 💻
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
 
-## 2. Add this automation to your account.
+## 2. Add this Reddit automation to your account.
 You can add many APIs on your Phantombuster account as your plan allows. Need more space? Delete an API and switch!
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
@@ -28,7 +30,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 ## 4. Add a Google Spreadsheet 📑
 Below your session cookie you’ll find _Spreadsheet URL_.
 
-Enter in the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
+Enter here the text field a link of a Google Spreadsheet with this same format _(only column A is mandatory)_:
 <center>![](https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Reddit+Posts+Extractor/Subreddits+Extractor+Input+File.png)</center>
 
 Your spreadsheet should contain a list of Subreddits URLs (**one link per row**).
@@ -43,7 +45,7 @@ Ready? Now click on "launch" to try your script!
 
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+# Repetition setup { repetition_setup }
 
 Once your automation is fully set up, you can program repetitive launches. That way, your auto-commenting will be spread over days, weeks or even months. 
 
