@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Messaging.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -147,7 +146,6 @@ const sendIntercomMessage = async (page, message) => {
 const cssSendMessage = async (page, chunck) => {
 	const frame = (await page.frames()).find(frame => frame.name() === "intercom-messenger-frame")
 	if (frame) {
-		// await frame.waitForSelector("textarea.message")
 		let writeSpeed = (chunck.length / 2) * 10
 		// Not to fast
 		if (writeSpeed < 100)
@@ -155,16 +153,19 @@ const cssSendMessage = async (page, chunck) => {
 		// Not to slow
 		if (writeSpeed > 500)
 			writeSpeed = 200
+		await frame.waitForSelector("textarea[name=\"message\"]")
 		await frame.type("textarea[name=\"message\"]", chunck, { delay: writeSpeed })
 		await frame.waitForSelector("button.intercom-composer-send-button")
 		await frame.click("button.intercom-composer-send-button")
-		/*try {
-			await page.waitForResponse("https://api-iam.intercom.io/messenger/web/messages")
+		try {
+			await page.waitForResponse(res => res.url().match(/^https:\/\/api-iam.intercom.io\/messenger\/web\/conversations\/[0-9]+\/reply$/))
 		} catch (err) {
 			console.log(err)
-		}*/
+			return false
+		}
+		return true
 	}
-	await page.screenshot({ path: `msg-chunck-test-${Date.now()}.jpg`, typpe: "jpeg", fullPage: true })
+	return false
 }
 
 /**
@@ -222,9 +223,16 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		if (!isUser) {
 			toSend += `\n(${email})`
 		}
-		const hasSend = await sendIntercomMessage(page, toSend)
+		const chuncks = toSend.split("\n\n")
+		const hasSend = await sendIntercomMessage(page, chuncks.split())
 		if (hasSend) {
 			utils.log(`Message sent at ${page.url()} (after ${i + 1} tries)`, "info")
+			for (const chunck of chuncks) {
+				utils.log(`Sending ${chunck}`, "info")
+				if (await cssSendMessage(page, chunck))
+					utils.log("Message sent", "info")
+				await page.waitFor(750)
+			}
 			return isUser
 		} else {
 			throw `Can't find a way to send a message on ${page.url()}`
@@ -300,7 +308,9 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 					const status = isUser ? "success" : "email sent in the text message"
 					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
 					for (const chunck of chuncks) {
-						await cssSendMessage(page, chunck)
+						utils.log(`Sending ${chunck}`, "info")
+						if (await cssSendMessage(page, chunck))
+							utils.log(`Message sent at ${query[columnName]}`, "info")
 						await page.waitFor(750)
 					}
 				} else {
@@ -311,7 +321,6 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${triesPerDomain || urls.length} alternative links`, "info")
 				const fullySetup = await crawl(page, urls, triesPerDomain, toSend, email)
 				const status = fullySetup ? "success" : "email sent in the text message"
-				console.log("Status: ", status, "|", message)
 				res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
 			}
 		} catch (err) {
