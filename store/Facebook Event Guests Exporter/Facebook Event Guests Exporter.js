@@ -261,7 +261,7 @@ const checkUnavailable = (arg, cb) => {
 		}
 	}
 	const tab = await nick.newTab()
-	let { sessionCookieCUser, sessionCookieXs, inputUrl, columnName, numberofEventsperLaunch, csvName } = utils.validateArguments()
+	let { sessionCookieCUser, sessionCookieXs, inputUrl, columnName, numberofEventsperLaunch, csvName, removeDuplicate} = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	let eventsToScrape, result = []
 	let interceptedUrl
@@ -365,7 +365,9 @@ const checkUnavailable = (arg, cb) => {
 	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 
-	result = removeDuplicates(result)
+	if (removeDuplicate) {
+		result = removeDuplicates(result)
+	}
 	if (initialResultLength && result.length > initialResultLength) {
 		utils.log(`Got ${result.length - initialResultLength} new profiles, ${result.length} in total.`, "done")
 	} else {

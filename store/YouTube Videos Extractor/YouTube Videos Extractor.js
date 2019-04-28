@@ -49,10 +49,11 @@ const scrapeVideosData = (arg, cb) => {
 			videoData.duration = video.querySelector("ytd-thumbnail-overlay-time-status-renderer").textContent.trim()
 		}
 		if (video.querySelector("#metadata-line span")) {
-			try {
+			try {				
 				let viewCount = video.querySelector("#metadata-line span").textContent
-				const multiplier = viewCount.replace(/\d{1,2}[,.]\d{1,2}/, "").trim().split(" ")[0].toLowerCase()
-				viewCount = parseFloat(viewCount.match(/\d{1,2}[,.]\d{1,2}/)[0])
+				viewCount = viewCount.split(" ")[0]
+				const multiplier = viewCount.replace(/\d+/g, "").replace(/[.]/, "").toLowerCase()
+				viewCount = parseFloat(viewCount.replace(/\.d+/g, ""))
 				switch (multiplier) {
 					case "k":
 						viewCount *= 1000

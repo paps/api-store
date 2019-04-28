@@ -124,7 +124,7 @@ const isIntercomVisible = async (page, url, email = null) => {
  * @return {Promise<boolean>}
  */
 const sendIntercomMessage = async (page, message) => {
-	utils.log(`Sending message: ${message}`, "info")
+	utils.log(`Sending message: ${message}`, "loading")
 	await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true })
 	await page.evaluate(prepareIntercomMessage, message)
 	await page.waitForSelector("iframe[name=\"intercom-messenger-frame\"]", { visible: true })
@@ -135,7 +135,7 @@ const sendIntercomMessage = async (page, message) => {
 		try {
 			await page.waitForResponse("https://api-iam.intercom.io/messenger/web/messages")
 		} catch (err) {
-			console.log(err)
+			return false
 		}
 		return true
 	}
@@ -143,6 +143,13 @@ const sendIntercomMessage = async (page, message) => {
 }
 
 
+/**
+ * @async
+ * @description
+ * @param {Puppeteer.Page}
+ * @param {string} chunck - message to send
+ * @return {Promise<boolean>} true means successful send
+ */
 const cssSendMessage = async (page, chunck) => {
 	const frame = (await page.frames()).find(frame => frame.name() === "intercom-messenger-frame")
 	if (frame) {
@@ -160,12 +167,40 @@ const cssSendMessage = async (page, chunck) => {
 		try {
 			await page.waitForResponse(res => res.url().match(/^https:\/\/api-iam.intercom.io\/messenger\/web\/conversations\/[0-9]+\/reply$/))
 		} catch (err) {
-			console.log(err)
 			return false
 		}
 		return true
 	}
 	return false
+}
+
+
+/**
+ * @async
+ * @description
+ * @param {Puppeteer.Page} page
+ * @param {string} message - message
+ * @return {Promise<boolean>}
+ */
+const sendMessages = async (page, message) => {
+	const messages = message.split("\n\n")
+	let isSent = false
+
+	isSent = await sendIntercomMessage(page, messages.shift())
+	if (isSent) {
+		utils.log(`Message sent at ${page.url()}`, "info")
+		for (const chunck of messages) {
+		utils.log(`Sending message: ${chunck}`, "loading")
+			isSent = await cssSendMessage(page, chunck)
+			if (!isSent) {
+				utils.log("Can't send the message, stopping the conversation", "warning")
+				break
+			} else
+				utils.log(`Message sent at ${page.url()}`, "info")
+			await page.waitFor(750)
+		}
+	}
+	return isSent
 }
 
 /**
@@ -223,9 +258,14 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		if (!isUser) {
 			toSend += `\n(${email})`
 		}
-		const chuncks = toSend.split("\n\n")
-		const hasSend = await sendIntercomMessage(page, chuncks.split())
+		const hasSend = await sendMessages(page, toSend)
 		if (hasSend) {
+			return isUser
+		} else {
+			throw `Can't find a way to send a message on ${page.url()}}`
+		}
+		//const hasSend = await sendIntercomMessage(page, chuncks.split())
+		/*if (hasSend) {
 			utils.log(`Message sent at ${page.url()} (after ${i + 1} tries)`, "info")
 			for (const chunck of chuncks) {
 				utils.log(`Sending ${chunck}`, "info")
@@ -236,7 +276,7 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 			return isUser
 		} else {
 			throw `Can't find a way to send a message on ${page.url()}`
-		}
+			}*/
 	} else {
 		throw `Can't find a way to send a message even after ${i + 1} tries`
 	}
@@ -294,7 +334,6 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		}
 		try {
 			let toSend = inflater.forgeMessage(message, query)
-			const chuncks = toSend.split("\n\n")
 			utils.log(`Opening ${query[columnName]}`, "info")
 			let canGo = await detectIntercom(page, query[columnName], email)
 			if (canGo) {
@@ -302,7 +341,14 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				if (!isUser) {
 					toSend += `\n(${email})`
 				}
-				const hasSend = await sendIntercomMessage(page, chuncks.shift())
+				const hasSend = await sendMessages(page, toSend)
+				if (hasSend) {
+					const status = isUser ? "success" : "email sent in the text message"
+					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
+				} else {
+					throw `Can't find a way to send a message on ${query[columnName]}`
+				}
+				/*const hasSend = await sendIntercomMessage(page, chuncks.shift())
 				if (hasSend) {
 					utils.log(`Message sent at ${query[columnName]}`, "info")
 					const status = isUser ? "success" : "email sent in the text message"
@@ -315,7 +361,7 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 					}
 				} else {
 					throw `Can't find a way to send a message on ${query[columnName]}`
-				}
+					}*/
 			} else {
 				const urls = await page.evaluate(getLinks)
 				utils.log(`Can't send message in ${query[columnName]}, will try to send in ${triesPerDomain || urls.length} alternative links`, "info")

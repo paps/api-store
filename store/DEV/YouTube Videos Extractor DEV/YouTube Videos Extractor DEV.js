@@ -55,8 +55,9 @@ const scrapeVideosData = (arg, cb) => {
 		if (video.querySelector("#metadata-line span")) {
 			try {
 				let viewCount = video.querySelector("#metadata-line span").textContent
-				const multiplier = viewCount.replace(/\d{1,2}[,.]\d{1,2}/, "").trim().split(" ")[0].toLowerCase()
-				viewCount = parseFloat(viewCount.match(/\d{1,2}[,.]\d{1,2}/)[0])
+				viewCount = viewCount.split(" ")[0]
+				const multiplier = viewCount.replace(/\d+/g, "").replace(/[.]/, "").toLowerCase()
+				viewCount = parseFloat(viewCount.replace(/\.d+/g, ""))
 				switch (multiplier) {
 					case "k":
 						viewCount *= 1000
@@ -69,7 +70,7 @@ const scrapeVideosData = (arg, cb) => {
 				}
 				videoData.viewCount = viewCount
 			} catch (err) {
-				//
+				videoData.errora = err.message
 			}
 		}
 		if (video.querySelector("#metadata-line > span:last-of-type")) {

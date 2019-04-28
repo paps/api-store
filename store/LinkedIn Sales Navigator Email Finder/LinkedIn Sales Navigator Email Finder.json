@@ -1,7 +1,7 @@
 {
 	"slug": "linkedin-sales-navigator-email-finder",
 	"description": "Find Emails from Sales Navigator searches",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Linkedin_Export_Search/lkd_exprt_srch.png",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/LinkedIn+Sales+Navigator+Email+Finder/LinkedIn+Sales+Navigator+Search+Export+2.2.png",
 	"hidden": true,
 	"new": true,
 	"gradientBegin": "#4CA1AF",
@@ -28,17 +28,23 @@
 					"firstNameColumn": ["customSpreadsheet"],
 					"lastNameColumn": ["customSpreadsheet"],
 					"companyNameColumn": ["customSpreadsheet"],
-					"domainNameColumn": ["customSpreadsheet"]
+					"domainNameColumn": ["customSpreadsheet"],
+					"customSpreadsheet": ["advancedSettings"],
+					"csvName": ["advancedSettings"],
+					"numberOfLinesPerLaunch": ["advancedSettings"]
 				}
 			},
 			"options": {
 				"fields": {
 					"spreadsheetUrl": {
 						"helpers": [
-							"Enter either a LinkedIn Sales Navigator Profile URL, a Google Spreadsheet URL <b>OR</b> a CSV URL",
+							"Enter either a Google Spreadsheet URL <b>OR</b> a CSV URL",
 							"When using a spreadsheet/CSV URL, make sure your file is publicly available"
 						],
-						"label": "Sales Navigator URL / Spreadsheet URL <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+						"label": "Spreadsheet URL <a href=\"/api-store/16443/linkedin-sales-navigator-email-finder#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
+					},
+					"advancedSettings": {
+						"rightLabel": "<b>Advanced Settings -></b>"
 					},
 					"customSpreadsheet": {
 						"rightLabel": "<b>Use a custom spreadsheet instead of a Sales Navigator Search Export spreadsheet</b>",
@@ -115,6 +121,14 @@
 				"type": "string",
 				"required": true
 			},
+			"emailChooser": {
+				"enum": [ "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
+				"default": "phantombuster"
+			},
+			"advancedSettings": {
+				"type": "boolean",
+				"default": "false"
+			},
 			"customSpreadsheet": {
 				"type": "boolean",
 				"default": "false"
@@ -138,10 +152,6 @@
 			"domainNameColumn": {
 				"type": "string",
 				"dependencies": ["customSpreadsheet"]
-			},
-			"emailChooser": {
-				"enum": [ "phantombuster", "hunter", "dropcontact", "hunter and dropcontact" ],
-				"default": "phantombuster"
 			},
 			"hunterApiKey": {
 				"type": "string",
