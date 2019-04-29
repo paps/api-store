@@ -219,7 +219,7 @@ class LinkedIn {
 				url = `https://${url}`
 			}
 			const urlObj = new URL(url)
-			return ((urlObj.hostname.indexOf("linkedin.com") > -1) && (urlObj.pathname.startsWith("/in/") || urlObj.pathname.startsWith("/comm/in/") || urlObj.pathname.startsWith("/profile/view") || urlObj.pathname.startsWith("/sales/people/") || urlObj.pathname.startsWith("/sales/gmail/profile/") || urlObj.pathname.startsWith("/pub/") || urlObj.pathname.startsWith("/feed/update/urn:li:activity") || urlObj.pathname.startsWith("/pulse/")))
+			return ((urlObj.hostname.indexOf("linkedin.com") > -1) && (urlObj.pathname.startsWith("/in/") || urlObj.pathname.startsWith("/comm/in/") || urlObj.pathname.startsWith("/profile/view") || urlObj.pathname.startsWith("/sales/people/") || urlObj.pathname.startsWith("/sales/gmail/profile/") || urlObj.pathname.startsWith("/pub/") || urlObj.pathname.startsWith("/feed/update/urn:li:activity") || urlObj.pathname.startsWith("/feed/update/urn:li:ugcPost") || urlObj.pathname.startsWith("/pulse/")))
 		} catch (err) {
 			return false
 		}

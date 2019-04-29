@@ -12,7 +12,7 @@ declare class Twitter {
 	public constructor(nick: Nick, buster: Buster, utils: StoreUtilities)
 	public constructor(buster: Buster, utils: StoreUtilities)
 	public isLogged(tab: Nick.Tab|Puppeteer.Page, printErrors?: boolean): Promise<boolean>
-	public login(tab: Nick.Tab|Puppeteer.Page, cookie: string): Promise<void>
+	public login(tab: Nick.Tab|Puppeteer.Page, cookie: string, betaOptIn?: boolean): Promise<void>
 	public openProfile(tab: Nick.Tab|Puppeteer.Page, url: string): Promise<void>
 	public scrapeProfile(tab: Nick.Tab|Puppeteer.Page, url: string, verbose?: boolean): Promise<IUnknownObject>
 	public collectFollowers(tab: Nick.Tab, url: string, limit?: number, isNetworkCleaner?: boolean): Promise<IUnknownObject[]>
