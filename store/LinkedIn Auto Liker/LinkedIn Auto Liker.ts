@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-pptr.js, lib-api-store.js"
-"phantombuster flags: save-folder"
 
 import Buster from "phantombuster"
 import puppeteer from "puppeteer"
@@ -263,8 +262,6 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		await page.click(clickSel)
 		await page.waitForSelector(waitElement, { visible: true, timeout: 15000 })
 	} catch (err) {
-		console.log(err)
-		await buster.saveText(await page.content(), `err-${Date.now()}.html`)
 		return ActionStatus.SCRAPE_ERR
 	}
 	return ActionStatus.SUCCESS
@@ -303,7 +300,8 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	}
 	await linkedin.login(page, sessionCookie)
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0).filter((el) => el)
+	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
+	queries = Array.from(new Set(queries)).filter((el) => el)
 	queries = queries.slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all URLs provided are already scraped", "warning")
