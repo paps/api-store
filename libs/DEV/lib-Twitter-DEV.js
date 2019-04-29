@@ -101,9 +101,11 @@ class Twitter {
 	 * @description Method used to be log as a valid Twitter user
 	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} cookie - Twitter auth_token cookie
+	 * @param {boolean} [betaOptIn] - Turn on the new Twitter UX (default: false)
+	 * NOTE: betaOptIn is a transient hack to force the new UX
 	 * @throws if there were an error during the login process
 	 */
-	async login(tab, cookie) {
+	async login(tab, cookie, betaOptIn = false) {
 		const isNick = isUsingNick(tab)
 		const _scrapeTwitterUsername = (arg, cb) => {
 			const sel = document.querySelector(".DashboardProfileCard-name a")
@@ -140,6 +142,8 @@ class Twitter {
 		this.utils.log("Connecting to Twitter...", "loading")
 		try {
 			const _cookie = { name: "auth_token", value: cookie, domain: ".twitter.com", httpOnly: true, secure: true }
+			// opt-in beta cookie
+			const _beta = { name: "rweb_optin", value: "on", domain: ".twitter.com", httpOnly: false, secure: false }
 			const url = "https://twitter.com"
 			const initialSelector = ".DashboardProfileCard, div[data-testid=\"DashButton_ProfileIcon_Link\"]"
 			let newinterface = false
@@ -149,13 +153,21 @@ class Twitter {
 					process.exit(1)
 				}
 				await this.nick.setCookie(_cookie)
+				if (betaOptIn) {
+					await this.nick.setCookie(_beta)
+				}
 				await tab.open(url)
 				await tab.waitUntilVisible(initialSelector)
 				if (await tab.isVisible("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) {
 					newinterface = true
 				}
 			} else {
+				// NOTE: we set the same viewport as NickJS to prevent any CSS paths changes
+				await tab.setViewport({ width: 1280, height: 800 })
 				await tab.setCookie(_cookie)
+				if (betaOptIn) {
+					await tab.setCookie(_beta)
+				}
 				await tab.goto(url)
 				await tab.waitForSelector(initialSelector, { visible: true })
 				if (await tab.$("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) {
@@ -176,8 +188,7 @@ class Twitter {
 			} else {
 				this.utils.log("Could not connect to Twitter with this session cookie.", "error")
 			}
-			await tab.screenshot(`${Date.now()}-err1".png`)
-			await this.buster.saveText(await tab.getContent(), `${Date.now()}- err1".html`)
+			await this.buster.saveText(isNick ? await tab.getContent() : await tab.content(), `${Date.now()}- err1".html`)
 			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
