@@ -279,7 +279,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, followersPerAccount, numberofProfilesperLaunch, csvName, splitFiles } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, followersPerAccount, columnName, numberofProfilesperLaunch, csvName, splitFiles } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
 	try {
 		agentObject = await buster.getAgentObject()
@@ -306,7 +306,7 @@ const extractProfiles = (htmlContent, profileUrl) => {
 
 	if (isUrl(spreadsheetUrl)) {
 		if (!isTwitter(spreadsheetUrl)) {
-			twitterUrls = await utils.getDataFromCsv2(spreadsheetUrl)
+			twitterUrls = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 		}
 	}
 	twitterUrls = twitterUrls.filter(str => str) // removing empty lines
