@@ -1,7 +1,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
 
 const { URL } = require("url")
 const Buster = require("phantombuster")
@@ -20,7 +20,7 @@ const nick = new Nick({
 
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Twitter = require("./lib-Twitter-DEV")
+const Twitter = require("./lib-Twitter")
 const twitter = new Twitter(nick, buster, utils)
 const DB_SHORT_NAME = "twitter-profile-scraper"
 // }
@@ -58,6 +58,7 @@ const isIntentUrl = url => {
 const waitForGraphQL = async tab => {
 	await tab.driver.client.Page.reload({ ignoreCache: true })
 	return new Promise((resolve, reject) => {
+		setTimeout(() => reject("Timeout after 15000ms"), 15000)
 		const __watcher = e => {
 			try {
 				let tmp = new URL(e.response.url)
@@ -86,10 +87,12 @@ const formatRawGraphQL = ql => {
 	}
 	if (ql.data && ql.data.user && ql.data.user.legacy) {
 		obj = ql.data.user.legacy
-		const tmp = obj.entities.url.urls.pop()
+		const tmp = obj.entities && obj.entities.url && obj.entities.url.urls ? obj.entities.url.urls.pop() : null
 
-		res.twitterId = obj.rest_id
-		res.alternativeProfileUrl = `https://twitter.com/intent/user?user_id=${res.twitterId}`
+		if (obj.rest_id) {
+			res.twitterId = obj.rest_id
+			res.alternativeProfileUrl = `https://twitter.com/intent/user?user_id=${res.twitterId}`
+		}
 		res.tweetsCount = obj.favourites_count
 		res.followers = obj.followers_count
 		res.following = obj.friends_count
@@ -98,7 +101,7 @@ const formatRawGraphQL = ql => {
 		res.name = obj.name
 		res.twitterProfile = `https://twitter.com/${obj.screen_name}`
 		res.bio = obj.description
-		//res.handle =
+		res.handle = `@${res.screen_name}`
 		res.location = obj.location
 		res.website = tmp && tmp.expanded_url
 		res.joinDate = (new Date(obj.created_at)).toISOString()
@@ -140,15 +143,19 @@ const _scrapeProfile = async (tab, url) => {
 		throw `Can't open URL: ${url}`
 	}
 	if (await twitter.isBetaOptIn(tab)) {
+		utils.log(`Loading profile ${_url}`, "loading")
 		await _openProfile(tab, _url)
 		res = await waitForGraphQL(tab)
+		utils.log(`${_url} loaded`, "loading")
 		res = formatRawGraphQL((await tab.driver.client.Network.getResponseBody({ requestId: res.requestId })).body)
 	} else {
 		await twitter.openProfile(tab, _url)
 		// NOTE: Happens when the Twitter account is forced in beta opt-in by the API & the parameter a Twitter intent URL
 		if (await twitter.isBetaOptIn(tab)) {
+			utils.log(`Loading profile ${_url}`, "loading")
 			await _openProfile(tab, _url)
 			res = await waitForGraphQL(tab)
+			utils.log(`${_url} loaded`, "loading")
 			res = formatRawGraphQL((await tab.driver.client.Network.getResponseBody({ requestId: res.requestId })).body)
 		} else {
 			res = await twitter.scrapeProfile(tab, _url, true)
