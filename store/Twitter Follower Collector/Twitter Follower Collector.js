@@ -556,7 +556,7 @@
 		let urlCount = 0
 		let currentResult = []
 		for (const url of twitterUrls) {
-			interceptedUrl =
+			interceptedUrl = null
 			queryUrl = url
 			let resuming = false
 			if (alreadyScraped && agentObject && url === lastSavedQuery) {

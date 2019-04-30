@@ -39,6 +39,11 @@
 						"label": "Number of followers to scrape per launch",
 						"helper": "If you leave this field empty, the API will try to get as much followers as possible for every Twitter account"
 					},
+					"columnName": {
+						"label": "Column name where Twitter profiles are stored in the spreadsheet",
+						"helper": "If empty, the first column of your spreadsheet will be used",
+						"placeholder": "Twitter Profile"
+					},
 					"numberofProfilesperLaunch": {
 						"label": "Number of lines to process per launch <a href=\"/api-store/4457/twitter-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
 						"inputType": "number"
@@ -70,6 +75,9 @@
 				"type": "number",
 				"title": "Followers count to get per accounts",
 				"minimum": 1
+			},
+			"columnName": {
+				"type": "string"
 			},
 			"numberofProfilesperLaunch": {
 				"type": "number",

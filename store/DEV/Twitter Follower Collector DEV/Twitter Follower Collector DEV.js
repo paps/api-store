@@ -339,13 +339,13 @@ const extractProfiles = (profileList, profileUrl) => {
 		data.name = profile.name
 		data.imgUrl = profile.profile_image_url
 		data.backgroundImg = profile.profile_banner_url
-		data.bio = profile.description
+		data.bio = profile.bio
 		if (profile.url) {
 			data.website = profile.url
 		}
 		data.location = profile.location
 		data.createdAt = profile.created_at
-		data.followersCount = profile.followers_count
+		data.followers_count = profile.followers_count
 		data.friendsCount = profile.friends_count
 		if (profile.verified) {
 			data.certified = "Certified"
