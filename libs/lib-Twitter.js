@@ -188,7 +188,7 @@ class Twitter {
 			} else {
 				this.utils.log("Could not connect to Twitter with this session cookie.", "error")
 			}
-			await this.buster.saveText(isNick ? await tab.getContent() : await tab.content(), `${Date.now()}- err1".html`)
+			await this.buster.saveText(isNick ? await tab.getContent() : await tab.content(), `${Date.now()}- err1.html`)
 			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
@@ -227,8 +227,28 @@ class Twitter {
 		// Intent URL: you need to click the redirection link to open the profile
 		if (contextSelector.indexOf(".alternate-context") > -1) {
 			await tab.click(selectors[2])
-			isNick ? await tab.waitUntilVisible(selectors[0], 15000) : await tab.waitForSelector(selectors[0], { timeout: 15000 })
+			try {
+				isNick ? await tab.waitUntilVisible([ selectors[0], "a[href$=\"/photo\"]" ], 15000, "or") : Promise.race([ selectors[0], "a[href$=\"/photo\"]" ].map(sel => tab.waitForSelector(sel, { timeout: 15000 })))
+			} catch (err) {
+				throw err
+			}
 		}
+	}
+
+	/**
+	 * @async
+	 * @description
+	 * @param {Nick.Tab|Puppeteer.Page} tab
+	 * @return {Promise<boolean>}
+	 */
+	async isBetaOptIn(tab) {
+		const sel = "div#react-root"
+		try {
+			isUsingNick(tab) ? await tab.waitUntilVisible(sel, 7500) : tab.waitForSelector(sel, { timeout: 7500, visible: true })
+		} catch (err) {
+			return false
+		}
+		return true
 	}
 
 	/**
