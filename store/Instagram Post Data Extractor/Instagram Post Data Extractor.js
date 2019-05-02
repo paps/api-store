@@ -35,32 +35,22 @@ const getpostUrlsToScrape = (data, numberOfPostsPerLaunch) => {
 	return data.slice(0, Math.min(numberOfPostsPerLaunch, maxLength)) // return the first elements
 }
 
-const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
+const loadAndScrapePosts = async (tab, postUrl) => {
 	utils.log(`Scraping post ${postUrl}`, "loading")
-	await tab.open(postUrl)
-	const scrapedData = await instagram.scrapePost(tab)
-	if (!hasCookie) {
-		delete scrapedData.likes
-	}
+	const scrapedData = await instagram.scrapePostJson(tab, postUrl)
+	scrapedData.postUrl = scrapedData.query
+	delete scrapedData.query
 	scrapedData.timestamp = (new Date()).toISOString()
 	return scrapedData
 }
 
 // Main function that execute all the steps to launch the scrape and handle errors
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfPostsPerLaunch , csvName } = utils.validateArguments()
+	let { spreadsheetUrl, columnName, numberOfPostsPerLaunch , csvName } = utils.validateArguments()
 	if (!csvName) { csvName = "result" }
-	let postUrls, hasCookie
+	let postUrls
 	const tab = await nick.newTab()
-	if (sessionCookie) {
-		await instagram.login(tab, sessionCookie)
-		hasCookie = true
-	} else {
-		utils.log("No session cookie found, the API won't extract like count on each post.", "warning")
-		hasCookie = false
-	}
 	let result = await utils.getDb(csvName + ".csv")
-
 	if (spreadsheetUrl.toLowerCase().includes("instagram.com/")) { // single instagram url
 		postUrls = [ spreadsheetUrl ]
 	} else { // CSV
@@ -71,11 +61,9 @@ const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
 		}
 		postUrls = getpostUrlsToScrape(postUrls.filter(el => utils.checkDb(el, result, "postUrl")), numberOfPostsPerLaunch)
 	}
-
 	console.log(`Posts to scrape: ${JSON.stringify(postUrls, null, 4)}`)
-
-
 	let postCount = 0
+	let currentResult = []
 	for (let postUrl of postUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -86,18 +74,18 @@ const loadAndScrapePosts = async (tab, postUrl, hasCookie) => {
 			const urlObject = new URL(postUrl)
 			if (!urlObject.pathname.startsWith("/p/")) {
 				utils.log(`${postUrl} isn't a valid post URL.`, "warning")
-				result.push({ postUrl, error: "Not a post URL" })
+				currentResult.push({ postUrl, error: "Not a post URL", timestamp: (new Date().toISOString()) })
 				continue
 			}
 			postCount++
 			buster.progressHint(postCount / postUrls.length, `${postCount} post${postCount > 1 ? "s" : ""} scraped`)
-			result = result.concat(await loadAndScrapePosts(tab, postUrl, hasCookie))
+			currentResult = currentResult.concat(await loadAndScrapePosts(tab, postUrl))
 		} catch (err) {
 			utils.log(`Can't scrape post at ${postUrl} due to: ${err.message || err}`, "warning")
 		}
 	}
-
-	await utils.saveResults(result, result, csvName, null, false)
+	result = result.concat(currentResult)
+	await utils.saveResults(currentResult, result, csvName)
 	nick.exit(0)
 })()
 .catch(err => {

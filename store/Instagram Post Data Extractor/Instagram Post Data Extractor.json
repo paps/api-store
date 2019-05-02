@@ -1,6 +1,6 @@
 {
 	"slug": "instagram-post-data-extractor",
-	"description": "Extract all data from an Instagram Post",
+	"description": "Extract all data from a Instagram Post",
 	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Profile_Scrapper/inst_prfl_scrpprnf.png",
 	"hidden": false,
 	"new": false,
@@ -9,15 +9,16 @@
 	"argumentHelpAnchor": "#section_argument",
 	"defaultArgument": {
 		"sessionCookie": "your_session_cookie",
-		"spreadsheetUrl": "instagram_posts_urls"
+		"spreadsheetUrl": "instagram_posts_urls",
+		"numberOfPostsPerLaunch": 10
 	},
 	"outputDescription": {
-		"postUrl": "Instagram post URL",
-		"profileUrl": "Instagram profile URL",
-		"profileName": "Instagram username",
-		"likes": "Post like count",
+		"username": "Post owner's username",
+		"fullName": "Post owner's full name",
+		"likeCount": "Post like count",
+		"commentCount": "Post comment count",
 		"description": "",
-		"postImage": "Post image URL",
+		"imgUrl": "Post image URL",
 		"pubDate": "Publication date",
 		"location": "Post location"
 	},
@@ -27,56 +28,48 @@
 		"alpaca": {
 			"options": {
 				"fields": {
-					"sessionCookie": {
-						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
-						"helpers": [
-							"Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>", "If you don't enter it, the API won't extract like Count data" ]
-						},
-						"spreadsheetUrl": {
-							"type": "url",
-							"helpers": [
-								"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
-								"label": "Spreadsheet URL of profiles to scrape <a href=\"/api-store/7085/instagram-profile-scraper#section_5addagooglespreadsheet\" target=\"_blank\">(?)</a>"
-							},
-							"columnName": {
-								"label": "Column name from which to get profile URLs",
-								"placeholder": "Instagram Profile Link",
-								"helper": "By default, we'll use the first column of your spreadsheet (column A)"
-							},
-							"numberOfPostsPerLaunch": {
-								"label": "Number of posts to scrape per launch <a href=\"/api-store/7085/instagram-profile-scraper#section_repetition_setup\" target=\"_blank\">(?)</a>",
-								"placeholder": 10,
-								"inputType": "number"
-							},
-							"csvName": {
-								"label": "Name of resulting CSV file",
-								"placeholder": "result"
-							}
-						}
-					}
-				}
-			},
-			"argumentSchema": {
-				"type": "object",
-				"properties": {
-					"sessionCookie": {
-						"type": "string"
-					},
 					"spreadsheetUrl": {
-						"type": "string",
-						"required": true
+						"type": "url",
+						"helpers": [
+							"Enter either a Google Spreadsheet URL or a CSV URL (make sure your file is publicly available)" ],
+							"label": "Spreadsheet URL of posts to scrape <a href=\"/api-store/10152/instagram-post-data-extractor#section_4addagooglespreadsheet\" target=\"_blank\">(?)</a>"
 					},
-					"columnName": {
-						"type": "string"
+						"columnName": {
+							"label": "Column name from which to get post URLs",
+							"placeholder": "Instagram Profile Link",
+							"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
-					"numberOfPostsPerLaunch": {
-						"type": "number",
-						"minimum": 1
+						"numberOfPostsPerLaunch": {
+							"label": "Number of posts to scrape per launch <a href=\"/api-store/10152/instagram-post-data-extractor#section_repetition_setup\" target=\"_blank\">(?)</a>",
+							"inputType": "number",
+							"helper": "All of them if empty"
 					},
-					"csvName": {
-						"type": "string",
-						"required": false
+						"csvName": {
+							"label": "Name of resulting CSV file",
+							"placeholder": "result"
 					}
 				}
 			}
 		}
+	},
+	"argumentSchema": {
+		"type": "object",
+		"properties": {
+			"spreadsheetUrl": {
+				"type": "string",
+				"required": true
+			},
+			"columnName": {
+				"type": "string"
+			},
+			"numberOfPostsPerLaunch": {
+				"type": "number",
+				"minimum": 1
+			},
+			"csvName": {
+				"type": "string",
+				"required": false
+			}
+		}
+	}
+}
