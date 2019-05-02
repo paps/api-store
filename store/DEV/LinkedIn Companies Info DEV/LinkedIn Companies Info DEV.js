@@ -496,11 +496,7 @@ const isLinkedUrl = url => {
 		}
 	}
 	await linkedIn.saveCookie()
-	for (const line of currentResult) {
-		if (!result.find(el => el.query === line.query)) {
-			result.push(line)
-		}
-	}
+	result = result.concat(currentResult)
 	await utils.saveResults(currentResult, result, csvName)
 	nick.exit()
 })()
