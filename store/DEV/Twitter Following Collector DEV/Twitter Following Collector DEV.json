@@ -30,7 +30,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_5getyourtwittersessioncookie\">?</a>)"
+						"label": "Session Cookie 'auth_token' (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_argument\">?</a>)"
 					},
 					"spreadsheetUrl": {
 						"label": "Twitter account or Spreadsheet URL (<a target=\"_blank\" href=\"/api-store/4457/twitter-following-collector#section_4aimaspecifictwitteraccountorseveralatatime\">?</a>)"
