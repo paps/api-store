@@ -48,7 +48,7 @@ const isLinkedInProfile = (url) => {
 		}
 		let urlObject = new URL(url)
 		if (urlObject.hostname.indexOf("linkedin.com") > -1) {
-			if (urlObject.pathname.startsWith("/sales/people/")) {
+			if (urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/profile/")) {
 				return "sales"
 			}
 			if (urlObject.pathname.startsWith("/in/")) {
