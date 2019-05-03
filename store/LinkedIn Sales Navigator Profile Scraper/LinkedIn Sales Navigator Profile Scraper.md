@@ -79,15 +79,15 @@ You can also enter a CSV file URL, it will work the same :)
 
 ## 6. Email discovery (optional) { email_discovery }
 
-**Thanks to our friends at [Hunter](https://hunter.io) (an email discovery service), this API can guess the email of each profile it visits.**
+LinkedIn allows its users access to the **email addresses** of their 1st degree connections. However, if you’re looking for the email addresses of people you’re not connected to, picking an email discovery services is paramount.
 
-To use this feature, first create an account at Hunter [here](https://hunter.io/users/sign_up). Once done, **get your Hunter API key** by going to "Dashboard" > "API" > "Copy API key".
+As a Phantombuster premium user, you have a daily credit of email requests. (You can see that figure down below next to your execution time).
 
-<center>![](https://phantombuster.imgix.net/api-store/hunter-screenshot.png)</center>
+Use your credit by selecting "Phantombuster" as your email discovery service.
 
-Paste your API key in the "Hunter.io API key" field in your API configuration. It will now guess the email of every visited profile! Expect a success rate between 20% and 50%.
+**Already have a subscription with another data enrichment service** such as [Dropcontact.io](https://dropcontact.io) or [Hunter.io](https://hunter.io)? Select a service and past your API key in the field below.
 
-Hunter gives you 100 free email guesses per month. After that, you'll have to buy one of their plans or wait a month.
+**Important note:** When email discovery is enabled, the API will open LinkedIn company pages to get company domains. For this reason, we recommend you limit your scraping to **40 profiles per day** if you're using it from a free LinkedIn account.
 
 
 # Click on Launch & Enjoy!
