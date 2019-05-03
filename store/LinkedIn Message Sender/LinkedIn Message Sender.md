@@ -103,7 +103,7 @@ This will launch the API and, if you didn't already change the spreadsheet URL, 
 
 Now that your API is ready, you just have to customize it to make it work repetitively.
 
-Every time the API is launched, it will send 10 connection requests and stop. (You can lower this value in the API's configuration.)
+Every time the API is launched, it will send 10 messages and stop. (You can lower this value in the API's configuration.)
 
 To do so, simply hit the “Settings” button to define when your API is launched.
 
