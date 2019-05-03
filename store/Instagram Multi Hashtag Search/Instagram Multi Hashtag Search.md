@@ -1,18 +1,19 @@
 # Find the IG posts that matter the most
 
-This API will search for multiple hashtags and/or location on Instagram at the same time, then **return the posts that match at least two of them**.
+The API will first search for the first term of your input (either a hashtag or a location), then **return the posts that match at with the other hashtags of your input**.
 
-For example, using `#vegan` and `Paris France` as input, you'll know who's talking about vegetables in the most beautiful city in the world!
+For example, using `Paris France` and `#vegan` as input, you'll know who's talking about vegetables in the most beautiful city in the world!
 
 To get your imagination going, here are some other examples:
 - `#sponsored + #healthy`: Healthy posts being sponsored on IG right now
 - `#beach + #makeup`: Makeup products that are beach-ready
-- `#ootd + San Francisco California`: Who's wearing what in SF today?
+- `San Francisco, California + #ootd`: Who's wearing what in SF today?
 
 You get the idea! There is no limit to the number of hashtags you can use, so if you're feeling like a power user, put more than 2 :)
 
 # What will you need? ⚙️ 
-- **List of hashtags and/or locations**: Provide a list of hashtags beginning with # (like `#phantombuster`) or a locations (like `New York`) and the API will find the IG posts that match at least two of them
+- **List of hashtags and/or locations**: Provide a list of hashtags beginning with # (like `#phantombuster`) or a location (like `New York`) and the API will find the IG posts that match at least two of them. If searching for a location, it must the first term of your input (you shouldn't enter `#party + Berlin` but `Berlin + #party` instead).
+You can also enter the direct Instagram location URL, like `https://www.instagram.com/explore/locations/7226110/tokyo-japan/ + #travel` instead of `Tokyo + #travel`.
 - **Session cookie (sessionid)**: Your Instagram `sessionid` session cookie (more info below)
 
 # Which steps to follow?
@@ -30,11 +31,11 @@ You'll now see the 3 configuration dots blinking. Click on them.
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
 ## 4. Enter at least two hashtags/locations
-In the 1st configuration field, you have to add at least 2 hashtags or locations so that the API can search for those terms in Instagram.
+In the 1st configuration field, you have to add at least 2 hashtags (or 1 location and 1 hashtag) so that the API can search for those terms in Instagram.
 
 Hashtags and locations are differentiated by the presence of a # in front of the word. Successively enter either a hashtag beginning with # (example: `#phantombuster`) or a location (example: `New York`).
 
-You can also enter a Google spreadsheet URL or a CSV with each line containing multiple hashtags or locations in a single cell, separated by commas (ex: 'New York, #selfie'). Each line will be treated as a single multi-hashtag search.
+You can also enter a Google spreadsheet URL or a CSV with each line containing multiple hashtags or locations in a single cell, separated by '+' signs (ex: 'New York + #selfie'). Each line will be treated as a single multi-hashtag search.
 
 ## 5. Easy & safe authentication { argument }
 
