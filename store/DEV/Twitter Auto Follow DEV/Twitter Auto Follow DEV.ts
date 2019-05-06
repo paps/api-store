@@ -26,13 +26,15 @@ declare interface IApiParams {
 	spreadsheetUrl?: string,
 	columnName?: string,
 	unfollowProfiles?: boolean,
+	betaOptIn?: boolean,
+	noDatabase?: boolean,
 }
 
 declare interface IMutableApiParams {
 	numberOfAddsPerLaunch?: number,
 	csvName?: string,
 	actionToPerform?: string,
-	queries?: string|string[]
+	queries?: string|string[],
 }
 
 declare interface IDbRow {
@@ -82,6 +84,7 @@ const waitForVisibleSelector = (selectors: string[]): boolean|string => {
 }
 
 const follow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string) => {
+	const alternativePendingSel = "div[data-testid$=cancel]"
 	try {
 		await page.click(followSel)
 		const response = await page.waitForResponse("https://api.twitter.com/1.1/friendships/create.json", { timeout: 2500 })
@@ -92,9 +95,9 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	}
 
 	try {
-		let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel ])
+		let res = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel, alternativePendingSel ])
 		res = await res.jsonValue()
-		if (res === pendingSel) {
+		if (res === pendingSel || res === alternativePendingSel) {
 			return FollowStatus.PENDING
 		}
 	} catch (err) {
@@ -102,6 +105,7 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	}
 
 	try {
+		// TODO: find the new CSS selector for the beta
 		await page.waitForSelector(".alert-messages", { timeout: 5000, visible: true })
 		return FollowStatus.RATE_LIMIT
 	} catch (err) {
@@ -110,20 +114,78 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	return FollowStatus.SUCCESS
 }
 
+/**
+ * @async
+ * @description Followback detection for the Twitter new UI beta
+ */
+const isFollowingBack = async (page: puppeteer.Page): Promise<boolean> => {
+	let res = false
+
+	res = await page.evaluate((): boolean => {
+		const el = document.querySelector("a[href$=\"_photo\"] ~ div > div:nth-child(2) > div > div:nth-child(2)")
+		if (el) {
+			return el.childElementCount === 2
+		}
+		return false
+	}) as boolean
+	return res
+}
+
+/**
+ * @async
+ * @description isPresent NickJS look alike function
+ */
+const isSelectorInDOM = async (page: puppeteer.Page, selector: string): Promise<boolean> => {
+	let res = false
+	try {
+		res = await page.waitForFunction((sel: string) => !!document.querySelector(sel), { timeout: 2500 }, selector)
+	} catch (err) {
+		return false
+	}
+	return res
+}
+
 const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: string, pendingSel: string, action: string) => {
+	const alternativePendingSel = "div[data-testid$=cancel]"
+	const alternativeFollowSel = "div[data-testid=\"primaryColumn\"] div[data-testid$=follow]"
+	const alternativeFollowingSel = "div[data-testid=\"primaryColumn\"] div[data-testid$=unfollow]"
+	const confirmSel = "div[data-testid=\"confirmationSheetConfirm\"]"
 	if (action === "unfollowback") {
 		try {
-			await page.waitForSelector("span.FollowStatus", { timeout: 5000, visible: true })
-			return FollowStatus.UFLB_ERROR
+			if (await isSelectorInDOM(page, "span.FollowStatus")) {
+				await page.waitForSelector("span.FollowStatus", { timeout: 5000, visible: true })
+				return FollowStatus.UFLB_ERROR
+			} else {
+				const res = await isFollowingBack(page)
+				if (res) {
+					return FollowStatus.UFLB_ERROR
+				}
+			}
 		} catch (err) {
 			/* unfollowback option & the user doesn't follows you */
 		}
 	}
 	try {
-		let foundSel = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel ])
+		let foundSel = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, pendingSel, alternativePendingSel, alternativeFollowingSel ])
 		foundSel = await foundSel.jsonValue()
+		let endpoint = ""
+
+		switch (foundSel) {
+			case pendingSel:
+				endpoint = "https://twitter.com/i/user/cancel"
+				break
+			case alternativePendingSel:
+				endpoint = "https://api.twitter.com/1.1/friendships/cancel.json"
+				break
+			default:
+				endpoint = "https://api.twitter.com/1.1/friendships/destroy.json"
+		}
 		await page.click(foundSel)
-		const endpoint = foundSel === pendingSel ? "https://twitter.com/i/user/cancel" : "https://api.twitter.com/1.1/friendships/destroy.json"
+		/* NOTE: new Twitter UI display a confirm popup before unfollowing */
+		if (foundSel === alternativeFollowingSel || foundSel === alternativePendingSel) {
+			await page.waitForSelector(confirmSel, { visible: true, timeout: 5000 })
+			await page.click(confirmSel)
+		}
 		await page.waitForResponse(endpoint, { timeout: 2500 })
 	} catch (err) {
 		return FollowStatus.API_ERROR
@@ -131,7 +193,7 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 	let found: puppeteer.JSHandle|string = ""
 	try {
 		await page.waitFor(1000)
-		found = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, ".alter-messages" ])
+		found = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, alternativeFollowingSel, alternativeFollowSel, ".alter-messages" ])
 		found = await (found as puppeteer.JSHandle).jsonValue()
 		if (found ===  ".alter-messages") {
 			return FollowStatus.RATE_LIMIT
@@ -139,15 +201,19 @@ const unfollow = async (page: puppeteer.Page, followSel: string, followingSel: s
 	} catch (err) {
 		/* No rate limit */
 	}
-	return found === followSel ? FollowStatus.SUCCESS : FollowStatus.ERROR
+	return found === followSel || alternativeFollowSel ? FollowStatus.SUCCESS : FollowStatus.ERROR
 }
 
 const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
+	const alternativePendingSel = "div[data-testid$=cancel]"
 	const followingSel = ".ProfileNav-item .following-text"
+	const alternativeFollowingSel = "div[data-testid=\"primaryColumn\"] div[data-testid$=unfollow]"
 	const followSel = ".ProfileNav-item .follow-text"
+	const alternativeFollowSel = "div[data-testid=\"primaryColumn\"] div[data-testid$=follow]"
 	const editProfile = ".ProfileNav-item .UserActions-editButton"
 	const pendingSel = ".pending"
 	let selector = null
+	const alternativeEdit = "a[href=\"/settings/profile\"]"
 	let status
 	const http = await page.goto(url)
 	if (http && http.status() === 404) {
@@ -155,26 +221,28 @@ const subscribe = async (page: puppeteer.Page, url: string, action: string) => {
 		return FollowStatus.USER_N_FOUND
 	}
 	try {
-		await page.waitForSelector("img.ProfileAvatar-image", { timeout: 5000, visible: true })
-		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, followSel, pendingSel, editProfile ])
+		await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ "img.ProfileAvatar-image", "a[href$=\"/photo\"]" ])
+		selector = await page.waitForFunction(waitForVisibleSelector, { timeout: 5000 }, [ followingSel, alternativeFollowingSel, alternativeFollowSel, followSel, alternativePendingSel, pendingSel, editProfile, alternativeEdit ])
 		selector = await selector.jsonValue()
 	} catch (err) {
 		return FollowStatus.ERROR
 	}
 
-	if (selector === followSel) {
+	if (selector === followSel || selector === alternativeFollowSel) {
 		if (action === "unfollow" || action === "unfollowback") {
 			return FollowStatus.UNFOL_WT_FOL
 		}
-		status = await follow(page, followSel, followingSel, pendingSel)
-	} else if (selector === followingSel) {
+		const fSel = selector === followSel ? followSel : alternativeFollowSel
+		const fiSel = fSel === followSel ? followingSel : alternativeFollowingSel
+		status = await follow(page, fSel, fiSel, pendingSel)
+	} else if (selector === followingSel || selector === alternativeFollowingSel) {
 		if (action === "follow") {
 			return FollowStatus.ALREADY_FOLLOW
 		}
 		status = await unfollow(page, followSel, followingSel, pendingSel, action)
-	} else if (selector === editProfile) {
+	} else if (selector === editProfile || selector === alternativeEdit) {
 		status = FollowStatus.FOLLOW_SELF
-	} else if (selector === pendingSel) {
+	} else if (selector === pendingSel || selector === alternativePendingSel) {
 		status = action === "follow" ? FollowStatus.PENDING : await unfollow(page, followSel, followingSel, pendingSel, action)
 	}
 	return status
@@ -211,8 +279,8 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 
 (async () => {
 	const args = utils.validateArguments()
-	const { sessionCookie, spreadsheetUrl, columnName, unfollowProfiles } = args as IApiParams
-	let { numberOfAddsPerLaunch, csvName, actionToPerform, queries } = args as IMutableApiParams
+	const { sessionCookie, spreadsheetUrl, columnName, unfollowProfiles, betaOptIn, noDatabase } = args as IApiParams
+	let { numberOfAddsPerLaunch, csvName, actionToPerform, queries  } = args as IMutableApiParams
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -220,7 +288,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-	await twitter.login(page, sessionCookie)
+	await twitter.login(page, sessionCookie, betaOptIn)
 
 	if (typeof numberOfAddsPerLaunch !== "number") {
 		numberOfAddsPerLaunch = DEF_LINES
@@ -246,7 +314,7 @@ const getProfiles = (rawCsv: string[], db: IDbRow[], count: number): string[] =>
 		queries = [ queries ]
 	}
 
-	let db = await utils.getDb(csvName + ".csv") as IUnknownObject[]
+	let db = noDatabase ? [] : await utils.getDb(csvName + ".csv") as IUnknownObject[]
 	const execResult: IUnknownObject[] = []
 
 	queries = getProfiles(queries as string[], db as IDbRow[], numberOfAddsPerLaunch)
