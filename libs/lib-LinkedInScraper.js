@@ -175,7 +175,7 @@ const scrapeInfos = (arg, callback) => {
 	}
 
 	const infos = {}
-	if (document.querySelector(".pv-profile-section.pv-top-card-section")) {
+	if (document.querySelector(".pv-profile-section.pv-top-card-section") || document.querySelector("section.pv-top-card-v3")) {
 		// Get primary infos
 		infos.general = getInfos([
 			/**
@@ -482,7 +482,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	}
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
-		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
+		if (infos.general && infos.general.profileUrl && infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = decodeURIComponent(infos.general.profileUrl.slice(28))
 			slug = slug.slice(0, slug.indexOf("/"))
 			if (saveImg) {
