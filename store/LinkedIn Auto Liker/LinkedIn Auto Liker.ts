@@ -41,7 +41,8 @@ interface IApiParams {
 	spreadsheetUrl?: string,
 	columnName?: string,
 	undoLikes: boolean,
-	noDatabase?: boolean
+	noDatabase?: boolean,
+	watcherMode?: boolean,
 }
 
 interface IMutableApiParams {
@@ -271,7 +272,7 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { sessionCookie, spreadsheetUrl, columnName, undoLikes, noDatabase } = args as IApiParams
+	const { sessionCookie, spreadsheetUrl, columnName, undoLikes, noDatabase, watcherMode } = args as IApiParams
 	let { csvName, queries, articleType, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args as IMutableApiParams
 	const res: IUnknownObject[] = []
 
@@ -300,9 +301,11 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	}
 	await linkedin.login(page, sessionCookie)
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
-	queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
-	queries = Array.from(new Set(queries)).filter((el) => el)
-	queries = queries.slice(0, numberOfLinesPerLaunch)
+	if (!watcherMode) {
+		queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
+		queries = Array.from(new Set(queries)).filter((el) => el)
+	}
+	queries = (queries as string[]).slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all URLs provided are already scraped", "warning")
 		process.exit()
