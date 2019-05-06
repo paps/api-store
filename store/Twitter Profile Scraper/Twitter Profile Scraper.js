@@ -119,13 +119,18 @@ const formatRawGraphQL = ql => {
  * @throws string on CSS error
  */
 const _openProfile = async (tab, url) => {
+	const sels = [ "a[href$=\"/photo\"]", "nav[role=\"navigation\"]" ]
 	const popupSel = "div[role=\"alertdialog\"] div[data-testid=\"confirmationSheetCancel\"]"
 	if (isIntentUrl(url) && await tab.isVisible(popupSel)) {
 		await tab.waitUntilVisible(popupSel, 7500)
 		await tab.click(popupSel)
 		await tab.waitWhileVisible(popupSel, 7500)
 	}
-	await tab.waitUntilVisible("a[href$=\"/photo\"]", 5000)
+	try {
+		await tab.waitUntilVisible(sels, 7500, "and")
+	} catch (err) {
+		throw `Can't open URL: ${url}`
+	}
 }
 
 /**
@@ -205,6 +210,11 @@ const _scrapeProfile = async (tab, url) => {
 	utils.log(`Profiles to scrape: ${JSON.stringify(profileUrls.slice(0, 100), null, 2)}`, "info")
 	await twitter.login(tab, sessionCookie, betaOptIn)
 
+	if (await twitter.isBetaOptIn(tab)) {
+		profileUrls = profileUrls.slice(0, 60)
+		utils.log("New Twitter UI detected, the API can only scrape at most 60 profiles due to restrictive rate limits", "warning")
+	}
+
 	for (const profile of profileUrls) {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -215,6 +225,33 @@ const _scrapeProfile = async (tab, url) => {
 			const res = await _scrapeProfile(tab, profile)
 			scrapingResult.push(res)
 		} catch (err) {
+			const apiErr = await tab.evaluate((arg, cb) => {
+				// Dirty way to get the Twitter error code
+				eval(document.querySelector("script[nonce]:first-of-type").textContent.trim())
+				cb(null, window.__INITIAL_STATE__ && window.__INITIAL_STATE__.featureSwitch && Array.isArray(window.__INITIAL_STATE__.featureSwitch.error) ? window.__INITIAL_STATE__.featureSwitch.error.pop() : null)
+			})
+			if (apiErr && apiErr.code === 88) {
+				utils.log("Twitter rate limit reached, please relaunch the API to resume your scraping", "warning")
+				process.exit()
+				break
+			} else {
+				await tab.evaluate((arg, cb) => {
+					delete window.__INITIAL_STATE__
+					cb(null)
+				})
+			}
+
+			if (typeof err === "string" && err.toLowerCase().startsWith("can't open url")) {
+				utils.log(`Error while scraping ${profile}: ${err.message || err}`, "warning")
+				scrapingResult.push({ query: profile, error: err.message || err })
+				continue
+			}
+
+			if (typeof err === "string" && err.toLowerCase().startsWith("can't open url")) {
+				utils.log(`Error while scraping ${profile}: ${err.message || err}`, "warning")
+				scrapingResult.push({ query: profile, error: err.message || err })
+				continue
+			}
 			utils.log(`Error while scraping ${profile}: ${err.message || err}`, "warning")
 			scrapingResult.push({ query: profile, error: err.message || err })
 		}
