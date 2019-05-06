@@ -1,3 +1,5 @@
+const { URL } = require("url")
+
 let RATE_LIMIT_REACHED = false
 
 const _getDivsNb = (arg, cb) => cb(null, document.querySelectorAll("div.GridTimeline-items > div.Grid").length)
@@ -47,6 +49,84 @@ const waitWhileHttpErrors = async (utils, tab) => {
 	}
 	utils.log(`Resuming the API scraping process (Rate limit duration ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
+
+/**
+ * @param {Nick.Tab} tab
+ * @param {boolean} [needReload]
+ * @param {number} [timeout]
+ * @param {boolean} [parseContent]
+ * @return {Promise<object>}
+ */
+const waitForGraphQL = async (tab, needReload = false, timeout = 15000, parseContent = false) => {
+	if (needReload) {
+		await tab.driver.client.Page.reload({ ignoreCache: true })
+	}
+	return new Promise((resolve, reject) => {
+		setTimeout(() => reject(`GraphQL data not found after ${timeout}ms`), timeout)
+		const __watcher = e => {
+			try {
+				let tmp = new URL(e.response.url)
+				if (tmp.host === "api.twitter.com" && tmp.pathname.indexOf("/UserByScreenName") > -1) {
+					tab.driver.client.removeListener("Network.responseReceived", __watcher)
+					tab.driver.client.Network.getResponseBody({ requestId: e.requestId }).then(res => {
+						const tmp = parseContent ? formatRawGraphQL(res.body) : JSON.parse(res.body)
+						resolve(tmp)
+					})
+				}
+			} catch (err) {
+				reject(err)
+			}
+		}
+		tab.driver.client.on("Network.responseReceived", __watcher)
+	})
+}
+
+/**
+ * @param {object|string} ql
+ * @return {object}
+ */
+const formatRawGraphQL = ql => {
+	const res = {}
+	let obj = null
+
+	if (typeof ql === "string") {
+		ql = JSON.parse(ql)
+	}
+	if (ql.data && ql.data.user && ql.data.user.legacy) {
+		obj = ql.data.user.legacy
+		const tmp = obj.entities && obj.entities.url && obj.entities.url.urls ? obj.entities.url.urls.pop() : null
+
+		if (obj.rest_id) {
+			res.twitterId = obj.rest_id
+			res.alternativeProfileUrl = `https://twitter.com/intent/user?user_id=${res.twitterId}`
+		}
+		res.tweetsCount = obj.favourites_count
+		res.followers = obj.followers_count
+		res.following = obj.friends_count
+		res.likes = obj.favourites_count
+		res.lists = obj.listed_count
+		res.name = obj.name
+		res.twitterProfile = `https://twitter.com/${obj.screen_name}`
+		res.bio = obj.description
+		res.handle = `@${obj.screen_name}`
+		res.location = obj.location
+		res.website = tmp && tmp.expanded_url
+		res.joinDate = (new Date(obj.created_at)).toISOString()
+		res.protectedAccount = obj.protected
+		res.followback = obj.followed_by && obj.following
+		res.canDM = obj.can_dm
+	}
+	return res
+}
+
+/*const _openProfile = async (tab, url) => {
+	const popupSel = "div[role=\"alterdialog\"] div[data-testid=\"\"]"
+	if (await tab.isVisible(popupSel)) {
+		await tab.click(popupSel)
+		await tab.waitWhileVisible(popupSel, 7500)
+	}
+	await tab.waitUntilVisible("a[href$=\"/photo\"]", 7500)
+}*/
 
 /**
  * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
@@ -206,7 +286,7 @@ class Twitter {
 	async openProfile(tab, url) {
 		const isNick = isUsingNick(tab)
 		const loadingErr = `Can't open URL: ${url}`
-		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context" ]
+		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context", "a[href$=\"/photo\"]" ]
 		let contextSelector = ""
 
 		if (isNick) {
@@ -323,7 +403,7 @@ class Twitter {
 			throw loadingErr
 		}
 		verbose && this.utils.log(`${url} loaded`, "done")
-		return tab.evaluate(_scrapeProfile)
+		return await this.isBetaOptIn(tab) ? waitForGraphQL(tab, true, 15000, true) : tab.evaluate(_scrapeProfile)
 	}
 
 	/**
