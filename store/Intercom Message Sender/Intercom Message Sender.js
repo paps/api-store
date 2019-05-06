@@ -110,7 +110,10 @@ const isIntercomVisible = async (page, url, email = null) => {
 			await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true, timeout: 7500 })
 		} catch (err) {
 			// Don't set the email, if the intercom has identity verification
-			await isIntercomVisible(page, url)
+			if (await page.evaluate(isIntercomBroken)) {
+				await wipeIntercomSession(page) // We remove all Intercom cookies (if found)
+				await isIntercomVisible(page, url) // do the same process without the email
+			}
 		}
 	}
 	return true
@@ -124,7 +127,7 @@ const isIntercomVisible = async (page, url, email = null) => {
  * @return {Promise<boolean>}
  */
 const sendIntercomMessage = async (page, message) => {
-	utils.log(`Sending message: ${message}`, "info")
+	utils.log(`Sending message: ${message}`, "loading")
 	await page.waitForSelector("iframe.intercom-launcher-frame", { visible: true })
 	await page.evaluate(prepareIntercomMessage, message)
 	await page.waitForSelector("iframe[name=\"intercom-messenger-frame\"]", { visible: true })
@@ -174,6 +177,35 @@ const cssSendMessage = async (page, chunck) => {
 	return false
 }
 
+
+/**
+ * @async
+ * @description
+ * @param {Puppeteer.Page} page
+ * @param {string} message - message
+ * @return {Promise<boolean>}
+ */
+const sendMessages = async (page, message) => {
+	const messages = message.split("\n\n")
+	let isSent = false
+
+	isSent = await sendIntercomMessage(page, messages.shift())
+	if (isSent) {
+		utils.log(`Message sent at ${page.url()}`, "info")
+		for (const chunck of messages) {
+		utils.log(`Sending message: ${chunck}`, "loading")
+			isSent = await cssSendMessage(page, chunck)
+			if (!isSent) {
+				utils.log("Can't send the message, stopping the conversation", "warning")
+				break
+			} else
+				utils.log(`Message sent at ${page.url()}`, "info")
+			await page.waitFor(750)
+		}
+	}
+	return isSent
+}
+
 /**
  * @return {boolean}
  */
@@ -191,6 +223,33 @@ const detectIntercom = async (page, url, email) => {
 	canGo = !!(canGo & await page.evaluate(isUsingIntercom))
 	return canGo
 }
+
+/**
+ * @async
+ * @description Call to clear the current session when: Intercom Identity Verification is used
+ * @param {Puppeteer.Page} page
+ */
+const wipeIntercomSession = async page => {
+	let cookies = await page.cookies()
+	cookies.filter(cookie => cookie.name.indexOf("intercom") > -1)
+	for (const cookie of cookies) {
+		await page.deleteCookie(cookie)
+	}
+}
+
+/**
+ * @description Detect if the Intercom launcher is still available
+ * @return {Promise<boolean>}
+ */
+const isIntercomBroken = () => {
+	try {
+		const tmp = JSON.parse(localStorage["intercom-state"])
+		return !tmp.launcher.isLauncherEnabled
+	} catch (err) {
+		return true
+	}
+}
+
 
 /**
  * @async
@@ -229,19 +288,11 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		if (!isUser) {
 			toSend += `\n(${email})`
 		}
-		const chuncks = toSend.split("\n\n")
-		const hasSend = await sendIntercomMessage(page, chuncks.split())
+		const hasSend = await sendMessages(page, toSend)
 		if (hasSend) {
-			utils.log(`Message sent at ${page.url()} (after ${i + 1} tries)`, "info")
-			for (const chunck of chuncks) {
-				utils.log(`Sending ${chunck}`, "info")
-				if (await cssSendMessage(page, chunck))
-					utils.log("Message sent", "info")
-				await page.waitFor(750)
-			}
 			return isUser
 		} else {
-			throw `Can't find a way to send a message on ${page.url()}`
+			throw `Can't find a way to send a message on ${page.url()}}`
 		}
 	} else {
 		throw `Can't find a way to send a message even after ${i + 1} tries`
@@ -300,7 +351,6 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 		}
 		try {
 			let toSend = inflater.forgeMessage(message, query)
-			const chuncks = toSend.split("\n\n")
 			utils.log(`Opening ${query[columnName]}`, "info")
 			let canGo = await detectIntercom(page, query[columnName], email)
 			if (canGo) {
@@ -308,17 +358,10 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				if (!isUser) {
 					toSend += `\n(${email})`
 				}
-				const hasSend = await sendIntercomMessage(page, chuncks.shift())
+				const hasSend = await sendMessages(page, toSend)
 				if (hasSend) {
-					utils.log(`Message sent at ${query[columnName]}`, "info")
 					const status = isUser ? "success" : "email sent in the text message"
 					res.push({ message: toSend, query: query[columnName], timestamp: (new Date()).toISOString(), sendAt: page.url(), status })
-					for (const chunck of chuncks) {
-						utils.log(`Sending ${chunck}`, "info")
-						if (await cssSendMessage(page, chunck))
-							utils.log(`Message sent at ${query[columnName]}`, "info")
-						await page.waitFor(750)
-					}
 				} else {
 					throw `Can't find a way to send a message on ${query[columnName]}`
 				}
