@@ -283,16 +283,16 @@ const checkUnavailable = (arg, cb) => {
 		if (!numberofEventsperLaunch) {
 			numberofEventsperLaunch = eventsToScrape.length
 		}
-	}
-	const lastUrl = eventsToScrape[eventsToScrape.length - 1]
-	eventsToScrape = getUrlsToScrape(eventsToScrape.filter(el => utils.checkDb(el, result, "eventUrl")), numberofEventsperLaunch)
-	if (eventsToScrape.length === 0) {
-		if (lastUrl) {
-			utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
-			eventsToScrape = [lastUrl] // if every event's already been scraped, we're scraping the last one
-		} else {
-			utils.log("Input spreadsheet is empty.", "error")
-			nick.exit(1)
+		const lastUrl = eventsToScrape[eventsToScrape.length - 1]
+		eventsToScrape = getUrlsToScrape(eventsToScrape.filter(el => utils.checkDb(el, result, "eventUrl")), numberofEventsperLaunch)
+		if (eventsToScrape.length === 0) {
+			if (lastUrl) {
+				utils.log("We already scraped all the pages from this spreadsheet, scraping the last one again...", "info")
+				eventsToScrape = [lastUrl] // if every event's already been scraped, we're scraping the last one
+			} else {
+				utils.log("Input spreadsheet is empty.", "error")
+				nick.exit(1)
+			}
 		}
 	}
 	console.log(`URLs to process: ${JSON.stringify(eventsToScrape, null, 4)}`)
@@ -346,7 +346,7 @@ const checkUnavailable = (arg, cb) => {
 						result.push({ eventUrl, timemestamp: (new Date()).toISOString(), error: "Event not available"})
 						utils.log("Event isn't available", "warning")
 					} else {
-						utils.log(`Error accessing page!: ${err}`, "error")
+						utils.log("Couldn't access event page!", "error")
 					}
 				}
 			} catch (err) {
