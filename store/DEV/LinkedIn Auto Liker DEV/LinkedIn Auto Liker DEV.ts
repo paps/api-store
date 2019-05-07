@@ -303,8 +303,8 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 	const db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 	if (!watcherMode) {
 		queries = (queries as string[]).filter((line) => db.findIndex((el) => el.query === line) < 0)
-		queries = Array.from(new Set(queries)).filter((el) => el)
 	}
+	queries = Array.from(new Set(queries)).filter((el) => el)
 	queries = (queries as string[]).slice(0, numberOfLinesPerLaunch)
 	if (queries.length < 1) {
 		utils.log("Input is empty OR all URLs provided are already scraped", "warning")
@@ -317,71 +317,75 @@ const likeArticle = async (page: puppeteer.Page, cancelLikes: boolean) => {
 		let _res = 0
 		const result: IUnknownObject = { query: post }
 		buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`)
-		if (linkedin.isLinkedInArticle(post)) {
-			urls.push(post)
-		} else {
-			_res = await openProfileFeed(page, post, articleType)
-			if (_res === OpenStatus.SUCCESS) {
-				const tmp = await getPostsFromProfile(page, numberOfLikesPerProfile)
-				urls = urls.concat(tmp)
+		try {
+			if (linkedin.isLinkedInArticle(post)) {
+				urls.push(post)
 			} else {
-				let errMsg = null
-				switch (_res) {
-					case OpenStatus.BAD_FEED:
-						errMsg = "Selected feed type doesn't exists"
-						break
-					case OpenStatus.BAD_HTTP:
-						errMsg = `Can't open ${post}`
-						break
-					case OpenStatus.SCRAPE_ERR:
-						errMsg = `Internal error while scraping ${post}`
-						break
-					case OpenStatus.INV_ARTICLE:
-						errMsg = `${post} isn't a LinkedIn article`
-						break
-					case OpenStatus.INV_PROFILE:
-						errMsg = `${post} isn't a LinkedIn profile`
-						break
-					case OpenStatus.EMPTY_FEED:
-						errMsg = `${post} doesn't have any activities`
-						break
-				}
-				utils.log(errMsg, "warning")
-				result.error = errMsg
-				result.timestamp = (new Date()).toISOString()
-				res.push(result)
-				continue
-			}
-		}
-		for (const article of urls) {
-			let errMsg = null
-			let successMsg = null
-			const openStatus = await openArticle(page, article)
-			if (openStatus === OpenStatus.SUCCESS) {
-				utils.log(`${undoLikes ? "Unl" : "L"}iking ${article}`, "info")
-				const cmdStatus = await likeArticle(page, undoLikes)
-				switch (cmdStatus) {
-					case ActionStatus.SUCCESS:
-						successMsg = `${post} ${undoLikes ? "un" : ""}liked`
-						break
-					case ActionStatus.ACT_ALRD_DONE:
-						errMsg = `${post} is already ${undoLikes ? "un" : ""}liked`
-						break
-					case ActionStatus.SCRAPE_ERR:
-						errMsg = `Internal error while scraping ${post}`
-						break
-				}
-				if (typeof errMsg === "string") {
+				_res = await openProfileFeed(page, post, articleType)
+				if (_res === OpenStatus.SUCCESS) {
+					const tmp = await getPostsFromProfile(page, numberOfLikesPerProfile)
+					urls = urls.concat(tmp)
+				} else {
+					let errMsg = null
+					switch (_res) {
+						case OpenStatus.BAD_FEED:
+							errMsg = "Selected feed type doesn't exists"
+							break
+						case OpenStatus.BAD_HTTP:
+							errMsg = `Can't open ${post}`
+							break
+						case OpenStatus.SCRAPE_ERR:
+							errMsg = `Internal error while scraping ${post}`
+							break
+						case OpenStatus.INV_ARTICLE:
+							errMsg = `${post} isn't a LinkedIn article`
+							break
+						case OpenStatus.INV_PROFILE:
+							errMsg = `${post} isn't a LinkedIn profile`
+							break
+						case OpenStatus.EMPTY_FEED:
+							errMsg = `${post} doesn't have any activities`
+							break
+					}
+					utils.log(errMsg, "warning")
 					result.error = errMsg
-					urls.splice(urls.indexOf(article), 1)
+					result.timestamp = (new Date()).toISOString()
+					res.push(result)
+					continue
 				}
-				utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "done")
 			}
+			for (const article of urls) {
+				let errMsg = null
+				let successMsg = null
+				const openStatus = await openArticle(page, article)
+				if (openStatus === OpenStatus.SUCCESS) {
+					utils.log(`${undoLikes ? "Unl" : "L"}iking ${article}`, "info")
+					const cmdStatus = await likeArticle(page, undoLikes)
+					switch (cmdStatus) {
+						case ActionStatus.SUCCESS:
+							successMsg = `${post} ${undoLikes ? "un" : ""}liked`
+							break
+						case ActionStatus.ACT_ALRD_DONE:
+							errMsg = `${post} is already ${undoLikes ? "un" : ""}liked`
+							break
+						case ActionStatus.SCRAPE_ERR:
+							errMsg = `Internal error while scraping ${post}`
+							break
+					}
+					if (typeof errMsg === "string") {
+						result.error = errMsg
+						urls.splice(urls.indexOf(article), 1)
+					}
+					utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "done")
+				}
+			}
+			result.urls = urls
+			result.likeCount = urls.length
+			result.timestamp = (new Date()).toISOString()
+			res.push(result)
+		} catch (err) {
+			res.push({ query: post, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
-		result.urls = urls
-		result.likeCount = urls.length
-		result.timestamp = (new Date()).toISOString()
-		res.push(result)
 	}
 	await utils.saveResults(res, res, csvName, null, true)
 	await linkedin.updateCookie(page)

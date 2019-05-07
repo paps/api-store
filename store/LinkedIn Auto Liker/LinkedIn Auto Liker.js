@@ -2,8 +2,7 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs";
 "phantombuster package: 5";
-"phantombuster dependencies: lib-StoreUtilities-DEV.js, lib-LinkedIn-pptr-DEV.js, lib-api-store.js";
-"phantombuster flags: save-folder";
+"phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn-pptr.js, lib-api-store.js";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -11,14 +10,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const phantombuster_1 = __importDefault(require("phantombuster"));
 const puppeteer_1 = __importDefault(require("puppeteer"));
 const url_1 = require("url");
-const lib_StoreUtilities_DEV_1 = __importDefault(require("./lib-StoreUtilities-DEV"));
-const lib_LinkedIn_pptr_DEV_1 = __importDefault(require("./lib-LinkedIn-pptr-DEV"));
+const lib_StoreUtilities_1 = __importDefault(require("./lib-StoreUtilities"));
+const lib_LinkedIn_pptr_1 = __importDefault(require("./lib-LinkedIn-pptr"));
 const buster = new phantombuster_1.default();
-const utils = new lib_StoreUtilities_DEV_1.default(buster);
-const linkedin = new lib_LinkedIn_pptr_DEV_1.default(buster, utils);
+const utils = new lib_StoreUtilities_1.default(buster);
+const linkedin = new lib_LinkedIn_pptr_1.default(buster, utils);
 const DB_NAME = "result";
 const DEF_LINES = 10;
 const DEF_LIKES = 1;
+const DEF_CAT = "all";
 // }
 var OpenStatus;
 (function (OpenStatus) {
@@ -31,6 +31,12 @@ var OpenStatus;
     OpenStatus[OpenStatus["EMPTY_FEED"] = -1] = "EMPTY_FEED";
     OpenStatus[OpenStatus["SUCCESS"] = 0] = "SUCCESS";
 })(OpenStatus || (OpenStatus = {}));
+var ActionStatus;
+(function (ActionStatus) {
+    ActionStatus[ActionStatus["ACT_ALRD_DONE"] = -2] = "ACT_ALRD_DONE";
+    ActionStatus[ActionStatus["SCRAPE_ERR"] = -1] = "SCRAPE_ERR";
+    ActionStatus[ActionStatus["SUCCESS"] = 0] = "SUCCESS";
+})(ActionStatus || (ActionStatus = {}));
 const _waitVisible = (selectors) => {
     for (const sel of selectors) {
         const el = document.querySelector(sel);
@@ -44,26 +50,31 @@ const _waitVisible = (selectors) => {
     }
     return false;
 };
+const _isPulse = () => {
+    try {
+        return (new window.URL(location.href)).pathname.startsWith("/pulse");
+    }
+    catch (err) {
+        return false;
+    }
+};
+const _pulseArticleLoader = (cssPath) => {
+    const el = document.querySelector(cssPath);
+    if (!el) {
+        return false;
+    }
+    return el.textContent ? el.textContent.trim().length > 0 : false;
+};
+const _isArticleLiked = (pulse) => {
+    if (pulse) {
+        const el = document.querySelector("button[aria-pressed=true].react-button__trigger, button[data-control-name=\"unlike\"] li-icon[type=\"like-filled-icon\"]");
+        return el ? !(getComputedStyle(el).display === "none") : !!el;
+    }
+    return !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]");
+};
 const waitForVisibleSelector = async (page, sels, options) => {
     const res = await page.waitForFunction(_waitVisible, options, sels);
     return res.jsonValue();
-};
-const isLinkedInProfile = (url) => {
-    try {
-        return (new url_1.URL(url)).pathname.startsWith("/in");
-    }
-    catch (err) {
-        return false;
-    }
-};
-const isLinkedArticle = (url) => {
-    try {
-        const tmp = new url_1.URL(url);
-        return tmp.pathname.startsWith("/feed/update/urn:li:activity") || tmp.pathname.startsWith("/pulse/");
-    }
-    catch (err) {
-        return false;
-    }
 };
 const updateUrlPath = (url, slug) => {
     try {
@@ -78,14 +89,6 @@ const updateUrlPath = (url, slug) => {
     }
     catch (err) {
         return url;
-    }
-};
-const isLinkedInProfileFeed = (url) => {
-    try {
-        return (new url_1.URL(url)).pathname.split("/").includes("detail");
-    }
-    catch (err) {
-        return false;
     }
 };
 const openArticle = async (page, url) => {
@@ -120,10 +123,10 @@ const openProfileFeed = async (page, url, feedType) => {
     }
     catch (err) {
         const _url = page.url();
-        utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`);
+        utils.log(_url === "https://www.linkedin.com/in/unavailable/" ? `${url} isn't a LinkedIn profile` : `Can't load ${url}`, "warning");
         return OpenStatus.INV_PROFILE;
     }
-    if (!isLinkedInProfileFeed(url)) {
+    if (!linkedin.isLinkedInProfileFeed(url)) {
         let slug = "";
         switch (feedType) {
             case "all":
@@ -197,42 +200,70 @@ const getPostsFromProfile = async (page, atMost) => {
         }
     }
     catch (err) {
-        console.log(err.message || err);
+        // ...
     }
     return res;
 };
 const likeArticle = async (page, cancelLikes) => {
     const sel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${cancelLikes ? "like-filled-icon" : "like-icon"}\"]`;
     const waitSel = `button[data-control-name=\"like_toggle\"] li-icon[type=\"${cancelLikes ? "like-icon" : "like-filled-icon"}\"]`;
-    const isLiked = await page.evaluate(() => !!document.querySelector("button[data-control-name=\"like_toggle\"] li-icon[type=\"like-filled-icon\"]"));
-    if (cancelLikes && !isLiked) {
-        return false;
-    }
-    if (!cancelLikes && isLiked) {
-        return false;
-    }
+    const pulseSel = `button[data-control-name=\"${cancelLikes ? "unlike" : "like"}\"]`;
+    const alternativePulseSel = `button[aria-pressed=${cancelLikes}].react-button__trigger`;
+    const pulseWaitSel = `button[data-control-name=\"${cancelLikes ? "like" : "unlike"}\"] li-icon[type=\"${cancelLikes ? "like-icon" : "like-filled-icon"}\"]`;
+    const alternativeWaitPulseSel = `button[aria-pressed=${!cancelLikes}].react-button__trigger`;
+    let isLiked = false;
+    let isPulse = await page.evaluate(_isPulse);
+    let clickSel = "";
+    let waitElement = "";
     try {
-        await page.click(sel);
-        await page.waitForFunction((selector) => !!document.querySelector(selector), { timeout: 30000 }, waitSel);
+        if (isPulse) {
+            // Wait until like count is present in the DOM
+            const selFound = await page.waitForFunction(_waitVisible, {}, ["button.reader-social-bar__like-count", "button[data-control-name=\"likes_count\"]"]);
+            const tmp = await page.waitForFunction(_pulseArticleLoader, {}, selFound);
+        }
+        else {
+            let tmp = await page.waitForFunction(_waitVisible, {}, ["button[data-control-name=\"like_toggle\"]", "button[aria-pressed].react-button__trigger"]);
+            tmp = await tmp.jsonValue();
+            if (tmp === "button[aria-pressed].react-button__trigger") {
+                // we'll use the same logic for pulse articles using the reaction button
+                isPulse = true;
+            }
+        }
+        isLiked = await page.evaluate(_isArticleLiked, isPulse);
+        if ((cancelLikes && !isLiked) || (!cancelLikes && isLiked)) {
+            return ActionStatus.ACT_ALRD_DONE;
+        }
+        clickSel = isPulse ? pulseSel : sel;
+        waitElement = isPulse ? pulseWaitSel : waitSel;
+        if (isPulse) {
+            let found = await page.waitForFunction(_waitVisible, {}, [pulseSel, alternativePulseSel]);
+            found = await found.jsonValue();
+            clickSel = found;
+            waitElement = found === alternativePulseSel ? alternativeWaitPulseSel : pulseWaitSel;
+        }
+        await page.click(clickSel);
+        await page.waitForSelector(waitElement, { visible: true, timeout: 15000 });
     }
     catch (err) {
-        console.log(err.message || err);
-        return false;
+        return ActionStatus.SCRAPE_ERR;
     }
-    return true;
+    return ActionStatus.SUCCESS;
 };
 (async () => {
     const browser = await puppeteer_1.default.launch({ args: ["--no-sandbox"] });
     const page = await browser.newPage();
     const args = utils.validateArguments();
-    const { sessionCookie, spreadsheetUrl, columnName, articleType, undoLikes } = args;
-    let { csvName, queries, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args;
+    const { sessionCookie, spreadsheetUrl, columnName, undoLikes, noDatabase, watcherMode } = args;
+    let { csvName, queries, articleType, numberOfLinesPerLaunch, numberOfLikesPerProfile } = args;
     const res = [];
     if (!csvName) {
         csvName = DB_NAME;
     }
     if (spreadsheetUrl) {
-        queries = linkedin.isLinkedInUrl(spreadsheetUrl) ? spreadsheetUrl : await utils.getDataFromCsv2(spreadsheetUrl, columnName);
+        queries = linkedin.isLinkedInUrl(spreadsheetUrl) ? [spreadsheetUrl] : await utils.getDataFromCsv2(spreadsheetUrl, columnName);
+    }
+    if (!articleType) {
+        articleType = DEF_CAT;
     }
     if (typeof numberOfLikesPerProfile !== "number") {
         numberOfLikesPerProfile = DEF_LIKES;
@@ -244,34 +275,98 @@ const likeArticle = async (page, cancelLikes) => {
         queries = [queries];
     }
     await linkedin.login(page, sessionCookie);
-    const db = await utils.getDb(csvName + ".csv");
-    queries = queries.filter((line) => db.findIndex((el) => el.query === line) < 0);
+    const db = noDatabase ? [] : await utils.getDb(csvName + ".csv");
+    if (!watcherMode) {
+        queries = queries.filter((line) => db.findIndex((el) => el.query === line) < 0);
+    }
+    queries = Array.from(new Set(queries)).filter((el) => el);
     queries = queries.slice(0, numberOfLinesPerLaunch);
     if (queries.length < 1) {
         utils.log("Input is empty OR all URLs provided are already scraped", "warning");
         process.exit();
     }
-    utils.log(`Posts to like: ${JSON.stringify(queries, null, 2)}`, "info");
+    utils.log(`Posts or (Posts from profiles feed) to like: ${JSON.stringify(queries, null, 2)}`, "info");
     let i = 0;
     for (const post of queries) {
+        let urls = [];
         let _res = 0;
+        const result = { query: post };
         buster.progressHint(++i / queries.length, `${undoLikes ? "Unl" : "L"}iking ${post}`);
-        if (isLinkedArticle(post)) {
-            _res = await openArticle(page, post);
-        }
-        else {
-            _res = await openProfileFeed(page, post, articleType);
-            const links = await getPostsFromProfile(page, numberOfLikesPerProfile);
-            for (const link of links) {
-                console.log("Liking :", link);
-                if (await openArticle(page, link) === OpenStatus.SUCCESS) {
-                    // TODO: like post
+        try {
+            if (linkedin.isLinkedInArticle(post)) {
+                urls.push(post);
+            }
+            else {
+                _res = await openProfileFeed(page, post, articleType);
+                if (_res === OpenStatus.SUCCESS) {
+                    const tmp = await getPostsFromProfile(page, numberOfLikesPerProfile);
+                    urls = urls.concat(tmp);
+                }
+                else {
+                    let errMsg = null;
+                    switch (_res) {
+                        case OpenStatus.BAD_FEED:
+                            errMsg = "Selected feed type doesn't exists";
+                            break;
+                        case OpenStatus.BAD_HTTP:
+                            errMsg = `Can't open ${post}`;
+                            break;
+                        case OpenStatus.SCRAPE_ERR:
+                            errMsg = `Internal error while scraping ${post}`;
+                            break;
+                        case OpenStatus.INV_ARTICLE:
+                            errMsg = `${post} isn't a LinkedIn article`;
+                            break;
+                        case OpenStatus.INV_PROFILE:
+                            errMsg = `${post} isn't a LinkedIn profile`;
+                            break;
+                        case OpenStatus.EMPTY_FEED:
+                            errMsg = `${post} doesn't have any activities`;
+                            break;
+                    }
+                    utils.log(errMsg, "warning");
+                    result.error = errMsg;
+                    result.timestamp = (new Date()).toISOString();
+                    res.push(result);
+                    continue;
                 }
             }
+            for (const article of urls) {
+                let errMsg = null;
+                let successMsg = null;
+                const openStatus = await openArticle(page, article);
+                if (openStatus === OpenStatus.SUCCESS) {
+                    utils.log(`${undoLikes ? "Unl" : "L"}iking ${article}`, "info");
+                    const cmdStatus = await likeArticle(page, undoLikes);
+                    switch (cmdStatus) {
+                        case ActionStatus.SUCCESS:
+                            successMsg = `${post} ${undoLikes ? "un" : ""}liked`;
+                            break;
+                        case ActionStatus.ACT_ALRD_DONE:
+                            errMsg = `${post} is already ${undoLikes ? "un" : ""}liked`;
+                            break;
+                        case ActionStatus.SCRAPE_ERR:
+                            errMsg = `Internal error while scraping ${post}`;
+                            break;
+                    }
+                    if (typeof errMsg === "string") {
+                        result.error = errMsg;
+                        urls.splice(urls.indexOf(article), 1);
+                    }
+                    utils.log(errMsg ? errMsg : successMsg, errMsg ? "warning" : "done");
+                }
+            }
+            result.urls = urls;
+            result.likeCount = urls.length;
+            result.timestamp = (new Date()).toISOString();
+            res.push(result);
         }
-        console.log("Open status:", _res);
-        await page.screenshot({ path: `test-${Date.now()}.jpg`, type: "jpeg", fullPage: true });
+        catch (err) {
+            res.push({ query: post, error: err.message || err, timestamp: (new Date()).toISOString() });
+        }
     }
+    await utils.saveResults(res, res, csvName, null, true);
+    await linkedin.updateCookie(page);
     await page.close();
     await browser.close();
     process.exit();
