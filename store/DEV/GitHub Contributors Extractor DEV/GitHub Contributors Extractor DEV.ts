@@ -17,7 +17,8 @@ interface IApiParams {
 	spreadsheetUrl: string,
 	columnName?: string,
 	numberOfLinesPerLaunch?: number,
-	noDatabase?: boolean
+	noDatabase?: boolean,
+	watcherMode?: boolean,
 }
 
 interface IMutableApiParams {
@@ -157,7 +158,7 @@ const scrapeContributors = async (page: puppeteer.Page): Promise<IUnknownObject[
 	const browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
 	const args = utils.validateArguments()
-	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, noDatabase } = args as IApiParams
+	const { spreadsheetUrl, columnName, numberOfLinesPerLaunch, noDatabase, watcherMode } = args as IApiParams
 	let { csvName, queries } = args as IMutableApiParams
 
 	if (!csvName) {
@@ -177,7 +178,9 @@ const scrapeContributors = async (page: puppeteer.Page): Promise<IUnknownObject[
 	if (Array.isArray(queries)) {
 		// Make repositories unique for the statefull process
 		queries = Array.from(new Set(queries)).filter((el) => el)
-		queries = queries.filter((el) => db.findIndex((line) => line.query === el) < 0)
+		if (!watcherMode) {
+			queries = queries.filter((el) => db.findIndex((line) => line.query === el) < 0)
+		}
 		if (typeof numberOfLinesPerLaunch === "number") {
 			queries = queries.slice(0, numberOfLinesPerLaunch)
 		}

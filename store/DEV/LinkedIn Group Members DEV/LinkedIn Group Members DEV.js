@@ -205,6 +205,7 @@ const getMembers = async (tab, url, scrapeCount = 0) => {
 		const res = await tab.evaluate(scrapeMembers, { sel })
 		// Removing duplicated scraped elements
 		if (members.push(...utils.filterRightOuter(members, res)) === lastLoad) {
+			await tab.wait(2500) // Could prevent High CPU Usage??
 			loadError++
 		} else {
 			loadError = 0

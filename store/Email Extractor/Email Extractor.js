@@ -177,7 +177,7 @@ const createCsvOutput = json => {
 				foundMails = await scrapeMails(page, url, timeToWait)
 			}
 		} else {
-			foundMails = await scrapeMails(page, url, timeToWait)
+			foundMails = await scrapeMails(page, url.startsWith("http") ? url : `http://${url}`, timeToWait)
 		}
 		scrapingRes = scrapingRes.concat(foundMails)
 		utils.log(`Got ${foundMails.mails.length} mail${ foundMails.mails.length === 1 ? "" : "s" } from ${url}`, "done")

@@ -65,6 +65,9 @@
 					},
 					"undoLikes": {
 						"rightLabel": "Unlike articles"
+					},
+					"watcherMode": {
+						"rightLabel": "<b>Reprocess</b> all articles"
 					}
 				}
 			}
@@ -104,6 +107,10 @@
 				"type": "string"
 			},
 			"undoLikes": {
+				"type": "boolean",
+				"default": false
+			},
+			"watcherMode": {
 				"type": "boolean",
 				"default": false
 			}

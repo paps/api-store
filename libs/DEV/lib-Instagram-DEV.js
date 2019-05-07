@@ -458,6 +458,81 @@ class Instagram {
 		return scrapedData
 	}
 
+	// scrape a post using post/?__a=1 trick
+	async scrapePostJson(tab, query) {
+		const jsonUrl = `${query}?__a=1`
+		await tab.open(jsonUrl)
+		try {
+			let instagramJsonCode = await tab.getContent()
+			const partCode = instagramJsonCode.slice(instagramJsonCode.indexOf("{"))
+			instagramJsonCode = JSON.parse(partCode.slice(0, partCode.indexOf("<")))
+			const postData = instagramJsonCode.graphql.shortcode_media
+			const scrapedData = {}
+			const owner = postData.owner
+			if (owner) {
+				if (owner.username) {
+					scrapedData.username = owner.username
+					scrapedData.profileUrl = `https://www.instagram.com/${scrapedData.username}`
+				}
+				if (owner.full_name) {
+					scrapedData.fullName = owner.full_name
+				}
+			}
+			if (postData.edge_media_to_caption && postData.edge_media_to_caption.edges && postData.edge_media_to_caption.edges[0] && postData.edge_media_to_caption.edges[0].node) {
+				scrapedData.description = postData.edge_media_to_caption.edges[0].node.text
+			}
+			if (postData.edge_media_to_comment && postData.edge_media_to_comment.count) {
+				scrapedData.commentCount = postData.edge_media_to_comment.count
+			}
+			if (postData.edge_liked_by) {
+				scrapedData.likeCount = postData.edge_liked_by.count
+			} else if (postData.edge_media_preview_like) {
+				scrapedData.likeCount = postData.edge_media_preview_like.count
+			}
+			if (postData.location) {
+				scrapedData.location = postData.location.name
+				scrapedData.locationId = postData.location.id
+			}
+			if (postData.taken_at_timestamp) {
+				scrapedData.pubDate = new Date(postData.taken_at_timestamp * 1000).toISOString()
+			}
+			if (postData.is_video) {
+				scrapedData.type = "Video"
+				if (postData.video_view_count) {
+					scrapedData.viewCount = postData.video_view_count
+				}
+			} else {
+				postData.type = "Photo"
+			}
+			if (postData.accessibility_caption) {
+				scrapedData.caption = postData.accessibility_caption
+			}
+			if (postData.edge_media_to_tagged_user && postData.edge_media_to_tagged_user.edges) {
+				const tags = postData.edge_media_to_tagged_user.edges
+				for (let i = 0; i < tags.length; i++) {
+					const tag = tags[i]
+					if (tag && tag.node && tag.node.user) {
+						const user = tag.node.user
+						const tagFullName = user.full_name
+						const tagUsername = user.username
+						scrapedData["taggedFullName" + (i + 1)] = tagFullName
+						scrapedData["taggedUsername" + (i + 1)] = tagUsername
+					}
+				}
+			}
+			scrapedData.imgUrl = postData.display_url
+			scrapedData.id = postData.id
+			scrapedData.timestamp = (new Date()).toISOString()
+			scrapedData.query = query
+			return scrapedData
+		} catch (err) {
+			if (await tab.isVisible("div.error-container")) {
+				this.utils.log("Post isn't available", "warning")
+				return { query, error: "Post isn't available.", timestamp: (new Date().toISOString()) }
+			}
+		}
+	}
+
 	// scrape a profile using profileUrl/?__a=1 trick (query is used as the profileUrl can also be web/friendships/id/follow )
 	async scrapeProfile(tab, query, profileUrl) {
 		const jsonUrl = `${profileUrl}?__a=1`

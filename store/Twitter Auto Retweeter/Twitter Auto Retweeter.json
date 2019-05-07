@@ -33,7 +33,7 @@
 			"options": {
 				"fields": {
 					"sessionCookie": {
-						"label": "Twitter auth_token session cookie <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_5getyourtwittersessioncookie\">(?)</a>",
+						"label": "Twitter auth_token session cookie <a target=\"_blank\" href=\"/api-store/11057/twitter-auto-retweeter#section_argument\">(?)</a>",
 						"helper": "Twitter auth_token cookie"
 					},
 					"spreadsheetUrl": {
@@ -57,8 +57,11 @@
 						"placeholder": 1
 					},
 					"csvName": {
-					   "label": "Name of resulting CSV file",
-					   "placeholder": "result"
+						"label": "Name of resulting CSV file",
+						"placeholder": "result"
+					},
+					"watcherMode": {
+						"rightLabel": "<b>Reprocess</b> all inputs"
 					}
 				}
 			}
@@ -91,6 +94,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"watcherMode": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [

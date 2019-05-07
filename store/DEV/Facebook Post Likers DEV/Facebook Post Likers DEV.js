@@ -215,9 +215,13 @@ const scrapeLikers = (arg, cb) => {
 				})
 				} catch (err) {
 					await tab.wait(10000)
-					urlToGo = await tab.evaluate((arg, cb) => {
-						cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
-					})
+					try {
+						urlToGo = await tab.evaluate((arg, cb) => {
+							cb(null, Array.from(document.querySelectorAll("a")).filter(el => el.href.includes("ufi/reaction/profile/browser/?ft_ent_identifier="))[0].href)
+						})
+					} catch (err) {
+						throw new Error("Could open Facebook post")
+					}
 				}
 				await tab.open(urlToGo)
 				await tab.waitUntilVisible(".fb_content")

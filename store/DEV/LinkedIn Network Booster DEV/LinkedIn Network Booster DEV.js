@@ -596,14 +596,19 @@ nick.newTab().then(async (tab) => {
 		try {
 			let foundInvitations = await validateInvitations(invitations, numberOfAddsPerLaunch)
 			utils.log(`${foundInvitations.length === 0 ? 0 : foundInvitations.length} invitations successfully sent`, "done")
+			let didntGoThrough = false
 			for (const invit of invitations) {
 				let index = foundInvitations.findIndex(el => el.profileUrl === invit.profileUrl)
 				if (index < 0) {
 					invit.error = "shadow ban"
 					utils.log(`${invit.baseUrl} invite didn't go through, don't worry you'll be able to retry in a few days`, "warning")
+					didntGoThrough = true
 				} else {
 					result.push(invit)
 				}
+			}
+			if (didntGoThrough) {
+				utils.log("You may have too many pending invitations in your account.", "warning")
 			}
 		} catch (err) {
 			if (err === "ERR_TOO_MANY_REDIRECTS") {

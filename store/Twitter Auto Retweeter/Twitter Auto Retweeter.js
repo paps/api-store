@@ -200,7 +200,7 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 ;(async () => {
 	const tab = await nick.newTab()
 	const res = []
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries, noDatabase, watcherMode } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
@@ -213,6 +213,15 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 			queries = [ spreadsheetUrl ]
 		}
 	}
+
+	if (!watcherMode) {
+		queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+		if (queries.length < 1) {
+			utils.log("Input is empty OR every URLs are already processed", "warning")
+			nick.exit()
+		}
+	}
+
 	if (typeof retweetsPerLaunch !== "number") {
 		retweetsPerLaunch = DEFAULT_RT
 	}
@@ -248,6 +257,7 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 			try {
 				if (await retweet(tab, tweet, isTweet)) {
 					delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
+					tweet.query = query
 					res.push(tweet)
 				}
 			} catch (err) {

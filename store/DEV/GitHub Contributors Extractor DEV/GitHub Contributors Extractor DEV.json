@@ -48,6 +48,9 @@
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"watcherMode": {
+						"rightLabel": "<b>Reprocess</b> the whole list of repositories"
 					}
 				}
 			}
@@ -69,6 +72,10 @@
 			},
 			"csvName": {
 				"type": "string"
+			},
+			"watcherMode": {
+				"type": "boolean",
+				"default": false
 			}
 		},
 		"oneOf": [

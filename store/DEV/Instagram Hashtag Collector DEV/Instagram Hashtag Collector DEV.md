@@ -2,6 +2,7 @@
 So you need to get data from Instagram? Just define which hashtags or locations you're interested in. This API will collect everything you need from IG's search result page and produce a neat CSV/Excel file.
 
 This is perfect to monitor what's happening around your **#brand** or **city**. Get a detailed report of everything that has been said on these topics and discover new profiles and hashtags to monitor / follow.
+Note that Instagram doesn't return the post owner's username when scraping for hashtags, so you'd have to use our [Instagram Post Data Extractor](https://phantombuster.com/api-store/10152/instagram-post-data-extractor) API to extract that information.
 
 
 # What will you need? ⚙️ 
