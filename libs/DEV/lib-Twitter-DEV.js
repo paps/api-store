@@ -281,12 +281,12 @@ class Twitter {
 	 * https://twitter.com/intent/user?(user_id,screen_name)=(@)xxx
 	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} url - URL to open
-	 * @throws on CSS exception / 404 HTTP code
+	 * @throws string on CSS exception / 404 HTTP code
 	 */
 	async openProfile(tab, url) {
 		const isNick = isUsingNick(tab)
 		const loadingErr = `Can't open URL: ${url}`
-		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context", "a[href$=\"/photo\"]" ]
+		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context", "a[href$=\"/photo\"]", "form.search-404" ]
 		let contextSelector = ""
 
 		if (isNick) {
@@ -304,6 +304,12 @@ class Twitter {
 		if (typeof contextSelector !== "string" && !isNick) {
 			contextSelector = "." + await (await contextSelector.getProperty("className")).jsonValue()
 		}
+
+		/* HTTP code 404 not triggered before?? */
+		if (contextSelector.indexOf(".search-404") > -1) {
+			throw `Can't open ${url}: HTTP code 404`
+		}
+
 		// Intent URL: you need to click the redirection link to open the profile
 		if (contextSelector.indexOf(".alternate-context") > -1) {
 			await tab.click(selectors[2])

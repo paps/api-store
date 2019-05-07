@@ -243,30 +243,31 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 			} else {
 				await loadSingleTweet(tab, processUrl)
 			}
-		} catch (err) {
-			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
-		}
-		let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
-		tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
-		for (const tweet of tweets) {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
-			try {
-				if (await retweet(tab, tweet, isTweet)) {
-					delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
-					tweet.query = query
-					res.push(tweet)
-				}
-			} catch (err) {
-				if (typeof err === "string") {
-					utils.log("You were logout during the API execution, don't forget to update your session cookie", "warning")
+			let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
+			tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
+			for (const tweet of tweets) {
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(timeLeft.message, "warning")
 					break
 				}
-				utils.log(err.message || err, "warning")
+				try {
+					if (await retweet(tab, tweet, isTweet)) {
+						delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
+						tweet.query = query
+						res.push(tweet)
+					}
+				} catch (err) {
+					if (typeof err === "string") {
+						utils.log("You were logout during the API execution, don't forget to update your session cookie", "warning")
+						break
+					}
+					utils.log(err.message || err, "warning")
+				}
 			}
+		} catch (err) {
+			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
+			res.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
 	}
 	db.push(...res)
