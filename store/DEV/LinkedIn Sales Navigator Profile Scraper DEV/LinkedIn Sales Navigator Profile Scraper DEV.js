@@ -197,6 +197,15 @@ const scrapeProfile = (arg, cb) => {
 			scrapedData.phoneNumber = phoneNumber
 		}
 	}
+	if (document.querySelector(".profile-topcard__contact-info a[href*=\"tel:\"]")) {
+		let phoneNumber = document.querySelector(".profile-topcard__contact-info a[href*=\"tel:\"]").href
+		if (phoneNumber) {
+			if (phoneNumber.startsWith("tel:")) {
+				phoneNumber = phoneNumber.slice(4)
+			}
+			scrapedData.phoneNumber = phoneNumber
+		}
+	}
 	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]").nextElementSibling) {
 		let email = document.querySelector(".profile-topcard__contact-info li-icon[type=\"envelope-icon\"]").nextElementSibling.href
 		if (email) {
