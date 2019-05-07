@@ -12,7 +12,7 @@ class Dropcontact {
 			headers: {
 				"X-Access-Token": this.apiKey,
 			},
-			response_timeout: 90000,
+			response_timeout: 180000,
 		}
 		try {
 			const res = await needle("post", "https://api.dropcontact.io/clean", params, options)
