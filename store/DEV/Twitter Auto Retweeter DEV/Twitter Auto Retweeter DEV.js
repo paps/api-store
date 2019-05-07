@@ -61,6 +61,12 @@ const isTweetUrl = url => {
 const scrapeTweets = (arg, cb) => {
 	const tweets = document.querySelectorAll(arg.single ? "div.tweet.js-actionable-tweet" : "li.js-stream-item:not(.has-profile-promoted-tweet) div.tweet.js-stream-tweet.js-actionable-tweet")
 	const res = [ ...tweets ].map((tweet, index) => {
+
+		// Pinned tweets skipped
+		if (tweet.classList.contains("user-pinned")) {
+			return null
+		}
+
 		// Skip promoted tweets
 		if (getComputedStyle(tweet.parentNode).display === "none") {
 			return null
