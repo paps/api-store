@@ -1,6 +1,6 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
-"phantombuster package: 4"
+"phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-LinkedIn.js"
 
 const Buster = require("phantombuster")
@@ -49,7 +49,10 @@ const getLikesNumber = (arg, callback) => {
 // Scroll the likes list to load other likes
 const scrollLikes = (arg, callback) => {
 	const list = document.querySelector(arg.listSelector)
-	list.scroll(0, list.scrollHeight)
+	if (list) {
+		list.scrollIntoView()
+	}
+	// list.scroll(0, list.scrollHeight)
 	callback()
 }
 
@@ -63,8 +66,9 @@ const loadAllLikes = async (tab, listSelector) => {
 			break
 		}
 		try {
-			await tab.evaluate(scrollLikes, { listSelector })
-			await tab.waitUntilVisible(`li.actor-item:nth-child(${likeCount + 1})`)
+			await tab.evaluate(scrollLikes, { listSelector: `${listSelector} li.actor-item:last-of-type` })
+			await tab.waitUntilVisible(".artdeco-spinner")
+			await tab.waitWhileVisible(".artdeco-spinner")
 			likeCount = await tab.evaluate(getLikesNumber)
 		} catch (error) {
 			if (likeCount) {
@@ -111,15 +115,15 @@ const getLikes = async (tab, urls, removeDuplicates = false) => {
 			 * If we got selectors for like, comment, and likes count
 			 * We store, selectors in selectors.likes variable
 			 */
-			selectors.likes = await tab.waitUntilVisible(["button.feed-shared-social-counts__num-likes.feed-shared-social-counts__count-value",
+			selectors.likes = await tab.waitUntilVisible([ "button.feed-shared-social-counts__num-likes.feed-shared-social-counts__count-value",
 				"button.feed-shared-social-counts", "button.feed-shared-social-counts__nums-likes",
-				"button.reader-social-bar__like-count.reader-social-bar__count"], 15000, "or")
+				"button.reader-social-bar__like-count.reader-social-bar__count", "ul.social-details-social-counts button[data-control-name=\"likes_count\"]" ], 15001, "or")
 			await tab.click(selectors.likes)
 			/**
 			 * this waitUntilVisible call checks if we got:
 			 * - some selectors loaded in order to open the popup in order to scrape the likers
 			 */
-			selectors.list = await tab.waitUntilVisible(["ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list"], 15000, "or")
+			selectors.list = await tab.waitUntilVisible([ "ul.feed-shared-likers-modal__actor-list.actor-list", "ul.feed-shared-likes-list__list", "ul.actor-list" ], 15000, "or")
 		} catch (error) {
 			const err = `${url} seems not to be a publication OR doesn't have any likes`
 			utils.log(err, "warning")
