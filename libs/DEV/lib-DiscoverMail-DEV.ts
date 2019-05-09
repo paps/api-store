@@ -16,7 +16,7 @@ class DiscoverMail {
 				"Content-Type": "application/json",
 				"X-Phantombuster-Key-1": this.apiKey,
 			},
-			response_timeout: 90000,
+			response_timeout: 180000,
 		}
 		const res = await needle("post", `${phantombusterServerUrl}api/v1/discover-email`, { payload: params }, options)
 		if (res.statusCode === 200) {

@@ -26,7 +26,6 @@ const Messaging = require("./lib-Messaging")
 const inflater = new Messaging(utils)
 const { URL } = require("url")
 const DB_SHORT_NAME = "linkedin-chat-send-message"
-const DB_NAME = DB_SHORT_NAME + ".csv"
 
 const PROFILES_PER_LAUNCH = 10
 
@@ -166,13 +165,16 @@ const sendMessage = async (tab, message, tags, profile) => {
 }
 
 ;(async () => {
-	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping, profileUrls } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, profilesPerLaunch, message, hunterApiKey, disableScraping, profileUrls, csvName } = utils.validateArguments()
 	if (!message || !message.trim()) {
 		throw "No message found!"
 	}
 	linkedInScraper = new LinkedInScraper(utils, hunterApiKey, nick)
 	const tab = await nick.newTab()
-	const db = await utils.getDb(DB_NAME)
+	if (!csvName) { 
+		csvName = DB_SHORT_NAME
+	}
+	const db = await utils.getDb(csvName + ".csv")
 	let rows = []
 	let columns = []
 
@@ -274,7 +276,7 @@ const sendMessage = async (tab, message, tags, profile) => {
 		await tab.wait(Math.round(500 + Math.random() * 500)) // Tiny delay to prevent cookie invalidation
 	}
 	db.push(...result)
-	await utils.saveResults(result, db, DB_SHORT_NAME, null)
+	await utils.saveResults(result, db, csvName, null)
 	await linkedin.updateCookie()
 	nick.exit(0)
 })().catch(err => {

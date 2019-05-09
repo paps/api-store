@@ -61,6 +61,12 @@ const isTweetUrl = url => {
 const scrapeTweets = (arg, cb) => {
 	const tweets = document.querySelectorAll(arg.single ? "div.tweet.js-actionable-tweet" : "li.js-stream-item:not(.has-profile-promoted-tweet) div.tweet.js-stream-tweet.js-actionable-tweet")
 	const res = [ ...tweets ].map((tweet, index) => {
+
+		// Pinned tweets skipped
+		if (tweet.classList.contains("user-pinned")) {
+			return null
+		}
+
 		// Skip promoted tweets
 		if (getComputedStyle(tweet.parentNode).display === "none") {
 			return null
@@ -200,7 +206,7 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 ;(async () => {
 	const tab = await nick.newTab()
 	const res = []
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, retweetsPerLaunch, csvName, queries, noDatabase, watcherMode } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DEFAULT_DB
@@ -213,6 +219,15 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 			queries = [ spreadsheetUrl ]
 		}
 	}
+
+	if (!watcherMode) {
+		queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
+		if (queries.length < 1) {
+			utils.log("Input is empty OR every URLs are already processed", "warning")
+			nick.exit()
+		}
+	}
+
 	if (typeof retweetsPerLaunch !== "number") {
 		retweetsPerLaunch = DEFAULT_RT
 	}
@@ -234,29 +249,31 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 			} else {
 				await loadSingleTweet(tab, processUrl)
 			}
-		} catch (err) {
-			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
-		}
-		let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
-		tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
-		for (const tweet of tweets) {
-			const timeLeft = await utils.checkTimeLeft()
-			if (!timeLeft.timeLeft) {
-				utils.log(timeLeft.message, "warning")
-				break
-			}
-			try {
-				if (await retweet(tab, tweet, isTweet)) {
-					delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
-					res.push(tweet)
-				}
-			} catch (err) {
-				if (typeof err === "string") {
-					utils.log("You were logout during the API execution, don't forget to update your session cookie", "warning")
+			let tweets = isTweet ? await scrapeSingleTweet(tab) : await findRTs(tab, retweetsPerLaunch)
+			tweets = tweets.length > retweetsPerLaunch ? tweets.slice(0, retweetsPerLaunch) : tweets
+			for (const tweet of tweets) {
+				const timeLeft = await utils.checkTimeLeft()
+				if (!timeLeft.timeLeft) {
+					utils.log(timeLeft.message, "warning")
 					break
 				}
-				utils.log(err.message || err, "warning")
+				try {
+					if (await retweet(tab, tweet, isTweet)) {
+						delete tweet.index // index isn't revelant to be save in the API outputs (only used for retweet function)
+						tweet.query = query
+						res.push(tweet)
+					}
+				} catch (err) {
+					if (typeof err === "string") {
+						utils.log("You were logout during the API execution, don't forget to update your session cookie", "warning")
+						break
+					}
+					utils.log(err.message || err, "warning")
+				}
 			}
+		} catch (err) {
+			utils.log(`Error while loading ${query}: ${err.message || err}`, "warning")
+			res.push({ query, error: err.message || err, timestamp: (new Date()).toISOString() })
 		}
 	}
 	db.push(...res)

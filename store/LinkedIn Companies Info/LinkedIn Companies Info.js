@@ -411,7 +411,6 @@ const isLinkedUrl = url => {
 	if (!companies) {
 		companies = []
 	}
-	companies = companies.filter(str => str) // removing empty lines
 	let result = await utils.getDb(csvName + ".csv")
 	if (!companiesPerLaunch) { companiesPerLaunch = companies.length }
 	if (!singleInput) {
@@ -426,7 +425,7 @@ const isLinkedUrl = url => {
 	await linkedIn.login(tab, sessionCookie)
 	let currentResult = []
 	for (const company of companies) {
-		if (company.length > 0) {
+		if (company) {
 			fullUrl = isLinkedUrl(company)
 			const timeLeft = await utils.checkTimeLeft()
 			if (!timeLeft.timeLeft) {
@@ -491,14 +490,13 @@ const isLinkedUrl = url => {
 					utils.log(`Could not get ${company} data because ${error}`, "warning")
 				}
 			}
+		} else {
+			currentResult.push({ query: company, error: "Empty input", timestamp: (new Date().toISOString() )})
 		}
 	}
 	await linkedIn.saveCookie()
-	for (const line of currentResult) {
-		if (!result.find(el => el.query === line.query)) {
-			result.push(line)
-		}
-	}
+	result = result.concat(currentResult)
+
 	await utils.saveResults(currentResult, result, csvName)
 	nick.exit()
 })()

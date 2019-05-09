@@ -49,7 +49,7 @@ const isLinkedInProfile = (url) => {
 		}
 		let urlObject = new URL(url)
 		if (urlObject.hostname.indexOf("linkedin.com") > -1) {
-			if (urlObject.pathname.startsWith("/sales/people/")) {
+			if (urlObject.pathname.startsWith("/sales/people/") || urlObject.pathname.startsWith("/sales/profile/")) {
 				return "sales"
 			}
 			if (urlObject.pathname.startsWith("/in/")) {
@@ -190,6 +190,15 @@ const scrapeProfile = (arg, cb) => {
 	}
 	if (document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]") && document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]").nextElementSibling) {
 		let phoneNumber = document.querySelector(".profile-topcard__contact-info li-icon[type=\"phone-handset-icon\"]").nextElementSibling.href
+		if (phoneNumber) {
+			if (phoneNumber.startsWith("tel:")) {
+				phoneNumber = phoneNumber.slice(4)
+			}
+			scrapedData.phoneNumber = phoneNumber
+		}
+	}
+	if (document.querySelector(".profile-topcard__contact-info a[href*=\"tel:\"]")) {
+		let phoneNumber = document.querySelector(".profile-topcard__contact-info a[href*=\"tel:\"]").href
 		if (phoneNumber) {
 			if (phoneNumber.startsWith("tel:")) {
 				phoneNumber = phoneNumber.slice(4)

@@ -26,6 +26,14 @@
 	"argumentForm": {
 		"enabled": true,
 		"alpaca": {
+			"schema": {
+				"dependencies": {
+					"spreadsheetUrl": ["advancedLoading"],
+					"numberOfProfiles": ["advancedLoading"],
+					"sortBy": ["advancedLoading"],
+					"numberOfLinesPerLaunch": ["advancedLoading"]
+				}
+			},
 			"options": {
 				"fields": {
 					"sessionCookie": {
@@ -34,16 +42,40 @@
 					},
 					"numberOfProfiles": {
 						"label": "Number of profiles to extract (all of them as possible if empty)",
-						"inputType": "number"
+						"inputType": "number",
+						"dependencies": {
+							"advancedLoading": [ "false" ]
+						}
 					},
 					"sortBy": {
 						"label": "Sort by",
 						"removeDefaultNone": true,
-						"sort": false
+						"sort": false,
+						"dependencies": {
+							"advancedLoading": [ "false" ]
+						}
 					},
 					"csvName": {
 						"label": "Name of resulting CSV file",
 						"placeholder": "result"
+					},
+					"advancedLoading": {
+						"rightLabel": "<b>Use a LinkedIn Contacts spreadsheet to fully extract your contacts list (takes longer)</b>"
+					},
+					"spreadsheetUrl": {
+						"label": "LinkedIn Contacts Spreadsheet URL",
+						"helper": "Use an archive from LinkedIn with your Connections and paste that spreadsheet link here",
+						"dependencies": {
+							"advancedLoading": [ "true" ]
+						}
+					},
+					"numberOfLinesPerLaunch": {
+						"label": "Number of lines of your spreadsheet to process per launch",
+						"inputType": "number",
+						"helper": "All of them if empty",
+						"dependencies": {
+							"advancedLoading": [ "true" ]
+						}
 					}
 				}
 			}
@@ -56,6 +88,16 @@
 				"type": "string",
 				"required": true,
 				"minLength": 15
+			},
+			"advancedLoading": {
+				"type": "boolean"
+			},
+			"spreadsheetUrl": {
+				"type": "string"
+			},
+			"numberOfLinesPerLaunch": {
+				"type": "number",
+				"minimum": 1
 			},
 			"numberOfProfiles": {
 				"type": "number",

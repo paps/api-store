@@ -1,3 +1,5 @@
+const { URL } = require("url")
+
 let RATE_LIMIT_REACHED = false
 
 const _getDivsNb = (arg, cb) => cb(null, document.querySelectorAll("div.GridTimeline-items > div.Grid").length)
@@ -47,6 +49,84 @@ const waitWhileHttpErrors = async (utils, tab) => {
 	}
 	utils.log(`Resuming the API scraping process (Rate limit duration ${Math.round((Date.now() - slowDownStart) / 60000)} minutes)`, "info")
 }
+
+/**
+ * @param {Nick.Tab} tab
+ * @param {boolean} [needReload]
+ * @param {number} [timeout]
+ * @param {boolean} [parseContent]
+ * @return {Promise<object>}
+ */
+const waitForGraphQL = async (tab, needReload = false, timeout = 15000, parseContent = false) => {
+	if (needReload) {
+		await tab.driver.client.Page.reload({ ignoreCache: true })
+	}
+	return new Promise((resolve, reject) => {
+		setTimeout(() => reject(`GraphQL data not found after ${timeout}ms`), timeout)
+		const __watcher = e => {
+			try {
+				let tmp = new URL(e.response.url)
+				if (tmp.host === "api.twitter.com" && tmp.pathname.indexOf("/UserByScreenName") > -1) {
+					tab.driver.client.removeListener("Network.responseReceived", __watcher)
+					tab.driver.client.Network.getResponseBody({ requestId: e.requestId }).then(res => {
+						const tmp = parseContent ? formatRawGraphQL(res.body) : JSON.parse(res.body)
+						resolve(tmp)
+					})
+				}
+			} catch (err) {
+				reject(err)
+			}
+		}
+		tab.driver.client.on("Network.responseReceived", __watcher)
+	})
+}
+
+/**
+ * @param {object|string} ql
+ * @return {object}
+ */
+const formatRawGraphQL = ql => {
+	const res = {}
+	let obj = null
+
+	if (typeof ql === "string") {
+		ql = JSON.parse(ql)
+	}
+	if (ql.data && ql.data.user && ql.data.user.legacy) {
+		obj = ql.data.user.legacy
+		const tmp = obj.entities && obj.entities.url && obj.entities.url.urls ? obj.entities.url.urls.pop() : null
+
+		if (obj.rest_id) {
+			res.twitterId = obj.rest_id
+			res.alternativeProfileUrl = `https://twitter.com/intent/user?user_id=${res.twitterId}`
+		}
+		res.tweetsCount = obj.favourites_count
+		res.followers = obj.followers_count
+		res.following = obj.friends_count
+		res.likes = obj.favourites_count
+		res.lists = obj.listed_count
+		res.name = obj.name
+		res.twitterProfile = `https://twitter.com/${obj.screen_name}`
+		res.bio = obj.description
+		res.handle = `@${obj.screen_name}`
+		res.location = obj.location
+		res.website = tmp && tmp.expanded_url
+		res.joinDate = (new Date(obj.created_at)).toISOString()
+		res.protectedAccount = obj.protected
+		res.followback = obj.followed_by && obj.following
+		res.canDM = obj.can_dm
+	}
+	return res
+}
+
+/*const _openProfile = async (tab, url) => {
+	const popupSel = "div[role=\"alterdialog\"] div[data-testid=\"\"]"
+	if (await tab.isVisible(popupSel)) {
+		await tab.click(popupSel)
+		await tab.waitWhileVisible(popupSel, 7500)
+	}
+	await tab.waitUntilVisible("a[href$=\"/photo\"]", 7500)
+}*/
 
 /**
  * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab instance (with a twitter page opened)
@@ -188,7 +268,7 @@ class Twitter {
 			} else {
 				this.utils.log("Could not connect to Twitter with this session cookie.", "error")
 			}
-			await this.buster.saveText(isNick ? await tab.getContent() : await tab.content(), `${Date.now()}- err1".html`)
+			await this.buster.saveText(isNick ? await tab.getContent() : await tab.content(), `${Date.now()}- err1.html`)
 			process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 		}
 	}
@@ -201,12 +281,12 @@ class Twitter {
 	 * https://twitter.com/intent/user?(user_id,screen_name)=(@)xxx
 	 * @param {Nick.Tab|Puppeteer.Page} tab - Nickjs Tab / Puppeteer Page instance
 	 * @param {String} url - URL to open
-	 * @throws on CSS exception / 404 HTTP code
+	 * @throws string on CSS exception / 404 HTTP code
 	 */
 	async openProfile(tab, url) {
 		const isNick = isUsingNick(tab)
 		const loadingErr = `Can't open URL: ${url}`
-		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context" ]
+		const selectors = [ ".ProfileCanopy" , ".ProfileHeading", "div.footer a.alternate-context", "a[href$=\"/photo\"]", "form.search-404" ]
 		let contextSelector = ""
 
 		if (isNick) {
@@ -224,11 +304,37 @@ class Twitter {
 		if (typeof contextSelector !== "string" && !isNick) {
 			contextSelector = "." + await (await contextSelector.getProperty("className")).jsonValue()
 		}
+
+		/* HTTP code 404 not triggered before?? */
+		if (contextSelector.indexOf(".search-404") > -1) {
+			throw `Can't open ${url}: HTTP code 404`
+		}
+
 		// Intent URL: you need to click the redirection link to open the profile
 		if (contextSelector.indexOf(".alternate-context") > -1) {
 			await tab.click(selectors[2])
-			isNick ? await tab.waitUntilVisible(selectors[0], 15000) : await tab.waitForSelector(selectors[0], { timeout: 15000 })
+			try {
+				isNick ? await tab.waitUntilVisible([ selectors[0], "a[href$=\"/photo\"]" ], 15000, "or") : Promise.race([ selectors[0], "a[href$=\"/photo\"]" ].map(sel => tab.waitForSelector(sel, { timeout: 15000 })))
+			} catch (err) {
+				throw err
+			}
 		}
+	}
+
+	/**
+	 * @async
+	 * @description
+	 * @param {Nick.Tab|Puppeteer.Page} tab
+	 * @return {Promise<boolean>}
+	 */
+	async isBetaOptIn(tab) {
+		const sel = "div#react-root"
+		try {
+			isUsingNick(tab) ? await tab.waitUntilVisible(sel, 7500) : tab.waitForSelector(sel, { timeout: 7500, visible: true })
+		} catch (err) {
+			return false
+		}
+		return true
 	}
 
 	/**
@@ -303,7 +409,7 @@ class Twitter {
 			throw loadingErr
 		}
 		verbose && this.utils.log(`${url} loaded`, "done")
-		return tab.evaluate(_scrapeProfile)
+		return await this.isBetaOptIn(tab) ? waitForGraphQL(tab, true, 15000, true) : tab.evaluate(_scrapeProfile)
 	}
 
 	/**

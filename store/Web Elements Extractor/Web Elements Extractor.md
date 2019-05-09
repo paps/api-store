@@ -58,7 +58,7 @@ It’s done! All that is left to do is to click on "launch" to try your script!
 
 A CSV file (Excel compatible file) will be created for you in the cloud. It's composed of two columns:
   - url: The source website's URL.
-  - mail: The email address found on the page. If no emails are fount the label "no mails found" is set.
+  - selector: data found in the CSS selector
 
 # Kind reminder
 

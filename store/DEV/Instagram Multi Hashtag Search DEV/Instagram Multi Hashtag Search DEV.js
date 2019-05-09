@@ -2,7 +2,6 @@
 "phantombuster command: nodejs"
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Instagram.js"
-"phantombuster flags: save-folder"
 
 const Buster = require("phantombuster")
 const buster = new Buster()
@@ -57,7 +56,17 @@ const ajaxCall = (arg, cb) => {
 	}
 }
 
-// Checks if a url is already in the csv
+// checks if there's a location in the other search terms
+const checkIfLocation = (terms) => {
+	terms.forEach((el) => {
+		if (!el.startsWith("#")) {
+			return true
+		}
+	})
+	return false
+}
+
+// checks if a url is already in the csv
 const checkDb = (str, db) => {
 	for (const line of db) {
 		if (str === line.query && (line.query !== agentObject.lastQuery || line.error)) {
@@ -177,7 +186,6 @@ const filterResults = (results, query, terms) => {
 		let matches = query
 		for (const term of terms) {
 			if (result.description && result.description.toLowerCase().match(regex) && result.description.toLowerCase().match(regex).includes(term)) {
-				// console.log(`Found Match between ${query} AND ${term}`)
 				hasMatched = true
 				matches += ` AND ${term}`
 			}
@@ -277,7 +285,6 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 
 			} else {
 				allCollected = false
-				console.log("allCollected")
 				break
 			}
 			if (!maxToScrape) {
@@ -293,7 +300,6 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 				break
 			}
 		} catch (err) {
-			console.log("erll", err)
 			break
 		}
 		if (new Date() - lastDate > 7500) {
@@ -336,7 +342,6 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 		if (utils.isUrl(spreadsheetUrl)) {
 			hashtags = await utils.getDataFromCsv2(spreadsheetUrl, columnName)
 			hashtags = hashtags.filter(el => el).map(el => el.trim())
-			console.log("spreads", hashtags)
 			hashtags = getUrlsToScrape(hashtags.filter(el => checkDb(el, results, "query")), numberOfLinesPerLaunch)
 		} else if (typeof spreadsheetUrl === "string") {
 			hashtags = [ spreadsheetUrl ]
@@ -347,18 +352,23 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 	tab.driver.client.on("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
 	let currentResult = []
-	console.log("hashtags:", hashtags)
 	for (const query of hashtags) {
 		utils.log(`Searching for ${query}`, "done")
-		let terms = query.split(",")
+		let terms = query.split("+")
 		terms = terms.map(el => el && el.toLowerCase().trim())
 		terms = Array.from(new Set(terms)) // removing duplicates
-		console.log("terms:", terms)
 		if (terms.length < 2) {
 			utils.log("Need at least two different terms.", "error")
+			currentResult.push({ query, error: "Only one search term", timestamp: (new Date().toISOString()) })
 			continue
 		}
 		const hashtag = terms.shift()
+		const hasLocation = checkIfLocation(terms)
+		if (hasLocation) {
+			utils.log("There's a location in the secondary search terms, the location can only the first term.", "error")
+			currentResult.push({ query, error: "Location in secondary term", timestamp: (new Date().toISOString()) })
+			continue
+		}
 		const otherTerms = terms.join(", ")
 		/**
 		 * Simple process to check if we need to search an URL for hashtags or locations
@@ -370,27 +380,16 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 			targetUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag.substr(1))}`
 			isLocation = false
 		} else if (hashtag.includes("instagram.com/explore/locations/")) {
-			inputType = "locations"
+			inputType = "location"
 			isLocation = true
 			targetUrl = hashtag
 		} else {
-			inputType = "locations"
+			inputType = "location"
 			isLocation = true
 			try {
-				console.log("searching targeturl")
 				targetUrl = await instagram.searchLocation(tab, hashtag)
-				console.log("targetUrl", targetUrl)
 			} catch (err) {
-				console.log("ha", err)
-				await tab.screenshot(`${Date.now()}checkUpcomingBirthdays.png`)
-				await buster.saveText(await tab.getContent(), `${Date.now()}checkUpcomingBirthdays.html`)
-				if (await tab.isVisible("nav input")) {
-					console.log("is visible")
-				}
-				if (await tab.isPresent("nav input")) {
-					console.log("is present")
-				}
-				continue
+				//
 			}
 		}
 		if (!targetUrl) {
@@ -411,10 +410,10 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 		}
 		let resuming = false
 		if (alreadyScraped && query === agentObject.lastQuery) {
-			utils.log(`Resuming scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag}...`, "loading")
+			utils.log(`Resuming scraping posts for ${(inputType === "location") ? "location" : "hashtag" } ${hashtag}...`, "loading")
 			resuming = true
 		} else {
-			utils.log(`Scraping posts for ${(inputType === "locations") ? "location" : "hashtag" } ${hashtag} searching for match with ${otherTerms}...`, "loading")
+			utils.log(`Scraping posts for ${(inputType === "location") ? "location" : "hashtag" } ${hashtag} searching for match with ${otherTerms}...`, "loading")
 		}
 		const tempResult = await loadPosts(tab, maxMatches, maxPosts, hashtag, resuming, terms, query)
 		currentResult = currentResult.concat(tempResult)
@@ -472,7 +471,6 @@ const loadPosts = async (tab, maxMatches, maxPosts, hashtag, resuming, terms, qu
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	console.log("elapsed:", new Date() - init)
 	nick.exit()
 })()
 	.catch(err => {

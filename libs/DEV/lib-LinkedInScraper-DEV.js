@@ -176,7 +176,7 @@ const scrapeInfos = (arg, callback) => {
 	}
 
 	const infos = {}
-	if (document.querySelector(".pv-profile-section.pv-top-card-section")) {
+	if (document.querySelector(".pv-profile-section.pv-top-card-section") || document.querySelector("section.pv-top-card-v3")) {
 		// Get primary infos
 		infos.general = getInfos([
 			/**
@@ -483,7 +483,7 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	console.log("Elapsed:T1", new Date() - initS, " ms.")
 	let infos = await tab.evaluate(scrapeInfos, { url: await tab.getUrl() })
 	try {
-		if (infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
+		if (infos.general && infos.general.profileUrl && infos.general.profileUrl.startsWith("https://www.linkedin.com/in/")) {
 			let slug = decodeURIComponent(infos.general.profileUrl.slice(28))
 			slug = slug.slice(0, slug.indexOf("/"))
 			// .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -512,9 +512,13 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 				utils.log(`Error while saving partial screenshot: ${err}`, "error")
 			}
 		}
+		await tab.screenshot(`${Date.now()}-good".png`)
+		await buster.saveText(await tab.getContent(), `${Date.now()}- good".html`)
 	} catch (err) {
 		if (!silence) {
 			utils.log(`Couldn't save picture :${err}`, "warning")
+			await tab.screenshot(`${Date.now()}-selector".png`)
+			await buster.saveText(await tab.getContent(), `${Date.now()}- selector".html`)
 		}
 	}
 

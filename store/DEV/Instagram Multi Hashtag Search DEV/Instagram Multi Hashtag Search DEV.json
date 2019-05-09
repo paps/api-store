@@ -1,7 +1,7 @@
 {
-	"slug": "instagram-hashtag-collector",
-	"description": "Extract the most recent posts for any hashtags or locations on Instagram",
-	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Hashtag_Collector/instagram_hashtag_collector.png",
+	"slug": "instagram-multi-hashtag-search",
+	"description": "Find posts that match multiple hashtags or locations on Instagram",
+	"image": "https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Multi_Hashtag_Search/instagram_multi_hashtag_search.png",
 	"hidden": false,
 	"new": false,
 	"gradientBegin": "#FCCF6B",
@@ -43,18 +43,17 @@
 			},
 			"options": {
 				"fields": {
-					"spreadsheetUrl": {
-						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/5391/instagram-hashtag-collector#section_argument\" target=\"_blank\">(?)</a>",
-						"helpers": [
-							"Enter either an Instagram hashtag beginning with # (like <i>#iseefaces</i>)",
-							"<b>OR</b> an Instagram location (like <i>New York, New York</i>)",
-							"<b>OR</b> a Google Spreadsheet URL (make sure your file is publicly available)",
-							"<b>OR</b> a CSV URL (make sure your file is publicly available)"
-						]
-					},
 					"sessionCookie": {
-						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\">(?)</a>",
-						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5391/instagram-hashtag-collector#section_5getyourinstagramsessioncookie\" target=\"_blank\"><b>How?</b></a>"
+						"label": "Your Instagram session cookie (<i>sessionid</i>) <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_argument\" target=\"_blank\">(?)</a>",
+						"helper": "Paste here your <i>sessionid</i> cookie value. <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_argument\" target=\"_blank\"><b>How?</b></a>"
+					},
+					"spreadsheetUrl": {
+						"label": "Hashtag, location or spreasheet URL <a href=\"/api-store/5952/instagram-multi-hashtag-search#section_4enteratleasttwohashtagslocations\" target=\"_blank\">(?)</a>",
+						"helpers": [
+							"Enter either hashtags separated by '+' signs (like <i>#cactus + #plant</i>)",
+							"<b>OR</b> a location followed by hashtags, separated by '+' signs (like <i>London + #party + #travel</i>)",
+							"<b>OR</b> a Google Spreadsheet/CSV URL (make sure your file is publicly available)"
+						]
 					},
 					"columnName": {
 						"label": "Spreadsheet column name for Instagram hashtags",
@@ -63,7 +62,7 @@
 						"helper": "If you're using a spreadsheet/CSV, tell us in which column you put the hashtags & locations (otherwise we'll use the first column)"
 					},
 					"numberOfLinesPerLaunch": {
-						"label": "Number of lines of your spreadsheet to process per launch <a href=\"/api-store/7195/instagram-following-collector#section_repetition_setup\" target=\"_blank\">(?)</a>",
+						"label": "Number of lines of your spreadsheet to process per launch",
 						"inputType": "number",
 						"helper": "All of them if empty"
 					},
@@ -91,12 +90,12 @@
 	"argumentSchema": {
 		"type": "object",
 		"properties": {
-			"spreadsheetUrl": {
-				"type": "string"
-			},
 			"sessionCookie": {
 				"type": "string",
 				"required": true
+			},
+			"spreadsheetUrl": {
+				"type": "string"
 			},
 			"columnName": {
 				"type": "string"

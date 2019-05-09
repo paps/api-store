@@ -77,7 +77,7 @@
 						"helper": "By default, we'll use the first column of your spreadsheet (column A)"
 					},
 					"emailChooser": {
-						"label": "Choose an email discovery service",
+						"label": "Choose an email discovery service <a href=\"/api-store/11108/linkedin-sales-navigator-profile-scraper#section_email_discovery\" target=\"_blank\">(?)</a>",
 						"removeDefaultNone": true,
 						"emptySelectFirst": true,
 						"sort": false,

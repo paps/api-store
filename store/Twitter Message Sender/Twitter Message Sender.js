@@ -38,13 +38,16 @@ const SELECTORS = {
 	msgDestinationSelector: "textarea.twttr-directmessage-input",
 	initConvSelector: "button.dm-initiate-conversation",
 	textEditSelector: "div.DMComposer-editor.tweet-box",
+	alternativeTextEditSel: "textarea[data-testid=\"dmComposerTextInput\"]",
 	sendSelector: "button.tweet-action",
+	alternativeSendSel: "div[data-testid=\"dmComposerSendButton\"]",
 	closeSelector: "button.DMActivity-close",
 	messageSelector: "li.DirectMessage",
 	writeErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error",
 	debugErrorSelector: "div.DMNotice.DMResendMessage.DMNotice--error .DMResendMessage-customErrorMessage",
 	convNameSelector: "span.DMUpdateName-name.u-textTruncate",
-	dmButton: "div.ProfileMessagingActions button.DMButton"
+	dmButton: "div.ProfileMessagingActions button.DMButton",
+	alternativeDmBtn : "div[data-testid=\"sendDMFromProfile\"]"
 }
 
 /* global $ */
@@ -116,16 +119,52 @@ const _sendMessage = (arg, cb) => {
 }
 
 
-const getConversationName = (arg, cb) => cb(null, document.querySelector(arg.sel) ? document.querySelector(arg.sel).textContent.trim() : null)
+/**
+ * @param {{ sel: string, isBeta: boolean }} arg
+ * @return {Promise<string>}
+ * @throws string
+ */
+const getConversationName = (arg, cb) => {
+	const el = document.querySelector(arg.isBeta ? "#detail-header div[role=\"presentation\"]" : arg.sel)
+	return cb(null, el ? el.textContent.trim() : null)
+}
+
+/**
+ * @param {{ sel: string }} arg
+ * @return {Promise<void>}
+ * @throws string
+ */
+const waitComposerButton = (arg, cb) => {
+	const startTime = Date.now()
+	const idle = () => {
+		const el = document.querySelector(arg.sel)
+		if (el && !!el.getAttribute("aria-disabled")) {
+			return cb(null)
+		}
+		if (Date.now() - startTime >= 30000) {
+			return cb("Message not send after 30s")
+		}
+		setTimeout(idle, 100)
+	}
+	idle()
+}
 
 /**
  * @async
  * @param {Object} tab - Nickjs tab instance
  * @param {String} message - inflated message
+ * @param {boolean} isBeta
  * @throws String when the target user doesn't follow back or on CSS failures
  */
-const sendMessage = async (tab, message) => {
+const sendMessage = async (tab, message, isBeta) => {
 	utils.log(`Sending message: ${message}`, "info")
+
+	if (isBeta) {
+		await tab.sendKeys(SELECTORS.alternativeTextEditSel, message, { reset: true, keepFocus: true })
+		await tab.click(SELECTORS.alternativeSendSel)
+		await tab.evaluate(waitComposerButton, { sel: SELECTORS.alternativeSendSel })
+		return
+	}
 
 	await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.sendSelector })
 	await tab.wait(Math.round(500 + Math.random() * 500))
@@ -158,7 +197,7 @@ const canSendDM = async tab => {
 ;(async () => {
 	const tab = await nick.newTab()
 	let db
-	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, numberOfLinesPerLaunch, csvName, message, queries, noDatabase, betaOptIn } = utils.validateArguments()
 	let csvHeaders = null
 	let rows = []
 	let msgTags = null
@@ -180,7 +219,7 @@ const canSendDM = async tab => {
 	if (typeof numberOfLinesPerLaunch === "number") {
 		numberOfLinesPerLaunch = DEFAULT_PROFILES
 	}
-	await twitter.login(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie, betaOptIn)
 
 	db = noDatabase ? [] : await utils.getDb(csvName + ".csv")
 
@@ -234,9 +273,10 @@ const canSendDM = async tab => {
 			res.push(profile)
 			continue
 		}
-		const canSend = await canSendDM(tab)
+		const isBeta = await twitter.isBetaOptIn(tab)
+		const canSend = isBeta ? profile.canDM : await canSendDM(tab)
 		if (typeof canSend === "string" || !canSend) {
-			const err = `Can't send a DM to ${one[columnName]}: ${typeof canSend === "string" ? canSend : "" }`
+			const err = `Can't send a DM to ${one[columnName]} ${typeof canSend === "string" ? `: ${canSend}` : "" }`
 			profile.error = err
 			profile.query = one[columnName]
 			profile.timestamp = (new Date()).toISOString()
@@ -245,13 +285,19 @@ const canSendDM = async tab => {
 			continue
 		}
 		try {
+			const sels = isBeta ? [ SELECTORS.alternativeTextEditSel, SELECTORS.alternativeSendSel ] : [ SELECTORS.textEditSelector, SELECTORS.sendSelector ]
 			profile.query = one[columnName]
 			profile.message = inflater.forgeMessage(message, Object.assign({}, profile, one))
-			await tab.click(SELECTORS.dmButton)
-			await tab.waitUntilVisible([ SELECTORS.textEditSelector, SELECTORS.sendSelector ], 15000, "and")
-			const convName = await tab.evaluate(getConversationName, { sel: SELECTORS.convNameSelector })
+
+			await tab.click(isBeta ? SELECTORS.alternativeDmBtn : SELECTORS.dmButton)
+			await tab.waitUntilVisible(sels, 15000, "and")
+
+			const convName = await tab.evaluate(getConversationName, { sel: SELECTORS.convNameSelector, isBeta })
+
 			utils.log(`Conversation with ${convName} opened`, "info")
-			await sendMessage(tab, profile.message)
+
+			await sendMessage(tab, profile.message, isBeta)
+
 			utils.log(`Message successfully sent to ${convName}`, "done")
 			profile.timestamp = (new Date()).toISOString()
 			res.push(profile)

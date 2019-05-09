@@ -181,17 +181,6 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 	let newlyScraped = 0
 	let results = []
 	if (!resuming) {
-		results = await tab.evaluate(scrapeFirstResults, { query })
-		if (maxPosts && results.length > maxPosts) {
-			results = results.slice(0, maxPosts)
-		}
-		newlyScraped = results.length
-		const postTab = await nick.newTab()
-		results = await extractFirstPosts(postTab, results, newlyScraped, query)
-		await postTab.close()
-		if (maxPosts && results.length >= maxPosts) {
-			return results
-		}
 		const initDate = new Date()
 		graphqlUrl = ""
 		do {
@@ -202,6 +191,17 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 				return results
 			}
 		} while (!graphqlUrl)
+		results = await tab.evaluate(scrapeFirstResults, { query })
+		if (maxPosts && results.length > maxPosts) {
+			results = results.slice(0, maxPosts)
+		}
+		newlyScraped = results.length
+		const postTab = await nick.newTab()
+		results = await extractFirstPosts(postTab, results, newlyScraped, query)
+		await postTab.close()
+		if (!graphqlUrl || (maxPosts && results.length >= maxPosts)) {
+			return results
+		}
 		nextUrl = graphqlUrl
 	} else {
 		nextUrl = agentObject.nextUrl
@@ -209,6 +209,7 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 	let maxToScrape = maxPosts
 	let lastDate = new Date()
 	lastHashtag = query
+	let firstConcat = true
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -219,7 +220,23 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 			const [ tempResult, endCursor, hasNextPage, error ] = await extractDataFromGraphQl(tab, query, nextUrl)
 			if (!error) {
 				newlyScraped += tempResult.length
-				results = results.concat(tempResult)
+				if (firstConcat) {
+					for (const post of tempResult) {
+						let found = false
+						for (let i = 0; i < results.length; i++) {
+							if (results[i].postUrl === post.postUrl) {
+								found = true
+								break
+							}
+						}
+						if (!found) {
+							results.push(post)
+						}
+					}
+					firstConcat = false
+				} else {
+					results = results.concat(tempResult)
+				}
 			} else {
 				allCollected = false
 				break
@@ -334,8 +351,20 @@ const isUrl = target => url.parse(target).hostname !== null
 		const tempResult = await loadPosts(tab, maxPosts, hashtag, resuming)
 		const oldResultLength = results.length
 		if (results.length) {
+			// for (const post of tempResult) {
+			// 	if (!results.find(el => el.postUrl === post.postUrl)) {
+			// 		results.push(post)
+			// 	}
+			// }
 			for (const post of tempResult) {
-				if (!results.find(el => el.postUrl === post.postUrl)) {
+				let found = false
+				for (let i = 0; i < results.length; i++) {
+					if (results[i].postUrl === post.postUrl) {
+						found = true
+						break
+					}
+				}
+				if (!found) {
 					results.push(post)
 				}
 			}

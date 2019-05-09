@@ -72,39 +72,43 @@ let db
 			break
 		}
 		utils.log(`Searching for ${one} ...`, "loading")
-		let search = await webSearch.search("linkedin.com " + one)
-		if (search.error === "No more search engines available") {
-			utils.log("No more search engines available, please retry later.", "warning")
-			break
-		}
-		let link = null
-		let description
-		let title
-		for (const res of search.results) {
-			if (res.link.indexOf("linkedin.com/company/") > 0) {
-				link = res.link
-				description = res.description
-				title = res.title
+		try {
+			let search = await webSearch.search("linkedin.com " + one)
+			if (search.error === "No more search engines available") {
+				utils.log("No more search engines available, please retry later.", "warning")
 				break
 			}
-		}
-		const foundData = {}
-		if (link) {
-			foundData.linkedinUrl = link
-			if (description) {
-				foundData.description = description
+			let link = null
+			let description
+			let title
+			for (const res of search.results) {
+				if (res.link.indexOf("linkedin.com/company/") > 0) {
+					link = res.link
+					description = res.description
+					title = res.title
+					break
+				}
 			}
-			if (title) {
-				foundData.title = title
+			const foundData = {}
+			if (link) {
+				foundData.linkedinUrl = link
+				if (description) {
+					foundData.description = description
+				}
+				if (title) {
+					foundData.title = title
+				}
+				utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
+			} else {
+				foundData.error = "No result found"
+				utils.log(`No result for ${one} (${search.codename})`, "done")
 			}
-			utils.log(`Got ${link} for ${one} (${search.codename})`, "done")
-		} else {
-			foundData.error = "No result found"
-			utils.log(`No result for ${one} (${search.codename})`, "done")
-		}
-		foundData.query = one
-		foundData.timestamp = (new Date()).toISOString()
-		toReturn.push(foundData)
+			foundData.query = one
+			foundData.timestamp = (new Date()).toISOString()
+			toReturn.push(foundData)
+		} catch (err) {
+			utils.log(err, "error")
+		}	
 		i++
 	}
 

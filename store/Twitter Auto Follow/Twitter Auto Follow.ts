@@ -105,6 +105,7 @@ const follow = async (page: puppeteer.Page, followSel: string, followingSel: str
 	}
 
 	try {
+		// TODO: find the new CSS selector for the beta
 		await page.waitForSelector(".alert-messages", { timeout: 5000, visible: true })
 		return FollowStatus.RATE_LIMIT
 	} catch (err) {

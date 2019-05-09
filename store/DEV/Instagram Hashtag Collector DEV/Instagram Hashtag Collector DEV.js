@@ -73,6 +73,7 @@ const getUrlsToScrape = (data, numberOfLinesPerLaunch) => {
 const interceptInstagramApiCalls = e => {
 	if (e.response.url.includes("graphql/query/?query_hash") && e.response.status === 200 && e.response.url.includes("show_ranked")) {
 		graphqlUrl = e.response.url
+		console.log("graphqlUrl", graphqlUrl)
 	}
 	if (isLocation && e.response.url.includes("graphql/query/?query_hash")) {
 		graphqlUrl = e.response.url
@@ -102,11 +103,13 @@ const scrapeFirstResults = (arg, cb) => {
 }
 
 const extractDataFromGraphQl = async (tab, query, nextUrl) => {
+	console.log("exrtacting")
 	await tab.inject("../injectables/jquery-3.0.0.min.js")
 	let jsonData
 	try {
 		jsonData = await tab.evaluate(ajaxCall, { url: nextUrl, headers })
 	} catch (err) {
+		console.log("errm", err)
 		try {
 			await tab.open(nextUrl)
 			let instagramJsonCode = await tab.getContent()
@@ -116,7 +119,7 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 				rateLimited = true
 			}
 		} catch (err3) {
-			//
+			console.log("err3", err3)
 		}
 		return [null, null, null, "rate limited"]
 	}
@@ -127,7 +130,14 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		edge = jsonData.data.hashtag.edge_hashtag_to_media
 	}
 	totalHashtagsCount = edge.count
-	const results = edge.edges
+	let results = edge.edges
+
+	// if (results.length === 0) {
+	// 	console.log("on switch")
+	// 	edge = jsonData.data.hashtag.edge_hashtag_to_top_posts
+	// 	results = edge.edges
+	// 	console.log("newRL:", results.length)
+	// }
 	const scrapedHashtags = []
 	for (const result of results) {
 		const node = result.node
@@ -147,14 +157,24 @@ const extractDataFromGraphQl = async (tab, query, nextUrl) => {
 		extractedData.timestamp = (new Date()).toISOString()
 		scrapedHashtags.push(extractedData)
 	}
-	const endCursor = edge.page_info.end_cursor
-	const hasNextPage = edge.page_info.has_next_page
+	let endCursor = null
+	let hasNextPage = null
+	if (edge.page_info) {
+		endCursor = edge.page_info.end_cursor
+		hasNextPage = edge.page_info.has_next_page
+	}
+
 	return [ scrapedHashtags, endCursor, hasNextPage ]
 }
 
 const extractFirstPosts = async (tab, results, firstResultsLength, query, maxPosts) => {
 	for (let i = 0; i < firstResultsLength; i++) {
 		buster.progressHint(i / firstResultsLength, `${i} first posts extracted`)
+		const timeLeft = await utils.checkTimeLeft()
+		if (!timeLeft.timeLeft) {
+			allCollected = false
+			break
+		}
 		if (results[i].postUrl) {
 			try {
 				await tab.open(results[i].postUrl)
@@ -178,10 +198,38 @@ const extractFirstPosts = async (tab, results, firstResultsLength, query, maxPos
  * @return {Promise<Boolean>} false if there were an execution error during the scraping process otherwise true
  */
 const loadPosts = async (tab, maxPosts, query, resuming) => {
+	console.log("maxP", maxPosts)
 	let newlyScraped = 0
 	let results = []
 	if (!resuming) {
+		// results = await tab.evaluate(scrapeFirstResults, { query })
+		// console.log("RL,", results.length)
+		// if (maxPosts && results.length > maxPosts) {
+		// 	results = results.slice(0, maxPosts)
+		// }
+		// newlyScraped = results.length
+		// const postTab = await nick.newTab()
+		// results = await extractFirstPosts(postTab, results, newlyScraped, query, maxPosts)
+		// await postTab.close()
+		// console.log("resuL", results.length)
+		// if (maxPosts && results.length >= maxPosts) {
+		// 	return results
+		// }
+		const initDate = new Date()
+		console.log("looking for graph")
+		graphqlUrl = ""
+		do {
+			await tab.wait(1000)
+			await tab.scroll(0, - 1000)
+			await tab.scrollToBottom()
+			if (new Date() - initDate > 10000) {
+				console.log("too long")
+				// return results
+				break
+			}
+		} while (!graphqlUrl)
 		results = await tab.evaluate(scrapeFirstResults, { query })
+		console.log("RL,", results.length)
 		if (maxPosts && results.length > maxPosts) {
 			results = results.slice(0, maxPosts)
 		}
@@ -189,26 +237,19 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 		const postTab = await nick.newTab()
 		results = await extractFirstPosts(postTab, results, newlyScraped, query, maxPosts)
 		await postTab.close()
-		if (maxPosts && results.length >= maxPosts) {
+		console.log("resuL", results.length)
+		if (!graphqlUrl || (maxPosts && results.length >= maxPosts)) {
 			return results
 		}
-		const initDate = new Date()
-		graphqlUrl = ""
-		do {
-			await tab.wait(1000)
-			await tab.scroll(0, - 1000)
-			await tab.scrollToBottom()
-			if (new Date() - initDate > 10000) {
-				return results
-			}
-		} while (!graphqlUrl)
 		nextUrl = graphqlUrl
 	} else {
 		nextUrl = agentObject.nextUrl
 	}
+	console.log("let's go", nextUrl)
 	let maxToScrape = maxPosts
 	let lastDate = new Date()
 	lastQuery = query
+	let firstConcat = true
 	do {
 		const timeLeft = await utils.checkTimeLeft()
 		if (!timeLeft.timeLeft) {
@@ -217,9 +258,31 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 		}
 		try {
 			const [ tempResult, endCursor, hasNextPage, error ] = await extractDataFromGraphQl(tab, query, nextUrl)
+			console.log("error:", error)
+			// console.log("tempR", tempResult)
 			if (!error) {
 				newlyScraped += tempResult.length
-				results = results.concat(tempResult)
+				if (firstConcat) {
+					console.log("firstConcat")
+					for (const post of tempResult) {
+						let found = false
+						for (let i = 0; i < results.length; i++) {
+							if (results[i].postUrl === post.postUrl) {
+								found = true
+								break
+							}
+						}
+						if (!found) {
+							console.log("on push FC")
+							results.push(post)
+						} else {
+							console.log("on push pas")
+						}
+					}
+					firstConcat = false
+				} else {
+					results = results.concat(tempResult)
+				}
 			} else {
 				allCollected = false
 				break
@@ -237,6 +300,7 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 				break
 			}
 		} catch (err) {
+			console.log("brok", err)
 			break
 		}
 		if (new Date() - lastDate > 7500) {
@@ -327,6 +391,7 @@ const loadPosts = async (tab, maxPosts, query, resuming) => {
 
 		try {
 			await tab.waitUntilVisible("main", 15000)
+			await tab.wait(3000)
 		} catch (err) {
 			utils.log(`Page is not opened: ${err.message || err}`, "error")
 			continue
