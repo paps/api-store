@@ -16,7 +16,7 @@ import StoreUtilities from "./lib-StoreUtilities-DEV"
 
 const utils = new StoreUtilities(buster)
 import Intercom from "./lib-Intercom"
-import { privateDecrypt } from "crypto";
+import { privateDecrypt } from "crypto"
 const intercom = new Intercom(buster, utils)
 
 const DB_NAME = "result"
@@ -24,7 +24,7 @@ let endWithError = 0
 // }
 
 const craftCsv = (json: IUnknownObject) => {
-	let craftedCsv = {} as IUnknownObject
+	const craftedCsv = {} as IUnknownObject
 	if (json) {
 		if (json.archivedUsers) {
 			craftedCsv.archivedUsers = json.archivedUsers
@@ -73,7 +73,7 @@ const scrapeBilling = () => {
 	const billingObject = {} as IUnknownObject
 	const tableSelector = document.querySelector("table.settings__billing__subscription__table")
 	if (tableSelector) {
-		billingObject.subscription = Array.from(tableSelector.querySelectorAll("tbody tr")).map(el => {
+		billingObject.subscription = Array.from(tableSelector.querySelectorAll("tbody tr")).map((el) => {
 			const returnedObject = {} as IUnknownObject
 			// const camelCaser = (str: string) => {
 			// 	const stringArray = str.toLowerCase().split(" ")
@@ -175,7 +175,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 			if (filter === "segment") {
 				utils.log("Invalid segment URL!", "error")
 			}  else {
-				utils.log("Error loading Intercom page...", "error")				
+				utils.log("Error loading Intercom page...", "error")
 			}
 			endWithError = 1
 			return null
@@ -184,16 +184,16 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		const currentUrl = page.url()
 		const urlObject = new URL(currentUrl)
 		if (urlObject.hostname.includes("intercom")) {
-			utils.log("Intercom isn't loading correctly...", "error")				
+			utils.log("Intercom isn't loading correctly...", "error")
 		} else {
-			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")				
+			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")
 		}
 		endWithError = 1
 		return null
 	}
-	const filters = await page.evaluate(() => Array.from(document.querySelectorAll(".filter-block__container")).map(el => {
+	const filters = await page.evaluate(() => Array.from(document.querySelectorAll(".filter-block__container")).map((el) => {
 		if (el && el.textContent) {
-			return el.textContent.trim().split("\n").map(el => el.trim()).filter(el => el).join(" ")
+			return el.textContent.trim().split("\n").map((el) => el.trim()).filter((el) => el).join(" ")
 		} else {
 			return null
 		}
@@ -207,7 +207,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		const matches = await page.evaluate(() => {
 			const matchesSelector = document.querySelector(".js__user-list__filter-and-select-details")
 			if (matchesSelector && matchesSelector.textContent) {
-				return matchesSelector.textContent.split(" ").map(el => el.replace(/\n/g, " ").trim()).filter(el => el).join(" ")
+				return matchesSelector.textContent.split(" ").map((el) => el.replace(/\n/g, " ").trim()).filter((el) => el).join(" ")
 			} else {
 				return ""
 			}
@@ -252,7 +252,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		id = id.slice(0, id.indexOf("/"))
 	}
 	let billingCount = {} as IUnknownObject
-	try{
+	try {
 		billingCount = await getBilling(page, id)
 		console.log("bC:", billingCount)
 	} catch (err) {
@@ -263,7 +263,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}billing.html`)
 	try {
 		const archivedUsers = await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
-		if(archivedUsers) {
+		if (archivedUsers) {
 			billingCount.archivedUsers = archivedUsers
 		}
 	} catch (err) {
@@ -275,7 +275,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	// console.log("filter:", _filter)
 	// console.log("lastseen:", _lastSeen)
 	// console.log("segment:", _segmentUrl)
-	await page.screenshot({ path: `0F.jpg`, type: "jpeg", quality: 50 })
+	await page.screenshot({ path: "0F.jpg", type: "jpeg", quality: 50 })
 	await buster.saveText(await page.evaluate(() => document.body.innerHTML) as string, `${Date.now()}users.html`)
 	if (billingCount) {
 		const craftedCsv = craftCsv(billingCount)
