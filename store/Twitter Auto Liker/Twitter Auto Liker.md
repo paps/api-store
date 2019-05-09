@@ -33,12 +33,10 @@ Show people love and you'll quickly get noticed. Put it on automatic and you'll 
 </div>
 
 # Tutorial 🚀
-## 1. Create an account on Phantombuster. It's FREE FOREVER.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Use this API on your account.
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
-
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Click on Configure me!
@@ -86,7 +84,7 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-## 6. Configure repetitive launches to auto like tweets over the long-term.
+## Set this Twitter automation on repeat { repetition_setup }
 
 Twitter Automation like all good things needs to be used with reason.
 
@@ -102,6 +100,6 @@ Then, select a frequency:
 
 Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
-# Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>

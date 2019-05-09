@@ -10,7 +10,7 @@ This API will do the repetitive work or Following & Unfollowing a list of contac
 
 !INCLUDE "./mdpp-sections/section-related-apis-twitter-1.mdpp"
 
-# Tutorial 🚀️ 
+# Tutorial 🚀
 
 ## Recommendations
 
@@ -24,12 +24,10 @@ This API will do the repetitive work or Following & Unfollowing a list of contac
 
 This API is capable of adding about **25 profiles per minute**.
 
-## 1. Create an account on Phantombuster.com 💻
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). We browse the web for you and automate actions so you can focus on what's important.
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Use this API on your account.
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
-
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Create your Input Spreadsheet
@@ -54,7 +52,7 @@ The API can perform 3 specifics actions:
 - Unfollow: Will auto unfollow a list of Twitter accounts.
 - Unfollow back (Unfollow only if the profile hasn't followed back): Will auto unfollow the accounts that do not follow your Twitter account.
 
-## 7. Configure repetitive launches
+## Set this Twitter automation on repeat { repetition_setup }
 
 Twitter does not tolerate **abusive behaviors**. Autofollowing hundred of profiles over a few minutes is obviously considered abusive.
 
@@ -75,7 +73,7 @@ Then, select a frequency:
 
 Now that this is set, click 💾 <span style="color:blue">Save</span> at the bottom of the page.
 
-## 8. Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
 You're done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
 

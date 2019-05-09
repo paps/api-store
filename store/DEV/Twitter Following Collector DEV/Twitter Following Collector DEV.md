@@ -31,12 +31,10 @@ Scrape these Twitter profiles to later build **Custom Audiences for Twitter Ads*
 </div>
 
 # Tutorial 🚀
-## 1. Create an account on Phantombuster.com. It's free.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Use thi Twitter scraper on your account.
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
-
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Click on Configure me!
@@ -81,7 +79,7 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-##  6. (Optional) ️️Repetition setup ⚙️ { repetition_setup }
+## Set this Twitter automation on repeat { repetition_setup }
 
 Once your API is ready, you can set up repetitive launches. This allows scraping to spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 

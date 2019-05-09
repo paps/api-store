@@ -9,10 +9,10 @@ This Twitter automation will gather all those Tweets in one place. Combine this 
 !INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
 
 # Tutorial 🚀
-## 1. Create a free Phantombuster account.
-Create your **FREE** account on [Phantombuster](https://phantombuster.com/register).
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Add this Twitter automation to your account.
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Click on Configure me!
