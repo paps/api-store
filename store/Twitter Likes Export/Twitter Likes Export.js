@@ -53,12 +53,16 @@ const scrapeMetadata = (arg, cb) => {
 	const res = {}
 	if (document.querySelector("li.js-stat-favorites strong")) {
 		res.likesCount = parseInt(document.querySelector("li.js-stat-favorites strong").textContent.trim().replace(/\s/g, ""), 10)
+	} else if (document.querySelector("a[href$=\"likes\"] span:first-of-type")) {
+		res.likesCount = parseInt(document.querySelector("a[href$=\"likes\"] span:first-of-type").textContent.trim().replace(/\s/g, ""), 10)
 	} else {
 		res.likesCount = -1
 	}
 
 	if (document.querySelector("li.js-stat-retweets strong")) {
 		res.retweetsCount = parseInt(document.querySelector("li.js-stat-retweets strong").textContent.trim().replace(/\s/g, ""), 10)
+	} else if (document.querySelector("a[href$=\"retweets\"] span:first-of-type")) {
+		res.retweetsCount = parseInt(document.querySelector("a[href$=\"retweets\"] span:first-of-type").textContent.trim().replace(/\s/g, ""), 10)
 	} else {
 		res.retweetsCount = -1
 	}
@@ -66,16 +70,31 @@ const scrapeMetadata = (arg, cb) => {
 	cb(null, res)
 }
 
+/**
+ * @param { { bundle: object, beta: boolean } } arg
+ * @return {Promise<object>}
+ */
 const scrapePopUp = (arg, cb) => {
-	const res = Array.from(document.querySelectorAll(arg.baseSelector)).map(user => {
+	const res = Array.from(document.querySelectorAll(arg.bundle.baseSelector)).map(user => {
 		const ret = {}
 
-		if (user.querySelector(arg.itemSelector)) {
-			ret.handle = user.querySelector(arg.itemSelector).dataset[arg.datasetHandle] || null
-			ret.name = user.querySelector(arg.itemSelector).dataset[arg.dataSetName] || null
+		if (!arg.beta) {
+			if (user.querySelector(arg.bundle.itemSelector)) {
+				ret.handle = user.querySelector(arg.bundle.itemSelector).dataset[arg.bundle.datasetHandle] || null
+				ret.name = user.querySelector(arg.bundle.itemSelector).dataset[arg.bundle.dataSetName] || null
+				ret.profileUrl = ret.handle ? `https://twitter.com/${ret.handle}` : null
+			}
+			ret.description = user.querySelector(arg.bundle.descriptionSelector) ? user.querySelector(arg.bundle.descriptionSelector).textContent.trim() : null
+		} else {
+			//const userSel = user.querySelector(arg.bundle.itemSelector)
+			const handleSel = user.querySelector(arg.bundle.datasetHandle)
+			const nameSel = user.querySelector(arg.bundle.datasetName)
+			const bioSel = user.querySelector(arg.bundle.description)
+			ret.handle = handleSel ? handleSel.textContent.trim() : null
+			ret.name = nameSel ? nameSel.textContent.trim() : null
+			ret.description = bioSel ? [...bioSel.parentNode.children].map(el => el.textContent.trim()).join(" ") : null
 			ret.profileUrl = ret.handle ? `https://twitter.com/${ret.handle}` : null
 		}
-		ret.description = user.querySelector(arg.descriptionSelector) ? user.querySelector(arg.descriptionSelector).textContent.trim() : null
 		ret.timestamp = (new Date()).toISOString()
 		return ret
 	})
@@ -154,46 +173,81 @@ const getTweetsInfos = async (tab, url) => {
 		dataSetName:  "name",
 		descriptionSelector: "p.bio.u-dir"
 	}
+
+	const alternativeExtract = {
+		baseSelector: "section[aria-labelledby*=\"accessible-list\"] div[data-testid=\"UserCell\"]",
+		datasetHandle: "a[role=\"link\"]:first-of-type div[dir=ltr]",
+		datasetName: "a[role=\"link\"]:first-of-type span[dir=auto]",
+		description: "div[dir=auto]:nth-of-type(2) span"
+	}
+
 	const likers = []
 	const retweets = []
 	await tab.open(url)
-	await tab.waitUntilVisible("div#permalink-overlay", 15000)
+	const isBeta = await twitter.isBetaOptIn(tab)
+	const sel = isBeta ? "article[data-testid=\"tweetDetail\"]" : "div#permalink-overlay"
+	const errSel = "h1[data-testid=error-detail]"
+	const found = await tab.waitUntilVisible([ sel , errSel ], 15000, "or")
+
+	if (found === errSel) {
+		res.error = `${url} doesn't exist`
+		res.likers = []
+		res.retweets = []
+		res.timestamp = (new Date()).toISOString()
+		utils.log(res.error, "warning")
+		return res
+	}
+
 	const metadata = await tab.evaluate(scrapeMetadata)
 
 	res = Object.assign({}, res, metadata)
 
 	// Get likers
 	utils.log(`Scraping likers on ${url}...`, "loading")
-	if (await tab.isPresent("li.js-stat-count > a.request-favorited-popup")) {
-		try {
-			await openPopUp(tab, "li.js-stat-count > a.request-favorited-popup", infosToExtract.baseSelector)
-			likers.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+	res.likers = []
+	try {
+		if (isBeta && await tab.isPresent("div a[href*=\"likes\"]")) {
+			await openPopUp(tab, "div a[href*=\"likes\"]", "div[aria-labelledby=\"modal-header\"]")
+			await tab.waitUntilVisible(alternativeExtract.baseSelector, 7500)
+			likers.push(...await tab.evaluate(scrapePopUp, { bundle: alternativeExtract, beta: isBeta }))
 			res.likers = likers
-			await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
-		} catch (err) {
-			utils.log(`Can't fetch likers on ${url}`, "warning")
+			await closePopUp(tab, "div[aria-labelledby=\"modal-header\"] div[role=button]:first-of-type", "div[aria-labelledby=\"modal-header\"]")
+		} else {
 			res.likers = []
+			if (await tab.isPresent("li.js-stat-count > a.request-favorited-popup")) {
+				await openPopUp(tab, "li.js-stat-count > a.request-favorited-popup", infosToExtract.baseSelector)
+				likers.push(...await tab.evaluate(scrapePopUp, { bundle: infosToExtract, beta: isBeta }))
+				res.likers = likers
+				await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+				utils.log(`Can't fetch likers on ${url}`, "warning")
+				res.likers = []
+			}
 		}
-	} else {
-		res.likers = []
+	} catch (err) {
+		// ...
 	}
 
 	// Get retweets
 	utils.log(`Scraping retweeters on ${url}...`, "loading")
-	if (await tab.isPresent("li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup")) {
-		try {
-			await openPopUp(tab, "li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup", infosToExtract.baseSelector)
-			retweets.push(...await tab.evaluate(scrapePopUp, infosToExtract))
+	try {
+		if (isBeta && await tab.isPresent("div a[href*=\"retweets\"]")) {
+			await openPopUp(tab, "div a[href*=\"retweets\"]", "div[aria-labelledby=\"modal-header\"]")
+			await tab.waitUntilVisible(alternativeExtract.baseSelector, 7500)
+			retweets.push(...await tab.evaluate(scrapePopUp, { bundle: alternativeExtract, beta: isBeta }))
 			res.retweets = retweets
-			await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
-		} catch (err) {
-			utils.log(`Can't fetch retweeters in ${url}`, "warning")
+			await closePopUp(tab, "div[aria-labelledby=\"modal-header\"] div[role=button]:first-of-type", "div[aria-labelledby=\"modal-header\"]")
+		} else {
 			res.retweets = []
+			if (await tab.isPresent("li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup")) {
+				await openPopUp(tab, "li.js-stat-count.js-stat-retweets.stat-count > a.request-retweeted-popup", infosToExtract.baseSelector)
+				retweets.push(...await tab.evaluate(scrapePopUp, { bundle: infosToExtract, beta: isBeta }))
+				res.retweets = retweets
+				await closePopUp(tab, "div[role=document] button.modal-btn.modal-close.js-close", infosToExtract.baseSelector)
+			}
 		}
-	} else {
-		res.retweets = []
+	} catch (err) {
+		// ...
 	}
-
 	utils.log(`${url} scraped`, "done")
 	return res
 }
@@ -228,7 +282,7 @@ const createCsvOutput = json => {
 
 ;(async () => {
 	const tab = await nick.newTab()
-	let { sessionCookie, spreadsheetUrl, columnName, tweetsPerLaunch, queries, csvName, noDatabase } = utils.validateArguments()
+	let { sessionCookie, spreadsheetUrl, columnName, tweetsPerLaunch, queries, csvName, noDatabase, betaOptIn } = utils.validateArguments()
 	const execResult = []
 
 	if (!csvName) {
@@ -264,7 +318,7 @@ const createCsvOutput = json => {
 	}
 
 	utils.log(JSON.stringify(queries, null, 2), "info")
-	await twitter.login(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie, betaOptIn)
 	for (const query of queries) {
 		if (!isTweetUrl(query)) {
 			const res = { query, error: `${query} is not a valid tweet URL`, timestamp: (new Date()).toISOString(), likers: [], retweets: [] }
