@@ -8,29 +8,7 @@ Show people love and you'll quickly get noticed. Put it on automatic and you'll 
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-<div xmlns="http://www.w3.org/1999/xhtml" id="section_relatedapis" class="row">
-	<div class="col-xs-12">
-		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_Auto_Retweeter/Twitter+Auto+Retweet(2).png" /> 
-		<a href="https://phantombuster.com/api-store/11057/twitter-auto-retweeter">
-			Twitter Auto Retweeter</a><br />
-		<small>Automatically Retweet a selection of Tweets</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
-		<a href="https://phantombuster.com/api-store/10678/twitter-message-sender">
-			Twitter Message Sender</a><br />
-		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
-		<a href="https://phantombuster.com/api-store/4127/twitter-auto-follow">
-			Twitter Auto Follow</a><br />
-		<small>Automatically follow (and unfollow) a list of Tweeter accounts</small>
-	</div>
-</div>
+!INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
 
 # Tutorial 🚀
 ## 1. Create an account on Phantombuster. It's FREE FOREVER.
@@ -57,34 +35,7 @@ To get Twitter profile URLs, you can use our other Twitter APIs such as [Followe
 
 ## 5. Easy & safe authentication { argument }
 
-This automation will connect to the website on your behalf. The **safest and most efficient** way for Phantombuster to authenticate as yourself is by using your session cookies.
-
-To make that process as easy as possible you can use **Phantombuster's browser extension**. It's a 2-click installation.
-
-<div class="row" style="margin: 10px 0px;">
-	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil"
-		target="_blank">
-			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
-				<p style="margin-top: 0px;">
-				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/chrome.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
-				Get it for Chrome</p>
-			</div>
-		</a>
-	</div>
-	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/"
-		target="_blank">
-			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
-				<p style="margin-top: 0px;">
-				<img src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Browser+Extension/firefox.svg" style="height: 35px; box-shadow: 0px 0px 0px white">
-				Get it for Firefox</p>
-			</div>
-		</a>
-	</div>
-</div>
-
-If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
+!INCLUDE "./mdpp-sections/section-web-browser-extension.mdpp"
 
 ## 6. Configure repetitive launches to auto like tweets over the long-term.
 

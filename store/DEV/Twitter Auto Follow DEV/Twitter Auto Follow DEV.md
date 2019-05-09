@@ -34,7 +34,7 @@ This API will do the repetitive work or Following & Unfollowing a list of contac
 
 # Tutorial 🚀️ 
 
-## ℹ️ Recommendations 
+## ℹ️ Recommendations
 
 ➡️ When starting a Follow/Unfollow strategy, you need to **warm your account up**. Like in Email marketing, you have to start with moderate numbers, and slowly increase those until you're
 

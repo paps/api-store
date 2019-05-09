@@ -8,7 +8,8 @@
     "eslint:error": "eslint --max-warnings 40 'libs/**/*.js' 'store/**/*.js' --quiet",
     "tslint": "tslint 'libs/**/*.ts' 'store/**/*.ts'",
     "build": "npm run tslint && tsc --diagnostics",
-    "build:watch": "tsc --watch"
+	"build:watch": "tsc --watch",
+	"buildmd": "markdown-pp --watch ."
   },
   "repository": {
     "type": "git",

@@ -8,29 +8,7 @@ This API will do the repetitive work or Following & Unfollowing a list of contac
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-<div xmlns="http://www.w3.org/1999/xhtml" id="section_relatedapis" class="row">
-	<div class="col-xs-12">
-		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_Auto_Retweeter/Twitter+Auto+Retweet(2).png" /> 
-		<a href="https://phantombuster.com/api-store/11057/twitter-auto-retweeter">
-			Twitter Auto Retweeter</a><br />
-		<small>Automatically Retweet a selection of Tweets</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
-		<a href="https://phantombuster.com/api-store/10678/twitter-message-sender">
-			Twitter Message Sender</a><br />
-		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
-	</div>
-	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
-		<a href="https://phantombuster.com/api-store/5770/twitter-auto-liker">
-			Twitter Auto Liker</a><br />
-		<small>Automatically like a list of Tweets</small>
-	</div>
-</div>
+!INCLUDE "./mdpp-sections/section-related-apis-twitter-1.mdpp"
 
 # Tutorial 🚀️ 
 
