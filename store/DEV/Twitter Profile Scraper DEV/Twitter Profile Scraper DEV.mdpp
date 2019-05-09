@@ -1,16 +1,17 @@
-# Scrape every Tweets liked by one or many Twitter accounts with this Twitter automation.
+# Automatically scrape Twitter profiles and extract all their publicly available data with this Twitter automation.
 
-What are your influencers liking on Twitter? Each of those *Likes* are pieces of information they deemed valuable and worth remembering.
+Basically, this Twitter automation tool will scrape **every piece of public info** out of a list of Twitter Profiles:
+That means the name, description, handle, URL, accounts' age and numbers of Tweets, followers, followee & likes.
 
-This Twitter automation will gather all those Tweets in one place. Combine this data with our other Twitter automations and turn these Tweets into a stream of valuable new leads.
+This automation will come in handy if you need to extract data out of multiple Twitter bios or need to do stats on a large number of Twitter accounts.
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 !INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
 
 # Tutorial 🚀
-## 1. Create a free Phantombuster account.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register).
+## 1. Create your free Phantombuster account.
+Create a **FREE** account on [Phantombuster](https://phantombuster.com/register).
 
 ## 2. Add this Twitter automation to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
@@ -27,10 +28,9 @@ The 1st argument field **"`Twitter account or Spreadsheet URL`"** let's Phantomb
 
 !INCLUDE "./mdpp-sections/section-web-browser-extension.mdpp"
 
-# ️️Repetition setup { repetition_setup }
+# Repetition setup { repetition_setup }
 
-Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
-
+Now that your Twitter automation is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
