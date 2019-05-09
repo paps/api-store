@@ -1,23 +1,40 @@
-# Extract every single piece of media content off a list of Twitter Profiles 🐦
+# Scrape Twitter and extract every single piece of media content off a list of Twitter accounts.
 
-Let's say you follow a few people whose Twitter are a goldmine of cool videos & images..
-Or you might be interested in what your competitors are publishing.
+Let's say you follow a few people whose Twitter are a goldmine of cool videos & images. Or maybe you want to do some business intelligence and keep an eye on what your competitors are publishing.
 
-Give us a list of these people and **we will extract the URLs** where each piece of content is hosted for you.
-And everything about it at the precise moment: **viewcounts, durations, description**, etc.
+Give us a list of these people and **we will extract the URLs** where each piece of content is hosted for you. And everything about it at the precise moment: **viewcounts, durations, description**, etc. What you do with this content is up to you. 
 
-What you do with this content is up to you. 
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-# What will you need? ⚙️ 
-- **"Twitter account or Spreadsheet URL"**: Choose a sepcific twitter account like `@phbuster` or choose an **open** spreadsheet url
-- **"Session Cookie auth_token"**: Your Twitter `auth_token` session cookie.
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_relatedapis" class="row">
+	<div class="col-xs-12">
+		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_follower_collector/Twitter+Followers+Collector.png" /> 
+		<a href="https://phantombuster.com/api-store/4130/twitter-follower-collector">
+			Twitter Followers Collector</a><br />
+		<small>Extract everyone following a list of Twitter accounts</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
+		<a href="https://phantombuster.com/api-store/10678/twitter-message-sender">
+			Twitter Message Sender</a><br />
+		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
+		<a href="https://phantombuster.com/api-store/4127/twitter-auto-follow">
+			Twitter Auto Follow</a><br />
+		<small>Automatically follow (and unfollow) a list of Tweeter accounts</small>
+	</div>
+</div>
 
-# Which steps to follow?
-## 1. Create an account on Phantombuster.com 💻
+# Tutorial 🚀
+## 1. Create a free Phantombuster account.
 If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
 
-
-## 2. Use this API on your account.👌
+## 2. Add this Twitter automation to your account.
 Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
@@ -35,13 +52,13 @@ In the 1st argument field **"`Twitter account or Spreadsheet URL`"** you have th
 
 ## 5. Easy & safe authentication { argument }
 
-This automation will connect to Twitter on your behalf. The **safest and most efficient** way for Phantombuster to authenticate as yourself is by using your session cookies.
+This automation will connect to the website on your behalf. The **safest and most efficient** way for Phantombuster to authenticate as yourself is by using your session cookies.
 
 To make that process as easy as possible you can use **Phantombuster's browser extension**. It's a 2-click installation.
 
 <div class="row" style="margin: 10px 0px;">
 	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil" 
+		<a href="https://chrome.google.com/webstore/detail/phantombuster/mdlnjfcpdiaclglfbdkbleiamdafilil"
 		target="_blank">
 			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
 				<p style="margin-top: 0px;">
@@ -51,7 +68,7 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 		</a>
 	</div>
 	<div class="col-xs-5 col-xs-offset-1">
-		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/" 
+		<a href="https://addons.mozilla.org/fr/firefox/addon/phantombuster/"
 		target="_blank">
 			<div class="btn btn-default text-center" style="display: inline-block; align-items: center;">
 				<p style="margin-top: 0px;">
@@ -59,16 +76,14 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 				Get it for Firefox</p>
 			</div>
 		</a>
-	</div>	
+	</div>
 </div>
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-
 # ⚙️️Repetition setup ⚙️ { repetition_setup }
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
-
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
@@ -85,20 +100,3 @@ For example, 10 profiles processed per launch, 8 launches per day: you'll proces
 # Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-
-<center>More bots like this one will be added to Phantombuster,</center>
-<center>stay tuned & check our [API store](https://phantombuster.com/api-store)!💗</center>
-
-#Output
-
-This API will output CSV and/or JSON containing the following fields:
-
-    twitterPostUrl (Tweet URL)
-    tweetContent
-    query (Original query (most of the time the Twitter profile / Twitter handle))
-    pubImage (Tweet images URLs (if available))
-    mediaUrl (External media URL)
-    mediaDescription (Description of the external media)
-    duration (Video duration (if available in ms))
-    views (Video views (if available))
-    videoUrl (URL to download the video (if available))
