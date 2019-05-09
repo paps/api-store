@@ -1,6 +1,6 @@
 # Have more real followers on Twitter by Auto Following targeted audiences.
 
-**Auto-following is still in 2019 _the_ best way to get new followers on Twitter**. People will notify your follow, visit your profile then it's up to you to have quality content to make them follow you back.
+**Auto-following is still in 2019 _the_ best way to get new followers on Twitter**. People will notice your follow, visit your profile then it's up to you to have quality content to make them follow you back.
 
 Your perfect audience is somewhere on Twitter. They are all following the same key influencers, seeing the same hashtags and liking the same Tweets. Find those people, follow them and turn them into your followers.
 
