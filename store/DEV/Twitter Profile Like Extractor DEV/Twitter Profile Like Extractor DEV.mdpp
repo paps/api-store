@@ -1,0 +1,47 @@
+# Scrape every Tweets liked by one or many Twitter accounts with this Twitter automation.
+
+What are your influencers liking on Twitter? Each of those *Likes* are pieces of information they deemed valuable and worth remembering.
+
+This Twitter automation will gather all those Tweets in one place. Combine this data with our other Twitter automations and turn these Tweets into a stream of valuable new leads.
+
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+!INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
+
+# Tutorial 🚀
+## 1. Create a free Phantombuster account.
+If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register).
+
+## 2. Add this Twitter automation to your account.
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+## 3. Click on Configure me!
+You'll now see the 3 configuration dots blinking. Click on them.
+
+<center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
+
+## 4. Aim a specific Twitter account or several at a time
+The 1st argument field **"`Twitter account or Spreadsheet URL`"** let's Phantombuster who you want to extract the liked Tweets from. Either specify one Twitter account, say: `@phbuster`, or the URL of a spreadsheet containing several Twitter accounts' URLs (`https://twitter.com/phbuster`).
+
+## 5. Easy & safe authentication { argument }
+
+!INCLUDE "./mdpp-sections/section-web-browser-extension.mdpp"
+
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
+
+
+To do so, simply hit the “Settings” button to define when your API is launched:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+# Click on Launch & Enjoy!
+It’s done! All that is left to do is to click on "launch" to try your script!
+<center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
