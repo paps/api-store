@@ -1,0 +1,51 @@
+# Automatically scrape the latest likers and commenters of a list of Tweets thanks to this Phantombuster Twitter automation.
+
+This Twitter automation will extract **the last 25 likers & 25 retweeters** out of every Tweet or list of Tweets that you're interested in.
+
+This way you can build great custom audience with super targeted people. You can also some of the related Twitter automations we have in store to setup a follow/unfollow strategy on Twitter.
+
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+!INCLUDE "./mdpp-sections/section-related-apis-twitter-3.mdpp"
+
+# Tutorial 🚀
+## 1. Create a free Phantombuster account.
+If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you.
+
+## 2. Add this Twitter automation on your account.
+Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
+
+<center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
+
+## 3. Configure your Twitter automation.
+You'll now see the 3 configuration dots blinking. Click on them.
+
+<center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
+
+## 4. Aim a specific Twitter account or several at a time
+In the 1st argument field **"`Twitter account or Spreadsheet URL`"** you have the choice to use this API for 1 twitter account at a time or several in one go.
+* One at a time: Just fill the form with a Twitter username, example: `@phbuster`
+
+* Several at a time: Paste the URL of a spreadsheet filled with Twitter username and/or Twitter accounts URLs **on column A**
+
+## 5. Easy & safe authentication { argument }
+
+!INCLUDE "./mdpp-sections/section-web-browser-extension.mdpp"
+
+# ⚙️️Repetition setup ⚙️ { repetition_setup }
+
+Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
+
+To do so, simply hit the “Settings” button to define when your API is launched:
+
+<center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
+
+Then, select a frequency:
+
+<center>![](https://phantombuster.imgix.net/api-store/repetition-setup.png)</center>
+
+Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
+
+# Click on Launch & Enjoy!
+It’s done! All that is left to do is to click on "launch" to try your script!
+<center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
