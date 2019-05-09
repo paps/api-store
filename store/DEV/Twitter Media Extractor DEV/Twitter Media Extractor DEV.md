@@ -81,7 +81,7 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-# ⚙️️Repetition setup ⚙️ { repetition_setup }
+## Set this Twitter automation on repeat️ { repetition_setup }
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
@@ -97,6 +97,6 @@ Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of
 
 For example, 10 profiles processed per launch, 8 launches per day: you'll process a total of 80 profiles per day.
 
-# Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>

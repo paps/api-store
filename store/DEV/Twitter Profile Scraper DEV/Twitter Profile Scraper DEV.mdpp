@@ -28,7 +28,7 @@ The 1st argument field **"`Twitter account or Spreadsheet URL`"** let's Phantomb
 
 !INCLUDE "./mdpp-sections/section-web-browser-extension.mdpp"
 
-# Repetition setup { repetition_setup }
+## Set this Twitter automation on repeat. { repetition_setup }
 
 Now that your Twitter automation is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
 
@@ -42,6 +42,6 @@ Then, select a frequency:
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
-# Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>

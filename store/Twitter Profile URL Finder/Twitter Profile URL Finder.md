@@ -8,7 +8,29 @@ Once you have that data, pick below one of our other APIs to auto like or auto f
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-!INCLUDE "./mdpp-sections/section-related-apis-twitter-3.mdpp"
+<div xmlns="http://www.w3.org/1999/xhtml" id="section_relatedapis" class="row">
+	<div class="col-xs-12">
+		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
+		<a href="https://phantombuster.com/api-store/4127/twitter-auto-follow">
+			Twitter Auto Follow</a><br />
+		<small>Automatically follow (and unfollow) a list of Tweeter accounts</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
+		<a href="https://phantombuster.com/api-store/10678/twitter-message-sender">
+			Twitter Message Sender</a><br />
+		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
+	</div>
+	<div class="col-xs-12 col-md-4 text-center">
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
+		<a href="https://phantombuster.com/api-store/5770/twitter-auto-liker">
+			Twitter Auto Liker</a><br />
+		<small>Automatically like a list of Tweets</small>
+	</div>
+</div>
 
 # Tutorial 🚀
 ## 1. Create your free Phantombuster account.
@@ -28,13 +50,13 @@ If the name you are searching for is pretty common we highly recommend you to ad
 
 You can also only search **company names**
 
-## 5. Specify the input file's name (optional).
+## 5. (optional) Specify the input file's name.
 
 With one query per cell, make sure that first name/last name & company are in the same cell.
 Use `columnName` to show our API what name you wrote on top of that column.
 In the example above our `columnName` is: `Name_of_your_column`
 
-## Set this Twitter automation on repeat
+## Set this Twitter automation on repeat { repetition_setup }
 
 If your input spreadsheet has a lot of rows, your Phantombuster account might not have enough execution time to find all the profile URLs in a single day. No worries though! You can set up **an automatic launch per day** to continue finding profile URLs over weeks or months if necessary.
 
@@ -53,4 +75,3 @@ Note: You can also [buy more hours per day](https://phantombuster.com/upgrade) t
 ## Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
-

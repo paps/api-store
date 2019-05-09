@@ -32,7 +32,7 @@ This Twitter automation will gather all those Tweets in one place. Combine this 
 
 # Tutorial 🚀
 ## 1. Create a free Phantombuster account.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register).
+Create your **FREE** account on [Phantombuster](https://phantombuster.com/register).
 
 ## 2. Add this Twitter automation to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
@@ -76,10 +76,9 @@ To make that process as easy as possible you can use **Phantombuster's browser e
 
 If you're operating from **another browser** and/or want to do it manually, [here is how to do it](https://intercom.help/phantombuster/help-home/how-to-get-your-cookies-without-using-our-browser-extension).
 
-# ️️Repetition setup { repetition_setup }
+## Set this Twitter automation on repeat { repetition_setup }
 
 Now that your API is ready, you should set up repetitive launches. That way, your scraping will be spread over days, weeks or even months. You can also specify the number of profiles to process per launch, or leave that field blank to process every profile from your list.
-
 
 To do so, simply hit the “Settings” button to define when your API is launched:
 
@@ -91,6 +90,6 @@ Then, select a frequency:
 
 Don't forget to click 💾 <span style="color:blue">Save</span> at the bottom of the page!
 
-# Click on Launch & Enjoy!
+## Click on Launch & Enjoy!
 It’s done! All that is left to do is to click on "launch" to try your script!
 <center>![](https://phantombuster.imgix.net/api-store/launch.JPG)</center>
