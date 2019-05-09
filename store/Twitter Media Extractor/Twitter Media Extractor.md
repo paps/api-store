@@ -31,12 +31,10 @@ Give us a list of these people and **we will extract the URLs** where each piece
 </div>
 
 # Tutorial 🚀
-## 1. Create a free Phantombuster account.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you. It’s a website automator which runs in the cloud. Once done we'll follow up.
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Add this Twitter automation to your account.
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
-
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Click on Configure me!

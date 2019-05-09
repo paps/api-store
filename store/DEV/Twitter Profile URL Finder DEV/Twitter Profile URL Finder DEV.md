@@ -34,7 +34,7 @@ Once you have that data, pick below one of our other APIs to auto like or auto f
 
 # Tutorial 🚀
 ## 1. Create your free Phantombuster account.
-Create a **FREE** account on [Phantombuster](https://phantombuster.com/register).
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
 ## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>

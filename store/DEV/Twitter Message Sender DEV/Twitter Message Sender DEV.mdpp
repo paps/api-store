@@ -1,14 +1,18 @@
-# Auto like Tweets and Twitter accounts with Phantombuster's Twitter Auto Liker automation
+# Automatically send Direct Messages (DM's) on Twitter and massively reach your followers.
 
-Despite all the controversy, Twitter is an incredible place to reach out to like-minded people and influencers.
+Whether you're launching a product, organizing an event, or need to raise awareness, you might want to contact people one-by-one. 
 
-**Auto liking** specific accounts on Twitter or Tweets related to specific hashtags can be game changing. Try to find niche hashtags or influencers and automatically like these with our **Twitter Auto Liker automation**. 
+This is super efficient. But it's also something you don't want to do manually.
 
-Show people love and you'll quickly get noticed. Put it on automatic and you'll get the benefits without having to spend too much time scrolling. And if your prospects don't get back at you right away, at least they'll be warmed up when you do contact them.
+The Twitter Message Sender is a Phantombuster Twitter automation that's design to save you time. Give it a list of your followers, craft a super copy and get your message out there. 
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 !INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
+
+## Best practice:
+✔️ Twitter lets you send up to 1000 DM's in a day.
+⏳ Prefer sending your messages over multiple launches rather than a single big one.
 
 # Tutorial 🚀
 ## 1. Create your free Phantombuster account.
@@ -22,7 +26,7 @@ You'll now see the 3 configuration dots blinking. Click on them.
 
 <center>![](https://phantombuster.imgix.net/api-store/configure_me.JPG)</center>
 
-## 4. Build a list of Tweets or Twitter profiles you want to auto like.
+## 4. Create a nice Spreadsheet
 In the "Spreadsheet URL" field, paste the URL of a spreadsheet filled with Twitter profile URLs, all **on column A**.
 
 The API will like tweets of those profiles over time.
@@ -37,11 +41,9 @@ To get Twitter profile URLs, you can use our other Twitter APIs such as [Followe
 
 ## Set this Twitter automation on repeat { repetition_setup }
 
-Twitter Automation like all good things needs to be used with reason.
+Twitter official limit is 1000 DM's a day. But in order to keep your account safe, prefer starting with fewer messages and incrementally increase that number.
 
-That is why this API will only like up to **10 tweets per launch**. To like many tweets, simply configure repetitive launches. All your follow requests will be spread out over days or weeks if necessary.
-
-To do so, simply hit the “Settings” button to define when your API is launched.
+To set launches on repeat, simply hit the “Settings” button to define when your API is launched.
 
 <center>![](https://phantombuster.imgix.net/api-store/settings-button.png)</center>
 

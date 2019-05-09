@@ -31,12 +31,10 @@ This way you can build great custom audience with super targeted people. You can
 </div>
 
 # Tutorial 🚀
-## 1. Create a free Phantombuster account.
-If you haven't already, create a **FREE** account on [Phantombuster](https://phantombuster.com/register). Our service will browse the web for you.
+## 1. Create your free Phantombuster account.
+<center><a type="button" class="btn btn-success callToAction" href="https://www.phantombuster.com/register" style="margin-top: 20px">SIGN UP</a></center>
 
-## 2. Add this Twitter automation on your account.
-Now that you're connected to Phantombuster, Click on the following button (it will open a new tab).
-
+## 2. Add this Twitter tool to your account.
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
 ## 3. Configure your Twitter automation.
