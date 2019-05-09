@@ -3,10 +3,10 @@
 		<h3 id="section_relatedapis"> You might also like those Twitter automations</h3>
 	</div>
 	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter_Auto_Retweeter/Twitter+Auto+Retweet(2).png" /> 
-		<a href="https://phantombuster.com/api-store/11057/twitter-auto-retweeter">
-			Twitter Auto Retweeter</a><br />
-		<small>Automatically Retweet a selection of Tweets</small>
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_follower_collector/Twitter+Followers+Collector.png" /> 
+		<a href="https://phantombuster.com/api-store/4130/twitter-follower-collector">
+			Twitter Followers Collector</a><br />
+		<small>Extract everyone following a list of Twitter accounts</small>
 	</div>
 	<div class="col-xs-12 col-md-4 text-center">
 		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Twitter+Message+Sender/Twitter+Auto+DM(1).png" /> 
