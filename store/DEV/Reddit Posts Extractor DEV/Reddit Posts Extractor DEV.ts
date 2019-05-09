@@ -212,7 +212,7 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 				results = results.concat(tempResult)
 				postCount = results.length
 				utils.log(`Got ${postCount} posts.`, "done")
-	
+
 			}
 			lastPost = extractedData.lastPost as string
 			if (!lastPost) {
@@ -249,7 +249,6 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 	const _reprocessAll = reprocessAll as boolean
 	browser = await puppeteer.launch({ args: [ "--no-sandbox" ] })
 	const page = await browser.newPage()
-
 
 	let result = await utils.getDb(_csvName + ".csv") as IUnknownObject[]
 	if (_spreadsheetUrl) {
@@ -296,7 +295,7 @@ const loadSubreddit = async (page: puppeteer.Page, query: string, subreddit: str
 			utils.log(`Scraping stopped: ${timeLeft.message}`, "warning")
 			break
 		}
-		
+
 	}
 	if (result.length) {
 		for (const post of currentResult) {

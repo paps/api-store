@@ -15,7 +15,7 @@ import StoreUtilities from "./lib-StoreUtilities"
 
 const utils = new StoreUtilities(buster)
 import Intercom from "./lib-Intercom"
-import { privateDecrypt } from "crypto";
+import { privateDecrypt } from "crypto"
 const intercom = new Intercom(buster, utils)
 
 const DB_NAME = "result"
@@ -23,7 +23,7 @@ let endWithError = 0
 // }
 
 const craftCsv = (json: IUnknownObject) => {
-	let craftedCsv = {} as IUnknownObject
+	const craftedCsv = {} as IUnknownObject
 	if (json) {
 		if (json.archivedUsers) {
 			craftedCsv.archivedUsers = json.archivedUsers
@@ -169,7 +169,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 			if (filter === "segment") {
 				utils.log("Invalid segment URL!", "error")
 			}  else {
-				utils.log("Error loading Intercom page...", "error")				
+				utils.log("Error loading Intercom page...", "error")
 			}
 			endWithError = 1
 			return null
@@ -178,16 +178,16 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		const currentUrl = page.url()
 		const urlObject = new URL(currentUrl)
 		if (utils.isUrl(segmentUrl) && urlObject.hostname.includes("intercom")) {
-			utils.log("Intercom isn't loading correctly...", "error")				
+			utils.log("Intercom isn't loading correctly...", "error")
 		} else {
-			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")				
+			utils.log("Invalid Segment URL, it should be an Intercom URL.", "error")
 		}
 		endWithError = 1
 		return null
 	}
-	const filters = await page.evaluate(() => Array.from(document.querySelectorAll(".filter-block__container")).map(el => {
+	const filters = await page.evaluate(() => Array.from(document.querySelectorAll(".filter-block__container")).map((el) => {
 		if (el && el.textContent) {
-			return el.textContent.trim().split("\n").map(el => el.trim()).filter(el => el).join(" ")
+			return el.textContent.trim().split("\n").map((el) => el.trim()).filter((el) => el).join(" ")
 		} else {
 			return null
 		}
@@ -201,7 +201,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		const matches = await page.evaluate(() => {
 			const matchesSelector = document.querySelector(".js__user-list__filter-and-select-details")
 			if (matchesSelector && matchesSelector.textContent) {
-				return matchesSelector.textContent.split(" ").map(el => el.replace(/\n/g, " ").trim()).filter(el => el).join(" ")
+				return matchesSelector.textContent.split(" ").map((el) => el.replace(/\n/g, " ").trim()).filter((el) => el).join(" ")
 			} else {
 				return ""
 			}
@@ -245,7 +245,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 		id = id.slice(0, id.indexOf("/"))
 	}
 	let billingCount = {} as IUnknownObject
-	try{
+	try {
 		billingCount = await getBilling(page, id)
 	} catch (err) {
 		//
@@ -253,7 +253,7 @@ const getUsers = async (page: puppeteer.Page, id: string, filter: string, lastSe
 	billingCount.timestamp = (new Date()).toISOString()
 	try {
 		const archivedUsers = await getUsers(page, id, _filter, _lastSeen, _segmentUrl)
-		if(archivedUsers) {
+		if (archivedUsers) {
 			billingCount.archivedUsers = archivedUsers
 		}
 	} catch (err) {

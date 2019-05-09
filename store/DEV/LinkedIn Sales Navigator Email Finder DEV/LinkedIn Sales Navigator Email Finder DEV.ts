@@ -3,12 +3,14 @@
 "phantombuster package: 5"
 "phantombuster dependencies: lib-StoreUtilities.js, lib-Hunter.js, lib-Dropcontact.js, lib-DiscoverMail.js"
 
-import { IUnknownObject } from "lib-api-store";
+import { IUnknownObject } from "lib-api-store"
 
-const Buster = require("phantombuster")
+// const Buster = require("phantombuster")
+import Buster from "phantombuster"
 const buster = new Buster()
 
-const StoreUtilities = require("./lib-StoreUtilities")
+// const StoreUtilities = require("./lib-StoreUtilities")
+import StoreUtilities from "./lib-StoreUtilities"
 const utils = new StoreUtilities(buster)
 
 declare interface IMailPayload {
@@ -31,12 +33,11 @@ const cleanObject = (obj: IUnknownObject) => {
 	}
 }
 
-
-;(async () => {
+(async () => {
 	const { spreadsheetUrl, customSpreadsheet, fullNameColumn, firstNameColumn, lastNameColumn, companyNameColumn, domainNameColumn, emailChooser, hunterApiKey, dropcontactApiKey, csvName, numberOfLinesPerLaunch } = utils.validateArguments()
 	let _csvName = csvName as string
 
-	if (!_csvName) { 
+	if (!_csvName) {
 		_csvName = "result"
 	}
 	let result = await utils.getDb(_csvName + ".csv")
@@ -55,8 +56,9 @@ const cleanObject = (obj: IUnknownObject) => {
 		require("coffee-script/register")
 		dropcontact = new (require("./lib-Dropcontact"))(dropcontactApiKey.trim())
 	}
-	let csv, header
-	let queries = []
+	let csv
+	let header
+	const queries = []
 	let firstNameIndex = -1
 	let lastNameIndex = -1
 	let fullNameIndex = -1
@@ -224,7 +226,7 @@ const cleanObject = (obj: IUnknownObject) => {
 					if (err.message && (err.message === "Hunter.io: got HTTP 401 - No user found for the API key supplied" || err.message.includes("HTTP 429"))) {
 						break
 					}
-				}		
+				}
 			}
 			if (dropcontact) {
 				try {
@@ -241,7 +243,7 @@ const cleanObject = (obj: IUnknownObject) => {
 					if (err.message && (err.message = "Dropcontact returned HTTP 401") || err.message.includes("HTTP 403") || err.message.includes("HTTP 429")) {
 						break
 					}
-				}				
+				}
 			}
 			if (phantombusterMail) {
 				mailPayload.siren = true
@@ -304,7 +306,7 @@ const cleanObject = (obj: IUnknownObject) => {
 	await utils.saveResults(currentResult, result, _csvName)
 	process.exit(0)
 })()
-	.catch(err => {
+	.catch((err) => {
 		utils.log(err, "error")
 		process.exit(1)
 	})
