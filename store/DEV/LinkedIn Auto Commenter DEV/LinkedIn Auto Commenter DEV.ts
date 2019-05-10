@@ -167,6 +167,7 @@ const commentArticle = async (page: puppeteer.Page, message: string, tags: IUnkn
 	let rows: IUnknownObject[] = []
 	let columns: string[] = []
 	let db: IUnknownObject[] = []
+	const res: IUnknownObject[] = []
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -211,11 +212,41 @@ const commentArticle = async (page: puppeteer.Page, message: string, tags: IUnkn
 	await linkedin.login(page, sessionCookie)
 
 	for (const one of rows) {
-		const url = one[columnName]
+		let errMsg:string|null = null
+		let _res = 0
+		const url: string = one[columnName] as string
+		const postsUrls: string[] = []
+		try {
+			if (linkedin.isLinkedInArticle(url)) {
+				postsUrls.push(url)
+			} else {
+				_res = await openArticle(page, url)
+				switch (_res) {
+					case OpenStatus.BAD_FEED:
+						errMsg = "Selected feed type doesn't exist"
+						break
+					case OpenStatus.BAD_HTTP:
+						errMsg = `Can't open ${url}`
+						break
+					case OpenStatus.SCRAPE_ERR:
+						errMsg = `Internal error while scraping ${url}`
+						break
+					case OpenStatus.INV_ARTICLE:
+						errMsg = `${url} isn't a valid LinkedIn article`
+						break
+					case OpenStatus.INV_PROFILE:
+						errMsg = `${url} isn't a valid LinkedIn profile`
+						break
+				}
+			}
+		} catch (err) {
+			res.push({ query: url, error: err.message || err, timestamp: (new Date()).toISOString() })
+		}
 	}
 	await linkedin.updateCookie(page)
 	await page.close()
 	await browser.close()
+	await utils.saveResults(res, res, csvName, null, true)
 	process.exit()
 })()
 .catch((err) => {
