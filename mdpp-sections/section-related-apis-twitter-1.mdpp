@@ -15,7 +15,7 @@
 		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
 	</div>
 	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_liker/Twitter+Auto+Liker.png" /> 
 		<a href="https://phantombuster.com/api-store/5770/twitter-auto-liker">
 			Twitter Auto Liker</a><br />
 		<small>Automatically like a list of Tweets</small>

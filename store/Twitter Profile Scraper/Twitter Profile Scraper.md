@@ -24,10 +24,10 @@ This automation will come in handy if you need to extract data out of multiple T
 		<small>Automatically Send Direct Messages (DM's) to your followers and spread a message</small>
 	</div>
 	<div class="col-xs-12 col-md-4 text-center">
-		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_follow/Twitter+Auto+Follow.png" /> 
-		<a href="https://phantombuster.com/api-store/4127/twitter-auto-follow">
-			Twitter Auto Follow</a><br />
-		<small>Automatically follow (and unfollow) a list of Tweeter accounts</small>
+		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/twitter_auto_liker/Twitter+Auto+Liker.png" /> 
+		<a href="https://phantombuster.com/api-store/5770/twitter-auto-liker">
+			Twitter Auto Liker</a><br />
+		<small>Automatically like a list of Tweets</small>
 	</div>
 </div>
 

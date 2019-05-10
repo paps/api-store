@@ -7,7 +7,7 @@ This automation will come in handy if you need to extract data out of multiple T
 
 <center><button type="button" class="btn btn-warning callToAction" onclick="useThisApi()">USE THIS API!</button></center>
 
-!INCLUDE "./mdpp-sections/section-related-apis-twitter-2.mdpp"
+!INCLUDE "./mdpp-sections/section-related-apis-twitter-1.mdpp"
 
 # Tutorial 🚀
 ## 1. Create your free Phantombuster account.
