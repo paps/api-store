@@ -358,6 +358,8 @@ const crawl = async (page, urls, triesPerDomain, toSend, email) => {
 				if (!isUser) {
 					toSend += `\n(${email})`
 				}
+				// Remove unexpected new lines at the end of the message
+				toSend = toSend.trim()
 				const hasSend = await sendMessages(page, toSend)
 				if (hasSend) {
 					const status = isUser ? "success" : "email sent in the text message"
