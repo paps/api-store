@@ -89,7 +89,9 @@
 			"store/DEV/LinkedIn Auto Liker DEV",
 			"store/DEV/LinkedIn Auto Commenter DEV",
 			"store/LinkedIn Auto Liker",
-			"store/LinkedIn Auto Commenter"
+			"store/LinkedIn Auto Commenter",
+			"store/DEV/LinkedIn Sales Navigator Email Finder DEV",
+			"store/LinkedIn Sales Navigator Email Finder"
 		],
 
 		// "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */

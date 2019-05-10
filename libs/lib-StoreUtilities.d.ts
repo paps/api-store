@@ -4,6 +4,7 @@ import Buster from "phantombuster"
 import { IUnknownObject, isUnknownObject } from "./lib-api-store"
 
 declare class StoreUtilities {
+	public test: boolean
 	public ERROR_CODES: { [error in keyof typeof ERRORS]: number }
 	public constructor(nick: Nick, buster: Buster)
 	public constructor(buster: Buster)
