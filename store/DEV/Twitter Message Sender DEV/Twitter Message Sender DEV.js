@@ -160,7 +160,7 @@ const sendMessage = async (tab, message, isBeta) => {
 	utils.log(`Sending message: ${message}`, "info")
 
 	if (isBeta) {
-		await tab.sendKeys(SELECTORS.alternativeTextEditSel, message, { reset: true, keepFocus: true })
+		await tab.sendKeys(SELECTORS.alternativeTextEditSel, message.replace(/\n/g, "\r\n"), { reset: true, keepFocus: true })
 		await tab.click(SELECTORS.alternativeSendSel)
 		await tab.evaluate(waitComposerButton, { sel: SELECTORS.alternativeSendSel })
 		return
@@ -168,7 +168,7 @@ const sendMessage = async (tab, message, isBeta) => {
 
 	await tab.evaluate(waitWhileEnabled, { sel: SELECTORS.sendSelector })
 	await tab.wait(Math.round(500 + Math.random() * 500))
-	await tab.sendKeys(SELECTORS.textEditSelector, message.replace("\n", "\r\n"), { reset: true, keepFocus: true })
+	await tab.sendKeys(SELECTORS.textEditSelector, message.replace(/\n/g, "\r\n"), { reset: true, keepFocus: true })
 	await tab.wait(Math.round(500 + Math.random() * 500))
 	await tab.evaluate(_sendMessage, { sel: SELECTORS.textEditSelector })
 
