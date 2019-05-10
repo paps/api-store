@@ -221,11 +221,12 @@ const scrapeSingleTweet = tab => tab.evaluate(scrapeTweets, { single: true })
 	}
 
 	if (!watcherMode) {
+		const tmp = Object.assign([], queries)
 		queries = queries.filter(el => db.findIndex(line => line.query === el) < 0)
 		if (queries.length < 1) {
-			utils.log("Input is empty OR every URLs are already processed", "warning")
-			nick.exit()
+			utils.log(`Every lines (${tmp.length}) have been processed. Restarting from line 1`, "info")
 		}
+		queries = tmp
 	}
 
 	if (typeof retweetsPerLaunch !== "number") {
