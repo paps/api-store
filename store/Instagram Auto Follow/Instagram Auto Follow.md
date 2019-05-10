@@ -12,7 +12,7 @@ Start getting more followers today by setting up the Instagram auto follower in 
 
 <div id="section_related_articles" class="row">
 	<div class="col-xs-12">
-		<h3 id="section_relatedapis"> You might also like those Instagram automations</h3>
+		<h3 id="section_relatedapis"> People who use Instagram auto follow also used those automations</h3>
 	</div>
 	<div class="col-xs-4 text-center">
 		<img class="img-rounded" src="https://s3-eu-west-1.amazonaws.com/phantombuster-static/api-store/Instagram_Auto_Liker/Instagram+Auto+Liker+BG.png" /> 
