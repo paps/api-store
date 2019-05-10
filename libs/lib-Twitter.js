@@ -225,7 +225,7 @@ class Twitter {
 			// opt-in beta cookie
 			const _beta = { name: "rweb_optin", value: "on", domain: ".twitter.com", httpOnly: false, secure: false }
 			const url = "https://twitter.com"
-			const initialSelector = ".DashboardProfileCard, div[data-testid=\"DashButton_ProfileIcon_Link\"]"
+			const initialSelector = ".DashboardProfileCard, div[data-testid=\"DashButton_ProfileIcon_Link\"], form.LoginForm"
 			let newinterface = false
 			if (isNick) {
 				if (!this.nick) {
@@ -252,6 +252,10 @@ class Twitter {
 				await tab.waitForSelector(initialSelector, { visible: true })
 				if (await tab.$("div[data-testid=\"DashButton_ProfileIcon_Link\"]")) {
 					newinterface = true
+				}
+				if (await tab.$("form.LoginForm")) {
+					this.utils.log("Could not connect to Twitter with this session cookie.", "error")
+					process.exit(this.utils.ERROR_CODES.TWITTER_BAD_COOKIE)
 				}
 			}
 			this.utils.log(`Connected as ${await tab.evaluate(_scrapeTwitterUsername)}`, "done")
