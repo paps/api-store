@@ -1,7 +1,8 @@
 // Phantombuster configuration {
 "phantombuster command: nodejs"
 "phantombuster package: 5"
-"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter.js"
+"phantombuster dependencies: lib-StoreUtilities.js, lib-Twitter-DEV.js"
+"phantombuster flags: save-folder"
 
 const url = require("url")
 const Buster = require("phantombuster")
@@ -18,13 +19,26 @@ const nick = new Nick({
 })
 const StoreUtilities = require("./lib-StoreUtilities")
 const utils = new StoreUtilities(nick, buster)
-const Twitter = require("./lib-Twitter")
+const Twitter = require("./lib-Twitter-DEV")
 const twitter = new Twitter(nick, buster, utils)
 const DB_NAME = "result"
 const DEFAULT_LIKE_COUNT = 1
 const DEFAULT_PROFILE_LAUNCH = 10
 // }
+//
+/**
+ * @description Tiny function used to check if a given string represents an URL
+ * @param {String} target
+ * @return { Boolean } true if target represents an URL otherwise false
+ */
+const isUrl = target => url.parse(target).hostname !== null
 
+/**
+ * @description Tiny function used tio check if a given string represents a Twitter URL
+ * @param { String } target
+ * @return { Boolean } true if target represents an Twitter URL otherwise false
+ */
+const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || url.parse(target).hostname === "mobile.twitter.com"
 const getValidUrlOrHandle = str => {
 	const matchRes = str.match(/twitter\.com\/(@?[A-z0-9_]+)/)
 	if (matchRes) {
@@ -128,6 +142,92 @@ const getTweetsCount = (arg, cb) => {
  */
 const getLoadedTweetsCount = (arg, cb) => {
 	cb(null, Array.from(document.querySelectorAll("div.tweet.js-actionable-tweet")).length)
+}
+
+/**
+ * @param { { undoLikes: boolean } } arg
+ * @return {Promise<number[]>} cb
+ */
+const findTweets = (arg, cb) => {
+	let tweets = [...document.querySelectorAll("section[aria-labelledby*=\"accessible-list\"] article[role=article]")].map((el, idx) => ({ tweet: el, idx }))
+
+	// Remove all sponsored tweets
+	tweets = tweets.filter(el => !el.tweet.parentNode.parentNode.parentNode.querySelector("h2[data-testid=\"noRightControl\"]"))
+	// Keep only tweets which don't have unlike button
+	tweets = tweets.filter(el => !el.tweet.querySelector("div[data-testid=unlike]"))
+	cb(null, tweets.map(el => el.idx))
+}
+
+/**
+ * @param { { idx: number, undoLikes: boolean } } arg
+ * @return {Promise<boolean>}
+ * @throws string on action error
+ */
+const callToActionBeta = (arg, cb) => {
+	const idleStart = Date.now()
+	const tweets = [...document.querySelectorAll("section[aria-labelledby*=\"accessible-list\"] article[role=article]")]
+	tweets[arg.idx].querySelector(`div[data-testid="${arg.undoLikes ? "unlike" : "like"}"]`).click()
+	const idle = () => {
+		const _tweets = [...document.querySelectorAll("section[aria-labelledby*=\"accessible-list\"] article[role=article]")]
+		if (_tweets[arg.idx].querySelector(`div[data-testid="${ arg.undoLikes ? "like" : "unlike" }"]`)) {
+			cb(null, true)
+		} else {
+			if (Date.now() - idleStart >= 30000) {
+				cb(`Can't determine if the tweet was ${arg.undoLikes ? "un" : ""}liked after 30s`)
+			}
+			setTimeout(idle, 200)
+		}
+	}
+	idle()
+}
+
+const betaScrollToLastTweet = (arg, cb) => {
+	const el = document.querySelector("section[aria-labelledby*=\"accessible-list\"] div:not([class]):not([style]):last-of-type")
+	if (el) {
+		el.scrollIntoView()
+	}
+	cb(null)
+}
+
+const __loadAndLike = async (tab, profile, likesCount = DEFAULT_LIKE_COUNT, undoLikes = false) => {
+	const res = {}
+	const url = isUrl(profile) ? profile : `https://twitter.com/${profile}`
+	let count = 0
+
+	const [ httpCode ] = await tab.open(url)
+	if (httpCode === 404) {
+		throw `Cannot open the URL: ${url}`
+	}
+	try {
+		await tab.waitUntilVisible("div[data-testid=\"primaryColumn\"]", 7500)
+		do {
+			const timeLeft = await utils.checkTimeLeft()
+			if (!timeLeft.timeLeft) {
+				utils.log(timeLeft.message, "warning")
+				break
+			}
+			const tweetsToLike = await tab.evaluate(findTweets, { undoLikes })
+			for (const tweet of tweetsToLike) {
+				console.log(tweet)
+				try {
+					if (await tab.evaluate(callToActionBeta, { idx: tweet, undoLikes })) {
+						count++
+					}
+				} catch (err) {
+					console.log(err.message || err)
+					await tab.screenshot(`action-err-${Date.now()}.jpg`)
+				}
+			}
+			await tab.evaluate(betaScrollToLastTweet)
+			if (await tab.isVisible("div[role=\"progressbar\"]")) {
+				await tab.waitUntilVisible("div[role=\"progressbar\"]", 7500)
+			}
+			// await tab.wait(1000)
+		} while (count < likesCount)
+	} catch (err) {
+		utils.log(`Can't open profile ${url}, due to ${err.message || err}`, "warning")
+	}
+	return res
 }
 
 /**
@@ -264,20 +364,6 @@ const likeTweet = async (tab, url, undoLikes = false) => {
 }
 
 /**
- * @description Tiny function used to check if a given string represents an URL
- * @param {String} target
- * @return { Boolean } true if target represents an URL otherwise false
- */
-const isUrl = target => url.parse(target).hostname !== null
-
-/**
- * @description Tiny function used tio check if a given string represents a Twitter URL
- * @param { String } target
- * @return { Boolean } true if target represents an Twitter URL otherwise false
- */
-const isTwitterUrl = target => url.parse(target).hostname === "twitter.com" || url.parse(target).hostname === "mobile.twitter.com"
-
-/**
  * @param {String} target
  * @return {Boolean}
  */
@@ -290,12 +376,31 @@ const isTweetUrl = target => {
 }
 
 /**
+ * @async
+ * @description Naive (or lazy) way to update the page viewport
+ * @param {Nick.Tab} tab - NickJS tab to update
+ * @param {object} viewport - new window size to set
+ * @return {Promise<Nick.Tab>} Cooked NickJS Tab
+ */
+const updateTab = async (tab, viewport) => {
+	if (await twitter.isBetaOptIn(tab)) {
+		tab._tabDriver.__options.width = viewport.width
+		tab._tabDriver.__options.height = viewport.height
+		await tab.driver.client.Emulation.setDeviceMetricsOverride(viewport)
+		await tab.driver.client.Page.reload({ ignoreCache: true })
+		await tab.wait(2500) // TODO: find a reliable solution instead of wait
+	}
+	return tab
+}
+
+/**
  * @description Main function to launch everything
  */
 ;(async () => {
-	const tab = await nick.newTab()
+	const viewport = { width: 800, height: 600, deviceScaleFactor: 1.0, mobile: false }
+	let tab = await nick.newTab()
 	let likedCount = 0
-	let {spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, csvName, noDatabase, undoLikes} = utils.validateArguments()
+	let { spreadsheetUrl, columnName, queries, sessionCookie, likesCountPerProfile, numberOfProfilesPerLaunch, csvName, noDatabase, undoLikes, betaOptIn } = utils.validateArguments()
 
 	if (!csvName) {
 		csvName = DB_NAME
@@ -339,7 +444,10 @@ const isTweetUrl = target => {
 		db = []
 		queries = oldQueries.slice(0, numberOfProfilesPerLaunch)
 	}
-	await twitter.login(tab, sessionCookie)
+	await twitter.login(tab, sessionCookie, betaOptIn)
+
+	// NOTE: silly hack to override width / height parameter
+	tab = await updateTab(tab, viewport)
 
 	for (const profile of queries) {
 		const timeLeft = await utils.checkTimeLeft()
@@ -349,13 +457,21 @@ const isTweetUrl = target => {
 		}
 		try {
 			let profileLiked = null
-			profileLiked = isTweetUrl(profile.url) ? await likeTweet(tab, profile.url, undoLikes) : await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
+
+			if (isTweetUrl(profile.url)) {
+				profileLiked = await likeTweet(tab, profile.url, undoLikes)
+			} else {
+				profileLiked = await twitter.isBetaOptIn(tab) ? await __loadAndLike(tab, profile.url, likesCountPerProfile, undoLikes) : await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
+			}
+
+			// profileLiked = isTweetUrl(profile.url) ? await likeTweet(tab, profile.url, undoLikes) : await loadProfileAndLike(tab, profile.url, likesCountPerProfile, undoLikes)
 			profileLiked.query = profile.query
 			likedCount += profileLiked.likeCount
 			result.push(profileLiked)
 			db.push(profileLiked)
 		} catch (err) {
-			utils.log(`Cannot like ${profile} due to: ${err.message || err}`, "error")
+			utils.log(`Cannot like ${profile.url} due to: ${err.message || err}`, "error")
+			console.log(err.stack || "no stack")
 		}
 	}
 
