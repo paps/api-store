@@ -259,32 +259,36 @@ const loadConnectionsPage = async (tab, sortBy) => {
 				const lastName = csvObject[1]
 				const query = `${firstName} ${lastName}`
 				utils.log(`Searching for ${query}...`, "loading")
-				if (query && query.trim()) {
-					tempResult = tempResult.concat(await loadConnectionsAndScrape(tab, numberOfProfiles, query))
-					if (tempResult) {
-						for (let i = 0; i < tempResult.length; i++) {
-							delete tempResult[i].firstName
-							delete tempResult[i].lastName
-							tempResult[i].query = query
-							tempResult[i].timestamp = (new Date().toISOString())
-							Object.assign(finalObject, tempResult[i])
+				try {
+					if (query && query.trim()) {
+						tempResult = tempResult.concat(await loadConnectionsAndScrape(tab, numberOfProfiles, query))
+						if (tempResult) {
+							for (let i = 0; i < tempResult.length; i++) {
+								delete tempResult[i].firstName
+								delete tempResult[i].lastName
+								tempResult[i].query = query
+								tempResult[i].timestamp = (new Date().toISOString())
+								Object.assign(finalObject, tempResult[i])
+								newResult.push(finalObject)
+								result.push(finalObject)
+							}
+						} else {
+							const errorObject = { error: "No profile found", timestamp: (new Date().toISOString())}
+							Object.assign(finalObject, errorObject)
 							newResult.push(finalObject)
 							result.push(finalObject)
 						}
+						const timeLeft = await utils.checkTimeLeft()
+						if (!timeLeft.timeLeft) {
+							utils.log(timeLeft.message, "warning")
+							break
+						}
+						await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
 					} else {
-						const errorObject = { error: "No profile found", timestamp: (new Date().toISOString())}
-						Object.assign(finalObject, errorObject)
-						newResult.push(finalObject)
-						result.push(finalObject)
+						utils.log("Empty line, skipping entry...", "loading")
 					}
-					const timeLeft = await utils.checkTimeLeft()
-					if (!timeLeft.timeLeft) {
-						utils.log(timeLeft.message, "warning")
-						break
-					}
-					await tab.evaluate((arg, cb) => cb(null, document.location.reload()))
-				} else {
-					utils.log("Empty line, skipping entry...", "loading")
+				} catch (err) {
+					utils.log(`Error processing that line:${err}`, "error")
 				}
 			}
 			await utils.saveResults(newResult, result, csvName)
