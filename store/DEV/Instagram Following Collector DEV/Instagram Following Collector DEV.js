@@ -74,22 +74,22 @@ const checkDb = (str, db) => {
 }
 
 // Removes any duplicate profile
-const removeDuplicates = (arr) => {
-	let resultArray = []
-	for (const profile of arr) {
-		let found = false
-		for (let i = 0; i < resultArray.length; i++) {
-			if (resultArray[i].profileUrl === profile.profileUrl && resultArray[i].query === profile.query) {
-				found = true
-				break
-			}
-		}
-		if (!found) {
-			resultArray.push(profile)
-		}
-	}
-	return resultArray
-}
+// const removeDuplicates = (arr) => {
+// 	let resultArray = []
+// 	for (const profile of arr) {
+// 		let found = false
+// 		for (let i = 0; i < resultArray.length; i++) {
+// 			if (resultArray[i].profileUrl === profile.profileUrl && resultArray[i].query === profile.query) {
+// 				found = true
+// 				break
+// 			}
+// 		}
+// 		if (!found) {
+// 			resultArray.push(profile)
+// 		}
+// 	}
+// 	return resultArray
+// }
 
 const scrapeFollowingCount = (arg, callback) => {
 	let followingCount = 0
@@ -354,7 +354,7 @@ const getFollowing = async (tab, url, numberMaxOfFollowing, resuming) => {
 	}
 	tab.driver.client.removeListener("Network.responseReceived", interceptInstagramApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
-	result = removeDuplicates(result)
+	// result = removeDuplicates(result)
 	await utils.saveResults(currentResult, result, csvName)
 	nick.exit(0)
 })()
