@@ -525,7 +525,9 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	const UI_SELECTORS = {
 		trigger: "a[data-control-name=\"contact_see_more\"]",
 		overlay: "artdeco-modal-overlay",
-		modal: "artdeco-modal"
+		alternateOverlay: ".artdeco-modal-overlay",
+		modal: "artdeco-modal",
+		alternateModal: ".artdeco-modal"
 	}
 
 	/**
@@ -533,9 +535,14 @@ const scrapingProcess = async (tab, url, utils, buster, saveImg, takeScreenshot,
 	 */
 	if (await tab.isPresent(UI_SELECTORS.trigger)) {
 		await tab.click(UI_SELECTORS.trigger)
-		await tab.waitUntilVisible([ UI_SELECTORS.overlay, UI_SELECTORS.modal ], 20000, "and")
+		try {
+			await tab.waitUntilVisible([ UI_SELECTORS.overlay, UI_SELECTORS.modal ], 20000, "and")
+		} catch (err) {
+			await tab.waitUntilVisible([ UI_SELECTORS.alternateOverlay, UI_SELECTORS.alternateModal ], 20000, "and")
+		}
 		infos.details = await tab.evaluate(getDetails)
-		await tab.click(UI_SELECTORS.overlay)
+		const clickSel = await tab.waitUntilVisible([ UI_SELECTORS.alternateOverlay, UI_SELECTORS.overlay ], 5000, "or")
+		await tab.click(clickSel)
 	}
 
 	infos.allSkills = (infos.skills) ? infos.skills.map(el => el.name ? el.name : "").join(", ") : ""
