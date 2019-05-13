@@ -469,6 +469,7 @@ nick.newTab().then(async (tab) => {
 	utils.log(`Groups to scrape: ${JSON.stringify(groupsArray, null, 2)}`, "done")
 	tab.driver.client.on("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.on("Network.requestWillBeSent", onHttpRequest)
+	let currentResult = []
 	for (let url of groupsArray) {
 		if (isFacebookGroupUrl(url)) { // Facebook Group URL
 			let resuming = false
@@ -479,14 +480,14 @@ nick.newTab().then(async (tab) => {
 				utils.log(`Getting data from ${url}...`, "loading")
 			}
 			try {
-				result = result.concat(await getFacebookMembers(tab, url, numberMaxOfMembers, membersPerLaunch, resuming))
+				currentResult = currentResult.concat(await getFacebookMembers(tab, url, numberMaxOfMembers, membersPerLaunch, resuming))
 			} catch (err) {
 				utils.log(`Could not connect to ${url}  ${err}`, "error")
 			}
 		} else {
 			const isPaged = await checkIfPage(tab, url)
 			utils.log(`${url} doesn't constitute a Facebook Group URL${isPaged ? ", it's a Page URL" : ""}... skipping entry`, "warning")
-			result.push({ groupUrl: url, error: "Not a Group URL", timestamp: (new Date()).toISOString() })
+			currentResult.push({ groupUrl: url, error: "Not a Group URL", timestamp: (new Date()).toISOString() })
 		}
 		if (lockedByFacebook) {
 			break
@@ -502,8 +503,9 @@ nick.newTab().then(async (tab) => {
 	tab.driver.client.removeListener("Network.responseReceived", interceptFacebookApiCalls)
 	tab.driver.client.removeListener("Network.requestWillBeSent", onHttpRequest)
 
-	if (result.length !== initialResultLength) {
-		await utils.saveResults(result, result, csvName)
+	if (currentResult.length) {
+		result = result.concat(currentResult)
+		await utils.saveFlatResults(currentResult, result, csvName)
 		if (agentObject) {
 			if (stillMoreToScrape && ajaxUrl) {
 				agentObject.nextUrl = ajaxUrl
