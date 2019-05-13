@@ -12,6 +12,7 @@ class Dropcontact {
 			headers: {
 				"X-Access-Token": this.apiKey,
 			},
+			open_timeout: 180000,
 			response_timeout: 180000,
 		}
 		try {
